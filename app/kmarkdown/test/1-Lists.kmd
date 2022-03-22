@@ -1,0 +1,37 @@
+=
+book = Markdown Tests
+title = Lists
+=
+
+Unsorted list:
+
+<{l
+Item con una línea.
+Item con dos
+  líneas virtuales y una real.
+Item con dos \\
+  líneas virtuales y reales.
+}>
+
+Numbered list:
+
+<{l1
+Item con una línea.
+Item con dos
+  líneas virtuales y una real.
+Item con dos \\
+  líneas virtuales y reales.
+}>
+
+Sorted list:
+
+<{la
+Item con una línea.
+Item con dos
+  líneas virtuales y una real.
+Item con dos \\
+  líneas virtuales y reales.
+}>
+
+Fin de listas.
+

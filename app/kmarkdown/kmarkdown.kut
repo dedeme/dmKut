@@ -1,0 +1,170 @@
+// Copyright 15-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program entry.
+
+import "err";
+import "top";
+import "metadata";
+
+// \s, m -> ()
+writeIndex = \dir, header, Meta -> {
+  fhtml = path.cat([dir, "index.html"]);
+  head = str.fmt("""
+    <table class="main"><tr><td style="text-align:left">
+      <span class="title">%s</span>
+      </td><td style="text-align:right">
+      <span class="title">Índice</span>
+    </td></tr></table>
+    <hr>
+    """,
+    [Meta.book]
+  );
+  index = arr.join(arr.mp(Meta.pages, \p ->
+    return "<a href='" + p.fpage + ".html'>" + p.title + "</a>";
+  ), "<br>\n");
+
+  file.write(fhtml,
+    "<!doctype html>\n<html>\n" +
+    header +
+    "\n<body>\n" +
+    head +
+    "<h2>Índice</h2>\n<p style='text-indent:0px'>\n" +
+    index +
+    "\n</p>\n</body>\n</html>\n"
+  );
+};
+
+/// Processes a file.
+/// \s, m, s -> ()
+processFile = \header, Meta, fkmd -> {
+  fkmdName = fkmd[:-4];
+  PageMeta = metadata.getCurrent(Meta.pages, fkmdName);
+  PrevMeta = metadata.getPrevious(Meta.pages, fkmdName);
+  NextMeta = metadata.getNext(Meta.pages, fkmdName);
+  isNumbered = arr.empty(PageMeta) ? false : PageMeta!.isNumbered;
+  withUp = arr.empty(PageMeta) ? false : PageMeta!.withUp;
+  withDown = arr.empty(PageMeta) ? false : PageMeta!.withDown;
+  head = Meta.book == ""
+    ? ""
+    : str.fmt("""
+        <table class="main"><tr><td style="text-align:left">
+          <span class="title">%s</span>
+          </td><td style="text-align:right">
+          <span class="title">%s</span>
+        </td></tr></table>
+        <hr>
+        <p style="text-indent: 0px">%s<a href="index.html">Índice</a>%s</p>
+        <hr>
+        """,
+        [ Meta.book,
+          arr.empty(PageMeta) ? "" : PageMeta!.title,
+          arr.empty(PrevMeta)
+            ? ""
+            : "<a href='" +
+              PrevMeta!.fpage +
+              ".html'>Anterior (" +
+              PrevMeta!.title +
+              ")</a> · ",
+          arr.empty(NextMeta)
+            ? ""
+            : " · <a href='" +
+              NextMeta!.fpage +
+              ".html'>Posterior (" +
+              NextMeta!.title +
+              ")</a>"
+        ]
+      )
+  ;
+  Hs = [];
+  body = top.process(isNumbered, Hs, file.read(fkmd));
+  index = arr.empty(Hs)
+    ? ""
+    : str.fmt("""
+        <p style='text-indent:0px'>
+        %s
+        <p>
+        <hr>
+        """,
+        [ arr.join(arr.mp(Hs, \h ->
+            return "<a href='#hp:" + h[:3] + "'>" +
+              h[3:] + "</a>";
+          ), "<br>\n")
+        ]
+      )
+  ;
+  md = file.read(fkmd);
+  fhtml = fkmd[:-3] + "html";
+  file.write(fhtml,
+    "<!doctype html>\n<html>\n" +
+    header +
+    "\n<body>\n" +
+    (withUp | withDown
+      ? "<div id='hp:START_PAGE'></div>\n"
+      : ""
+    ) +
+    head +
+    index +
+    body +
+    (withUp
+      ? """
+        <div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+          <span onclick="location.assign('#hp:START_PAGE');">
+            <img border="0" src="img/up.png" alt="" />
+          </span>
+        </div>
+        """
+      : ""
+    ) +
+    (withDown
+      ? """
+        <div style="position: fixed;top: 0px;right: 10px;cursor: pointer;">
+          <span onclick="location.assign('#hp:END_PAGE');">
+            <img border="0" src="img/down.png" alt="" />
+          </span>
+        </div>
+        """
+      : ""
+    ) +
+    (withUp | withDown
+      ? "<div id='hp:END_PAGE'></div>\n"
+      : ""
+    ) +
+    "\n</body>\n</html>\n"
+  );
+};
+
+/// Processes a directory.
+/// \s -> ()
+processDir = \dir -> {
+  Fkmds = [];
+  for (f : file.dir(dir)) {
+    fpath = path.cat([dir, f]);
+    if (file.isDirectory(fpath)) {
+      processDir(fpath);
+    } else if (str.ends(f, ".kmd")) {
+      arr.push(Fkmds, fpath);
+    };
+  }
+
+  if (arr.empty(Fkmds)) return ;
+
+  fheader = path.cat([dir, "000header.html"]);
+  if (!file.exists(fheader)) {
+    err.show("'" + fheader + "' not found", "");
+    return;
+  }
+  header = file.read(fheader);
+
+  Meta = metadata.read(Fkmds);
+
+  if (Meta.book != "") writeIndex(dir, header, Meta);
+
+  for (fkmd : Fkmds) {
+    err.setFile(fkmd);
+
+    processFile(header, Meta, fkmd);
+  }
+};
+
+processDir("./");

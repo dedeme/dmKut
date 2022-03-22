@@ -1,0 +1,42 @@
+=
+title = Code
+=
+
+Showing C code:
+
+<{c0 ed1
+if (x == 3) {
+  return 3 + 2;
+}
+}>
+
+Showing Kut code:
+
+<{C1 ed2
+/** Multi comment
+comment
+*/
+// Single comment true
+/// Doc comment
+s = "A string";
+trace s;
+assert s == """
+A string
+de dos lineas
+""";
+assert true | false;
+if (x == 3) {
+  sys.println(3 / 2);
+}
+
+R = ["abc", "de"];
+sys.println(R[0][0:2]);
+raraAvis = {"a": 1};
+sys.println(RaraAvis.a);
+
+fun = \a, b -> {
+  return a + b + 0xfF32;
+};
+
+}>
+

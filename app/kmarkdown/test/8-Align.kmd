@@ -1,0 +1,33 @@
+=
+title=Alignment
+withUp
+=
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut scelerisque mauris. Suspendisse malesuada metus vel risus elementum dignissim. Cras in nibh vehicula, dignissim mauris a, ultricies dui. Maecenas in molestie ante. Suspendisse in orci nec elit mattis consequat vel in turpis. Pellentesque eget purus vitae lectus maximus condimentum. Nam quis velit facilisis, euismod arcu id, elementum velit. Fusce sed velit fermentum, cursus erat ut, semper est.
+
+<|Al Left\\alignment\\without frame.
+
+Morbi tempus ipsum ut bibendum convallis. Vivamus varius magna ut odio fermentum ultrices. In eu neque at elit feugiat sodales a bibendum augue. Morbi pretium ante sit amet tortor efficitur maximus. Morbi dapibus feugiat lectus, eget volutpat metus accumsan eget. Donec tincidunt ultricies risus et sodales. Curabitur nec consequat lectus. Praesent interdum, orci nec sollicitudin luctus, risus elit convallis libero, in volutpat lorem lorem id nulla. Aliquam erat volutpat. Ut eu mauris quis nisi congue laoreet id ut lorem. Morbi convallis pharetra lorem ac congue.
+
+<|ar Right\\alignment\\without frame.
+
+Maecenas eu lacinia diam. Aliquam erat volutpat. Ut vulputate, felis at maximus elementum, nibh neque interdum tellus, eget malesuada tortor quam egestas sapien. Quisque convallis mattis leo in pretium. Aliquam ac efficitur erat, nec hendrerit libero. Morbi aliquam ligula nec sapien placerat accumsan. Phasellus lobortis suscipit tortor a vulputate. Morbi eu metus gravida, volutpat sem ut, pulvinar risus. Nulla vitae dignissim urna, non vehicula nulla. Ut vehicula nibh sollicitudin libero aliquet commodo. Vestibulum rutrum purus a sodales fermentum. Praesent a tellus suscipit, feugiat quam a, efficitur metus.
+
+<|a Center\\alignment\\without frame.
+
+Nulla sit amet vulputate orci. Vivamus urna lorem, euismod at pellentesque a, finibus in felis. Integer sed pellentesque tortor, quis volutpat est. Nunc mollis lorem et porta auctor. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus feugiat, orci ac fermentum placerat, justo ipsum vulputate enim, eu vehicula tortor augue non metus. Donec ultrices iaculis velit eu rhoncus. Praesent varius in diam quis posuere. Maecenas laoreet mi nec urna pellentesque laoreet. Morbi feugiat tellus sit amet odio rutrum, et suscipit tellus porta. Integer auctor dictum cursus. Integer ac consequat urna. Phasellus consectetur in massa et pretium. Quisque tristique iaculis ligula at auctor.
+
+<{v <hr>}>
+
+<|a|l Left\\alignment\\with frame.
+
+Morbi tempus ipsum ut bibendum convallis. Vivamus varius magna ut odio fermentum ultrices. In eu neque at elit feugiat sodales a bibendum augue. Morbi pretium ante sit amet tortor efficitur maximus. Morbi dapibus feugiat lectus, eget volutpat metus accumsan eget. Donec tincidunt ultricies risus et sodales. Curabitur nec consequat lectus. Praesent interdum, orci nec sollicitudin luctus, risus elit convallis libero, in volutpat lorem lorem id nulla. Aliquam erat volutpat. Ut eu mauris quis nisi congue laoreet id ut lorem. Morbi convallis pharetra lorem ac congue.
+
+<|A|r Right\\alignment\\with frame.
+
+Maecenas eu lacinia diam. Aliquam erat volutpat. Ut vulputate, felis at maximus elementum, nibh neque interdum tellus, eget malesuada tortor quam egestas sapien. Quisque convallis mattis leo in pretium. Aliquam ac efficitur erat, nec hendrerit libero. Morbi aliquam ligula nec sapien placerat accumsan. Phasellus lobortis suscipit tortor a vulputate. Morbi eu metus gravida, volutpat sem ut, pulvinar risus. Nulla vitae dignissim urna, non vehicula nulla. Ut vehicula nibh sollicitudin libero aliquet commodo. Vestibulum rutrum purus a sodales fermentum. Praesent a tellus suscipit, feugiat quam a, efficitur metus.
+
+<|A| Center\\alignment\\with frame.
+
+Nulla sit amet vulputate orci. Vivamus urna lorem, euismod at pellentesque a, finibus in felis. Integer sed pellentesque tortor, quis volutpat est. Nunc mollis lorem et porta auctor. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus feugiat, orci ac fermentum placerat, justo ipsum vulputate enim, eu vehicula tortor augue non metus. Donec ultrices iaculis velit eu rhoncus. Praesent varius in diam quis posuere. Maecenas laoreet mi nec urna pellentesque laoreet. Morbi feugiat tellus sit amet odio rutrum, et suscipit tellus porta. Integer auctor dictum cursus. Integer ac consequat urna. Phasellus consectetur in massa et pretium. Quisque tristique iaculis ligula at auctor.
+

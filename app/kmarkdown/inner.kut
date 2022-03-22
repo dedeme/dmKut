@@ -1,0 +1,245 @@
+// Copyright 15-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Processing of a 'non-top' text.
+
+import "err";
+import "prpmarks";
+
+/// Sets text format.
+/// Used in 'inner.processFinal'.
+///   tx: Texto to format.
+///   sym: one of $, $$, _, __
+///   left: Code of eft part format.
+///   right: Code of eft part format.
+///   fn1: Function to format external text.
+///   fn2: Function to format internal text.
+/// (\s, s, s, s, \s->s, \s->s) -> s
+splitJoinFormat = \tx, sym, left, right, fn1, fn2 -> {
+    len = str.len(sym);
+    ix1 = str.index(tx, sym);
+    if (ix1 == -1) return "";
+    ix2 = str.indexFrom(tx, sym, ix1 + len);
+    if (ix2 == -1) {
+      err.show("'" + sym + "' close is missing", tx);
+      return tx;
+    }
+
+    return fn1(tx[:ix1]) + left +
+      fn2(tx[ix1 + len:ix2]) + right +
+      fn1(tx[ix2 + len:])
+    ;
+  };
+
+/// Process final
+/// \s -> s
+processFinal = \tx -> {
+  id = \tx -> return tx;;
+  dot = \tx -> return str.replace(tx, "·", "&nbsp;");;
+  line = \tx -> return str.replace(tx, "\\\\", "<br>");;
+  lt  = \tx -> return str.replace(tx, "<", "&lt;");;
+  amp  = \tx -> return str.replace(tx, "&", "&amp;");;
+
+  mth2 = splitJoinFormat(tx, "$$", "$$", "$$", processFinal, id);
+  if (mth2 != "") return mth2;
+
+  mth1 = splitJoinFormat(tx, "$", "$", "$", processFinal, id);
+  if (mth1 != "") return mth1;
+
+  under = splitJoinFormat(tx, "__", "<u>", "</u>", processFinal, processFinal);
+  if (under != "") return under;
+
+  italic = splitJoinFormat(tx, "**", "<i>", "</i>", processFinal, processFinal);
+  if (italic != "") return italic;
+
+  return dot(line(lt(amp(tx))));
+};
+
+
+/// Processes chuncks of text.
+/// \s -> s
+process = \tx -> {
+  splitJoin = \tx, sym -> {
+    ix = str.index(tx, sym);
+    if (ix == -1) return "";
+    return process(tx[:ix]) + sym[2:-2] + process(tx[ix + str.len(sym):])
+    ;
+  };
+
+  frame = \tx, start, white -> {
+    Start = [start + 3];
+    ix = str.indexFrom(tx, "}>", Start!);
+    if (ix == -1) {
+      err.show(
+        "'" + (white ? "<{F" : "<{f") + "' not closed",
+        tx[start:]
+      );
+      return "";
+    }
+    Class = [white ? "fm" : "fm2"];
+    if (tx[Start!] == "2") {
+      Start! += 1;
+      Class! = white ? "ffm" : "ffm2";
+    }
+    return
+      process(tx[:start]) +
+      "<span class='" + Class! + "'>" +
+      process(tx[Start!:ix]) +
+      "</span>" +
+      process(tx[ix + 2:])
+    ;
+  };
+
+  img = \tx, start, withFrame -> {
+    start2 = start + 3;
+    ix = str.indexFrom(tx, "}>", start2);
+    if (ix == -1) {
+      err.show("'" + (withFrame ? "<{I" : "<{i") + "' not closed", tx[start:]);
+      return "";
+    }
+    Src = [tx[start2:ix]];
+    N = [""];
+    while () {
+      if (Src! == "") break;
+      ch = Src!!;
+      if (ch >= "0" & ch <= "9") {
+        N! += ch;
+      } else {
+        break;
+      }
+      Src! = Src![1:];
+    }
+
+    n = N!;
+    size = n == "" ? "" : " style='width:" + n + "px' ";
+
+    Src! = str.trim(Src!);
+    if (Src! == "") {
+      err.show("Image source is empty", tx[start:]);
+      return "";
+    }
+    if (str.index(Src!, ".") == -1) Src! = Src! + ".png";
+    if (str.index(Src!, "/") == -1) Src! = path.cat(["img", Src!]);
+    class = withFrame ? " class='fm' " : "";
+    return
+      process(tx[:start]) +
+      "<img src='" + Src! + "'" + class + size + ">" +
+      process(tx[ix + 2:])
+    ;
+  };
+
+  hyper = \tx, start -> {
+    start2 = start + 3;
+    ix = str.indexFrom(tx, "}>", start2);
+    if (ix == -1) {
+      err.show("'<{h' not closed", tx[start:]);
+      return "";
+    }
+    Hyp = [str.trim(tx[start2:ix])];
+    if (Hyp! == "") {
+      err.show("Empty hyperlink", tx[start:]);
+      return "";
+    }
+
+    Rest = [""];
+    ix2 = str.index(Hyp!, " ");
+    if (ix2 != -1) {
+      Rest! = str.ltrim(Hyp![ix2 + 1:]);
+      Hyp! = Hyp![:ix2];
+    }
+    if (str.index(Hyp!, '"') != -1 & Hyp! != "\"\"") {
+      err.show("Hyperlink contains quotes", tx[start:]);
+      return "";
+    }
+    if (Rest! == "" & Hyp! != "\"\"") {
+      Rest! = path.base(Hyp!);
+      ix = str.lastIndex(Rest!, ".");
+      if (ix > 0) Rest! = Rest![:ix];
+    }
+    if (Rest! == "") {
+      err.show("Hyperlink label is missing", tx[start:]);
+      return "";
+    }
+    if (Hyp! == "\"\"") Hyp! = "";
+
+    return
+      process(tx[:start]) +
+      "<a href='" + Hyp! + "'>" + Rest! + "</a>" +
+      process(tx[ix + 2:])
+    ;
+  };
+
+  verbatim = \tx, start -> {
+    start2 = start + 3;
+    ix = str.indexFrom(tx, "}>", start2);
+    if (ix == -1) {
+      err.show("'<{v' not closed", tx[start:]);
+      return "";
+    }
+    return
+      process(tx[:start]) +
+      str.trim(tx[start2:ix]) +
+      process(tx[ix + 2:])
+    ;
+  };
+
+  // ------------------------------------------------
+
+  ixf = str.index(tx, "<{f");
+  if (ixf != -1) {
+    tx2 = frame(tx, ixf, false);
+    if(tx2 != "") return tx2;
+  }
+  ixF = str.index(tx, "<{F");
+  if (ixF != -1) {
+    tx2 = frame(tx, ixF, true);
+    if(tx2 != "") return tx2;
+  }
+
+  ixi = str.index(tx, "<{i");
+  if (ixi != -1) {
+    tx2 = img(tx, ixi, false);
+    if(tx2 != "") return tx2;
+  }
+  ixI = str.index(tx, "<{I");
+  if (ixI != -1) {
+    tx2 = img(tx, ixI, true);
+    if(tx2 != "") return tx2;
+  }
+
+  ixh = str.index(tx, "<{h");
+  if (ixh != -1) {
+    tx2 = hyper(tx, ixh);
+    if(tx2 != "") return tx2;
+  }
+
+  ixv = str.index(tx, "<{v");
+  if (ixv != -1) {
+    tx2 = verbatim(tx, ixv);
+    if(tx2 != "") return tx2;
+  }
+
+  lt = splitJoin(tx, "<(<)>");
+  if (lt != "") return lt;
+
+  amp = splitJoin(tx, "<(&)>");
+  if (amp != "") return amp;
+
+  dot = splitJoin(tx, "<(·)>");
+  if (dot != "") return dot;
+
+  line = splitJoin(tx, "<(\\\\)>");
+  if (line != "") return line;
+
+  dol = splitJoin(tx, "<($)>");
+  if (dol != "") return dol;
+
+  ast = splitJoin(tx, "<(**)>");
+  if (ast != "") return ast;
+
+  und = splitJoin(tx, "<(__)>");
+  if (und != "") return und;
+
+  return processFinal(tx);
+};
+

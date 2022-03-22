@@ -1,0 +1,43 @@
+// Copyright 16-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// List process.
+
+import "inner";
+
+/// \s -> \s
+process = \tx -> {
+  start = switch(tx[0]) {
+    "1": "<ol>";
+    "a": "<ol type='a'>";
+    default: "<ul>";
+  };
+  end = str.starts(start, "<o") ? "</ol>" : "</ul>";
+
+  ix = str.index(tx, "\n");
+  if (ix == -1) return start + end;
+
+  Tx = [str.ltrim(tx[ix:])];
+  Ps = [];
+  while () {
+    tx = Tx!;
+    if (tx == "") break;
+    Ix = [0];
+    while () {
+      Ix! = str.indexFrom(tx, "\n", Ix!);
+      if (Ix! == -1) {
+        Ix! = str.len(tx);
+        break;
+      }
+      if (Ix! == str.len(tx) - 1 | tx[Ix! + 1] != " ") {
+        break;
+      }
+      Ix! += 1;
+    }
+    arr.push(Ps, "<li>" + inner.process(tx[:Ix!]) + "</li>\n");
+    Tx! = str.trim(tx[Ix!:]);
+  }
+
+  return "\n" + start + "\n" + arr.join(Ps, "") + end + "\n";
+};
+

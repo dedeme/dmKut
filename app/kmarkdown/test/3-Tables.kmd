@@ -1,0 +1,83 @@
+=
+title = Tables
+=
+
+Primera tabla:
+
+<{tlcr
+Text1
+<{i favicon}>
+1,00
+
+<{F2 Text 2}>
+-
+1,00
+
+Text 3
+<{i favicon}>
+234,00
+}>
+
+<|a <{F2 Segunda tabla}>\\·
+
+<{Tlcr
+Text1
+<{i favicon}>
+1,00
+
+<{F Text 2}>
+-
+1,00
+
+Text 3
+<{i favicon}>
+234,00
+}>
+
+Tercera tabla:
+
+<{t|lcr
+Text1
+<{i favicon}>
+1,00
+
+<{F Text 2}>
+-
+1,00
+
+Text 3
+<{i favicon}>
+234,00
+}>
+
+<|a <{f ·Cuarta <(·)> tabla·}>
+
+<{T|lcr
+Text1
+<{i favicon}>
+1,00
+
+<{F Text 2}>
+-
+1,00
+
+Text 3
+<{i favicon}>
+234,00
+}>
+
+Tabla irregular:
+
+<{trl
+one
+123
+
+tow
+344
+
+three
+}>
+
+·
+
+Y fin

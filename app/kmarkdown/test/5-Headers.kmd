@@ -1,0 +1,19 @@
+=
+title = Headers
+=
+
+There are three kinds of headers:
+
+* Main (H1)
+
+For titles.
+
+** Indexable (H2)
+
+Headers __which__ will **be** put <(__)>in<(__)> <(**)>the<(**)> page index.
+
+*** Last level (H3)
+
+For mark groups of paragraphs.
+
+More examples <{h levelA/headersExample.html aquí}>.

@@ -1,0 +1,93 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// As reader.
+
+import "dm/ext";
+import "data/cts";
+import "data/rs";
+
+// s, i -> s
+getTeam = \t, ix -> {
+  ix2 = str.indexFrom(t, "_", ix);
+  if (ix2 == -1)
+    sys.fail(str.fmt("'_' not found in\n%s", t[ix : ix+80]));
+
+  ix3 = str.indexFrom(t, '"', ix2);
+  if (ix3 == -1)
+    sys.fail(str.fmt("'\"' not found in\n%s", t[ix : ix+80]));
+
+  team = t[ix2+1 : ix3];
+  r = arr.index(cts.AsTeams, \mt -> return mt == team;);
+  if (r == -1)
+    sys.fail(str.fmt("'%s' is not a valid team in\n%s", [team, t[ix : ix+80]]));
+
+  return r;
+};
+
+// s, i -> <Rs>
+getResult = \t, ix -> {
+  ix0 = str.indexFrom(t, "\"resultado\"", ix);
+  if (ix0 == -1)
+    sys.fail(str.fmt("'\"resultado\"' not found in\n%s", t[ix : ix+80]));
+
+  ix2 = str.indexFrom(t, '>', ix0);
+  if (ix2 == -1)
+    sys.fail(str.fmt("'>' not found in\n%s", t[ix : ix+80]));
+
+  ix3 = str.indexFrom(t, '-', ix2);
+  if (ix == -1)
+    sys.fail(str.fmt("'-' not found in\n%s", t[ix : ix+80]));
+
+  ix4 = str.indexFrom(t, '<', ix3);
+  if (ix4 == -1)
+    sys.fail(str.fmt("'<' not found in\n%s", t[ix : ix+80]));
+
+  return rs.new(
+    math.toInt(str.trim(t[ix2+1 : ix3])),
+    math.toInt(str.trim(t[ix3+1 : ix4]))
+  );
+};
+
+/// Reads results.
+/// It returns an array where rows are teams which play at home and columns
+/// teams which play out. Order of teams is the same as 'cts.CurrentTeams".
+/// \-> [[([<Rs>]|[])...]...]
+read = \-> {
+  t = ext.wget(
+    "https://resultados.as.com/resultados/futbol/primera/calendario/",
+    false
+  );
+
+  size = arr.size(cts.CurrentTeams);
+  // [[([<Result>]|[])...]...]
+  R = [];
+  for (i = 0:size) {
+    // [([<Result>]|[])...]
+    row = [];
+    for (j = 0:size) arr.push(row, []);
+    arr.push(R, row);
+  }
+
+  Pos = [0];
+  while () {
+    ix = str.indexFrom(t, "col-equipo-local sel", Pos!);
+    if (ix == -1) break;
+    homeTeam = getTeam(t, ix);
+
+    ix2 = str.indexFrom(t, "col-equipo-visitante", ix + 10);
+    if (ix2 == -1)
+      sys.fail(str.fmt("Out team is missing in\n%s", t[ix : ix+80]));
+
+    ixr = str.indexFrom(t, "col-resultado finalizado", ix + 10);
+    if (ixr != -1) {
+      outTeam = getTeam(t, ix2);
+      Rs = [getResult(t, ixr)];
+      R[homeTeam][outTeam] = Rs;
+    }
+
+    Pos! = ix2 + 10;
+  }
+
+  return R;
+};

@@ -1,0 +1,108 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base.
+
+import "dm/log";
+import "dm/jstb";
+import "data/cts";
+import "data/rs";
+import "data/bet";
+
+/// Initialize data base.
+/// \-> ()
+init = \-> {
+  dhome = cts.dbHome;
+  if (!file.exists(path.cat([dhome, "version.txt"]))) {
+    file.mkdir(dhome);
+    file.write(path.cat([dhome, "version.txt"]), cts.version);
+  }
+
+  log.init(path.cat([cts.dbHome, "log.tb"]), true);
+
+  version = file.read(path.cat([dhome, "version.txt"]));
+  if (version != cts.version)
+    sys.fail(str.fmt(
+      "Expected data versión '%s', found '%s'", cts.version, version
+    ));
+
+  year = path.cat([dhome, cts.year]);
+  if (!file.isDirectory(year)) file.mkdir(year);
+};
+
+/// List of years with data.
+/// \-> [s...]
+years = \-> return arr.filter(
+  file.dir(cts.dbHome),
+  \f -> return path.extension(f) == "";
+);;
+
+/// Result tables.
+/// \s -> <Jstb> of [[([<Rs>]|[])...]...]
+results = \year -> return jstb.newArr(
+  path.cat([cts.dbHome, year, "results.tb"]),
+  \-> {
+      size = arr.size(cts.CurrentTeams);
+      // [[([<Rs>]|[])...]...]
+      R = [];
+      for (i = 0:size) {
+        // [([<Rs>]|[])...]
+        row = [];
+        for (j = 0:size) arr.push(row, []);
+        arr.push(R, row);
+      }
+      return js.wa(arr.mp(R, \Row -> return rs.rowToJs(Row);));
+    },
+  rs.rowToJs,
+  rs.rowFromJs
+);;
+
+/// Team tables.
+/// \s -> <Jstb> of [s...]
+teams = \year -> return jstb.newArr(
+  path.cat([cts.dbHome, year, "teams.tb"]),
+  \-> return js.wa(arr.mp(cts.CurrentTeams, js.ws));,
+  js.ws,
+  js.rs
+);;
+
+/// Points tables.
+/// \s -> <Jstb> of [[([<Rs>]|[])...]...]
+points = \year -> return jstb.newArr(
+  path.cat([cts.dbHome, year, "points.tb"]),
+  \-> {
+      size = arr.size(cts.CurrentTeams);
+      // [[([<Rs>]|[])...]...]
+      R = [];
+      for (i = 0:size) {
+        // [([<Rs>]|[])...]
+        row = [];
+        for (j = 0:size) arr.push(row, []);
+        arr.push(R, row);
+      }
+      return js.wa(arr.mp(R, \Row -> return rs.rowToJs(Row);));
+    },
+  rs.rowToJs,
+  rs.rowFromJs
+);;
+
+/// Bet tables.
+/// \s -> <Jstb> of [[([<Bet>]|[])...]...]
+bets = \year -> return jstb.newArr(
+  path.cat([cts.dbHome, year, "bets.tb"]),
+  \-> {
+      size = arr.size(cts.CurrentTeams);
+      // [[([<Rs>]|[])...]...]
+      R = [];
+      for (i = 0:size) {
+        // [([<Rs>]|[])...]
+        row = [];
+        for (j = 0:size) arr.push(row, []);
+        arr.push(R, row);
+      }
+      return js.wa(arr.mp(R, \Row -> return bet.rowToJs(Row);));
+    },
+  bet.rowToJs,
+  bet.rowFromJs
+);;
+

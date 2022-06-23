@@ -32,7 +32,7 @@ function aceConf(ed, langIx) {
   });
   switch (langIx) {
   case 0:
-    ed.getSession().setMode("ace/mode/c_cpp");
+    ed.getSession().setMode("ace/mode/kmarkdown");
     break;
   case 1:
     ed.getSession().setMode("ace/mode/kut");
@@ -51,10 +51,10 @@ window.onload = function () {
 
 
 <body>
-<table class="main"><tr><td style="text-align:left">
-  <span class="title">Markdown Tests</span>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Headers</span>
   </td><td style="text-align:right">
-  <span class="title">Headers</span>
+  <span class="kmd-title">Markdown Tests</span>
 </td></tr></table>
 <hr>
 <p style="text-indent: 0px"><a href='4-Literal.html'>Anterior (Literals)</a> · <a href="index.html">Índice</a> · <a href='6-Frames.html'>Posterior (Frames)</a></p>
@@ -67,7 +67,7 @@ window.onload = function () {
 <h1>Main (H1)</h1>
 <p>For titles.</p>
 <h2 id='hp:001'>Indexable (H2)</h2>
-<p>Headers <u>which</u> will <i>be</i> put __in__ **the** page index.</p>
+<p>Headers <u>which</u> will <i>be</i> put __in__ //the// page index.</p>
 <h3>Last level (H3)</h3>
 <p>For mark groups of paragraphs.</p>
 <p>More examples <a href='levelA/headersExample.html'>aquí</a>.</p>

@@ -4,8 +4,9 @@ Book level:
   book = Book title
 Page level:
   title = Page title
-  isNumbered -> boolean. If it apears, headers '**' and index will be numbered.
-
+  numbered -> boolean. If it apears, headers '**' and index will be numbered.
+  withUp -> boolean. If it apears, an up arrow is shown.
+  withDown -> boolean. If it apears, an down arrow is shown.
 
 ***** Simbolos de bloque
 
@@ -25,7 +26,7 @@ Data to process is until "}>" at the beginning of line.
   Terminus are aligned whithout blanks and definitions with al least
   one blank.
 
-<{[t|T][|][l|c|r]*
+<{[t|T][|][l|c|r]+
   t -> left align, T -> center align.
   | -> cells with lines
   lcr -> column alignment.
@@ -39,6 +40,8 @@ Data to process is until "}>" at the beginning of line.
 
   Each cell is aligned without blanks and successive lines of the same
   cell are aligned with at least with a blank.
+
+  If a cell is only one '-', it will be empty.
 
 <{[c|C](0-9) label
   c-> left align, C -> center align.
@@ -73,14 +76,12 @@ Data to process is until "}>" at the beginning of line.
 <(<)> : Literal <
 <(&)> : Literal &
 <(·)> : Literal ·
-<(\\)> : Literal '\\'
-<(**)> : Literal '\\'
-<(__)> : Literal '\\'
+<(\\)> : Literal '\\' o '\' con MathJax
+<(//)> : Literal '//'
+<(__)> : Literal '__'
+<(##)> : Literal '##'
+<(||)> : Literal '||'
 
-<{[f|F][2] Marco
-  f Transparente
-  F Fondo blanco
-  2 Marco grande.
 <{[i|I][width] path : Image
   i -> sin marco
   I -> con marco
@@ -93,6 +94,8 @@ Data to process is until "}>" at the beginning of line.
 \\ : Avance de línea. <br>
 ** : Cursiva
 __ : Subrayado
+## : Code
+|| : Recuadro
 $$ : Fórmula
 $ : Fórmula
 · : Blanco

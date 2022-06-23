@@ -1,0 +1,60 @@
+// Copyright 05-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Model evalutations from MMakert update.
+
+import "fns";
+import "db";
+import "data/dated";
+import "data/modelEvals";
+import "data/modelFloats";
+import "data/hotMap";
+import "ex/mmarket/evals";
+import "ex/mmarket/results";
+
+/// \-> ()
+run = \-> {
+  lastSunday = fns.lastSunday();
+
+  modelEvalsTb = db.modelEvalsTb();
+  MdEvs = modelEvalsTb.read();
+  dated.add(
+    MdEvs,
+    modelEvals.new(lastSunday, evals.ranking())
+  );
+  modelEvalsTb.write(MdEvs);
+
+  for (m = evals.list()) {
+    hotMapsDb = db.hotMapsDb(m);
+    Maps = hotMapsDb.read();
+    dated.add(
+      Maps,
+      hotMap.new(lastSunday, evals.paramsEvals(m))
+    );
+    hotMapsDb.write(Maps);
+  }
+
+  totalsDb = db.totalsModelSimProfitsDb();
+  MdTotals = totalsDb.read();
+  dated.add(
+    MdTotals,
+    modelFloats.new(lastSunday, results.totalsRanking())
+  );
+  totalsDb.write(MdTotals);
+
+  cashesDb = db.cashesModelSimProfitsDb();
+  MdCashes = cashesDb.read();
+  dated.add(
+    MdCashes,
+    modelFloats.new(lastSunday, results.cashesRanking())
+  );
+  cashesDb.write(MdCashes);
+
+  refsDb = db.refsModelSimProfitsDb();
+  MdRefs = refsDb.read();
+  dated.add(
+    MdRefs,
+    modelFloats.new(lastSunday, results.refsRanking())
+  );
+  refsDb.write(MdRefs);
+};

@@ -1,0 +1,44 @@
+// Copyright 29-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+fib = \n -> return n <= 1 ? 1 : fib(n - 1) + fib(n - 2);;
+
+Tm = [time.now()];
+trace "Recursive";
+trace fib(37);
+trace time.now() - Tm!;
+
+fib2 = \n -> {
+  if (n <= 1) return 1;
+  N0= [0];
+  N1= [1];
+  for (i = 2:n) {
+    tmp = N1!;
+    N1! += N0!;
+    N0! = tmp;
+  }
+  return N1!;
+};
+
+Tm! = time.now();
+trace "For";
+trace fib2(55);
+trace time.now() - Tm!;
+
+fib3 = \n -> {
+  if (n <= 1) return 1;
+  N0= [0];
+  N1= [1];
+  iter.each([2:n], \i -> {
+    tmp = N1!;
+    N1! += N0!;
+    N0! = tmp;
+  });
+  return N1!;
+};
+
+Tm! = time.now();
+trace "Iterator";
+trace fib3(55);
+trace time.now() - Tm!;
+

@@ -1,0 +1,39 @@
+// Copyright 03-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Profits page.
+
+import "dm/cgi";
+import "cts";
+import "data/dailyProfitsEntry";
+import "data/profitsEntry";
+import "data/acc/diary";
+import "ex/ktmarket/profits";
+import "ex/ktmarket/diariesDb";
+import "db";
+
+/// \m -> s
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata": {
+      lvs = cts.qlevels;
+      year = time.year(time.now());
+      //[[<DailyProfitsEntry>...]...]
+      InvPs = arr.fromIter(iter.mp(
+        [0:cts.qlevels], \inv -> return profits.read(year, inv);
+      ));
+      Pfs = dailyProfitsEntry.mkProfits(InvPs);
+      return cgi.rp({
+        "initialAssets": js.wa(arr.fromIter(
+            iter.mp([0:lvs], \inv ->
+              return js.wf(diary.initialAssets(diariesDb.read(year, inv).anns));
+            )
+          )),
+        "profits": js.wa(arr.mp(Pfs, \e -> return profitsEntry.toJs(e);)),
+        "ibex": db.ibexTb().readJs()
+      });
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  };
+};

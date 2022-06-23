@@ -6,7 +6,10 @@
 import "inner";
 import "err";
 
-/// \s b -> \s
+/// Proceses mark '<{C' and '<{c' (Code).
+///   tx: Text to process.
+///   centered: If is 'true' the code frame will be centered.
+/// \s, b -> \s
 process = \tx, centered -> {
   tx2 = "<{" + (centered ? "C" : "c") + tx;
   ix = str.index(tx, "\n");
@@ -16,7 +19,7 @@ process = \tx, centered -> {
   }
 
   if (tx[0] < "0" | tx[0] > "9") {
-    err.show("Language index is missingx", tx2);
+    err.show("Language index is missing", tx2);
     return "\ntx\n";
   }
   codeIndex = tx[0];
@@ -33,12 +36,16 @@ process = \tx, centered -> {
         aceConf(ed, %s);
       });
     </script>
-    <table %s><tr><td><div id="%s" class="aceEditor">
+    <table %s><tr><td><div id="%s" class="kmd-aceEditor">
     %s
     </div></td></tr></table>
     """,
     [ label, codeIndex, centered ? " align='center'" : "",
-      label, tx[ix + 1:]
+      label, str.replace(
+        str.replace(
+          str.trim(tx[ix + 1:]),
+          "<", "&lt;"),
+        ">", "&gt;")
      ]
   );
 };

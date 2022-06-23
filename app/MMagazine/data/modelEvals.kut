@@ -1,0 +1,27 @@
+// Copyright 01-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Unsorted model evaluations of a date.
+
+import "data/modelEval";
+
+/// \s, [<ModelEval>...] -> m<ModelEvals>
+new = \date, evals -> return {
+  date,
+  evals
+};;
+
+/// \<ModelEvals> -> s
+toJs = \Me -> return js.wa([
+  js.ws(Me.date),
+  js.wa(arr.mp(Me.evals, \e -> return modelEval.toJs(e);))
+]);;
+
+/// \s -> <ModelEvals>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    arr.mp(js.ra(A[1]), \e -> return modelEval.fromJs(e);)
+  );
+};

@@ -1,0 +1,438 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>Kmarkdown Tests</title>
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  case 2:
+    ed.getSession().setMode("ace/mode/javascript");
+    break;
+  case 3:
+    ed.getSession().setMode("ace/mode/css");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+</head>
+
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Marcas de Bloque</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='04-MarcasDeComienzoDeParrafo.html'>Anterior (Marcas de Comienzo de Párrafo)</a> · <a href="index.html">Índice</a> · <a href='06-Configuracion.html'>Posterior (Configuración)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#hp:001'>Características</a><br>
+<a href='#hp:002'>Lista</a><br>
+<a href='#hp:003'>Definición</a><br>
+<a href='#hp:004'>Tabla</a><br>
+<a href='#hp:005'>Código</a><br>
+<a href='#hp:006'>Texto html literal</a>
+<p>
+<hr>
+<h2 id='hp:001'>Características</h2>
+<p>Las marcas de bloque comienzan en un párrafo cuyo único contenido es la
+propia marca y se extienden hasta un párrafo que comienze con <code>}></code>.</p>
+<p>En el bloque puede haber varias secciones.</p>
+<p>Cada sección empieza con una línea sin espacios en blanco iniciales y
+continúa, si es preciso, con más líneas que comienzan, al menos con un blanco.</p>
+<p>Entre las secciones se pueden poner tantas lineas en blanco como se desee.</p>
+<h2 id='hp:002'>Lista</h2>
+<p>Se corresponde con las marcas <i>html</i> <code>&lt;ol></code> y <code>&lt;ul></code>.</p>
+<p><u>Marca</u>: <code>&lt;{l[1|a]?</code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>1</code></dt>
+<dd>  Crea una lista numerada de tipo 1., 2., 3. ...</dd>
+<dt><code>a</code></dt>
+<dd>  Crea una lista numerada de tipo a., b., c. ...</dd>
+<dt><i>?</i></dt>
+<dd>  Si no se indica el tipo de numeración, la lista será 'no ordenada'.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed1");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed1" class="kmd-aceEditor">
+Una lista numerada:
+
+&lt;{l1
+Primera entrada.
+Segunda entrada con dos líneas en el diseño;
+  pero una sola en el resultado.
+Tercera entrada una linea en el diseño;\\\\pero dos en el resultado.
+
+}&gt;
+
+Otra lista numerada:
+
+&lt;{la
+Primera entrada.
+Segunda entrada con dos líneas en el diseño;
+  pero una sola en el resultado.
+Tercera entrada una linea en el diseño;\\\\pero dos en el resultado.
+
+}&gt;
+
+Finalmente una lista 'no-numerada':
+
+&lt;{l
+Primera entrada.
+Segunda entrada con dos líneas en el diseño;
+  pero una sola en el resultado.
+Tercera entrada una linea en el diseño;\\\\pero dos en el resultado.
+
+&rcub;&gt;
+</div></td></tr></table>
+<p>muestra</p>
+<div class="frame1"><p>Una lista numerada:</p>
+
+<ol>
+<li>Primera entrada.</li>
+<li>Segunda entrada con dos líneas en el diseño;
+  pero una sola en el resultado.</li>
+<li>Tercera entrada una linea en el diseño;<br>pero dos en el resultado.</li>
+</ol>
+<p>Otra lista numerada:</p>
+
+<ol type='a'>
+<li>Primera entrada.</li>
+<li>Segunda entrada con dos líneas en el diseño;
+  pero una sola en el resultado.</li>
+<li>Tercera entrada una linea en el diseño;<br>pero dos en el resultado.</li>
+</ol>
+<p>Finalmente una lista 'no-numerada':</p>
+
+<ul>
+<li>Primera entrada.</li>
+<li>Segunda entrada con dos líneas en el diseño;
+  pero una sola en el resultado.</li>
+<li>Tercera entrada una linea en el diseño;<br>pero dos en el resultado.</li>
+</ul>
+</div><h2 id='hp:003'>Definición</h2>
+<p>Se corresponde con la marca <i>html</i> <code>&lt;dl></code> .</p>
+<p><u>Marca</u>: <code>&lt;{d</code></p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed2");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed2" class="kmd-aceEditor">
+Unas definiciones:
+
+&lt;{d
+//Término 1//
+  Una definición en una línea
+__Término 2__
+  Otra definición con dos líneas en el diseño;
+  pero una sola en el resultado.
+Término 3
+  Tercera definición con una linea en el diseño;\\\\pero dos en el resultado.
+
+}&gt;
+</div></td></tr></table>
+<p>muestra</p>
+<div class="frame1"><p>Unas definiciones:</p>
+
+<dl>
+<dt><i>Término 1</i></dt>
+<dd>  Una definición en una línea</dd>
+<dt><u>Término 2</u></dt>
+<dd>  Otra definición con dos líneas en el diseño;
+  pero una sola en el resultado.</dd>
+<dt>Término 3</dt>
+<dd>  Tercera definición con una linea en el diseño;<br>pero dos en el resultado.</dd>
+</dl>
+</div><h2 id='hp:004'>Tabla</h2>
+<p>Sólo se admiten tablas regulares de tipo <i>filas x columnas</i>.</p>
+<p>El número de columnas se indica en la marca inicial, al definir su alineación.</p>
+<p>Las celdas se irán rellenando con los contenidos de cada sección. Cuando
+se agote una fila, se empezará con la sigiente. Si quedan posiciones vacías
+en la última línea, se completarán con las correspondientes <code>&lt;td>&lt;/td></code>.</p>
+<p>Una celda se puede dejar vacía escribiendo en su sección un signo '-' sin
+más.</p>
+<p><u>Marca</u>: <code>{[T|t]|?[l|c|r]+</code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>T</code></dt>
+<dd>  Crea una table centrada.</dd>
+<dt><code>t</code></dt>
+<dd>  Crea una tabla con alineación a la izquierda.</dd>
+<dt><code>|</code></dt>
+<dd>  (Opcional) La tabla tendrá lineas de separación de celdas.</dd>
+<dt><code>l</code></dt>
+<dd>  Alineación de columna a la izquierda.</dd>
+<dt><code>c</code></dt>
+<dd>  Alineación de columna en el centro.</dd>
+<dt><code>r</code></dt>
+<dd>  Alineación de columna a la derecha.</dd>
+<dt><i>+</i></dt>
+<dd>  Se añadirán tantas marcas de alineación como columnas tenga la tabla.<br>
+  Al menos se indicará una.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed3");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed3" class="kmd-aceEditor">
+Una Tabla a la derecha:
+
+&lt;{trl
+1:··
+Se escribe
+  "uno"
+
+2:··
+Se escribe\\\\"dos"
+
+y···\\\\3:··
+Se escribe "tres
+
+}&gt;
+
+Y una tabla centrada con líneas:
+
+&lt;{T|rl
+1:··
+Se escribe
+  "uno"
+
+2:··
+Se escribe\\\\"dos"
+
+y···\\\\3:··
+Se escribe "tres
+
+}&gt;
+</div></td></tr></table>
+<p>muestra</p>
+<div class="frame1"><p>Una Tabla a la derecha:</p>
+
+<table>
+<tr>
+<td style='text-align:right'>1:&nbsp;&nbsp;</td>
+<td style='text-align:left'>Se escribe
+  "uno"</td>
+</tr>
+<tr>
+<td style='text-align:right'>2:&nbsp;&nbsp;</td>
+<td style='text-align:left'>Se escribe<br>"dos"</td>
+</tr>
+<tr>
+<td style='text-align:right'>y&nbsp;&nbsp;&nbsp;<br>3:&nbsp;&nbsp;</td>
+<td style='text-align:left'>Se escribe "tres</td>
+</tr>
+</table>
+<p>Y una tabla centrada con líneas:</p>
+
+<table align='center'>
+<tr>
+<td style='text-align:right' class='kmd-fm2' >1:&nbsp;&nbsp;</td>
+<td style='text-align:left' class='kmd-fm2' >Se escribe
+  "uno"</td>
+</tr>
+<tr>
+<td style='text-align:right' class='kmd-fm2' >2:&nbsp;&nbsp;</td>
+<td style='text-align:left' class='kmd-fm2' >Se escribe<br>"dos"</td>
+</tr>
+<tr>
+<td style='text-align:right' class='kmd-fm2' >y&nbsp;&nbsp;&nbsp;<br>3:&nbsp;&nbsp;</td>
+<td style='text-align:left' class='kmd-fm2' >Se escribe "tres</td>
+</tr>
+</table>
+</div><h2 id='hp:005'>Código</h2>
+<p>Inserta un recuadro mara mostrar código correpondiente a lenguajes de
+programación y similares.</p>
+<p>Esta marca funciona en conexión con el <a href='02-Encabezado.html'>encabezado general</a> y supone tener configurado el editor ACE.</p>
+<p><u>Marca</u>: <code>&lt;{[C|c](0-9) label</code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>C</code></dt>
+<dd>  Muestra el recuadro centrado.</dd>
+<dt><code>c</code></dt>
+<dd>  Muestra el recuadro a la izquierda.</dd>
+<dt><code>0-9</code></dt>
+<dd>  Indica uno de los diez posibles lenguages configurados en el encabezado
+  general.</dd>
+<dt><i>label</i></dt>
+<dd>  Una etiqueta que debe ser diferente para cada recuadro.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<p>En los ejemplos siguientes se supone que en el encabezado principal dentro
+de la función <code>aceConf</code> se han definido los siguientes lenguajes:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edH1");
+    aceConf(ed, 2);
+  });
+</script>
+<table  align='center'><tr><td><div id="edH1" class="kmd-aceEditor">
+function aceConf(ed, langIx) {
+  // ...
+
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  case 2:
+    ed.getSession().setMode("ace/mode/javascript");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+
+  // ...
+}
+</div></td></tr></table>
+<p>&nbsp;</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed4");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed4" class="kmd-aceEditor">
+Ejemplo de código en C.
+
+&lt;{c2 ed1
+function printSomeThing(s) {
+  if (s.length &gt; 10) {
+    console.log("This is \n" + s);
+  }
+}
+
+}&gt;
+
+Ejemplo de código HTML centrado
+
+&lt;{C1 ed2
+&lt;p&gt;Un párrafo con &lt;b&gt;negrita&lt;/b&gt;.
+
+}&gt;
+</div></td></tr></table>
+<p>El resultado es:</p>
+<div class="frame1"><p>Ejemplo de código en C.</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("eed1");
+    aceConf(ed, 2);
+  });
+</script>
+<table ><tr><td><div id="eed1" class="kmd-aceEditor">
+function printSomeThing(s) {
+  if (s.length &gt; 10) {
+    console.log("This is \n" + s);
+  }
+}
+</div></td></tr></table>
+<p>Ejemplo de código HTML centrado</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("eed2");
+    aceConf(ed, 1);
+  });
+</script>
+<table  align='center'><tr><td><div id="eed2" class="kmd-aceEditor">
+&lt;p&gt;Un párrafo con &lt;b&gt;negrita&lt;/b&gt;.&lt;/p&gt;
+</div></td></tr></table>
+</div><h2 id='hp:006'>Texto html literal</h2>
+<p>Permite introducir largos bloques de <i>html</i> directamente.</p>
+<p><u>Marca</u>: <code>&lt;{V</code></p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edV");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edV" class="kmd-aceEditor">
+&lt;{V
+&lt;p&gt;Una tabla numerando con letras mayúsculas.&lt;/p&gt;
+
+&lt;ol type="A"&gt;
+  &lt;li&gt;Primera entrada.&lt;/li&gt;
+  &lt;li&gt;Segunda entrada.&lt;/li&gt;
+  &lt;li&gt;Trecera entrada.&lt;/li&gt;
+&lt;/ol&gt;
+
+}&gt;
+</div></td></tr></table>
+<p>mostrará</p>
+<div class="frame1">
+
+<p>Una tabla numerando con letras mayúsculas.</p>
+
+<ol type="A">
+  <li>Primera entrada.</li>
+  <li>Segunda entrada.</li>
+  <li>Trecera entrada.</li>
+</ol>
+
+</div><div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

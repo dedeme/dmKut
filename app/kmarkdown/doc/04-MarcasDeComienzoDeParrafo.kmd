@@ -1,0 +1,246 @@
+=
+  title = Marcas de Comienzo de Párrafo
+  withUp
+=
+
+** Descripción
+
+Son marcas que sólo pueden situarse al comienzo de un párrafo, y extienden
+su efecto únicamente al párrafo en el que se encuentran.
+
+** Encabezados
+
+Hay tres niveles:
+
+<{c0 ed1
+  * Tipo H1
+
+  ** Tipo H2
+
+  *** Tipo H3
+}>
+
+Si en el apartado de configuración se establece el párametro ##numbererd##
+el encabezado tipo ##**## aparecerá numerado.
+
+Con los encabezados de este tipo (##**##) se construirá un índice al comienzo
+de la página.
+
+<{h ex/headers1.html Aquí}> se ve el resultado del código anterior sin el
+parámetro ##numbered## y <{h ex/headers2.html aquí}> con el mismo código
+ye el dicho parámetro.
+
+** Otras marcas:
+
+*** Recuadro
+
+Recuadra el actual párrafo.
+
+__Marca__: ##<|[F|f]c?##
+
+__Opciones__:
+
+<{d
+##F##
+  Crea un marco con fondo blanco.
+##f##
+  Crea un marco con fondo transparente.
+##c##
+  (Opcional) Centra el recuadro.
+
+}>
+
+__Ejemplos__:
+
+<{c0 ed2
+<|F Recuadro con fondo\\\\blanco
+
+·
+
+<|f Recuadro con fondo\\\\tansparente
+
+·
+
+<|Fc Recuadro centrado con fondo\\\\blanco
+
+·
+
+<|fc Recuadro centrado con fondo\\\\tansparente
+
+}>
+
+produce
+
+<{V
+<div class="frame2">
+}>
+
+<|F Recuadro con fondo\\blanco
+
+·
+
+<|f Recuadro con fondo\\tansparente
+
+·
+
+<|Fc Recuadro centrado con fondo\\blanco
+
+·
+
+<|fc Recuadro centrado con fondo\\tansparente
+
+<{V
+</div>
+}>
+
+*** Imagen
+
+Inserta una imagen en la página.
+
+__Marca__: ##<|[I|i][l|r]?[ancho] ruta##
+
+__Opciones__:
+
+<{d
+##I##
+  Crea una imagen dentro de un recuadro.
+##i##
+  Crea una imagen sin recuadro.
+##l##
+  (Opcional) Sitúa la imagen a la izquierda del texto, que discurre por su
+  derecha.
+##r##
+  (Opcional) Sitúa la imagen a la derecha del texto, que discurre por su
+  izquierda.
+//?//
+  Si no se indican ##l## ni ##r## la imagen aparecerá centrada el texto
+  aparecerá después de ella.
+//ancho//
+  Ancho de la imagen en pixels.
+//ruta//
+    Ruta de la imagen.\\
+  \\
+  Si la imagen está en un subdirectorio llamdo 'img', no es necesario
+  escribirlo.\\
+  Para indicar una imagen en el mismo directorio de la página, se debe usar
+  ##./## (p.e. ##./favicon##)\\
+  \\
+  Si la extensión de la imagen es ##.png## no es necesaria indicarla.\\
+  Una imagen sin extensión no se puede mostrar.
+}>
+
+__Ejemplos__:
+
+<{c0 ed3
+Imagen recuadrada en el centro
+
+<|I gnu
+
+y texto subsiguiente\\\\con tres\\\\líneas.
+
+Imagen recuadrada a la izquierda
+
+<|Il40 gnu
+
+y texto\\\\subsiguiente\\\\con\\\\cinco\\\\líneas.
+
+Imagen sin recuadro a la derecha
+
+<|ir40 https://www.gnu.org/graphics/heckert_gnu.transp.small
+
+y texto subsiguiente\\\\con tres\\\\líneas.
+
+}>
+
+se ve
+
+<{V
+<div class="frame1">
+}>
+
+Imagen recuadrada en el centro
+
+<|I gnu
+
+y texto subsiguiente\\con tres\\líneas.
+
+Imagen recuadrada a la izquierda
+
+<|Il40 gnu
+
+y texto\\subsiguiente\\con\\cinco\\líneas.
+
+Imagen sin recuadro a la derecha
+
+<|ir40 https://www.gnu.org/graphics/heckert_gnu.transp.small
+
+y texto subsiguiente\\con tres\\líneas.
+
+<{V
+</div>
+}>
+
+*** Alineación
+
+Permite alinear un párrafo.
+
+__Marca__: ##<[A|a]|?[l|r]?##
+
+__Opciones__:
+
+<{d
+##A##
+  Pone el texto con fondo blanco.
+##i##
+  Pone el texto con fondo transparente.
+##|##
+  (Opcional) Pone el texto dentro de un marco.
+##l##
+  (Opcional) Sitúa el contenido a la izquierda del texto principal, que
+  discurre por su derecha.
+##r##
+  (Opcional) Sitúa el contenido a la derecha del texto principal, que
+  discurre por su izquierda.
+//?//
+  Si no se indican ##l## ni ##r## el contenido aparecerá centrada el texto
+  principal aparecerá después de él.
+}>
+
+__Ejemplos__:
+
+<{c0 ed4
+<|A|l //Texto\\\\alineado a la izquierda,\\\\con marco y fondo blanco//
+
+y texto\\\\principal\\\\con\\\\cinco\\\\líneas.
+
+<|a //Texto\\\\centrado//
+
+y texto\\\\principal\\\\con\\\\cinco\\\\líneas.
+
+<|ar //Texto alineado a la derecha,\\\\sin  marco y fondo transparente//
+
+y texto\\\\principal\\\\con\\\\cinco\\\\líneas.
+
+}>
+
+se ve
+
+<{V
+<div class="frame2">
+}>
+
+<|A|l //Texto\\alineado a la izquierda,\\con marco y fondo blanco//
+
+y texto\\principal\\con\\cinco\\líneas.
+
+<|a //Texto\\centrado//
+
+y texto\\principal\\con\\cinco\\líneas.
+
+<|ar //Texto alineado a la derecha,\\sin  marco y fondo transparente//
+
+y texto\\principal\\con\\cinco\\líneas.
+
+<{V
+</div>
+}>

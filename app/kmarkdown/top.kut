@@ -35,8 +35,8 @@ processP = \isNumbered, Hs, tx -> {
     return "<h2 id='hp:" + nlink + "'>" + Txt! + "</h2>\n";
   }
   if (str.starts(txt, "*** ")) return prpmarks.h3(txt[4:]);
-  if (str.starts(txt, "<|f")) return prpmarks.frame(txt[3:], true);
-  if (str.starts(txt, "<|F")) return prpmarks.frame(txt[3:], false);
+  if (str.starts(txt, "<|f")) return prpmarks.frame(txt[3:], false);
+  if (str.starts(txt, "<|F")) return prpmarks.frame(txt[3:], true);
   if (str.starts(txt, "<|i")) return prpmarks.img(txt[3:], false);
   if (str.starts(txt, "<|I")) return prpmarks.img(txt[3:], true);
   if (str.starts(txt, "<|a")) return prpmarks.align(txt[3:], false);
@@ -45,13 +45,13 @@ processP = \isNumbered, Hs, tx -> {
 };
 
 /// Processes text at top of file.
-///   isNumbered: 'true' if headers sould be numbered.
-///   Hs        : Empty list of headers (h2) to populate.
-///               Each entry has the form: 000Title, where '000' is a hyperlink
-///               and Title is text.
-///   tx        : Text to process.
+///   numbered: 'true' if headers sould be numbered.
+///   Hs       : Empty list of headers (h2) to populate.
+///              Each entry has the form: 000Title, where '000' is a hyperlink
+///              and Title is text.
+///   tx       : Text to process.
 /// \b, m, s -> s
-process = \isNumbered, Hs, tx -> {
+process = \numbered, Hs, tx -> {
   Tx = [str.trim(tx)];
   Ps = [];
   Nheader! = 1;
@@ -138,10 +138,10 @@ process = \isNumbered, Hs, tx -> {
 
     ix = str.index(tx, "\n\n");
     if (ix == -1) {
-      arr.push(Ps, processP(isNumbered, Hs, tx));
+      arr.push(Ps, processP(numbered, Hs, tx));
       break;
     }
-    arr.push(Ps, processP(isNumbered, Hs, tx[:ix]));
+    arr.push(Ps, processP(numbered, Hs, tx[:ix]));
     Tx! = str.ltrim(tx[ix + 2:]);
   }
   return arr.join(Ps, "");

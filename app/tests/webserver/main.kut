@@ -1,0 +1,18 @@
+// Copyright 25-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "/dm/dmKut/libdm/websv";
+
+if (!file.isDirectory("www") | !file.isDirectory("bin"))
+  sys.fail("Tests in 'main.kut' must be lauched in '/dm/dmKut/app/tests/webserver'");
+
+websv.start(5055, 0, "./", \rq -> {
+  Rp = websv.getRq(rq);
+  if (arr.empty(Rp)) {
+    Rp2 = websv.dmCgiRq(rq);
+    if (arr.empty(Rp2)) return websv.echoRp(rq);
+    arr.push(Rp, Rp2!);
+  }
+
+  return Rp!;
+});

@@ -6,6 +6,11 @@
 import "inner";
 
 /// Divides dd - dt
+///   tx: Text to process.
+/// \s -> \s///   Store: Array which will be modified in place, with next values:
+///     0: Already read text.
+///     1: Current mark.
+///     2: Rest of text.
 split = \tx -> {
   ix = str.index(tx, "\n");
   if (ix == -1) return "<dt>" + tx + "</dt>\n<dd></dd>\n";
@@ -14,6 +19,8 @@ split = \tx -> {
   ;
 };
 
+/// Processes mark '<{d' (Definition).
+///   tx: Text to process.
 /// \s -> \s
 process = \tx -> {
   ix = str.index(tx, "\n");

@@ -1,0 +1,114 @@
+// Copyright 18-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Strategies management
+
+import "data/strategy";
+import "data/profits";
+import "strategies/always1";
+import "strategies/alwaysx";
+import "strategies/always2";
+import "strategies/bestIncomes";
+import "strategies/mediumIncomes";
+import "strategies/worstIncomes";
+import "strategies/bestTeam";
+import "strategies/worstTeam";
+import "strategies/bestPond";
+import "strategies/mediumPond";
+import "strategies/worstPond";
+
+/// List of stratigies.
+/// [s...]
+list = [
+  always1.mk(),
+  alwaysx.mk(),
+  always2.mk(),
+  bestIncomes.mk(),
+  mediumIncomes.mk(),
+  worstIncomes.mk(),
+  bestTeam.mk(),
+  worstTeam.mk(),
+  bestPond.mk(),
+  mediumPond.mk(),
+  worstPond.mk()
+];;
+
+/// Returns the strategy with identifier 'id'.
+/// \s -> <Stragegy>
+get = \id -> {
+  R = arr.find(list, \e -> return e.id == id;);
+  if (arr.empty(R)) sys.fail("Strategy '" + id + "' not found");
+  return R!;
+};
+
+/// Returns profits of a strategy in a year.
+///   S          : Strategy.
+///   description: Description of profits.
+///   Results    : Year results table.
+///   Points     : Year points table.
+///   Bets       : Year bets table.
+/// \<Strategy>, s, [[([<Rs>]|[])...]...], [[([<Rs>]|[])...]...],
+///  [[([<Bet>]|[])...]...] -> <Profits>
+yearProfits = \S, description, Results, Points, Bets -> {
+  size = arr.size(Results);
+  Hits = [0];
+  Fails = [0];
+  Amount = [0.0];
+  for (i = 0:size) {
+    for (j = 0:size) {
+      R = Results[i][j];
+      P = Points[i][j];
+      B = Bets[i][j];
+      if (arr.empty(R) | arr.empty(P) | arr.empty(B)) continue;
+      pfs = strategy.profits(S, R!, P!, B!);
+      if (pfs < 0.0) Fails! += 1;
+      else Hits! += 1;
+      Amount! += pfs;
+    }
+  }
+  return profits.new(description, Hits!, Fails!, Amount!);
+};
+
+/// Returns profits of a strategy in several years.
+///   S      : Strategy.
+///   Years  : List of years. Each year matches its own Results, Points and Bets
+///            tables and also match each <Profit> of result.
+///   Results: Several year results tables.
+///   Points : Several year points tables.
+///   Bets   : Several year bets tables.
+/// \<Strategy>, [s...], [[[([<Rs>]|[])...]...]...], [[[([<Rs>]|[])...]...]...],
+///  [[[([<Bet>]|[])...]...]...] -> [<Profits>...]
+yearsProfits = \S, Years, Results, Points, Bets -> return arr.fromIter(iter.mp(
+  [0:arr.size(Years)],
+  \i -> return yearProfits(S, Years[i], Results[i], Points[i], Bets[i]);
+));;
+
+/// Returns profits of a group of strategies in a year.
+/// Each strategy matches a <Profit> of result.
+///   Ss         : Strategies.
+///   Results    : Year results table.
+///   Points     : Year points table.
+///   Bets       : Year bets table.
+/// \[<Strategy>...], [[([<Rs>]|[])...]...], [[([<Rs>]|[])...]...],
+///  [[([<Bet>]|[])...]...] -> [<Profits>...]
+yearGroupProfits = \Ss, Results, Points, Bets -> return arr.mp(
+  Ss,
+  \S -> return yearProfits(S, S.id, Results, Points, Bets);
+);;
+
+/// Returns profits of a group of strategies in several years.
+/// Each strategy matches a <Profit> of result.
+///   Ss     : Strategies.
+///   Results: Several year results tables.
+///   Points : Several year points tables.
+///   Bets   : Several year bets tables.
+/// \[<Strategy>...], [[[([<Rs>]|[])...]...]...], [[[([<Rs>]|[])...]...]...],
+///  [[[([<Bet>]|[])...]...]...] -> [<Profits>...]
+yearsGroupProfits = \Ss, Results, Points, Bets -> return arr.mp(
+  Ss,
+  \S -> return profits.sum(arr.fromIter(iter.mp(
+      [0:arr.size(Results)],
+      \i -> return yearProfits(S, "", Results[i], Points[i], Bets[i]);
+    )), S.id);
+);;
+

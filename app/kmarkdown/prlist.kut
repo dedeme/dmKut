@@ -5,6 +5,8 @@
 
 import "inner";
 
+/// Processes mark '<{l' (list).
+///   tx: Texto to process.
 /// \s -> \s
 process = \tx -> {
   start = switch(tx[0]) {

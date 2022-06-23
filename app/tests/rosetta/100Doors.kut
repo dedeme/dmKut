@@ -1,0 +1,15 @@
+// Copyright 14-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+A = arr.new(100, false);
+for (i = 0:100) {
+  P = [i];
+  inc = i + 1;
+  while (P! < 100) {
+    p = P!;
+    A[p] = !A[p];
+    P! += inc;
+  }
+}
+for (p = 0:100)
+  sys.println(str.fmt("door #%d is %s.", [p + 1, A[p] ? "open" : "close"]));

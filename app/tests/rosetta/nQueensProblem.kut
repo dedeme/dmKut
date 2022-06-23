@@ -1,0 +1,56 @@
+ok = \Rs, cr, cc -> {
+  for (c = Rs) if (c == cc) return false;
+  for (c, r = Rs) if (c - cc == r - cr | c - cc == cr - r) return false;
+  return true;
+};
+
+println = \Qs -> {
+  Ss = [];
+  for (r, i = Qs) arr.push(Ss, str.fmt("[%d, %d]", [i + 1, r + 1]));
+  sys.println(arr.join(Ss, "-"));
+};
+
+// \i -> ()
+solve1 = \n -> {
+
+  // \i -> [i...]
+  sub = \r, c -> {
+    if (c == 0) return [[]];
+    SubR = sub(r, c - 1);
+    R = [];
+    for (Row = SubR) {
+      for (i = 0:r) {
+        if (ok(Row, arr.size(Row), i)) {
+          NewRow = arr.copy(Row);
+          arr.push(NewRow, i);
+          arr.push(R, NewRow);
+        }
+      }
+    }
+    return R;
+  };
+  for (Rs = sub(n, n)) println(Rs);
+};
+
+solve2 = \n -> {
+  R = [0];
+  Qs = arr.new(n, -1);
+  while () {
+    r = R!;
+    Qs[r] += 1;
+    if (Qs[r] == n) {
+      if (r == 0) break;
+      Qs[r] = -1;
+      R! -= 1;
+      continue;
+    }
+    if (ok(Qs[:r], r, Qs[r])) {
+      if (r == n - 1) println(Qs);
+      else R! += 1;
+    }
+  }
+};
+
+solve1(8);
+sys.println("||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+solve2(8);

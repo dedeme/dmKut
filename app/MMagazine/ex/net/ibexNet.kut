@@ -1,0 +1,39 @@
+// Copyright 29-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+// \-> s
+getText = \ -> {
+  url = "https://es.investing.com/indices/spain-35-historical-data";
+  Rs = sys.cmd("wget", ["-q", "--no-cache", "-O", "-", url]);
+  return Rs[0];
+};
+
+// \s, i, i -> [f] | []
+find = \tx, date, from -> {
+  d = time.format("%D.%M.%Y", date);
+  ix1 = str.indexFrom(tx, ">" + d + "<", from);
+  if (ix1 != -1) {
+    ix2 = str.indexFrom(tx, "Font\">", ix1);
+    if (ix2 != -1) {
+      ix2 = ix2 + 6;
+      ix3 = str.indexFrom(tx, "<", ix2);
+      if (ix3 != -1) {
+        return math.fromIso(str.trim(tx[ix2:ix3]));
+      }
+    }
+  }
+  return [];
+};
+
+/// Returns the ibex value for 'date'.
+/// \i -> [f] | []
+read = \date -> {
+  tx = getText();
+
+  start = str.index(tx, "<div id=\"results_box\">");
+  if (start == -1) {
+    return [];
+  }
+
+  return find(tx, date, start);
+};

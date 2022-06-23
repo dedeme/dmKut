@@ -1,0 +1,159 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global constants
+
+/// Application name.
+/// s
+appName = "Bet1x2";
+/// Application version.
+/// s
+version = "202204";
+/// Home for cgi data.
+/// s
+webHome = "/dm/wwwcgi/dmcgi/" + appName;
+/// Home for command data.
+/// s
+dbHome = "/home/deme/.dmKutApp/" + appName;
+
+/// Result 1
+/// i
+r1 = 0;
+/// Result x
+/// i
+rx = 1;
+/// Result 2
+/// i
+r2 =2;
+
+/// Current league year.
+/// s
+year = "2021";
+
+/// Team index.
+/// m[s]
+Teams = {
+  realMadrid: "Real Madrid",
+  valencia: "Valencia CF",
+  atletico: "Atlético de Madrid",
+  realSociedad: "Real Sociedad",
+  athletic: "Athletic Club",
+  sevilla: "Sevilla FC",
+  barcelona: "FC Barcelona",
+  mallorca: "RCD Mallorca",
+  betis: "Real Betis",
+  elche: "Elche CF",
+  cadiz: "Cádiz CF",
+  osasuna: "CA Osasuna",
+  rayo: "Rayo Vallecano",
+  villarreal: "Villarreal CF",
+  levante: "Levante UD",
+  espanyol: "RCD Espanyol",
+  granada: "Granada CF",
+  celta: "RC Celta",
+  getafe: "Getafe CF",
+  alaves: "Deportivo Alavés"
+};
+
+/// Current teams.
+/// [s...]
+CurrentTeams = [
+  "realMadrid",
+  "valencia",
+  "atletico",
+  "realSociedad",
+  "athletic",
+  "sevilla",
+  "barcelona",
+  "mallorca",
+  "betis",
+  "elche",
+  "cadiz",
+  "osasuna",
+  "rayo",
+  "villarreal",
+  "levante",
+  "espanyol",
+  "granada",
+  "celta",
+  "getafe",
+  "alaves"
+];
+
+/// Marca team codes.
+/// They have the same order as 'currentTeams'.
+/// [s...]
+MarcaTeams = [
+  "186", // realMadrid
+  "191", // valencia
+  "175", // atletico
+  "188", // realSociedad
+  "174", // athletic
+  "179", // sevilla
+  "178", // barcelona
+  "181", // mallorca
+  "185", // betis
+  "954", // elche
+  "1737", // cadiz
+  "450", // osasuna
+  "184", // rayo
+  "449", // villarreal
+  "855", // levante
+  "177", // espanyol
+  "5683", // granada
+  "176", // celta
+  "1450", // getafe
+  "173" // alaves
+];
+
+/// As team codes.
+/// They have the same order as 'currentTeams'.
+/// [s...]
+AsTeams = [
+  "1", // realMadrid
+  "17", // valencia
+  "42", // atletico
+  "16", // realSociedad
+  "5", // athletic
+  "53", // sevilla
+  "3", // barcelona
+  "11", // mallorca
+  "171", // betis
+  "121", // elche
+  "91", // cadiz
+  "13", // osasuna
+  "2", // rayo
+  "19", // villarreal
+  "136", // levante
+  "8", // espanyol
+  "347", // granada
+  "6", // celta
+  "172", // getafe
+  "4" // alaves
+];
+
+/// Sportium team codes.
+/// They have the same order as 'currentTeams'.
+/// [s...]
+SportiumTeams = [
+  "Real Madrid", // realMadrid
+  "Valencia CF", // valencia
+  "Atlético Madrid", // atletico
+  "Real Sociedad", // realSociedad
+  "Athletic Club", // athletic
+  "FC Sevilla", // sevilla
+  "FC Barcelona", // barcelona
+  "RCD Mallorca", // mallorca
+  "Real Betis", // betis
+  "Elche", // elche
+  "Cádiz CF", // cadiz
+  "Osasuna", // osasuna
+  "Rayo Vallecano", // rayo
+  "Villarreal CF", // villarreal
+  "Levante UD", // levante
+  "RCD Espanyol", // espanyol
+  "Granada CF", // granada
+  "Celta de Vigo", // celta
+  "Getafe CF", // getafe
+  "Dep. Alaves" // alaves
+];

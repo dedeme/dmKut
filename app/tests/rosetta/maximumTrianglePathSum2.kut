@@ -1,0 +1,17 @@
+dataStr = str.trim(file.read("maximumTrianglePathSum2.txt"));
+
+Data = arr.mp(
+  str.splitTrim(dataStr, "\n"),
+  \l -> return arr.mp(str.splitTrim(l, " "), \s -> return math.toInt(s););
+);
+
+Rs = Data[arr.size(Data) - 1];
+for (r = arr.size(Data) - 2:-1) {
+  for (n, i = Data[r]) {
+    l = Rs[i];
+    r = Rs[i + 1];
+    Rs[i] = n + (l > r ? l : r);
+  }
+}
+sys.println(math.toStr(Rs[0]));
+

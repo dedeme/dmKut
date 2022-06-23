@@ -1,0 +1,29 @@
+// Copyright 01-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Unsorted model evaluations of a date.
+
+import "data/modelFloat";
+
+/// Field 0 of <ParamsEval>
+params = 0;
+/// Field 1 of <ParamsEval>
+eval = 1;
+
+/// \[f...], i -> a<ParamsEval>
+new = \Params, eval -> return [Params, eval];;
+
+/// \<ParamsEval> -> s
+toJs = \Pe -> return js.wa([
+  js.wa(arr.mp(Pe[0], \p -> return js.wf(p);)),
+  js.wi(Pe[1])
+]);;
+
+/// \s -> <ParamsEval>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    arr.mp(js.ra(A[0]), \p -> return js.rf(p);),
+    js.ri(A[1])
+  );
+};

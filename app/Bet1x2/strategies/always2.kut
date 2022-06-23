@@ -1,0 +1,15 @@
+// Copyright 18-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Strategy which always select '2'.
+
+import "data/cts";
+import "data/strategy";
+
+/// Returns a Always2 strategy.
+/// \-> <Strategy-Always2>
+mk = \-> return strategy.new(
+  "Always 2",
+  "Choose always '2'",
+  \Points, Bet -> return cts.r2;
+);;

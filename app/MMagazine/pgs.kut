@@ -1,0 +1,65 @@
+// Copyright 27-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Web pages management.
+
+import "dm/cgi";
+import "pgs/main";
+import "pgs/ktmarket";
+import "pgs/mmarket";
+import "cts";
+
+/// Process a web request.
+process = \rq -> {
+  ix = str.index(rq, ":");
+
+  // CONNECTION --------------------------------------------------------------
+
+  if (ix == -1) {
+    sys.print(cgi.connect(rq));
+    return;
+  }
+
+  // AUTHENTICATION ----------------------------------------------------------
+
+  if (ix == 0) {
+    key = cryp.key(cts.appName, cgi.klen);
+    data = cryp.decode(key, rq[1:]);
+    Ps = str.split(data, ":");
+    sys.print(cgi.authentication(key, Ps[0], Ps[1], Ps[2] == "1"));
+    return;
+  }
+
+  // NORMAL DATA -------------------------------------------------------------
+
+  sessionId = rq[:ix];
+  ConKey = [""];
+  Rest = [rq[ix + 1:]];
+  ix2 = str.index(Rest!, ":");
+  if (ix2 != -1) {
+    ConKey! = Rest![:ix2];
+    Rest! = Rest![ix2 + 1:];
+  }
+  ComKey = cgi.getComKey(sessionId, ConKey!);
+  if (arr.size(ComKey) == 0) {
+    sys.print(cgi.rpExpired());
+  } else {
+    j = cryp.decode(ComKey!, Rest!);
+    Data = js.ro(j);
+    sys.print(processHub(Data));
+  }
+
+};
+
+// \m -> s
+processHub = \Rq -> {
+  module = js.rs(Rq.module);
+  return switch (module) {
+    "Main": main.process(Rq);
+    "KtMarket": ktmarket.process(Rq);
+    "MMarket": mmarket.process(Rq);
+    default: sys.fail("Value of module (" + module + ") is not valid");
+  };
+};
+
+

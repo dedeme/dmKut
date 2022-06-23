@@ -32,7 +32,7 @@ function aceConf(ed, langIx) {
   });
   switch (langIx) {
   case 0:
-    ed.getSession().setMode("ace/mode/c_cpp");
+    ed.getSession().setMode("ace/mode/kmarkdown");
     break;
   case 1:
     ed.getSession().setMode("ace/mode/kut");
@@ -51,30 +51,33 @@ window.onload = function () {
 
 
 <body>
-<table class="main"><tr><td style="text-align:left">
-  <span class="title">Markdown Tests</span>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Symbols</span>
   </td><td style="text-align:right">
-  <span class="title">Symbols</span>
+  <span class="kmd-title">Markdown Tests</span>
 </td></tr></table>
 <hr>
 <p style="text-indent: 0px"><a href='8-Align.html'>Anterior (Alignment)</a> · <a href="index.html">Índice</a></p>
 <hr>
 <p>Símbolos literales:</p>
 <p><br>
-$ : Literal <br>
-< : Literal <br>
-& : Literal <br>
+&#036; : Literal <br>
+&lt; : Literal <br>
+&amp; : Literal <br>
 · : Literal <br>
-\\ : Literal</p>
-<p>Marcos pequeños: <span class='fm'> Fondo blanco</span> y <span class='fm2'> Fondo transparente</span>.</p>
-<p>Marcos grandes: <span class='ffm'> Fondo blanco</span> y <span class='ffm2'> Fondo transparente</span>.</p>
-<p>Incluyendo imágenes sin tamaño: Con marco <img src='img/favicon.png' class='fm' > y sin marco
+// : Literal <br>
+__ : Literal <br>
+## : Literal <br>
+|| : Literal <br>
+\\\\ : Literal</p>
+<p>Marco: <span class='kmd-fm'>Fondo blanco</span>.</p>
+<p>Incluyendo imágenes sin tamaño: Con marco <img src='img/favicon.png' class='kmd-fm' > y sin marco
 <img src='img/favicon.png'></p>
-<p>Incluyendo imágenes con tamaño: Con marco <img src='levelA/img/T01-1.png' class='fm'  style='width:10px' > y sin marco
+<p>Incluyendo imágenes con tamaño: Con marco <img src='levelA/img/T01-1.png' class='kmd-fm'  style='width:10px' > y sin marco
 <img src='levelA/img/T01-1.png' style='width:10px' ></p>
 <p>Un hipervínculo: <a href='http://www.google.es'>google</a>.</p>
 <p>Html tal cual:</p>
-<p><hr></p>
+<p> <hr></p>
 <p>Y varios de fomato:</p>
 <p>Un poco de <i>cursiva</i> y otro poco de <u>subrayado</u><br>
 Con avance simple de línea.</p>

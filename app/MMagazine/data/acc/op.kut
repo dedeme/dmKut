@@ -1,0 +1,94 @@
+// Copyright 28-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+
+/// Diary opration.
+/// An operation is an array wose first field is its type. The remains fields
+/// have different meanings depending on such type.
+
+/// Index of <Op> field 1 for 'se', bu' and 'st'.
+nicks = 1;
+/// Index of <Op> field 2 for 'se', bu' and 'st'.
+stocks = 2;
+/// Index of <Op> field 3 for 'se', bu' and 'st'.
+price = 3;
+/// Index of <Op> field 1 for other differents to 'se', bu' and 'st'.
+amount = 1;
+/// Index of <Op> field 2 for other differents to 'se', bu' and 'st'.
+cause = 2;
+
+
+/// Creates an annation of type "se" (sell)
+/// \s, i, f -> a<Op>
+se = \nick, stocks, price -> return ["se", nick, stocks, price];;
+
+/// Creates an annation of type "bu" (buy)
+/// \s, i, f -> a<Op>
+bu = \nick, stocks, price -> return ["bu", nick, stocks, price];;
+
+/// Creates an annation of type "st" (stock)
+/// \s, i, f -> a<Op>
+st = \nick, stocks, price -> return ["st", nick, stocks, price];;
+
+/// Creates an annation of type "in" (Income)
+/// \f -> a<Op>
+in = \amount -> return ["in", amount];;
+
+/// Creates an annation of type "wi" (Withdrawal)
+/// \f -> a<Op>
+wi = \amount -> return ["wi", amount];;
+
+/// Creates an annation of type "pr" (Profits)
+/// \f, s -> a<Op>
+pr = \amount, cause -> return ["pr", amount, cause];;
+
+/// Creates an annation of type "fe" (Fees)
+/// \f, s -> a<Op>
+fe = \amount, cause -> return ["fe", amount, cause];;
+
+/// Creates an annation of type "pd" (Positive differences)
+/// \f, s -> a<Op>
+pd = \amount, cause -> return ["pd", amount, cause];;
+
+/// Creates an annation of type "nd" (Negative differences)
+/// \f, s -> a<Op>
+nd = \amount, cause -> return ["nd", amount, cause];;
+
+/// Returns the type of O.
+/// \<Op> -> s
+type = \O -> return O[0];;
+
+/// \<Op> -> s
+toJs = \O -> return js.wa(
+  [js.ws(type(O))] +
+  switch (type(O)) {
+    "se": [js.ws(O[1]), js.wi(O[2]),js.wf(O[2])];
+    "bu": [js.ws(O[1]), js.wi(O[2]),js.wf(O[2])];
+    "st": [js.ws(O[1]), js.wi(O[2]),js.wf(O[2])];
+    "in": [js.wf(O[1])];
+    "wi": [js.wf(O[1])];
+    "pr": [js.wf(O[1]), js.ws(O[2])];
+    "fe": [js.wf(O[1]), js.ws(O[2])];
+    "pd": [js.wf(O[1]), js.ws(O[2])];
+    "nd": [js.wf(O[1]), js.ws(O[2])];
+    default: sys.fail("Operation type '" + type(O) + "' is unknown.");
+  }
+);;
+
+/// s -> <Op>
+fromJs = \j -> {
+  A = js.ra(j);
+  tp = js.rs(A[0]);
+  return switch (tp) {
+    "se": [tp, js.rs(A[1]), js.ri(A[2]), js.rf(A[3])];
+    "bu": [tp, js.rs(A[1]), js.ri(A[2]), js.rf(A[3])];
+    "st": [tp, js.rs(A[1]), js.ri(A[2]), js.rf(A[3])];
+    "in": [tp, js.rf(A[1])];
+    "wi": [tp, js.rf(A[1])];
+    "pr": [tp, js.rf(A[1]), js.rs(A[2])];
+    "fe": [tp, js.rf(A[1]), js.rs(A[2])];
+    "pd": [tp, js.rf(A[1]), js.rs(A[2])];
+    "nd": [tp, js.rf(A[1]), js.rs(A[2])];
+    default: sys.fail("Operation type '" + tp + "' is unknown.");
+  };
+};

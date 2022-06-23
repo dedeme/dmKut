@@ -32,7 +32,7 @@ function aceConf(ed, langIx) {
   });
   switch (langIx) {
   case 0:
-    ed.getSession().setMode("ace/mode/c_cpp");
+    ed.getSession().setMode("ace/mode/kmarkdown");
     break;
   case 1:
     ed.getSession().setMode("ace/mode/kut");
@@ -51,25 +51,80 @@ window.onload = function () {
 
 
 <body>
-<table class="main"><tr><td style="text-align:left">
-  <span class="title">Markdown Tests</span>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Code</span>
   </td><td style="text-align:right">
-  <span class="title">Code</span>
+  <span class="kmd-title">Markdown Tests</span>
 </td></tr></table>
 <hr>
 <p style="text-indent: 0px"><a href='2a-Definitions.html'>Anterior (Definitions)</a> · <a href="index.html">Índice</a> · <a href='3-Tables.html'>Posterior (Tables)</a></p>
 <hr>
-<p>Showing C code:</p>
+<script>
+window.MathJax = null;
+</script><p>Showing Kmarkdown code:</p>
 <script>
   aceFns.push(() => {
     ed = ace.edit("ed1");
     aceConf(ed, 0);
   });
 </script>
-<table ><tr><td><div id="ed1" class="aceEditor">
-if (x == 3) {
-  return 3 + 2;
-}
+<table ><tr><td><div id="ed1" class="kmd-aceEditor">
+=
+title = A Title.
+=
+
+* Header 1
+
+&lt;{l1
+E1
+E2
+}&gt;
+&lt;{d
+Término
+  Definición
+}&gt;
+
+** Header 2
+
+A table
+
+&lt;{T|lr
+a
+b &lt;($)&gt; &lt;(&lt;)&gt; &lt;(&)&gt; &lt;(·)&gt; &lt;(\\)&gt; &lt;(//)&gt; &lt;(__)&gt;
+
+-
+e
+}&gt;
+
+*** Header 3
+
+Aquí una imágen &lt;{I23 favicon}&gt y
+un hipervínculo &lt;{h sub/target.html tg}&gt;
+
+Texto en &lt;{v &lt;b&gt;}&gthtml&lt;{v &lt/b&gt;}&gt; auténtico.
+
+Línea con ····blancos···· separando.
+
+&lt;{c0 a lang
+Code
+}&gt;
+
+&lt;{V
+Html
+}&gt;
+
+&lt;|fc a frame
+
+&lt;|Il23 An image
+
+&lt;|a|r An aligned &lt;div&gt;
+
+Unas fórmulas:
+
+Fórmula normal $2 + 2$ y fórmula centrada $$5 * 3$$.
+
+Un poco de //cursiva//, otro poco de ##codigo## y otro poco de
+__subrayado__ al final.
 </div></td></tr></table>
 <p>Showing Kut code:</p>
 <script>
@@ -78,7 +133,7 @@ if (x == 3) {
     aceConf(ed, 1);
   });
 </script>
-<table  align='center'><tr><td><div id="ed2" class="aceEditor">
+<table  align='center'><tr><td><div id="ed2" class="kmd-aceEditor">
 /** Multi comment
 comment
 */
@@ -100,10 +155,9 @@ sys.println(R[0][0:2]);
 raraAvis = {"a": 1};
 sys.println(RaraAvis.a);
 
-fun = \a, b -> {
+fun = \a, b -&gt; {
   return a + b + 0xfF32;
 };
-
 </div></td></tr></table>
 
 </body>

@@ -1,0 +1,11 @@
+// Using linux command sha256sum
+sha256Str = \s ->
+  return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | sha256sum"])[0][:64];;
+
+test = \s, ex ->
+  sys.println(str.fmt(
+    "String: %s\n  Expected: %s\n  Actual  : %s",
+    [js.ws(s), ex, sha256Str(s)]
+  ));;
+
+test("Rosetta code", "764faf5c61ac315f1497f9dfa542713965b785e5cc2f707d6468d7d1124cdfcf");

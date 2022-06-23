@@ -1,0 +1,32 @@
+// Copyright 19-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Strategy which select the worst team.
+
+import "data/cts";
+import "data/strategy";
+import "data/rs";
+
+home = rs.home;
+out = rs.out;
+pond1 = 0.4336;
+pondx = 0.2901;
+
+/// Returns a Worsteam strategy.
+/// \-> <Strategy-WorstTeam>
+mk = \-> return strategy.new(
+  "Team-Worst",
+  "Choose the worst team.",
+  \Points, Bet -> {
+    top = math.toFloat(Points[home] + Points[out]);
+    sum = top * 2.0;
+    dif = math.toFloat(Points[home] - Points[out]);
+
+    up = sum * pond1 - top;
+    down = sum * pondx - top;
+    return dif >= up ? cts.r2
+      : dif >= down ? cts.rx
+      : cts.r1
+    ;
+  }
+);;

@@ -1,0 +1,260 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>Kmarkdown Tests</title>
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  case 2:
+    ed.getSession().setMode("ace/mode/javascript");
+    break;
+  case 3:
+    ed.getSession().setMode("ace/mode/css");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+</head>
+
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Marcas de Párrafo</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='02-Encabezado.html'>Anterior (Encabezado)</a> · <a href="index.html">Índice</a> · <a href='04-MarcasDeComienzoDeParrafo.html'>Posterior (Marcas de Comienzo de Párrafo)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#hp:001'>Marcas de formato.</a><br>
+<a href='#hp:002'>Marcas especiales.</a><br>
+<a href='#hp:003'>Símbolos literales</a>
+<p>
+<hr>
+<h2 id='hp:001'>Marcas de formato.</h2>
+<p>Se pueden usar las siguientes marcas:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed1");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed1" class="kmd-aceEditor">
+Letra cursiva: //cursiva//.
+
+Subrayado: __subrayado__.
+
+Código: ##codigo##.
+
+Recuadro: ||Recuadro||.
+
+Varios blancos: varios ······ blancos.
+
+Fórmula en linea: \$4 \over 2\$.
+
+Fórmula centrada:
+
+\$\$4 \over 2\$\$
+</div></td></tr></table>
+<p>Lo que produce:</p>
+<div class="frame2"><p>Letra cursiva: <i>cursiva</i>.</p>
+<p>Subrayado: <u>subrayado</u>.</p>
+<p>Código: <code>codigo</code>.</p>
+<p>Recuadro: <span class='kmd-fm'>Recuadro</span>.</p>
+<p>Varios blancos: varios &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; blancos.</p>
+<p>Fórmula en linea: $4 \over 2$.</p>
+<p>Fórmula centrada:</p>
+<p>$$4 \over 2$$</p>
+</div><p>También se puede utilizar '\\\\' para forzar un salto de línea dentro del
+párrafo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed2");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed2" class="kmd-aceEditor">
+Este párrafo tiene \\\\ un salto de línea.
+</div></td></tr></table>
+<p>produce</p>
+<div class="frame1"><p>Este párrafo tiene <br> un salto de línea.</p>
+</div><h2 id='hp:002'>Marcas especiales.</h2>
+<p>Estas marcas tienen una marca apertura y otra de cierre.</p>
+<p>La marca de cierre siempre es la misma: <code>}></code>, mientras que la de
+apertura varía con cada caso.</p>
+<h3>Imagen</h3>
+<p>Inserta una imagen en medio de la línea.</p>
+<p><u>Marca</u>: <code>&lt;{[I|i][ancho] ruta }></code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>I</code></dt>
+<dd>  Con marco.</dd>
+<dt><code>i</code></dt>
+<dd>  Sin marco.</dd>
+<dt><i>ancho</i></dt>
+<dd>  Ancho de la imagen en pixels</dd>
+<dt><i>ruta</i></dt>
+<dd>  Ruta de la imagen.<br>
+  <br>
+  Si la imagen está en un subdirectorio llamdo 'img', no es necesario
+  escribirlo.<br>
+  Para indicar una imagen en el mismo directorio de la página, se debe usar
+  <code>./</code> (p.e. <code>./favicon</code>)<br>
+  <br>
+  Si la extensión de la imagen es <code>.png</code> no es necesaria indicarla.<br>
+  Una imagen sin extensión no se puede mostrar.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edR2");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edR2" class="kmd-aceEditor">
+Estas imágenes estan en el directorio ##img## y tienen la extesión ##.png##.
+Esta está recuadrada &lt;{I40 gnu}&gt; y esta &lt;{i50 gnu}&gt; no lo está.
+
+Esta última &lt;{I30 https://www.gnu.org/graphics/heckert_gnu.transp.small.png}&gt;
+está fuera de este servidor y podría también mostrarse prescindiendo de
+la extesión y en tamaño original:
+&lt;{I https://www.gnu.org/graphics/heckert_gnu.transp.small}&gt;.
+</div></td></tr></table>
+<p>se vería como</p>
+<div class="frame1"><p>Estas imágenes estan en el directorio <code>img</code> y tienen la extesión <code>.png</code>.
+Esta está recuadrada <img src='img/gnu.png' class='kmd-fm'  style='width:40px' > y esta <img src='img/gnu.png' style='width:50px' > no lo está.</p>
+<p>Esta última <img src='https://www.gnu.org/graphics/heckert_gnu.transp.small.png' class='kmd-fm'  style='width:30px' >
+está fuera de este servidor y podría también mostrarse prescindiendo de
+la extesión y en tamaño original:
+<img src='https://www.gnu.org/graphics/heckert_gnu.transp.small' class='kmd-fm' >.</p>
+</div><h3>Hipervínculo</h3>
+<p>Inserta un hipervínculo en la línea.</p>
+<p><u>Marca</u>: <code>&lt;{h ruta [etiqueta] }></code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>h</code></dt>
+<dd>  Discriminador de la marca.</dd>
+<dt><i>ruta</i></dt>
+<dd>  La ruta destino. Corresponde a la propiedad <code>html</code> de la marca de html
+  <code>&lt;a></code>.</dd>
+<dt><i>etiqueta</i></dt>
+<dd>  Etiqueta que se mostrará para pinchar sobre ella.<br>
+  <br>
+  Si no se indica se utilizará la última parte de la ruta.</dd>
+</dl>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edR3");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edR3" class="kmd-aceEditor">
+Hipervínculo sin etiqueta: &lt;{h https://www.gnu.org/education/education.html}&gt;
+y con etiqueta &lt;{h
+https://www.gnu.org/education/education.html Gnu-Educación }&gt;.
+</div></td></tr></table>
+<p>mostrará</p>
+<div class="frame1"><p>Hipervínculo sin etiqueta: <a href='https://www.gnu.org/education/education.html'>education</a>
+y con etiqueta <a href='https://www.gnu.org/education/education.html'>Gnu-Educación</a>.</p>
+</div><h3>Html literal</h3>
+<p>Permite introducir <i>html</i> directamente.</p>
+<p><u>Marca</u>: <code>&lt;{v</code></p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edR4");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edR4" class="kmd-aceEditor">
+Poner texto &lt;{v &lt;b&gt;}&gt;en negrita&lt;{v &lt;/b&gt;}&gt; es difícil, pero no
+&lt;{v &lt;big&gt;}&gt;imposible&lt;{v &lt;/big&gt;}&gt;.
+</div></td></tr></table>
+<p>mostrará</p>
+<div class="frame1"><p>Poner texto  <b>en negrita </b> es difícil, pero no
+ <big>imposible </big>.</p>
+</div><h2 id='hp:003'>Símbolos literales</h2>
+<p>Si se quiere utilizar los símbolos de formato de manera literal se dispone
+de las siguientes marcas:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edL1");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edL1" class="kmd-aceEditor">
+Literales:\\\
+&lt;($)&gt; \\\
+&lt;(&lt;)&gt; \\\
+&lt;(&)&gt; \\\
+&lt;(·)&gt; \\\
+&lt;(\\\\)&gt; \\\
+&lt;(//)&gt; \\\
+&lt;(__)&gt; \\\
+&lt;(||)&gt; \\\
+&lt;(##)&gt;
+</div></td></tr></table>
+<p>que producen</p>
+<div class="frame1"><p>Literales:<br>
+&#036; <br>
+&lt; <br>
+&amp; <br>
+· <br>
+\\\\ -- Con MathJax activado produce \\<br>
+// <br>
+__ <br>
+|| <br>
+##</p>
+</div><div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

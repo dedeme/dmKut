@@ -1,0 +1,42 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Type a<TBet>. Team bet in a match for reading in Sportium.
+
+import "data/bet" : bt;
+
+/// Field index 0. Day of match (1-31)
+day = 0;
+/// Field index 1. Home team.
+home = 1;
+/// Field index 2. Out team.
+out = 2;
+/// Field index 3. Bet for each result.
+bet = 3;
+
+/// Constructor
+///   day: Day of match (1-31)
+///   home: Home team.
+///   out: Out team.
+///   bet: Bet for each result.
+/// \i, s, s, <Bet> -> <TBet>
+new = \day, home, out, bet -> return [day, home, out, bet];;
+
+/// \<TBet> -> s
+toJs = \T -> return js.wa([
+  js.wi(T[day]),
+  js.ws(T[home]),
+  js.ws(T[out]),
+  bt.toJs(T[bet])
+]);;
+
+/// \s -> <TBet>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.ri(A[0]),
+    js.rs(A[1]),
+    js.rs(A[2]),
+    bt.fromJs(A[3])
+  );
+};

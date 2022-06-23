@@ -1,0 +1,17 @@
+// a[e...], \e,e->b -> [[e...]...]
+perm = \A -> {
+  sz = arr.size(A);
+  if (sz < 2) return [A];
+  R = [];
+  for (e, i = A) {
+    Sub = [];
+    for (e2, j = A) if (i != j) arr.push(Sub, e2);
+    for (P = perm(Sub)) {
+      arr.unshift(P, e);
+      arr.push(R, P);
+    }
+  }
+  return R;
+};
+
+for (P = perm([1, 2, 3])) sys.println(arr.toStr(P));

@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="../img/favicon.png" />
+<link rel="stylesheet" href="../styles.css" type="text/css" />
+<title>Kmarkdown Tests</title>
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+</head>
+
+
+<body>
+<p style='text-indent:0px'>
+<a href='#hp:001'>Tipo H2</a>
+<p>
+<hr>
+<h1>Tipo H1</h1>
+<h2 id='hp:001'>Tipo H2</h2>
+<h3>Tipo H3</h3>
+
+</body>
+</html>

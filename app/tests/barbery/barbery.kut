@@ -1,0 +1,18 @@
+// Copyright 21-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "clock";
+import "client";
+import "barber";
+
+sys.rand();
+
+clockTh = thread.start(clock.run);
+clientMakerTh = thread.start(client.makerRun);
+barberTh = thread.start(barber.run);
+
+thread.join(clockTh);
+thread.join(clientMakerTh);
+thread.join(barberTh);
+
+sys.println("Program end.");

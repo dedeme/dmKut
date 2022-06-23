@@ -1,0 +1,25 @@
+// Copyright 01-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pair Model - Float.
+
+/// \s, f -> m<ModelFloat>
+new = \model, value ->  return {
+  model,
+  value
+};;
+
+/// \<ModelValue> -> s
+toJs = \Mf -> return js.wa([
+  js.ws(Mf.model),
+  js.wf(Mf.value)
+]);;
+
+/// \s -> <ModelValue>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    js.rf(A[1])
+  );
+};

@@ -1,0 +1,274 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>Kmarkdown Tests</title>
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  case 2:
+    ed.getSession().setMode("ace/mode/javascript");
+    break;
+  case 3:
+    ed.getSession().setMode("ace/mode/css");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+</head>
+
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Marcas de Comienzo de Párrafo</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='03-MarcasDeParrafo.html'>Anterior (Marcas de Párrafo)</a> · <a href="index.html">Índice</a> · <a href='05-MarcasDeBloque.html'>Posterior (Marcas de Bloque)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#hp:001'>Descripción</a><br>
+<a href='#hp:002'>Encabezados</a><br>
+<a href='#hp:003'>Otras marcas:</a>
+<p>
+<hr>
+<h2 id='hp:001'>Descripción</h2>
+<p>Son marcas que sólo pueden situarse al comienzo de un párrafo, y extienden
+su efecto únicamente al párrafo en el que se encuentran.</p>
+<h2 id='hp:002'>Encabezados</h2>
+<p>Hay tres niveles:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed1");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed1" class="kmd-aceEditor">
+* Tipo H1
+
+  ** Tipo H2
+
+  *** Tipo H3
+</div></td></tr></table>
+<p>Si en el apartado de configuración se establece el párametro <code>numbererd</code>
+el encabezado tipo <code>**</code> aparecerá numerado.</p>
+<p>Con los encabezados de este tipo (<code>**</code>) se construirá un índice al comienzo
+de la página.</p>
+<p><a href='ex/headers1.html'>Aquí</a> se ve el resultado del código anterior sin el
+parámetro <code>numbered</code> y <a href='ex/headers2.html'>aquí</a> con el mismo código
+ye el dicho parámetro.</p>
+<h2 id='hp:003'>Otras marcas:</h2>
+<h3>Recuadro</h3>
+<p>Recuadra el actual párrafo.</p>
+<p><u>Marca</u>: <code>&lt;|[F|f]c?</code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>F</code></dt>
+<dd>  Crea un marco con fondo blanco.</dd>
+<dt><code>f</code></dt>
+<dd>  Crea un marco con fondo transparente.</dd>
+<dt><code>c</code></dt>
+<dd>  (Opcional) Centra el recuadro.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed2");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed2" class="kmd-aceEditor">
+&lt;|F Recuadro con fondo\\\\blanco
+
+·
+
+&lt;|f Recuadro con fondo\\\\tansparente
+
+·
+
+&lt;|Fc Recuadro centrado con fondo\\\\blanco
+
+·
+
+&lt;|fc Recuadro centrado con fondo\\\\tansparente
+</div></td></tr></table>
+<p>produce</p>
+<div class="frame2"><table><tr><td class='kmd-fm'>
+ Recuadro con fondo<br>blanco
+</td></tr></table>
+<p>&nbsp;</p>
+<table><tr><td class='kmd-fm2'>
+ Recuadro con fondo<br>tansparente
+</td></tr></table>
+<p>&nbsp;</p>
+<table align="center"><tr><td class='kmd-fm'>
+ Recuadro centrado con fondo<br>blanco
+</td></tr></table>
+<p>&nbsp;</p>
+<table align="center"><tr><td class='kmd-fm2'>
+ Recuadro centrado con fondo<br>tansparente
+</td></tr></table>
+</div><h3>Imagen</h3>
+<p>Inserta una imagen en la página.</p>
+<p><u>Marca</u>: <code>&lt;|[I|i][l|r]?[ancho] ruta</code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>I</code></dt>
+<dd>  Crea una imagen dentro de un recuadro.</dd>
+<dt><code>i</code></dt>
+<dd>  Crea una imagen sin recuadro.</dd>
+<dt><code>l</code></dt>
+<dd>  (Opcional) Sitúa la imagen a la izquierda del texto, que discurre por su
+  derecha.</dd>
+<dt><code>r</code></dt>
+<dd>  (Opcional) Sitúa la imagen a la derecha del texto, que discurre por su
+  izquierda.</dd>
+<dt><i>?</i></dt>
+<dd>  Si no se indican <code>l</code> ni <code>r</code> la imagen aparecerá centrada el texto
+  aparecerá después de ella.</dd>
+<dt><i>ancho</i></dt>
+<dd>  Ancho de la imagen en pixels.</dd>
+<dt><i>ruta</i></dt>
+<dd>    Ruta de la imagen.<br>
+  <br>
+  Si la imagen está en un subdirectorio llamdo 'img', no es necesario
+  escribirlo.<br>
+  Para indicar una imagen en el mismo directorio de la página, se debe usar
+  <code>./</code> (p.e. <code>./favicon</code>)<br>
+  <br>
+  Si la extensión de la imagen es <code>.png</code> no es necesaria indicarla.<br>
+  Una imagen sin extensión no se puede mostrar.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed3");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed3" class="kmd-aceEditor">
+Imagen recuadrada en el centro
+
+&lt;|I gnu
+
+y texto subsiguiente\\\\con tres\\\\líneas.
+
+Imagen recuadrada a la izquierda
+
+&lt;|Il40 gnu
+
+y texto\\\\subsiguiente\\\\con\\\\cinco\\\\líneas.
+
+Imagen sin recuadro a la derecha
+
+&lt;|ir40 https://www.gnu.org/graphics/heckert_gnu.transp.small
+
+y texto subsiguiente\\\\con tres\\\\líneas.
+</div></td></tr></table>
+<p>se ve</p>
+<div class="frame1"><p>Imagen recuadrada en el centro</p>
+<div  style='padding:4px;text-align:center' ><img src='img/gnu.png' class='kmd-fm' ></div>
+<p>y texto subsiguiente<br>con tres<br>líneas.</p>
+<p>Imagen recuadrada a la izquierda</p>
+<div  style='padding:4px;float:left' ><img src='img/gnu.png' class='kmd-fm'  style='width:40px' ></div>
+<p>y texto<br>subsiguiente<br>con<br>cinco<br>líneas.</p>
+<p>Imagen sin recuadro a la derecha</p>
+<div  style='padding:4px;float:right' ><img src='https://www.gnu.org/graphics/heckert_gnu.transp.small' style='width:40px' ></div>
+<p>y texto subsiguiente<br>con tres<br>líneas.</p>
+</div><h3>Alineación</h3>
+<p>Permite alinear un párrafo.</p>
+<p><u>Marca</u>: <code>&lt;[A|a]|?[l|r]?</code></p>
+<p><u>Opciones</u>:</p>
+
+<dl>
+<dt><code>A</code></dt>
+<dd>  Pone el texto con fondo blanco.</dd>
+<dt><code>i</code></dt>
+<dd>  Pone el texto con fondo transparente.</dd>
+<dt><code>|</code></dt>
+<dd>  (Opcional) Pone el texto dentro de un marco.</dd>
+<dt><code>l</code></dt>
+<dd>  (Opcional) Sitúa el contenido a la izquierda del texto principal, que
+  discurre por su derecha.</dd>
+<dt><code>r</code></dt>
+<dd>  (Opcional) Sitúa el contenido a la derecha del texto principal, que
+  discurre por su izquierda.</dd>
+<dt><i>?</i></dt>
+<dd>  Si no se indican <code>l</code> ni <code>r</code> el contenido aparecerá centrada el texto
+  principal aparecerá después de él.</dd>
+</dl>
+<p><u>Ejemplos</u>:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed4");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed4" class="kmd-aceEditor">
+&lt;|A|l //Texto\\\\alineado a la izquierda,\\\\con marco y fondo blanco//
+
+y texto\\\\principal\\\\con\\\\cinco\\\\líneas.
+
+&lt;|a //Texto\\\\centrado//
+
+y texto\\\\principal\\\\con\\\\cinco\\\\líneas.
+
+&lt;|ar //Texto alineado a la derecha,\\\\sin  marco y fondo transparente//
+
+y texto\\\\principal\\\\con\\\\cinco\\\\líneas.
+</div></td></tr></table>
+<p>se ve</p>
+<div class="frame2"><div style='padding:4px;float:left'><div style='background-color:  rgb(255, 250, 250);border: 1px solid rgb(110,130,150); padding: 4px;border-radius: 4px;'> <i>Texto<br>alineado a la izquierda,<br>con marco y fondo blanco</i></div></div><p>y texto<br>principal<br>con<br>cinco<br>líneas.</p>
+<div style='padding:4px;text-align:center'><div style=''> <i>Texto<br>centrado</i></div></div><p>y texto<br>principal<br>con<br>cinco<br>líneas.</p>
+<div style='padding:4px;float:right'><div style=''> <i>Texto alineado a la derecha,<br>sin  marco y fondo transparente</i></div></div><p>y texto<br>principal<br>con<br>cinco<br>líneas.</p>
+</div><div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

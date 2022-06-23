@@ -1,0 +1,52 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Type a<Rs>. Scores of a single match.
+
+import "data/cts";
+
+/// Field index 0. Home score.
+home = 0;
+/// Field index 1. Out score.
+out = 1;
+
+/// Constructor.
+///   home: Score of home team.
+///   out : Score of out team.
+/// \i, i -> <Rs>
+new = \home, out -> return [home, out];;
+
+/// Returns 'true' if both scores, home and out, are equals.
+/// \<Rs>, <Rs> -> b
+eq = \R1, R2 -> return R1[0] == R2[0] & R1[1] == R2[1];;
+
+/// Returns the value 1x2 of a 'Rs'. Returns is one of 'cts.r1', 'cts.rx' or
+/// 'cts.r2'.
+/// \<Rs> -> i
+value = \R -> return R[0] > R[1] ? cts.r1 : R[1] > R[0] ? cts.r2 : cts.rx;;
+
+/// \<Rs> -> s
+toJs = \R -> return js.wa([
+  js.wi(R[0]),
+  js.wi(R[1])
+]);;
+
+/// \s -> <Rs>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.ri(A[0]),
+    js.ri(A[1])
+  );
+};
+
+/// \[([<Rs>]|[])...] -> s
+rowToJs = \Row -> return js.wa(arr.mp(
+  Row, \Cell -> return arr.empty(Cell) ? js.wn() : toJs(Cell!);
+));;
+
+/// \s -> [([<Rs>]|[])...]
+rowFromJs = \j -> return arr.mp(
+  js.ra(j), \c -> return js.isNull(c) ? [] : [fromJs(c)];
+);;
+

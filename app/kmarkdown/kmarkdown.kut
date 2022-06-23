@@ -7,21 +7,25 @@ import "err";
 import "top";
 import "metadata";
 
-// \s, m -> ()
+/// Write 'index.html' page.
+///   dir   : Web root directory.
+///   header: Text of file '000header.html'
+///   Meta  : Page metadata. See 'metadata'.
+/// \s, m -> ()
 writeIndex = \dir, header, Meta -> {
   fhtml = path.cat([dir, "index.html"]);
   head = str.fmt("""
-    <table class="main"><tr><td style="text-align:left">
-      <span class="title">%s</span>
+    <table class="kmd-main"><tr><td style="text-align:left">
+      <span class="kmd-title">%s</span>
       </td><td style="text-align:right">
-      <span class="title">Índice</span>
+      <span class="kdm-title">Índice</span>
     </td></tr></table>
     <hr>
     """,
     [Meta.book]
   );
   index = arr.join(arr.mp(Meta.pages, \p ->
-    return "<a href='" + p.fpage + ".html'>" + p.title + "</a>";
+    return "<a href='" + path.base(p.fpage) + ".html'>" + p.title + "</a>";
   ), "<br>\n");
 
   file.write(fhtml,
@@ -36,40 +40,43 @@ writeIndex = \dir, header, Meta -> {
 };
 
 /// Processes a file.
+///   header: Path of HTML file '000header.html'.
+///   Meta  : Page metadata. See 'metadata'.
+///   fkmd  : Path fo '.kmd' file.
 /// \s, m, s -> ()
 processFile = \header, Meta, fkmd -> {
   fkmdName = fkmd[:-4];
   PageMeta = metadata.getCurrent(Meta.pages, fkmdName);
   PrevMeta = metadata.getPrevious(Meta.pages, fkmdName);
   NextMeta = metadata.getNext(Meta.pages, fkmdName);
-  isNumbered = arr.empty(PageMeta) ? false : PageMeta!.isNumbered;
+  numbered = arr.empty(PageMeta) ? false : PageMeta!.numbered;
   withUp = arr.empty(PageMeta) ? false : PageMeta!.withUp;
   withDown = arr.empty(PageMeta) ? false : PageMeta!.withDown;
   head = Meta.book == ""
     ? ""
     : str.fmt("""
-        <table class="main"><tr><td style="text-align:left">
-          <span class="title">%s</span>
+        <table class="kmd-main"><tr><td style="text-align:left">
+          <span class="kmd-title">%s</span>
           </td><td style="text-align:right">
-          <span class="title">%s</span>
+          <span class="kmd-title">%s</span>
         </td></tr></table>
         <hr>
         <p style="text-indent: 0px">%s<a href="index.html">Índice</a>%s</p>
         <hr>
         """,
-        [ Meta.book,
-          arr.empty(PageMeta) ? "" : PageMeta!.title,
+        [ arr.empty(PageMeta) ? "" : PageMeta!.title,
+          Meta.book,
           arr.empty(PrevMeta)
             ? ""
             : "<a href='" +
-              PrevMeta!.fpage +
+              path.base(PrevMeta!.fpage) +
               ".html'>Anterior (" +
               PrevMeta!.title +
               ")</a> · ",
           arr.empty(NextMeta)
             ? ""
             : " · <a href='" +
-              NextMeta!.fpage +
+              path.base(NextMeta!.fpage) +
               ".html'>Posterior (" +
               NextMeta!.title +
               ")</a>"
@@ -77,7 +84,7 @@ processFile = \header, Meta, fkmd -> {
       )
   ;
   Hs = [];
-  body = top.process(isNumbered, Hs, file.read(fkmd));
+  body = top.process(numbered, Hs, file.read(fkmd));
   index = arr.empty(Hs)
     ? ""
     : str.fmt("""
@@ -93,7 +100,6 @@ processFile = \header, Meta, fkmd -> {
         ]
       )
   ;
-  md = file.read(fkmd);
   fhtml = fkmd[:-3] + "html";
   file.write(fhtml,
     "<!doctype html>\n<html>\n" +
@@ -135,10 +141,11 @@ processFile = \header, Meta, fkmd -> {
 };
 
 /// Processes a directory.
+///   dir: Web root directory.
 /// \s -> ()
 processDir = \dir -> {
   Fkmds = [];
-  for (f : file.dir(dir)) {
+  for (f = file.dir(dir)) {
     fpath = path.cat([dir, f]);
     if (file.isDirectory(fpath)) {
       processDir(fpath);
@@ -160,11 +167,12 @@ processDir = \dir -> {
 
   if (Meta.book != "") writeIndex(dir, header, Meta);
 
-  for (fkmd : Fkmds) {
+  for (fkmd = Fkmds) {
     err.setFile(fkmd);
-
     processFile(header, Meta, fkmd);
   }
 };
+
+
 
 processDir("./");

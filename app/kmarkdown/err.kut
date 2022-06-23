@@ -5,9 +5,15 @@
 
 File = [""];
 
-// \s -> ()
+/// Set the current processing file.
+///   fpath: File path.
+/// \s -> ()
 setFile = \fpath -> File! = fpath;;
 
+/// Shows in console an error message
+///   msg: Message to show.
+///   tx : Text where the error happend. It will be show with a maximun of
+///        50 characters.
 /// s, s -> ()
 show = \msg, tx -> {
   tx2 = str.len(tx) > 50 ? tx[:47] + "..." : tx;
@@ -16,7 +22,7 @@ show = \msg, tx -> {
     File! + ":\n" +
     msg +
     "\n---------- in:\n" +
-    tx +
+    tx2 +
     "\n--------------------------------------------------"
   );
 };

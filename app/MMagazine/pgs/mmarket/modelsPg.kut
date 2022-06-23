@@ -1,0 +1,44 @@
+// Copyright 01-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Models page.
+
+import "dm/cgi";
+import "db";
+import "data/modelFloats";
+import "data/modelFloat";
+
+/// \m -> s
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata": {
+      Rp = {};
+      Rp.type = Rq.type;
+      switch (js.rs(Rq.type)) {
+        "total": Rp.dataGroups = db.totalsModelSimProfitsDb().readJs();
+        "cash": Rp.dataGroups = db.cashesModelSimProfitsDb().readJs();
+        "ref": Rp.dataGroups = db.refsModelSimProfitsDb().readJs();
+        default: {
+          Rp.type = js.ws("points");
+          Rp.dataGroups = js.wa(arr.mp(
+            db.modelEvalsTb().read(),
+            \e -> return modelFloats.toJs(
+              modelFloats.new(
+                e.date,
+                arr.mp(
+                  e.evals,
+                  \ev -> return modelFloat.new(
+                    ev.model, math.toFloat(ev.eval) / 100.0
+                  );
+                )
+              )
+            );
+          ));
+        }
+      }
+      return cgi.rp(Rp);
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  };
+};

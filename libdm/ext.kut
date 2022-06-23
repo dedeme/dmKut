@@ -1,0 +1,58 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Functions using external programs.
+
+
+/// If 'isMozilla' is 'false', it calls "wget -q --no-cache -O - 'url'" and
+/// returns the text read.
+/// If 'isMozilla' is 'true', it calls:
+///   wget --user-agent Mozilla
+///     --load-cookies=/home/deme/.mozilla/firefox/bfrqeymk.default/cookies.sqlite
+///     -q --no-cache -O - url
+/// If the reading fails, it returns an empty string.
+/// \s, b -> s
+wget = \url, isMozilla -> {
+  moz = "--user-agent Mozilla " +
+    "--load-cookies=/home/deme/" +
+    ".mozilla/firefox/bfrqeymk.default/cookies.sqlite "
+  ;
+  Opts = ["-q", "--no-cache", "-O", "-", url];
+  if (isMozilla) arr.unshift(Opts, moz);
+  R = sys.cmd("wget", Opts);
+  if (R[1] != "" | R[0] == "") return "";
+  else return R[0];
+};
+
+/// Returns the md5 sum of a file. It calls "md5sum 'f'".
+///   f: File to check.
+/// \s -> s
+md5 = \f -> {
+  R = sys.cmd("md5sum", [f]);
+  if (R[1] != "") sys.fail(R[1]);
+  return R[0][:32];
+};
+
+/// Returns the md5 sum of a string. It calls
+///     bash -c "echo -n " + js.ws('s') + " | md5sum"
+///   s: String to check.
+/// \s -> s
+md5Str = \s ->
+  return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | md5sum"])[0][:32];;
+
+/// Returns the sha256 sum of a file. . It calls "sha256sum 'f'".
+///   f: File to check.
+/// \s -> s
+sha256 = \f -> {
+  R = sys.cmd("sha256sum", [f]);
+  if (R[1] != "") sys.fail(R[1]);
+  return R[0][:64];
+};
+
+/// Returns the sha256 sum of a string. It calls
+///     bash -c "echo -n " + js.ws('s') + " | sha256sum"
+///   s: String to check.
+/// \s -> s
+sha256Str = \s ->
+  return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | sha256sum"])[0][:64];;
+

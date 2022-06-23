@@ -9,7 +9,7 @@ Text1
 <{i favicon}>
 1,00
 
-<{F2 Text 2}>
+||Text 2||
 -
 1,00
 
@@ -18,14 +18,14 @@ Text 3
 234,00
 }>
 
-<|a <{F2 Segunda tabla}>\\·
+<|a ||Segunda tabla||\\·
 
 <{Tlcr
 Text1
 <{i favicon}>
 1,00
 
-<{F Text 2}>
+||Text 2||
 -
 1,00
 
@@ -41,7 +41,7 @@ Text1
 <{i favicon}>
 1,00
 
-<{F Text 2}>
+||Text 2||
 -
 1,00
 
@@ -50,14 +50,14 @@ Text 3
 234,00
 }>
 
-<|a <{f ·Cuarta <(·)> tabla·}>
+<|a Cuarta <(·)> tabla
 
 <{T|lcr
 Text1
 <{i favicon}>
 1,00
 
-<{F Text 2}>
+||Text 2||
 -
 1,00
 

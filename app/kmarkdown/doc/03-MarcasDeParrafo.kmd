@@ -1,0 +1,247 @@
+=
+  title = Marcas de Párrafo
+  withUp
+=
+
+** Marcas de formato.
+
+Se pueden usar las siguientes marcas:
+
+<{c0 ed1
+Letra cursiva: //cursiva//.
+
+Subrayado: __subrayado__.
+
+Código: ##codigo##.
+
+Recuadro: ||Recuadro||.
+
+Varios blancos: varios ······ blancos.
+
+Fórmula en linea: \$4 \over 2\$.
+
+Fórmula centrada:
+
+\$\$4 \over 2\$\$
+
+}>
+
+Lo que produce:
+
+<{V
+<div class="frame2">
+}>
+
+Letra cursiva: //cursiva//.
+
+Subrayado: __subrayado__.
+
+Código: ##codigo##.
+
+Recuadro: ||Recuadro||.
+
+Varios blancos: varios ······ blancos.
+
+Fórmula en linea: $4 \over 2$.
+
+Fórmula centrada:
+
+$$4 \over 2$$
+
+<{V
+</div>
+}>
+
+También se puede utilizar '<(\\)><(\\)>' para forzar un salto de línea dentro del
+párrafo:
+
+<{c0 ed2
+  Este párrafo tiene \\\\ un salto de línea.
+}>
+
+produce
+
+<{V
+<div class="frame1">
+}>
+Este párrafo tiene \\ un salto de línea.
+
+<{V
+</div>
+}>
+
+** Marcas especiales.
+
+Estas marcas tienen una marca apertura y otra de cierre.
+
+La marca de cierre siempre es la misma: ##}>##, mientras que la de
+apertura varía con cada caso.
+
+*** Imagen
+
+Inserta una imagen en medio de la línea.
+
+__Marca__: ##<{[I|i][ancho] ruta }>##
+
+__Opciones__:
+
+<{d
+##I##
+  Con marco.
+##i##
+  Sin marco.
+//ancho//
+  Ancho de la imagen en pixels
+//ruta//
+  Ruta de la imagen.\\
+  \\
+  Si la imagen está en un subdirectorio llamdo 'img', no es necesario
+  escribirlo.\\
+  Para indicar una imagen en el mismo directorio de la página, se debe usar
+  ##./## (p.e. ##./favicon##)\\
+  \\
+  Si la extensión de la imagen es ##.png## no es necesaria indicarla.\\
+  Una imagen sin extensión no se puede mostrar.
+
+}>
+
+__Ejemplos__:
+
+<{c0 edR2
+
+Estas imágenes estan en el directorio ##img## y tienen la extesión ##.png##.
+Esta está recuadrada <{I40 gnu}> y esta <{i50 gnu}> no lo está.
+
+Esta última <{I30 https://www.gnu.org/graphics/heckert_gnu.transp.small.png}>
+está fuera de este servidor y podría también mostrarse prescindiendo de
+la extesión y en tamaño original:
+<{I https://www.gnu.org/graphics/heckert_gnu.transp.small}>.
+
+}>
+
+se vería como
+
+<{V
+<div class="frame1">
+}>
+
+Estas imágenes estan en el directorio ##img## y tienen la extesión ##.png##.
+Esta está recuadrada <{I40 gnu}> y esta <{i50 gnu}> no lo está.
+
+Esta última <{I30 https://www.gnu.org/graphics/heckert_gnu.transp.small.png}>
+está fuera de este servidor y podría también mostrarse prescindiendo de
+la extesión y en tamaño original:
+<{I https://www.gnu.org/graphics/heckert_gnu.transp.small}>.
+
+
+<{V
+</div>
+}>
+
+*** Hipervínculo
+
+Inserta un hipervínculo en la línea.
+
+__Marca__: ##<(<)>{h ruta [etiqueta] }>##
+
+__Opciones__:
+
+<{d
+##h##
+  Discriminador de la marca.
+//ruta//
+  La ruta destino. Corresponde a la propiedad ##html## de la marca de html
+  ##<a>##.
+//etiqueta//
+  Etiqueta que se mostrará para pinchar sobre ella.\\
+  \\
+  Si no se indica se utilizará la última parte de la ruta.
+}>
+
+Ejemplo:
+
+<{c0 edR3
+
+Hipervínculo sin etiqueta: <{h https://www.gnu.org/education/education.html}>
+y con etiqueta <{h
+https://www.gnu.org/education/education.html Gnu-Educación }>.
+
+}>
+
+mostrará
+
+<{V
+<div class="frame1">
+}>
+Hipervínculo sin etiqueta: <{h https://www.gnu.org/education/education.html}>
+y con etiqueta <{h
+https://www.gnu.org/education/education.html Gnu-Educación }>.
+
+<{V
+</div>
+}>
+
+*** Html literal
+
+Permite introducir //html// directamente.
+
+__Marca__: ##<(<)>{v##
+
+Ejemplo:
+
+<{c0 edR4
+Poner texto <{v <b>}>en negrita<{v </b>}> es difícil, pero no
+<{v <big>}>imposible<{v </big>}>.
+
+}>
+
+mostrará
+
+<{V
+<div class="frame1">
+}>
+Poner texto <{v <b>}>en negrita<{v </b>}> es difícil, pero no
+<{v <big>}>imposible<{v </big>}>.
+
+<{V
+</div>
+}>
+
+** Símbolos literales
+
+Si se quiere utilizar los símbolos de formato de manera literal se dispone
+de las siguientes marcas:
+
+<{c0 edL1
+Literales:\\\
+<($)> \\\
+<(<)> \\\
+<(&)> \\\
+<(·)> \\\
+<(\\\\)> \\\
+<(//)> \\\
+<(__)> \\\
+<(||)> \\\
+<(##)>
+}>
+
+que producen
+
+<{V
+<div class="frame1">
+}>
+
+Literales:\\
+<($)> \\
+<(<)> \\
+<(&)> \\
+<(·)> \\
+<(\\)><(\\)> -- Con MathJax activado produce <(\\)>\\
+<(//)> \\
+<(__)> \\
+<(||)> \\
+<(##)>
+
+<{V
+</div>
+}>

@@ -1,0 +1,55 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Type a<Bet>. Amount of money bet
+
+import "data/cts";
+
+/// Field index 0. Bet for home team.
+r1 = 0;
+/// Field index 1. Bet for draw.
+rx = 1;
+/// Field index 2. Bet for out team.
+r2 = 2;
+
+/// Constructor.
+///   r1: Bet for home team
+///   rx: Bet for draw
+///   r2: Bet for out team
+/// \f, f, f -> a<Bet>
+new = \r1, rx, r2 -> return [r1, rx, r2];;
+
+/// Bet incomes of a result.
+///   Bet: Bet.
+///   rs : Match result.
+/// \<Bet>, i -> f
+incomes = \Bet, rs ->
+  return rs == cts.r1 ? Bet[r1] : rs == cts.r2 ? Bet[r2] : Bet[rx];;
+
+/// \<Bet> -> s
+toJs = \B -> return js.wa([
+  js.wf(B[r1]),
+  js.wf(B[rx]),
+  js.wf(B[r2])
+]);;
+
+/// s -> <Bet>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rf(A[0]),
+    js.rf(A[1]),
+    js.rf(A[2])
+  );
+};
+
+/// \[([<Bet>]|[])...] -> s
+rowToJs = \Row -> return js.wa(arr.mp(
+  Row, \Cell -> return arr.empty(Cell) ? js.wn() : toJs(Cell!);
+));;
+
+/// \s -> [([<Bet>]|[])...]
+rowFromJs = \j -> return arr.mp(
+  js.ra(j), \c -> return js.isNull(c) ? [] : [fromJs(c)];
+);;
+

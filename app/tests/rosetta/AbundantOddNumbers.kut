@@ -1,0 +1,42 @@
+getSum = \n -> {
+  sqrt = math.toInt(math.sqrt(math.toFloat(n)));
+  return iter.reduce(
+    [3:sqrt],
+    sqrt * sqrt == n ? sqrt + 1 : 1,
+    \sm, v -> return n % v == 0 ? sm + v + n / v : sm;
+  );
+};
+
+sys.println("The first 25 abundant odd numbers:");
+C = [0];
+N = [9];
+while () {
+  n = N!;
+  sum = getSum(n);
+  if (sum > n) {
+    if (C! < 25)
+      sys.println(("  " + math.toStr(n))[-5:] +
+        " proper divisor sum: " + ("  " + math.toStr(sum))[-5:]
+      );
+    else if (C! == 999) {
+      sys.println("1000th abundant odd number:");
+      sys.println(str.fmt("    %d proper divisor sum: %d", [n, sum]));
+    }
+    C! += 1;
+    if (C! == 1000) break;
+  }
+  N! += 2;
+}
+
+N! = 1000_000_001;
+while () {
+  n = N!;
+  sum = getSum(n);
+  if (sum > n) {
+    sys.println("First abundant odd number > 1000000000:");
+    sys.println(str.fmt("    %d proper divisor sum: %d", [n, sum]));
+    break;
+  }
+  N! += 2;
+}
+

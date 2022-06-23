@@ -1,0 +1,48 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program tests.
+
+import "net/marca";
+import "net/as";
+import "net/sportium";
+import "data/rs";
+import "data/bet";
+
+import "update";
+
+/// Run program tests.
+/// \-> ()
+run = \-> {
+/*
+  R1 = marca.read();
+//  for (Row = R1) {
+//    L = [""];
+//    for (C = Row) L! += (arr.empty(C) ? "[]" : rs.toJs(C!)) + " ";
+//    sys.println(L!);
+//  }
+
+  R2 = as.read();
+//  for (Row = R2) {
+//    L = [""];
+//    for (C = Row) L! += (arr.empty(C) ? "[]" : rs.toJs(C!)) + " ";
+//    sys.println(L!);
+//  }
+
+  assert arr.size(R1) == arr.size(R2);
+  for (i = 0:arr.size(R1)) {
+    Row1 = R1[i];
+    Row2 = R2[i];
+    assert arr.size(Row1) == arr.size(Row2);
+    for (j = 0:arr.size(Row1)) {
+      Rs1 = Row1[j];
+      Rs2 = Row2[j];
+      assert (arr.empty(Rs1) & arr.empty(Rs2)) | rs.eq(Rs1!, Rs2!);
+    }
+  }
+
+  Bets = sportium.read();
+  assert arr.size(Bets) > 0;
+*/
+  update.run();
+};

@@ -1,0 +1,71 @@
+// Copyright 01-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Retrieves simulation data from MMarket.
+
+import "data/modelFloat";
+import "data/mmarket/simProfitsRow";
+import "data/mmarket/simProfits";
+
+dir = "/home/deme/.dmCApp/MMarket/data/simulation";
+
+// s -> s
+fpath = \model -> return path.cat([dir, model + ".tb"]);;
+
+/// Returns model list.
+/// \-> [s...]
+list = \-> return arr.mp(
+  arr.filter(
+    file.dir(dir),
+    \f -> return str.ends(f, ".tb");
+  ),
+  \f -> return f[:-3];
+);;
+
+// Returns last ranking of simulation profits.
+//   type: It can be: 't' (total), 'c' (cash) or 'r' (refs)
+//  \s -> [<ModelFloat>...]
+ranking = \type -> {
+  // \s-> <ModelFloat>
+  lastBest = \f -> {
+    model = f[0:-3];
+    fpath = path.cat([dir, f]);
+    Rk = arr.mp(
+      js.ra(js.ra(file.read(fpath))[1]),
+      \E -> return simProfitsRow.fromJs(E);
+    );
+    hprofits = simProfitsRow.hprofits;
+    total = simProfits.total;
+    cash = simProfits.cash;
+    ref = simProfits.ref;
+    return modelFloat.new(
+      model,
+      math.round(arr.reduce(
+        Rk,
+        0.0,
+        \r, E -> return switch (type){
+          "t": E[hprofits][total] > r ? E[hprofits][total] : r;
+          "c": E[hprofits][cash] > r ? E[hprofits][cash] : r;
+          default: E[hprofits][ref] > r ? E[hprofits][ref] : r;
+        };
+      ), 2)
+    );
+  };
+
+  return arr.mp(
+    arr.filter(file.dir(dir), \e -> return str.ends(e, ".tb");),
+    \f -> return lastBest(f);
+  );
+};
+
+/// Returns the best total assets of each model.
+/// \-> [<ModelFloat>...]
+totalsRanking = \-> return ranking("t");;
+
+/// Returns the best cash assets of each model.
+/// \-> [<ModelFloat>...]
+cashesRanking = \-> return ranking("c");;
+
+/// Returns the best reference (risk) assets of each model.
+/// \-> [<ModelFloat>...]
+refsRanking = \-> return ranking("r");;

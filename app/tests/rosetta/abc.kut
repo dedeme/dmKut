@@ -1,0 +1,21 @@
+Blocks = ["BO", "XK", "DQ", "CP", "NA", "GT", "RE", "TG", "QD", "FS", "JW",
+  "HU", "VI", "AN", "OB", "ER", "FS", "LY", "PC", "ZM"];
+
+canMakeWord = \w, Bks -> {
+  if (w == "") return true;
+  ch = w[0];
+  w2 = w[1:];
+  for (b, i = Bks) {
+    if (str.index(b, ch) != -1) {
+      if (canMakeWord(w2, Bks[:i] + Bks[i+1:])) return true;
+    }
+  }
+  return false;
+};
+
+for (w = ["A", "BARK", "book", "TREAT", "COMMON", "SQUAD", "CONFuSE"])
+  sys.println(str.fmt(
+    "%s can %sbe made", [
+      w,
+      canMakeWord(str.toUpper(w), Blocks) ? "" : "not "
+    ]));

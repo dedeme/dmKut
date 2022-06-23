@@ -1,0 +1,40 @@
+// Copyright 19-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Strategy which select the best prospect, crossing ponderation of results and
+/// payments.
+
+import "data/cts";
+import "data/strategy";
+import "data/bet";
+import "data/rs";
+
+home = rs.home;
+out = rs.out;
+r1 = bet.r1;
+rx = bet.rx;
+r2 = bet.r2;
+pond1 = 0.5664;
+pondx = 0.1435;
+pond2 = 0.2901;
+
+/// Returns a Besteam strategy.
+/// \-> <Strategy-BestTeam>
+mk = \-> return strategy.new(
+  "Poderation-Best",
+  "Choose the best prospect, crossing ponderation of results and payments.",
+  \Points, Bet -> {
+    psum = math.toFloat(Points[home] + Points[out]);
+    v1 = math.toFloat(Points[home]) * pond1 * (Bet[r1] - 1.0) / psum;
+    v2 = math.toFloat(Points[out]) * pond2 * (Bet[r2] - 1.0) / psum;
+    vx = (1.0 - math.abs(math.toFloat(Points[home] - Points[out]))) *
+      pondx * (Bet[rx] - 1.0);
+
+    return v1 >= vx & v1 >= v2
+      ? cts.r1
+      : vx >= v2
+        ? cts.rx
+        : cts.r2
+    ;
+  }
+);;

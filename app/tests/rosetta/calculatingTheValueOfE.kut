@@ -1,0 +1,24 @@
+// Copyright 14-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+// Dicrect
+sys.println(str.fmt("e = %.15f", [math.exp(1.0)]));
+
+// Functional
+sys.println(str.fmt(
+  "e = %.15f",
+  [ iter.reduce([1 : 22], [1.0, 1.0], \P, x -> {
+      flx = P[1] * math.toFloat(x);
+      return [P[0] + (1.0 / flx), flx];
+    })[0]
+  ]
+));
+
+// Imperative
+E = [1.0];
+Fact = [1];
+for (x = 1:20) {
+  Fact! *= x;
+  E! += 1.0 / math.toFloat(Fact!);
+}
+sys.println(str.fmt("e = %.15f", [E!]));

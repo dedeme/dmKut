@@ -1,0 +1,44 @@
+// Copyright 21-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "shop";
+import "clock";
+import "cts";
+
+cutHair = \cl -> {
+  sys.println(str.fmt("Barber: Cutting hair to %s", [cl]));
+  sys.println(str.fmt("Shop: %s", [shop.showSits()]));
+  sys.sleep(cts.barberTime);
+};
+
+run = \ -> {
+  sys.println("Barber: Go out from home");
+  sys.sleep(1000);
+  sys.println("Barber: Open barbery");
+  shop.open();
+
+  End = [false];
+  Sleeping = [false];
+  while (!End!) {
+    Cl = [""];
+    thread.sync(\ -> {
+      if (clock.TimeOver! & shop.IsOpen!) {
+        sys.println("Barber: Close barbery");
+        shop.close();
+      }
+
+      if (shop.isEmpty()) {
+        if (!shop.IsOpen!) End! = true;
+        else if (!Sleeping!) {
+          Sleeping! = true;
+          sys.println("Barber: Barber is sleeping");
+        }
+      } else {
+        Sleeping! = false;
+        Cl! = shop.takeAClient();
+      }
+    });
+    if (Cl! != "") cutHair(Cl!);
+    else if (!End!) sys.sleep(10);
+  }
+};

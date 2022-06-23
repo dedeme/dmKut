@@ -4,19 +4,24 @@
 /// Processing paragraph marks.
 
 import "inner";
+import "err";
 
 /// Processes '* '
+///   tx     : Paragraph text.
 /// \s -> s
 h1 = \tx -> return "<h1>" + inner.process(tx) + "</h1>\n";;
 
 /// Processes '*** '
+///   tx     : Paragraph text.
 /// \s -> s
 h3 = \tx -> return "<h3>" + inner.process(tx) + "</h3>\n";;
 
 /// Processes '<|f' (frame)
+///   tx     : Paragraph text.
+///   isWhite: 'true' if text frame has a background white.
 /// \s, b -> s
 frame = \tx, isWhite -> {
-  class = isWhite ? "fm" : "fm2";
+  class = isWhite ? "kmd-fm" : "kmd-fm2";
   Align = [""];
   Tx = [tx];
   if (str.starts(Tx!, "c")) {
@@ -32,6 +37,8 @@ frame = \tx, isWhite -> {
 };
 
 /// Processes '<|i' (image)
+///   tx       : Paragraph text.
+///   withFrame: 'true' if the image has a frame.
 /// \s, b -> s
 img = \tx, withFrame -> {
   float = str.starts(tx, "l") ? "l" : str.starts(tx, "r") ? "r" : "c";
@@ -66,12 +73,14 @@ img = \tx, withFrame -> {
   if (str.index(Src!, ".") == -1) Src! = Src! + ".png";
   if (str.index(Src!, "/") == -1) Src! = path.cat(["img", Src!]);
   src = Src!;
-  class = withFrame ? " class='fm' " : "";
+  class = withFrame ? " class='kmd-fm' " : "";
   return "<div " + style + "><img src='" + src +
       "'" + class + size + "></div>\n";
 };
 
 /// Processes '<|a' (alignmment)
+///   tx     : Paragraph text.
+///   isWhite: 'true' if text frame has a background white.
 /// \s, b -> s
 align = \tx, isWhite -> {
   inStyle = [isWhite ? "background-color:  rgb(255, 250, 250);" : ""];

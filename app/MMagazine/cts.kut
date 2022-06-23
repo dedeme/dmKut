@@ -1,0 +1,26 @@
+// Copyright 27-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global constants
+
+/// Application name.
+appName = "MMagazine";
+/// Application version.
+version = "202203";
+/// Home for cgi data.
+webHome = "/dm/wwwcgi/dmcgi/" + appName;
+/// Home for command data.
+dbHome = "/home/deme/.dmKutApp/" + appName;
+
+/// Number of quantum levels and number of investors.
+qlevels = 3;
+/// Minimum value to analyze.
+rangesMin = 12; // id 120000 -> parameter 0.12
+/// Group of 10000 to analyze
+rangesGroups = 10; // from 120000 inclusive to 220000 exclusive [0.12-0.22)
+/// Number of parameters per group.
+rangesGroupElements = 10000;
+/// Entries in a parameter ranking.
+rankingSize = 40;
+/// Number of parameter rankings saved.
+totalRankings = 4;

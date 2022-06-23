@@ -1,0 +1,178 @@
+=
+  title = Encabezado
+  withUp
+=
+
+<{V
+<script>window.MathJax=null;</script>
+}>
+
+** Plantilla
+
+Todos los directorios con archivos ##.kmd## deben ten er un archivo con el
+nombre ##000head.html## que será utilizado para generar automáticamente los
+encabezados (<head>) de las diversas páginas.
+
+Todas las páginas de un mismo directorio comparten el mismo encabezado.
+
+A continuación se muestra una plantilla del mismo y se explican sus
+características.
+
+<{c1 ed1
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>Kmarkdown Tests</title>
+
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+</head>
+}>
+
+Esta plantilla se puede personalizar como se quiera; pero hay que tener en
+cuenta:
+
+** Soporte de MathJax
+
+Las líneas
+
+<{c1 ed2
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+}>
+
+se pueden eliminar si no se va a usar MathJax.
+
+En otro caso sólo es obligatorio mantener la definición
+
+<|F inlineMath: [['$', '$']]
+
+pues Kmarkdown supone ##el## uso de $...$ y $$...$$ para marcar el
+contexto matemático.
+
+Por otra parte es posible que, aún deseando usar MathJax en algunas páginas,
+resulte inconveniente mantenerlo en otras. En tal caso se puede bloquear
+su actividad en una página escribiendo al principio del archivo ##.kmd##:
+
+<{c0 ed3
+<{V
+&ltscript>window.MathJax=null;</script>
+}&gt;
+}>
+
+** Soporte de Ace
+
+Las líneas
+
+<{c1 ed4
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+}>
+
+se pueden eliminar si no se va a usar el editor de código Ace.
+
+La functión ##aceConf## tiene dos parámetros que se corresponden:
+
+<{d
+##ed##
+  Al editor.\\
+  Se debe usar para configurar el mismo.\\
+  Aunque se puede usar más de un editor en cada página, todos tienen que
+  tener la misma configuración, salvo por el parámetro ##.setMode()##.
+##langIx##
+  Un indice que debe ser distinto para cada modo (lenguage). Dicho índice
+  se debe emplear en la marca ##<{C## ot ##<{c## cuando se inserta un editor
+  en el texto.
+}>
+
+La parte
+
+<|F <{v <tt style="font-size:12px">}>aceFns = [];\\
+\\
+window.onload = function () {\\
+··for (fn of aceFns) fn();\\
+}<{v </tt>}>
+
+no se debe tocar, salvo para añadir más código en ##window.onload## si fuera
+necesario.
+
+

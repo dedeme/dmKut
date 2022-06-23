@@ -1,0 +1,63 @@
+=
+book = Documentación de Kmarkdown
+title = Introducción
+withUp
+=
+
+** Objeto del programa.
+
+ //Kmarkdown// tiene como objetivo simplificar la escritura de páginas web,
+en especial cuando se trata de anotar apuntes de física, matemáticas
+o cualquier otra disciplina que requiera la escritura de fórmulas
+matemáticas, o cuando se trata de editar tutoriales o  manuales de
+programación.
+
+** ¿Cómo funciona?
+
+Desde el directorio superior del sitio web se ejecuta:
+
+<|F ##kut kmarkdown## \\
+  (//Se supone que ##kut## y ##markdown## estan en el path//).
+
+Esto hace que todos los archivos con extensión ##.kmd## sean "transpilados"
+a ##.html##. El nuevo archivo //html// mantiene el mismo nombre que el
+archivo //kmd// original.
+
+Y esto es todo.
+
+** Escribir archivos ##.kmd##.
+
+Un archivo ##.kmd## tiene dos partes:
+
+<{l
+Configuración
+Cuerpo (<body>) del archivo ##.htm.##.
+}>
+
+*** Configuración
+
+Aparece entre dos líneas que sólo contienen el signo '='.
+
+Sirve para determinar características de la paǵina.
+
+*** Cuerpo
+
+Está compuesto por párrafos separados por doble espacio.
+
+En el texto se introducen marcas que dan estructura y formato a la paǵina
+##.html##.
+
+** Libros
+
+Es posible indexar los archivos del directorio superior, generando un
+sencillo libro, con un índice y enlaces entre los mismos.
+
+** Encabezado (<head>) de los archivos ##.html##.
+
+En cada directorio con archivos ##.kmd## se debe crear uno con el nombre
+##000header.html## que tendrá un código del encabezado
+
+Este código será pegado al comienzo de cada página ##.html##.
+
+Una plantilla del mismo se muestra en el apartado <{h 02-Encabezado.html
+Encabezado}>.

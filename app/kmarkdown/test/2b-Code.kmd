@@ -2,13 +2,75 @@
 title = Code
 =
 
-Showing C code:
+<{V
+<script>
+window.MathJax = null;
+</script>
+}>
+
+Showing Kmarkdown code:
 
 <{c0 ed1
-if (x == 3) {
-  return 3 + 2;
-}
+=
+title = A Title.
+=
+
+* Header 1
+
+<{l1
+E1
+E2
+}&gt;
+<{d
+Término
+  Definición
+}&gt;
+
+** Header 2
+
+A table
+
+<{T|lr
+a
+b <($)&gt; <(<)&gt; <(&)&gt; <(·)&gt; <(\\)&gt; <(//)&gt; <(__)&gt;
+
+-
+e
+}&gt;
+
+*** Header 3
+
+Aquí una imágen <{I23 favicon}&gt y
+un hipervínculo <{h sub/target.html tg}&gt;
+
+Texto en <{v &lt;b>}&gthtml<{v &lt/b>}&gt; auténtico.
+
+Línea con ····blancos···· separando.
+
+<{c0 a lang
+Code
+}&gt;
+
+<{V
+Html
+}&gt;
+
+<|fc a frame
+
+<|Il23 An image
+
+<|a|r An aligned <div>
+
+Unas fórmulas:
+
+Fórmula normal $2 + 2$ y fórmula centrada $$5 * 3$$.
+
+Un poco de //cursiva//, otro poco de ##codigo## y otro poco de
+__subrayado__ al final.
+
 }>
+
+
 
 Showing Kut code:
 

@@ -1,0 +1,220 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>Kmarkdown Tests</title>
+<script id="MathJax-script"
+  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
+<script src="/dm/www/ace/ace.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+
+function aceConf(ed, langIx) {
+  ed.setTheme("ace/theme/deme");
+  ed.getSession().setTabSize(2);
+  ed.getSession().setUseSoftTabs(true);
+  ed.setOptions({
+    readOnly: true,
+    maxLines: 100000
+  });
+  switch (langIx) {
+  case 0:
+    ed.getSession().setMode("ace/mode/kmarkdown");
+    break;
+  case 1:
+    ed.getSession().setMode("ace/mode/html");
+    break;
+  case 2:
+    ed.getSession().setMode("ace/mode/javascript");
+    break;
+  case 3:
+    ed.getSession().setMode("ace/mode/css");
+    break;
+  default:
+    console.log("Ace language " + langIx + " not found.");
+  }
+}
+aceFns = [];
+
+window.onload = function () {
+  for (fn of aceFns) fn();
+}
+</script>
+</head>
+
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Configuración</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='05-MarcasDeBloque.html'>Anterior (Marcas de Bloque)</a> · <a href="index.html">Índice</a> · <a href='07-Styles.html'>Posterior ("<i>Styles</i>")</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#hp:001'>Objeto</a><br>
+<a href='#hp:002'>Configuración de páginas individuales</a><br>
+<a href='#hp:003'>Configuración de un libro</a>
+<p>
+<hr>
+<h2 id='hp:001'>Objeto</h2>
+<p>La configuración persigue, por un lado facilitar la realización de conjuntos
+relacionados de páginas, que llamaremos libros, y por otro configurar algunos
+aspectos de páginas individuales.</p>
+<p>Su código aparecer al comienzo de la página. Para que pueda ser leída el
+primer carácter del texto debe ser <code>=</code> y aparecer como único carácter de
+la línea.</p>
+<p>La zona de configuración termina igualmente con una línea cuyo único caracter
+es <code>=</code>.</p>
+<h2 id='hp:002'>Configuración de páginas individuales</h2>
+<p>Entre las dos líneas con <code>=</code> se escribirán los códigos de configuración.</p>
+<p>Podrán insertarse tantas líneas en blanco como se desee.</p>
+<p>Si se encuentra una línea no válida, el programa emitirá un mensaje de error y
+detendrá la lectura del código.</p>
+<p>Se pueden configurar los siguientes elementos.</p>
+<h3>Numeración de encabezados de segundo nivel.</h3>
+<p>Se escribe una línea cuya única palabra es <code>numbered</code></p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed1");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed1" class="kmd-aceEditor">
+=
+  numbered
+=
+</div></td></tr></table>
+<h3>Flecha apuntando al comienzo de la página</h3>
+<p>Se escribe una línea cuya única palabra es <code>withUp</code></p>
+<p>Para que funcione se debe crear un subdirectorio llamado <code>img</code> e incluir en
+él un icono con el nombre <code>up.png</code>, de manera que puede enlazarse como
+<code>img/up.png</code>.</p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed2");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed2" class="kmd-aceEditor">
+=
+  withUp
+=
+</div></td></tr></table>
+<h3>Flecha apuntando al final de la página</h3>
+<p>Se escribe una línea cuya única palabra es <code>withDown</code></p>
+<p>Para que funcione se debe crear un subdirectorio llamado <code>img</code> e incluir en
+él un icono con el nombre <code>down.png</code>, de manera que puede enlazarse como
+<code>img/down.png</code>.</p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed3");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed3" class="kmd-aceEditor">
+=
+  withDown
+=
+</div></td></tr></table>
+<h3>Título de la página</h3>
+<p>Se escribe en una línea precedido de <code>title = </code>.</p>
+<p>Es el título que aparecerá en el encabezado de las páginas pertenecientes
+a un libro.</p>
+<p>Si no se ha configurado un libro, no tendrá ningún efecto.</p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed4");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed4" class="kmd-aceEditor">
+=
+  title = Primera Página
+=
+</div></td></tr></table>
+<h3>Todo junto</h3>
+<p>Se puede ver <a href='ex/conf1.html'>aquí</a> un ejemplo de una página con la siguiente
+configuración</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("ed5");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="ed5" class="kmd-aceEditor">
+=
+  numbered
+  withUp
+  withDown
+=
+</div></td></tr></table>
+<h2 id='hp:003'>Configuración de un libro</h2>
+<p>Los libros agrupan páginas en archivos ubicados en un mismo directorio.</p>
+<p>Estas páginas quedarán indexadas en el orden alfabético del nombre de
+los <i>archivos</i> <code>.kmd</code> que las definen.</p>
+<p><i>Markdown</i> puede utilizarse no obstante con archivos en distintos
+subdirectorios. Estos archivos se compilarán; pero no se incorporarán al libro,
+teniendose que acceder a ellas mediante hipervínculos.</p>
+<p>Para configurar un libro sólo es necesario incluir en las líneas de
+configuración de uno de los archivos del directorio (usualmente el primero
+alfabéticamente) el nombre del libro precedido de <code>book = </code>.</p>
+<p>En caso de que incluyan varias páginas con la línea <code>book =</code> se seleccionará
+uno sin seguir ningún particular criterio.</p>
+<p>Ejemplo:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edL1");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edL1" class="kmd-aceEditor">
+=
+  book = El Gran Libro
+  title = Primera Página
+=
+</div></td></tr></table>
+<p>Para realizar el presente libro en el archivo <code>01-Intro.kmd</code> que se
+usa para crear la página <i>Introducción</i>, se incluye la siguiente
+configuración:</p>
+<script>
+  aceFns.push(() => {
+    ed = ace.edit("edL2");
+    aceConf(ed, 0);
+  });
+</script>
+<table ><tr><td><div id="edL2" class="kmd-aceEditor">
+=
+  book = Documentación de Kmarkdown
+  title = Introducción
+  withUp
+=
+</div></td></tr></table>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

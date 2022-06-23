@@ -1,0 +1,52 @@
+// Copyright 18-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Type m<Profits>. Profits data.
+
+/// Constructor
+///   Description: Origin description.
+///   hits       : Number of hits.
+///   fails      : Number of fails.
+///   amount     : Profits amount.
+/// \s, i, i, f -> m<Profits>
+new = \description, hits, fails, amount -> return {
+  description: description,
+  hits: hits,
+  fails: fails,
+  amount: amount
+};;
+
+/// Returns the sum of 'Ps' in a new <Profits> with a fresh description.
+///   Ps: Array of <Profits> to add.
+///   description: Description of the resultant <Profits>.
+/// \[<Profits>...], s -> <Profits>
+sum = \Ps, description -> {
+  Hits = [0];
+  Fails = [0];
+  Amount = [0.0];
+  for (P = Ps) {
+    Hits! += P.hits;
+    Fails! += P.fails;
+    Amount! += P.amount;
+  }
+  return new(description, Hits!, Fails!, Amount!);
+};
+
+/// \<Profits> -> s
+toJs = \P -> return js.wa([
+  js.ws(P.description),
+  js.wi(P.hits),
+  js.wi(P.fails),
+  js.wf(P.amount)
+]);;
+
+/// \s -> <Profits>
+fromJs = \j -> {
+  a = js.ra(j);
+  return new(
+    js.rs(a[0]),
+    js.ri(a[1]),
+    js.ri(a[2]),
+    js.rf(a[3])
+  );
+};

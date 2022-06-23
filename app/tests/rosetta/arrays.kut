@@ -1,0 +1,13 @@
+A = [];
+arr.push(A, 1);
+arr.push(A, 2);
+sys.println("First value of A is: " + math.toStr(A[0]));
+sys.println("Second value of A is: " + math.toStr(A[1]));
+
+B = [""];
+B! = "ABC";
+sys.println("The value of B is: " + B!);
+
+C = [10, 20];
+sys.println("First value of C is: " + math.toStr(C[0]));
+sys.println("Second value of C is: " + math.toStr(C[1]));

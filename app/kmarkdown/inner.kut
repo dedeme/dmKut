@@ -6,98 +6,66 @@
 import "err";
 import "prpmarks";
 
-/// Sets text format.
-/// Used in 'inner.processFinal'.
-///   tx: Texto to format.
-///   sym: one of $, $$, _, __
-///   left: Code of eft part format.
-///   right: Code of eft part format.
-///   fn1: Function to format external text.
-///   fn2: Function to format internal text.
-/// (\s, s, s, s, \s->s, \s->s) -> s
-splitJoinFormat = \tx, sym, left, right, fn1, fn2 -> {
-    len = str.len(sym);
-    ix1 = str.index(tx, sym);
-    if (ix1 == -1) return "";
-    ix2 = str.indexFrom(tx, sym, ix1 + len);
-    if (ix2 == -1) {
-      err.show("'" + sym + "' close is missing", tx);
-      return tx;
+/// Look for next symbols: '\\', '//', '##', '||', '__', '<{', '<(', '$',
+/// '·', '&' and '<'.
+///   Store: Array which will be modified in place, with next values:
+///     0: Already read text.
+///     1: Current mark.
+///     2: Rest of text.
+/// \[s, s, s] -> ()
+cut = \Store -> {
+  tx = Store[2];
+  Ix = [-1];
+  S = [""];
+  update = \s -> {
+    ix = str.index(tx, s);
+    if (ix != -1 & (Ix! == -1 | ix < Ix!)) {
+      S! = s;
+      Ix! = ix;
     }
-
-    return fn1(tx[:ix1]) + left +
-      fn2(tx[ix1 + len:ix2]) + right +
-      fn1(tx[ix2 + len:])
-    ;
   };
 
-/// Process final
-/// \s -> s
-processFinal = \tx -> {
-  id = \tx -> return tx;;
-  dot = \tx -> return str.replace(tx, "·", "&nbsp;");;
-  line = \tx -> return str.replace(tx, "\\\\", "<br>");;
-  lt  = \tx -> return str.replace(tx, "<", "&lt;");;
-  amp  = \tx -> return str.replace(tx, "&", "&amp;");;
+  update("\\\\");
+  update("//");
+  update("##");
+  update("<{");
+  update("<(");
+  update("$");
+  update("||");
+  update("__");
+  update("·");
+  update("&");
+  update("<");
 
-  mth2 = splitJoinFormat(tx, "$$", "$$", "$$", processFinal, id);
-  if (mth2 != "") return mth2;
-
-  mth1 = splitJoinFormat(tx, "$", "$", "$", processFinal, id);
-  if (mth1 != "") return mth1;
-
-  under = splitJoinFormat(tx, "__", "<u>", "</u>", processFinal, processFinal);
-  if (under != "") return under;
-
-  italic = splitJoinFormat(tx, "**", "<i>", "</i>", processFinal, processFinal);
-  if (italic != "") return italic;
-
-  return dot(line(lt(amp(tx))));
+  if (Ix! != -1) {
+    ix = Ix!;
+    s = S!;
+    Store[0] += tx[:ix];
+    Store[1] = s;
+    Store[2] = tx[ix + str.len(s):];
+  } else {
+    Store[0] += tx;
+    Store[1] = "";
+    Store[2] = "";
+  }
 };
 
-
-/// Processes chuncks of text.
-/// \s -> s
-process = \tx -> {
-  splitJoin = \tx, sym -> {
-    ix = str.index(tx, sym);
-    if (ix == -1) return "";
-    return process(tx[:ix]) + sym[2:-2] + process(tx[ix + str.len(sym):])
-    ;
-  };
-
-  frame = \tx, start, white -> {
-    Start = [start + 3];
-    ix = str.indexFrom(tx, "}>", Start!);
+/// Processes the following marks: '<{I', '<{i', '<{h' and '<{v'.
+///   Store: Array which will be modified in place, with next values:
+///     0: Already read text.
+///     1: Current mark.
+///     2: Rest of text.
+/// \[s, s, s] -> ()
+bracket = \Store -> {
+  image = \withFrame -> {
+    tx = Store[2][1:];
+    ix = str.index(tx, "}>");
     if (ix == -1) {
-      err.show(
-        "'" + (white ? "<{F" : "<{f") + "' not closed",
-        tx[start:]
-      );
-      return "";
+      err.show("'" + (withFrame ? "<{I" : "<{i") + "' not closed", tx);
+      Store[0] += "&lt;{";
+      return;
     }
-    Class = [white ? "fm" : "fm2"];
-    if (tx[Start!] == "2") {
-      Start! += 1;
-      Class! = white ? "ffm" : "ffm2";
-    }
-    return
-      process(tx[:start]) +
-      "<span class='" + Class! + "'>" +
-      process(tx[Start!:ix]) +
-      "</span>" +
-      process(tx[ix + 2:])
-    ;
-  };
-
-  img = \tx, start, withFrame -> {
-    start2 = start + 3;
-    ix = str.indexFrom(tx, "}>", start2);
-    if (ix == -1) {
-      err.show("'" + (withFrame ? "<{I" : "<{i") + "' not closed", tx[start:]);
-      return "";
-    }
-    Src = [tx[start2:ix]];
+    Src = [tx[:ix]];
     N = [""];
     while () {
       if (Src! == "") break;
@@ -115,31 +83,34 @@ process = \tx -> {
 
     Src! = str.trim(Src!);
     if (Src! == "") {
-      err.show("Image source is empty", tx[start:]);
-      return "";
+      err.show("Image source is empty", tx);
+      Store[0] += "&lt;{";
+      return;
     }
     if (str.index(Src!, ".") == -1) Src! = Src! + ".png";
     if (str.index(Src!, "/") == -1) Src! = path.cat(["img", Src!]);
-    class = withFrame ? " class='fm' " : "";
-    return
-      process(tx[:start]) +
-      "<img src='" + Src! + "'" + class + size + ">" +
-      process(tx[ix + 2:])
-    ;
+    class = withFrame ? " class='kmd-fm' " : "";
+
+    Store[0] += "<img src='" + Src! + "'" + class + size + ">";
+    Store[2] = tx[ix + 2:];
   };
 
-  hyper = \tx, start -> {
-    start2 = start + 3;
-    ix = str.indexFrom(tx, "}>", start2);
+  hyper = \-> {
+    tx = Store[2][1:];
+    ix = str.index(tx, "}>");
     if (ix == -1) {
-      err.show("'<{h' not closed", tx[start:]);
-      return "";
+      err.show("Empty hyperlink", tx);
+      Store[0] += "&lt;{";
+      return;
     }
-    Hyp = [str.trim(tx[start2:ix])];
+
+    Hyp = [str.trim(tx[1:ix])];
     if (Hyp! == "") {
-      err.show("Empty hyperlink", tx[start:]);
-      return "";
+      err.show("Empty hyperlink", tx);
+      Store[0] += "&lt;{";
+      return;
     }
+    Hyp! = regex.replace(Hyp!, "\\s", " ");
 
     Rest = [""];
     ix2 = str.index(Hyp!, " ");
@@ -148,8 +119,9 @@ process = \tx -> {
       Hyp! = Hyp![:ix2];
     }
     if (str.index(Hyp!, '"') != -1 & Hyp! != "\"\"") {
-      err.show("Hyperlink contains quotes", tx[start:]);
-      return "";
+      err.show("Hyperlink contains quotes", tx);
+      Store[0] += "&lt;{";
+      return;
     }
     if (Rest! == "" & Hyp! != "\"\"") {
       Rest! = path.base(Hyp!);
@@ -157,89 +129,135 @@ process = \tx -> {
       if (ix > 0) Rest! = Rest![:ix];
     }
     if (Rest! == "") {
-      err.show("Hyperlink label is missing", tx[start:]);
-      return "";
+      err.show("Hyperlink label is missing", tx);
+      Store[0] += "&lt;{";
+      return;
     }
     if (Hyp! == "\"\"") Hyp! = "";
 
-    return
-      process(tx[:start]) +
-      "<a href='" + Hyp! + "'>" + Rest! + "</a>" +
-      process(tx[ix + 2:])
-    ;
+    Store[0] += "<a href='" + Hyp! + "'>" + Rest! + "</a>" ;
+    Store[2] = tx[ix + 2:];
   };
 
-  verbatim = \tx, start -> {
-    start2 = start + 3;
-    ix = str.indexFrom(tx, "}>", start2);
+  verb = \-> {
+    tx = Store[2][1:];
+    ix = str.index(tx, "}>");
     if (ix == -1) {
-      err.show("'<{v' not closed", tx[start:]);
-      return "";
+      err.show("'<{v' not closed", tx);
+      Store[0] += "&lt;{";
+      return;
     }
-    return
-      process(tx[:start]) +
-      str.trim(tx[start2:ix]) +
-      process(tx[ix + 2:])
-    ;
+    Store[0] += tx[:ix];
+    Store[2] = tx[ix + 2:];
   };
 
-  // ------------------------------------------------
+  // ---------------------------------------
 
-  ixf = str.index(tx, "<{f");
-  if (ixf != -1) {
-    tx2 = frame(tx, ixf, false);
-    if(tx2 != "") return tx2;
+  tx = Store[2];
+  if (str.starts(tx, "i")) image(false);
+  else if (str.starts(tx, "I")) image(true);
+  else if (str.starts(tx, "h")) hyper();
+  else if (str.starts(tx, "v")) verb();
+  else Store[0] += "&lt;{";
+};
+
+/// Processes '$' mark (MathJax functions).
+///   Store: Array which will be modified in place, with next values:
+///     0: Already read text.
+///     1: Current mark.
+///     2: Rest of text.
+/// \[s, s, s] -> ()
+dolar = \Store -> {
+  tx = Store[2];
+  if (str.starts(tx, "$")) {
+    ix = str.index(tx, "$$");
+    if (ix == -1) {
+      err.show("'$$' not closed", tx);
+      Store[0] += "$";
+      return;
+    }
+    Store[0] += "$" + tx[:ix] + "$$";
+    Store[2] = tx[ix + 2:];
+    return;
   }
-  ixF = str.index(tx, "<{F");
-  if (ixF != -1) {
-    tx2 = frame(tx, ixF, true);
-    if(tx2 != "") return tx2;
+  ix = str.index(tx, "$");
+  if (ix == -1) {
+    err.show("'$' not closed", tx);
+    Store[0] += "$";
+    return;
+  }
+  Store[0] += "$" + tx[:ix] + "$";
+  Store[2] = tx[ix + 1:];
+};
+
+
+/// Processes literal escaping.
+///   Store: Array which will be modified in place, with next values:
+///     0: Already read text.
+///     1: Current mark.
+///     2: Rest of text.
+/// \[s, s, s] -> ()
+paren = \Store -> {
+  update = \s, n -> {
+    Store[0] += s;
+    Store[2] = Store[2][n:];
+  };
+
+  tx = Store[2];
+  if (str.starts(tx, "$)>")) update("&#036;", 3);
+  else if (str.starts(tx, "<)>")) update("&lt;", 3);
+  else if (str.starts(tx, "&)>")) update("&amp;", 3);
+  else if (str.starts(tx, "·)>")) update("·", 4);
+  else if (str.starts(tx, "\\\\)>")) update("\\\\", 4);
+  else if (str.starts(tx, "//)>")) update("//", 4);
+  else if (str.starts(tx, "__)>")) update("__", 4);
+  else if (str.starts(tx, "||)>")) update("||", 4);
+  else if (str.starts(tx, "##)>")) update("##", 4);
+  else Store[0] += "&lt;(";
+};
+
+/// Processes marks inside paragraphs.
+///   tx: Paragraph text.
+/// \s -> s
+process = \tx -> {
+  Store = ["", "", tx];
+  Cursive = [false];
+  Code = [false];
+  Underline = [false];
+  Frame = [false];
+  while () {
+    cut(Store);
+    if (Store[1] == "") break;
+
+    switch (Store[1]) {
+      "\\\\" :  Store[0] = Store[0] + "<br>";
+      "//"   :  {
+                  Store[0] = Store[0] + (Cursive! ? "</i>" : "<i>");
+                  Cursive! = !Cursive!;
+                }
+      "##"   :  {
+                  Store[0] = Store[0] + (Code! ? "</code>" : "<code>");
+                  Code! = !Code!;
+                }
+      "<{"   :  bracket(Store);
+      "<("   :  paren(Store);
+      "$"    :  dolar(Store);
+      "__"   :  {
+                  Store[0] = Store[0] + (Underline! ? "</u>" : "<u>");
+                  Underline! = !Underline!;
+                }
+      "||"   :  {
+                  Store[0] = Store[0] +
+                    (Frame! ? "</span>" : "<span class='kmd-fm'>");
+                  Frame! = !Frame!;
+                }
+      "·"    :  Store[0] = Store[0] + "&nbsp;";
+      "&"    :  Store[0] = Store[0] + "&amp;";
+      "<"    :  Store[0] = Store[0] + "&lt;";
+      default: sys.fail("Unexpected value: " + Store[1]);
+    }
   }
 
-  ixi = str.index(tx, "<{i");
-  if (ixi != -1) {
-    tx2 = img(tx, ixi, false);
-    if(tx2 != "") return tx2;
-  }
-  ixI = str.index(tx, "<{I");
-  if (ixI != -1) {
-    tx2 = img(tx, ixI, true);
-    if(tx2 != "") return tx2;
-  }
-
-  ixh = str.index(tx, "<{h");
-  if (ixh != -1) {
-    tx2 = hyper(tx, ixh);
-    if(tx2 != "") return tx2;
-  }
-
-  ixv = str.index(tx, "<{v");
-  if (ixv != -1) {
-    tx2 = verbatim(tx, ixv);
-    if(tx2 != "") return tx2;
-  }
-
-  lt = splitJoin(tx, "<(<)>");
-  if (lt != "") return lt;
-
-  amp = splitJoin(tx, "<(&)>");
-  if (amp != "") return amp;
-
-  dot = splitJoin(tx, "<(·)>");
-  if (dot != "") return dot;
-
-  line = splitJoin(tx, "<(\\\\)>");
-  if (line != "") return line;
-
-  dol = splitJoin(tx, "<($)>");
-  if (dol != "") return dol;
-
-  ast = splitJoin(tx, "<(**)>");
-  if (ast != "") return ast;
-
-  und = splitJoin(tx, "<(__)>");
-  if (und != "") return und;
-
-  return processFinal(tx);
+  return Store[0];
 };
 

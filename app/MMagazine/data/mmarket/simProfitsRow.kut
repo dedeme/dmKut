@@ -1,0 +1,43 @@
+// Copyright 29-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Row of simulation profits table.
+
+import "data/mmarket/simProfits";
+
+/// <SimProfitsRow> field 0
+params = 0;
+/// <SimProfitsRow> field 1
+weeks = 1;
+/// <SimProfitsRow> field 2
+hprofits = 2;
+/// <SimProfitsRow> field 3
+profits = 3;
+
+/// Constructor.
+///   params  : Parameters evaluated.
+///   weeks   : Weeks weight to calculate historic values.
+///   hprofits: Historic values.
+///   profits : Last values.
+/// \[f...], i, <SimProfits>, <SimProfits> -> a<SimProfitsRow>
+new = \params, weeks, hprofits, profits ->
+  return [params, weeks, hprofits, profits];;
+
+/// \<SimProfitsRow> -> s
+toJs = \R -> return js.wa([
+    js.wa(arr.mp(R[0], \e -> return js.wf(e);)),
+    js.wi(R[1]),
+    simProfits.toJs(R[2]),
+    simProfits.toJs(R[3])
+  ]);;
+
+/// s -> <SimProfitsRow>
+fromJs = \j -> {
+  A = js.ra(j);
+  return [
+    arr.mp(js.ra(A[0]), \e -> return js.rf(e);),
+    js.ri(A[1]),
+    simProfits.fromJs(A[2]),
+    simProfits.fromJs(A[3])
+  ];
+};

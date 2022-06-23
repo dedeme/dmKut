@@ -1,0 +1,2 @@
+A = ["apple", "orange"];
+sys.println(str.fmt("Length of A is %d", [arr.size(A)]));

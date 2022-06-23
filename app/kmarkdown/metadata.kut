@@ -17,14 +17,14 @@ newBook = \book, Pages -> return {
 /// Creates a new page metadata.
 ///   fpage: File name without extension '.kmd'
 ///   title: Page title or "".
-///   isNumbered: 'true' if headers '**' should be numbered.
+///   numbered: 'true' if headers '**' should be numbered.
 ///   withUp: 'true' if an up arrow is shown.
 ///   withDown: 'true' if an down arrow is shown.
 /// \s, s, b, b, b -> m
-newPage = \fpage, title, isNumbered, withUp, withDown -> return {
+newPage = \fpage, title, numbered, withUp, withDown -> return {
     "fpage": fpage,
     "title": title,
-    "isNumbered": isNumbered,
+    "numbered": numbered,
     "withUp": withUp,
     "withDown": withDown
   };;
@@ -34,7 +34,7 @@ newPage = \fpage, title, isNumbered, withUp, withDown -> return {
 ///   fpage  : Page to search.
 /// \[m...], s -> ([m] | [])
 getCurrent = \PgMetas, fpage -> {
-  for (PgMeta : PgMetas)
+  for (PgMeta = PgMetas)
     if (PgMeta.fpage == fpage) return [PgMeta];;
   return [];
 };
@@ -45,7 +45,7 @@ getCurrent = \PgMetas, fpage -> {
 ///   fpage  : Page to search.
 /// \[m...], s -> ([m] | [])
 getPrevious = \PgMetas, fpage -> {
-  for (PgMeta, i : PgMetas)
+  for (PgMeta, i = PgMetas)
     if (PgMeta.fpage == fpage) return i > 0 ? [PgMetas[i - 1]] : [];;
   return [];
 };
@@ -56,7 +56,7 @@ getPrevious = \PgMetas, fpage -> {
 ///   fpage  : Page to search.
 /// \[m...], s -> ([m] | [])
 getNext = \PgMetas, fpage -> {
-  for (PgMeta, i : PgMetas)
+  for (PgMeta, i = PgMetas)
     if (PgMeta.fpage == fpage)
       return i < arr.size(PgMetas) - 1 ? [PgMetas[i + 1]] : [];;
   return [];
@@ -71,7 +71,7 @@ read = \Fkmds -> {
   Book = [""];
   PgMetas = [];
 
-  for (fkmd : Fkmds) {
+  for (fkmd = Fkmds) {
     err.setFile(fkmd);
 
     PgMeta = newPage(fkmd[:-4], "", false, false, false);
@@ -83,7 +83,7 @@ read = \Fkmds -> {
       if (l == "=") return true;
 
       if (l == "numbered") {
-        PgMeta.isNumbered = true;
+        PgMeta.numbered = true;
         return false;
       }
 

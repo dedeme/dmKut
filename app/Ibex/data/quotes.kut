@@ -1,0 +1,45 @@
+// Copyright 20-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// quotes data.
+
+import "dm/log";
+
+/// Returns new data for qibex table.
+///   OldIbex: [[date, value]...]. Old data of qibex table.
+///   NewQuotes: [[date, value]...]. Quotes to add to 'oldIbex'.
+///   CoQuotes: [[date, open, close]...]. Company quotes for dates reference.
+/// \[[s,f]...], [[s,f]...], [[s,f,f]...] -> [[s,f]...]
+ibexMix = \OldIbex, NewQuotes, CoQuotes -> {
+  R = [];
+  oSize = arr.size(OldIbex);
+  nSize = arr.size(NewQuotes);
+  Oix = [0];
+  Nix = [0];
+
+  for (cix = 0:arr.size(CoQuotes)) {
+    d = CoQuotes[cix][0];
+
+    while (Oix! < oSize & OldIbex[Oix!][0] < d) Oix! += 1;
+    oix = Oix!;
+    if (oix < oSize & OldIbex[oix][0] == d) {
+      arr.push(R, [d, OldIbex[oix][1]]);
+    } else {
+      while (Nix! < nSize & NewQuotes[Nix!][0] < d) Nix! += 1;
+      nix = Nix!;
+      if (nix < nSize & NewQuotes[nix][0] == d) {
+        arr.push(R, [d, NewQuotes[nix][1]]);
+      } else {
+        if (log.isInit()) {
+          log.error("quotes.ibexMix: Ibex quotes no found in " + d);
+          arr.push(R, [d, R[cix - 1][1]]);
+        } else {
+          sys.fail("Ibex quotes no found in " + d);
+        }
+      }
+    }
+  }
+
+  return R;
+};
+

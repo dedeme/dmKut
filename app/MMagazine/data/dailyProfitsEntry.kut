@@ -53,13 +53,13 @@ mkProfits = \InvPs -> {
 
   now = time.now();
   Date = [time.newDate(1, 1, time.year(now))];
-  Ixs = arr.fromIter(iter.mp([0:cts.qlevels], \i -> return 0;));
+  Ixs = arr.fromIter(iter.mp([0:cts.investors], \i -> return 0;));
   while (time.dfDays(Date!, now) <= 0) {
     if (time.weekday(Date!) == 0) {
       day = time.toStr(Date!);
       // [f...]
       Pfs = [];
-      for (inv = 0:cts.qlevels) {
+      for (inv = 0:cts.investors) {
         Ix = [Ixs[inv]];
         // [DailyProfitsEntry...]
         Invp = InvPs[inv];

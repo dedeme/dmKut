@@ -8,17 +8,19 @@ getText = \ -> {
   return Rs[0];
 };
 
-// \s, i, i -> [f] | []
-find = \tx, date, from -> {
+// \s, i -> [f] | []
+find = \tx, date -> {
   d = time.format("%D.%M.%Y", date);
-  ix1 = str.indexFrom(tx, ">" + d + "<", from);
+  ix1 = str.index(tx, ">" + d + "<");
   if (ix1 != -1) {
-    ix2 = str.indexFrom(tx, "Font\">", ix1);
+    ix2 = str.indexFrom(tx, "<td class=", ix1);
     if (ix2 != -1) {
-      ix2 = ix2 + 6;
-      ix3 = str.indexFrom(tx, "<", ix2);
+      ix3 = str.indexFrom(tx, ">", ix2);
       if (ix3 != -1) {
-        return math.fromIso(str.trim(tx[ix2:ix3]));
+        ix4 = str.indexFrom(tx, "<", ix3);
+        if (ix4 != -1) {
+          return math.fromIso(str.trim(tx[ix3+1:ix4]));
+        }
       }
     }
   }
@@ -29,11 +31,8 @@ find = \tx, date, from -> {
 /// \i -> [f] | []
 read = \date -> {
   tx = getText();
-
-  start = str.index(tx, "<div id=\"results_box\">");
-  if (start == -1) {
-    return [];
-  }
-
-  return find(tx, date, start);
+  return find(tx, date);
 };
+
+// Test
+// trace(read(time.addDays(time.now(), -2)));

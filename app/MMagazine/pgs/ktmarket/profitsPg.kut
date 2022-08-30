@@ -17,10 +17,11 @@ process = \Rq -> {
       year = time.year(time.now());
       //[[<DailyProfitsEntry>...]...]
       InvPs = arr.fromIter(iter.mp(
-        [0:cts.qlevels], \inv -> return profits.read(year, inv);
+        [0:cts.investors], \inv -> return profits.read(year, inv);
       ));
       Pfs = dailyProfitsEntry.mkProfits(InvPs);
       return cgi.rp({
+        "investors": js.wi(cts.investors),
         "profits": js.wa(arr.mp(Pfs, \e -> return profitsEntry.toJs(e);))
       });
     }

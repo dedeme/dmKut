@@ -9,8 +9,8 @@ import "data/dated";
 import "data/modelEvals";
 import "data/modelFloats";
 import "data/hotMap";
-import "ex/mmarket/evals";
-import "ex/mmarket/results";
+import "ex/ktmmarket/evals";
+import "ex/ktmmarket/results";
 
 /// \-> ()
 run = \-> {

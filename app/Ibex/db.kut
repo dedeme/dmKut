@@ -1,0 +1,89 @@
+// Copyright 19-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base functions.
+
+import "dm/jstb";
+import "data/cts";
+import "data/rs";
+import "data/market";
+
+/// Ibex quotes.
+/// Table has the fallowing structure:
+///   [[date:s, value:f]...]
+/// \-> <jstb>
+qibex = \-> return jstb.new(
+  path.cat([cts.dbHome, "qibex.tb"]),
+  \-> return "[]";,
+  \T -> return js.wa(arr.mp(
+      T,
+      \DtVal -> return js.wa([js.ws(DtVal[0]), js.wf2(DtVal[1], 2)]);
+    ));,
+  \j -> return arr.mp(
+      js.ra(j),
+      \j2 -> {
+        A = js.ra(j2);
+        return [js.rs(A[0]), js.rf(A[1])];
+      }
+    );
+);;
+
+/// Nick ponderations.
+/// Table has the fallowing structure:
+///   [[nick:s, poderation:f]...]
+/// \-> <jstb>
+nkpond = \-> return jstb.new(
+  path.cat([cts.dbHome, "nkpond.tb"]),
+  \-> return "[]";,
+  \T -> return js.wa(arr.mp(
+      T,
+      \DtVal -> return js.wa([js.ws(DtVal[0]), js.wf2(DtVal[1], 2)]);
+    ));,
+  \j -> return arr.mp(
+      js.ra(j),
+      \j2 -> {
+        A = js.ra(j2);
+        return [js.rs(A[0]), js.rf(A[1])];
+      }
+    );
+);;
+
+/// Returns quotes of a company.
+/// The returned table has the fallowing structure:
+///   [[date:s, open: f, close: f]...]
+/// Paremeter:
+///   nk: Company nick.
+/// \s -> [[s, f, f]...]
+qco = \nk -> {
+  R = [];
+  tb = path.cat([cts.dbQuotes, nk + ".tb"]);
+  for (l = str.splitTrim(file.read(tb), "\n")) {
+    ps = str.splitTrim(l, ":");
+    arr.push(R, [ps[0], math.toFloat(ps[1]), math.toFloat(ps[2])]);
+  }
+
+  for (i = 1:arr.size(R)) {
+    E = R[i];
+    if (E[1] < 0.0) E[1] = R[i-1][1];
+    if (E[2] < 0.0) E[2] = R[i-1][2];
+  }
+  arr.reverseIn(R);
+  for (i = 1:arr.size(R)) {
+    E = R[i];
+    if (E[1] < 0.0) E[1] = R[i-1][1];
+    if (E[2] < 0.0) E[2] = R[i-1][2];
+  }
+
+  return R;
+};
+
+/// Model results.
+/// Table is an array with the fallowing structure:
+///   [modelResult: <rs> ...]
+/// \-> <jstb>
+rsTb = \-> return jstb.new(
+  path.cat([cts.dbHome, "rs.tb"]),
+  \-> return "[]";,
+  \R -> return js.wa(arr.mp(R, rs.toJs));,
+  \j -> return arr.mp(js.ra(j), rs.fromJs);
+);;

@@ -1,0 +1,79 @@
+// Copyright 19-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "db";
+
+run = \ -> {
+
+  // qibex test. -------------------------------------------
+  Qs = db.qibex().read();
+  ValSum = [0.0];
+  DatesOk = [true];
+  PrevDate = ["000000"];
+  for (DtVal = Qs) {
+    d = DtVal[0];
+    if (arr.empty(time.fromStrOp(d))) {
+      sys.println("Bad date: " + d);
+      DatesOk! = false;
+    }
+    if (d <= PrevDate!) {
+      sys.println("Unsorted date: " + d);
+      DatesOk! = false;
+    }
+    PrevDate! = d;
+
+    ValSum! += DtVal[1];
+  }
+  assert DatesOk!;
+  assert ValSum! > 0.0;
+
+  // nkponds test. -----------------------------------------
+  Nks = [""];
+  PondSum = [0.0];
+  NkPonds = db.nkpond().read();
+  arr.sort(NkPonds, \e1, e2 -> return e1[0] < e2[0];);
+  for (NkPond = NkPonds) {
+    Nks! += NkPond[0] + "·";
+    PondSum! += NkPond[1];
+  }
+  assert Nks! == "AMS·BBVA·CABK·CLNX·FER·IBE·ITX·REP·SAN·TEF·";
+  assert PondSum! > 50.0 & PondSum! < 100.0;
+
+  // Companies test. ---------------------------------------
+  for (NkPond = NkPonds) {
+    nk = NkPond[0];
+
+    Qs = db.qco(nk);
+    DatesOk = [true];
+    QuotesOk = [true];
+    PrevDate = ["000000"];
+    for (DtOpCl = Qs) {
+      d = DtOpCl[0];
+      if (arr.empty(time.fromStrOp(d))) {
+        sys.println("Bad date: " + d);
+        DatesOk! = false;
+      }
+      if (d <= PrevDate!) {
+        sys.println("Unsorted date: " + d);
+        DatesOk! = false;
+      }
+      PrevDate! = d;
+
+      op = DtOpCl[1];
+      if (op < 0.0) {
+        sys.println("Open less than 0 in " + d);
+        QuotesOk! = false;
+      }
+
+      cl = DtOpCl[2];
+      if (cl < 0.0) {
+        sys.println("Close less than 0 in " + d);
+        QuotesOk! = false;
+      }
+    }
+    assert DatesOk!;
+    assert QuotesOk!;
+  }
+
+  sys.println("db tests finished");
+};

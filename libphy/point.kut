@@ -1,0 +1,44 @@
+// Copyright 17-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// 3D point.
+
+import "vector";
+import "fn";
+
+/// Constructor type map.
+/// \f, f, f -> <point>
+new = \x, y, z -> return {x, y, z};;
+
+/// Returns 'true' if 'P1' is equals to 'P2' with 6 digits of precision.
+/// \<point>, <point> -> b
+eq = \P1, P2 -> return
+  math.eq(P1.x, P2.x, 0.0000001) &
+  math.eq(P1.y, P2.y, 0.0000001) &
+  math.eq(P1.z, P2.z, 0.0000001)
+;;
+
+/// Returns P1 - P2
+/// \<point>, <point> -> <vector>
+sub = \P1, P2 -> return vector.new(P1.x - P2.x, P1.y - P2.y, P1.z - P2.z);;
+
+/// \<point> -> s
+toStr = \P -> return
+  "(" + fn.fmtf(P.x) + ", " + fn.fmtf(P.y) + ", " + fn.fmtf(P.z) + ")";;
+
+/// \<point> -> s
+toJs = \P -> return js.wa([
+  js.wf(P.x),
+  js.wf(P.y),
+  js.wf(P.z)
+]);;
+
+/// s -> <point>
+fromJs = \j -> {
+  a = js.ra(j);
+  return new (
+    js.rf(a[0]),
+    js.rf(a[1]),
+    js.rf(a[2])
+  );
+};

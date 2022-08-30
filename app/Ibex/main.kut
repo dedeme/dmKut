@@ -1,0 +1,64 @@
+// Copyright 19-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program entry.
+
+import "dm/log";
+import "dm/cgi";
+import "test/allTests";
+import "data/cts";
+import "update";
+import "web";
+
+install = \-> {
+  if (!file.exists(cts.dbHome)) file.mkdir(cts.dbHome);
+  log.init(path.cat([cts.dbHome, "log.tb"]), true);
+};
+
+help = """
+
+  Usage: Ibex 'argument'
+  where 'argument' is:
+    - "install": Ibex install
+      * Intialization for before the first running.
+    - "update": Ibex update
+      * Update data base.
+    - "test": Ibex test
+      * Does several tests.
+    - "resetLog": Ibex resetLog
+      * Reset program log.
+    - cgi code: Ibex xxxxxxx
+      * Read a request and send a response.
+"""
+;
+
+Args = sys.args();
+if (arr.size(Args) != 1) sys.fail(help);
+a = Args[0];
+
+if (a == "install") {
+  install();
+  return;
+}
+
+if (a == "resetLog") {
+  log.init(path.cat([cts.dbHome, "log.tb"]), false);
+  log.reset();
+  return;
+}
+
+if (a == "test" | a == "update") {
+  if (a == "test") {
+    log.init(path.cat([cts.dbHome, "log.tb"]), false);
+    allTests.run();
+  } else {
+    log.init(path.cat([cts.dbHome, "log.tb"]), true);
+    update.run();
+  }
+
+  return;
+}
+
+cgi.init(cts.webHome, 900);
+log.init(path.cat([cts.dbHome, "log.tb"]), false);
+web.process(a);

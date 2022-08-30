@@ -1,0 +1,33 @@
+// Copyright 20-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Buy and keep model.
+
+import "data/mdSt";
+import "data/model";
+
+doc = """
+  Some doc
+"""
+;
+
+// \[f...] -> <mdSt>
+init = \Closes -> return mdSt.new(true, 0.0, "");;
+
+// \<mdSt>, f -> <mdSt>
+next = \State, close ->
+  return mdSt.new(false, close, State.Internal ? "b" : "");;
+
+/// Constructor.
+/// \-> <model>
+new = \-> return model.new(
+  "CM",
+  "Comprar y mantener",
+  doc,
+  [],
+  init,
+  next
+);;
+
+
+

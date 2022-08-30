@@ -1,0 +1,88 @@
+// Copyright 17-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// 3D vector
+
+import "fn";
+
+/// Constructor with cartesians coordenates.
+/// \f, f, f -> <vector>
+new = \x, y, z -> return {x, y, z};;
+
+/// Constructor with polar coordenates.
+/// \f, f, f -> <vector>
+newPolar = \len, theta, phi -> {
+  z = math.cos(phi) * len;
+  h = math.sin(phi) * len;
+  x = math.cos(theta) * h;
+  y = math.sin(theta) * h;
+  return {x, y, z};
+};
+
+/// Returns 'true' if 'V1' is equals to 'V2' with 6 digits of precision.
+/// \<vector>, <vector> -> b
+eq = \V1, V2 -> return
+  math.eq(V1.x, V2.x, 0.0000001) &
+  math.eq(V1.y, V2.y, 0.0000001) &
+  math.eq(V1.z, V2.z, 0.0000001)
+;;
+
+/// Returns V length.
+/// \<vector> -> f
+len = \V -> return math.sqrt(V.x * V.x + V.y * V.y + V.z * V.z);;
+
+/// Returns V1 + V2
+/// \<vector>, <vector> -> <vector>
+plus = \V1, V2 -> return new(V1.x + V2.x, V1.y + V2.y, V1.z + V2.z);;
+
+/// Returns -V1
+/// \<vector> -> <vector>
+neg = \V1 -> return new(-V1.x, -V1.y, -V1.z);;
+
+/// Returns V1 - V2
+/// \<vector>, <vector> -> <vector>
+sub = \V1, V2 -> return new(V1.x - V2.x, V1.y - V2.y, V1.z - V2.z);;
+
+/// Returns V * n
+/// \<vector>, f -> <vector>
+mul = \V, n -> return new(V.x * n, V.y * n, V.z * n);;
+
+/// Returns a map {len:f, theta:f, phi:f} with polar coordenates of V.
+/// \<vector> -> m
+toPolar = \V -> {
+  h = math.sqrt(V.x * V.x + V.y * V.y);
+  theta = math.atan(V.y / V.x);
+  phi = math.atan(h / V.z);
+  len = math.sqrt(h * h + V.z * V.z);
+  return {len, theta, phi};
+};
+
+/// \<vector> -> s
+toStr = \V -> return
+  "(" + fn.fmtf(V.x) + ", " + fn.fmtf(V.y) + ", " + fn.fmtf(V.z) + ")";;
+
+/// Returns a representation of 'V' in polar coordenates.
+/// \<vector> -> s
+toStrPolar = \V -> {
+  W = toPolar(V);
+  return "(" + fn.fmtf(W.phi) + ", " + fn.fmtf(W.theta) + ", " +
+    fn.fmtf(W.len) + ")"
+  ;
+};
+
+/// \<vector> -> s
+toJs = \V -> return js.wa([
+  js.wf(V.x),
+  js.wf(V.y),
+  js.wf(V.z)
+]);;
+
+/// s -> <vector>
+fromJs = \j -> {
+  a = js.ra(j);
+  return new (
+    js.rf(a[0]),
+    js.rf(a[1]),
+    js.rf(a[2])
+  );
+};

@@ -9,8 +9,8 @@ import "data/ibexSundays";
 import "data/modelEvals";
 import "data/modelFloats";
 import "data/hotMap";
-import "ex/mmarket/evals";
-import "ex/mmarket/results";
+import "ex/ktmmarket/evals";
+import "ex/ktmmarket/results";
 import "cts";
 import "fns";
 
@@ -71,7 +71,7 @@ refsModelSimProfitsDb = \-> return jstb.newArr(
   modelFloats.fromJs
 );;
 
-/// Returns hot maps of a model.
+/// Returns hot maps of a model sorted by date.
 /// \s -> <Jstb> of [<HotMap>...]
 hotMapsDb = \model -> return jstb.newArr(
   path.cat([cts.dbHome, "hotMaps", model + ".tb"]),

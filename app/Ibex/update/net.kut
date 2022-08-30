@@ -1,0 +1,80 @@
+// Copyright 19-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "dm/ext";
+import "dm/log";
+
+/// \->[[s, f]...]
+getIbex = \-> {
+  R = [];
+
+  html = ext.wget("https://www.infobolsa.es/indice/historico-ibex_35", false);
+
+  I1 = [0];
+  I2 = [0];
+
+  index = \s, ix -> {
+    r = str.indexFrom(html, s, ix);
+    if (r == -1) log.error("net.getIbex: Substring not found\n" + s);
+    return r;
+  };
+
+  I1! = index('<table class="fullTable body">', 0);
+  if (I1! == -1) return [];
+  while () {
+    I1! = str.indexFrom(html, '<tr class="normal">', I1!);
+    if (I1! == -1) break;
+    I1! = index('<td class="date center"', I1!);
+    if (I1! == -1) return [];
+    I1! = index('>', I1!);
+    if (I1! == -1) return [];
+    I2! = index('<', I1!);
+    if (I2! == -1) return [];
+    d0 = str.trim(html[I1! + 1:I2!]);
+
+    I1! = index('<td class="price"', I2!);
+    if (I1! == -1) return [];
+    I1! = index('>', I1!);
+    if (I1! == -1) return [];
+    I2! = index('<', I1!);
+    if (I2! == -1) return [];
+    v0 = str.trim(html[I1!+1:I2!]);
+
+    D = time.fromIsoOp(d0, "/");
+    if (arr.empty(D)) {
+      log.error("net.getIbex: Bad date\n" + d0);
+      return [];
+    }
+
+    V = math.fromIso(v0);
+    if (arr.empty(V)) {
+      log.error("net.getIbex: Bad value\n" + v0);
+      return [];
+    }
+
+    arr.push(R, [time.toStr(D!), V!]);
+  }
+
+  arr.reverseIn(R);
+
+  DatesOk = [true];
+  PrevDate = ["000000"];
+  for (DtVal = R) {
+    d = DtVal[0];
+    if (arr.empty(time.fromStrOp(d))) {
+      log.error("Bad date: " + d);
+      DatesOk! = false;
+    }
+    if (d <= PrevDate!) {
+      log.error("Unsorted date: " + d);
+      DatesOk! = false;
+    }
+    PrevDate! = d;
+  }
+  if (!DatesOk!) {
+    return [];
+  }
+
+  return R;
+};
+

@@ -1,0 +1,31 @@
+// Copyright 20-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Model results.
+
+import "data/nkRs";
+
+/// Creates a new Rs of type array.
+///   model: Model identifier.
+///   nkResults: Nick resuls.
+/// \s, [<nkRs>...] -> <rs>
+new = \model, NkResults ->
+  return [model, NkResults];;
+
+///
+toJs = \R -> {
+  return js.wa([
+    js.ws(R[0]),
+    js.wa(arr.mp(R[1], nkRs.toJs))
+  ]);
+};
+
+///
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    arr.mp(js.ra(A[1]), nkRs.fromJs)
+  );
+};
+

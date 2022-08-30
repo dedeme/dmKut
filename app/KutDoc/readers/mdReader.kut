@@ -49,14 +49,20 @@ read = \pack, pt -> {
         FirstDoc! = false;
         St! = "init";
       } else if (str.starts(l, "///")) {
-        tx = l[4:];
-        DocBf! = tx;
+        if (l == "///") DocBf! = "\n";
+        else {
+          tx = l[4:];
+          DocBf! = tx;
+        }
         St! = "doc";
       }
     "init":
       if (str.starts(l, "///")) {
-        tx = l[4:];
-        DocBf! = tx;
+        if (l == "///") DocBf! = "\n";
+        else {
+          tx = l[4:];
+          DocBf! = tx;
+        }
         St! = "doc";
       }
     "doc":

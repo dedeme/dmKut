@@ -9,7 +9,7 @@
 /// Example of use:
 ///
 /// tb = new(
-///   "abc.tb", "\-> return [];",
+///   "abc.tb", \-> return "[]";,
 ///   \o -> return js.wa(arr.mp(o, \e -> return js.ws(e);));,
 ///   \j -> return arr.mp(js.ra(j), \e -> return js.rs(e););
 /// );
@@ -18,7 +18,7 @@
 ///
 /// or
 ///
-/// tb = newArr("abc.tb", "\-> return [];", js.ws, js.rs);
+/// tb = newArr("abc.tb", \-> return "[]";, js.ws, js.rs);
 /// tb.write(["a", "b", "c"]);
 /// assert arr.toStr(tb.read()) == '["a", "b", "c"]';
 

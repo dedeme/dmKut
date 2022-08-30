@@ -6,14 +6,26 @@
 import "dm/cgi";
 import "dm/log";
 import "db";
+import "ex/ktmarket/investors";
+import "data/paramsEval";
 
 /// \m -> s
 process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "idata": {
+      Mds = ["QFIJO", "QMOV", "APRX"];
+      ParEvals = [];
+      for (m = Mds) {
+        Pevs = db.hotMapsDb(m).read()[0].entries;
+        arr.push(ParEvals, arr.reduce(Pevs, Pevs[0], \Rs, E ->
+          return E[paramsEval.eval] > Rs[paramsEval.eval] ? E : Rs;
+        ));
+      }
       return cgi.rp({
-        "ok": js.wb(true)
+        "iparams": js.wa(arr.mp(investors.read(), \ps -> return js.wa(ps);)),
+        "models": js.wa(arr.mp(Mds, js.ws)),
+        "paramsEvals": js.wa(arr.mp(ParEvals, paramsEval.toJs))
       });
     }
     "getLog": return cgi.rp({

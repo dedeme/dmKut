@@ -1,16 +1,11 @@
-// Copyright 27-Mar-2022 ºDeme
+// Copyright 31-Jul-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Global constants
 
 /// Application name.
-appName = "MMagazine";
+appName = "PropositionalLogic";
 /// Application version.
-version = "202203";
+version = "202207";
 /// Home for cgi data.
 webHome = "/dm/wwwcgi/dmcgi/" + appName;
-/// Home for command data.
-dbHome = "/home/deme/.dmKutApp/" + appName;
-
-/// Number of investors.
-investors = 3;

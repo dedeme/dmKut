@@ -28,132 +28,135 @@ r2 =2;
 
 /// Current league year.
 /// s
-year = "2021";
+year = "2022";
 
 /// Team index.
 /// m[s]
 Teams = {
-  realMadrid: "Real Madrid",
-  valencia: "Valencia CF",
-  atletico: "Atlético de Madrid",
-  realSociedad: "Real Sociedad",
+  almeria: "U.D. Almería",
+  alaves: "Deportivo Alavés",
   athletic: "Athletic Club",
-  sevilla: "Sevilla FC",
+  atletico: "Atlético de Madrid",
   barcelona: "FC Barcelona",
-  mallorca: "RCD Mallorca",
   betis: "Real Betis",
-  elche: "Elche CF",
   cadiz: "Cádiz CF",
+  celta: "RC Celta",
+  elche: "Elche CF",
+  espanyol: "RCD Espanyol",
+  getafe: "Getafe CF",
+  girona: "Girona FC",
+  granada: "Granada CF",
+  levante: "Levante UD",
+  mallorca: "RCD Mallorca",
   osasuna: "CA Osasuna",
   rayo: "Rayo Vallecano",
-  villarreal: "Villarreal CF",
-  levante: "Levante UD",
-  espanyol: "RCD Espanyol",
-  granada: "Granada CF",
-  celta: "RC Celta",
-  getafe: "Getafe CF",
-  alaves: "Deportivo Alavés"
+  realMadrid: "Real Madrid",
+  realSociedad: "Real Sociedad",
+  sevilla: "Sevilla FC",
+  valencia: "Valencia CF",
+  valladolid: "Real Valladolid CF",
+  villarreal: "Villarreal CF"
 };
 
 /// Current teams.
 /// [s...]
 CurrentTeams = [
-  "realMadrid",
-  "valencia",
-  "atletico",
-  "realSociedad",
+  "almeria",
   "athletic",
-  "sevilla",
+  "atletico",
   "barcelona",
-  "mallorca",
   "betis",
-  "elche",
   "cadiz",
+  "celta",
+  "elche",
+  "espanyol",
+  "getafe",
+  "girona",
+  "mallorca",
   "osasuna",
   "rayo",
-  "villarreal",
-  "levante",
-  "espanyol",
-  "granada",
-  "celta",
-  "getafe",
-  "alaves"
+  "realMadrid",
+  "realSociedad",
+  "sevilla",
+  "valencia",
+  "valladolid",
+  "villarreal"
 ];
 
 /// Marca team codes.
 /// They have the same order as 'currentTeams'.
 /// [s...]
 MarcaTeams = [
-  "186", // realMadrid
-  "191", // valencia
-  "175", // atletico
-  "188", // realSociedad
+  "1564", // almeria
   "174", // athletic
-  "179", // sevilla
+  "175", // atletico
   "178", // barcelona
-  "181", // mallorca
   "185", // betis
-  "954", // elche
   "1737", // cadiz
+  "176", // celta
+  "954", // elche
+  "177", // espanyol
+  "1450", // getafe
+  "2893", // girona
+  "181", // mallorca
   "450", // osasuna
   "184", // rayo
-  "449", // villarreal
-  "855", // levante
-  "177", // espanyol
-  "5683", // granada
-  "176", // celta
-  "1450", // getafe
-  "173" // alaves
+  "186", // realMadrid
+  "188", // realSociedad
+  "179", // sevilla
+  "191", // valencia
+  "192", // valladolid
+  "449" // villarreal
 ];
 
 /// As team codes.
 /// They have the same order as 'currentTeams'.
 /// [s...]
 AsTeams = [
-  "1", // realMadrid
-  "17", // valencia
-  "42", // atletico
-  "16", // realSociedad
+  "85", // almeria
   "5", // athletic
-  "53", // sevilla
+  "42", // atletico
   "3", // barcelona
-  "11", // mallorca
   "171", // betis
-  "121", // elche
   "91", // cadiz
+  "6", // celta
+  "121", // elche
+  "8", // espanyol
+  "172", // getafe
+  "648", // girona
+  "11", // mallorca
   "13", // osasuna
   "2", // rayo
-  "19", // villarreal
-  "136", // levante
-  "8", // espanyol
-  "347", // granada
-  "6", // celta
-  "172", // getafe
-  "4" // alaves
+  "1", // realMadrid
+  "16", // realSociedad
+  "53", // sevilla
+  "17", // valencia
+  "18", // valladolid
+  "19" // villarreal
 ];
 
 /// Sportium team codes.
 /// They have the same order as 'currentTeams'.
 /// [s...]
 SportiumTeams = [
-  "Real Madrid", // realMadrid
-  "Valencia CF", // valencia
-  "Atlético Madrid", // atletico
-  "Real Sociedad", // realSociedad
+  "UD Almeria", // almeria
   "Athletic Club", // athletic
-  "FC Sevilla", // sevilla
+  "Atlético Madrid", // atletico
   "FC Barcelona", // barcelona
-  "RCD Mallorca", // mallorca
   "Real Betis", // betis
-  "Elche", // elche
   "Cádiz CF", // cadiz
+  "Celta de Vigo", // celta
+  "Elche", // elche
+  "RCD Espanyol", // espanyol
+  "Getafe CF", // getafe
+  "Girona FC", // girona
+  "RCD Mallorca", // mallorca
   "Osasuna", // osasuna
   "Rayo Vallecano", // rayo
-  "Villarreal CF", // villarreal
-  "Levante UD", // levante
-  "RCD Espanyol", // espanyol
-  "Granada CF", // granada
-  "Celta de Vigo", // celta
-  "Getafe CF", // getafe
-  "Dep. Alaves" // alaves
+  "Real Madrid", // realMadrid
+  "Real Sociedad", // realSociedad
+  "FC Sevilla", // sevilla
+  "Valencia CF", // valencia
+  "Real Valladolid", // valladolid
+  "Villarreal CF" // villarreal
 ];

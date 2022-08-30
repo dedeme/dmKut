@@ -21,6 +21,9 @@ init = \fpath, logFail -> {
     });
 };
 
+/// Returns 'true' if 'log' was initialized.
+isInit = \-> return !arr.empty(File);;
+
 // () -> s
 date = \-> return time.format("%D/%M/%Y(%t)", time.now());;
 

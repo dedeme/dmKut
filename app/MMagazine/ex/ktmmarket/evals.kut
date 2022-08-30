@@ -7,7 +7,7 @@ import "data/modelEval";
 import "data/paramsEval";
 import "data/mmarket/mModelEval";
 
-dir = "/home/deme/.dmCApp/MMarket/data/evals";
+dir = "/home/deme/.dmGoApp/KtMMarket/data/evals";
 
 // s -> s
 fpath = \model -> return path.cat([dir, model + ".tb"]);;

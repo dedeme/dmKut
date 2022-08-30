@@ -1,0 +1,65 @@
+// Copyright 20-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Approximations model.
+
+import "data/mdSt";
+import "data/model";
+
+doc = """
+  Some doc
+"""
+;
+
+// \[f...], f, f -> <mdSt>
+init = \Closes, start, approx -> {
+  isBeginning = true;
+  isSold = false;
+  ref = Closes[0] * (1.0 - start);
+  return mdSt.new([start, approx, isBeginning, isSold, ref], ref, "");
+};
+
+// \<mdSt>, f -> <mdSt>
+next = \State, close -> {
+  Int = State.Internal;
+  start = Int[0];
+  approx = Int[1];
+  isBeginning = Int[2];
+  isSold = Int[3];
+  ref = Int[4];
+
+  if (isSold) {
+    if (close > ref) {
+      newRef = close * (1.0 - start);
+      return mdSt.new([start, approx, false, false, newRef], newRef, "b");
+    } else {
+      newRef = ref - (ref-close)*approx;
+      return mdSt.new([start, approx, false, true, newRef], newRef, "");
+    }
+  } else {
+    if (close < ref) {
+      newRef = close * (1.0 + start);
+      op = isBeginning ? "" : "s";
+      return mdSt.new([start, approx, false, true, newRef], newRef, op);
+    } else {
+      newRef = ref + (close-ref)*approx;
+      return mdSt.new([start, approx, isBeginning, false, newRef], newRef, "");
+    }
+  }
+};
+
+/// Constructor.
+///   start : Ratio to reference start.
+///   approx: Ratio to reference approximation.
+/// \f, f -> <model>
+new = \start, approx-> return model.new(
+  "APRX",
+  "Aproximaciones",
+  doc,
+  [start, approx],
+  \closes -> return init(closes, start, approx);,
+  next
+);;
+
+
+

@@ -17,14 +17,15 @@ process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "idata": {
-      lvs = cts.qlevels;
+      lvs = cts.investors;
       year = time.year(time.now());
       //[[<DailyProfitsEntry>...]...]
       InvPs = arr.fromIter(iter.mp(
-        [0:cts.qlevels], \inv -> return profits.read(year, inv);
+        [0:cts.investors], \inv -> return profits.read(year, inv);
       ));
       Pfs = dailyProfitsEntry.mkProfits(InvPs);
       return cgi.rp({
+        "investors": js.wi(cts.investors),
         "initialAssets": js.wa(arr.fromIter(
             iter.mp([0:lvs], \inv ->
               return js.wf(diary.initialAssets(diariesDb.read(year, inv).anns));

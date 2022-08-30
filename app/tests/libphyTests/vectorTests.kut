@@ -1,0 +1,18 @@
+// Copyright 17-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "libphy/vector";
+
+run = \-> {
+  V = vector.new(2.3, 1.1, 16.0);
+  Vp = vector.toPolar(V);
+  assert math.eq(Vp.len, vector.len(V), 0.0000001);
+  V2 = vector.newPolar(Vp.len, Vp.theta, Vp.phi);
+  assert vector.eq(V, V2);
+  V3 = vector.fromJs(vector.toJs(V));
+  assert vector.eq(V, V3);
+
+  sys.println("vector tests finished");
+};
+
+

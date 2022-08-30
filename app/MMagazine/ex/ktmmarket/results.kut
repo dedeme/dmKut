@@ -7,7 +7,7 @@ import "data/modelFloat";
 import "data/mmarket/simProfitsRow";
 import "data/mmarket/simProfits";
 
-dir = "/home/deme/.dmCApp/MMarket/data/simulation";
+dir = "/home/deme/.dmGoApp/KtMMarket/data/simulation";
 
 // s -> s
 fpath = \model -> return path.cat([dir, model + ".tb"]);;

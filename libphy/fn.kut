@@ -1,0 +1,25 @@
+// Copyright 17-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions.
+
+/// Returns a formated float with six digit of precision.
+/// \f -> s
+fmtf = \n -> {
+  rm0s = \s -> {
+    rm0s2 = \s2 -> {
+      return  s2 == ""
+        ? ""
+        : s2[str.len(s2)-1] == '0'
+          ? rm0s2(s2[:-1])
+          : s2[str.len(s2)-1] == '0'
+            ? s2[:-1]
+            : s2
+      ;
+    };
+    r = rm0s2(s);
+    return r == "" ? s : r;
+  };
+
+  return rm0s(math.toStr(math.round(n, 6)));
+};

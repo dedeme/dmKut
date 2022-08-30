@@ -1,0 +1,60 @@
+// Copyright 20-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Update data.
+
+import "db";
+import "update/net";
+import "data/quotes";
+import "data/model";
+import "data/rs";
+import "data/cts";
+
+/// Update data.
+/// \-> ()
+run = \-> {
+  NkPonds = db.nkpond().read();
+  // sort from greater to less ponderation.
+  arr.sort(NkPonds, \e1, e2 -> return e1[1] > e1[1];);
+
+  QibexTb = db.qibex();
+  QibexData = QibexTb.read();
+  NewIbexData = net.getIbex();
+  CoQuotes = db.qco(NkPonds[0][0]);
+  Ibex = quotes.ibexMix(QibexData, NewIbexData, CoQuotes);
+  QibexTb.write(Ibex);
+
+  Dates = arr.mp(Ibex, \DtVal -> return DtVal[0];);
+  MdList = model.list();
+  Rss = arr.mp(MdList, \m -> return rs.new(m.id, []););
+
+  Closes = [];
+  Opens = [Ibex[0][1]];
+  for (j = 0:arr.size(Ibex)-1) {
+    v = Ibex[j][1];
+    arr.push(Closes, v);
+    arr.push(Opens, v);
+  }
+  arr.push(Closes, Ibex[arr.size(Ibex)-1][1]);
+  for (i = 0:arr.size(MdList)) {
+    arr.push(Rss[i][1], model.calculate(
+      MdList[i], "IBEX", 1.0, 1.0, Dates, Opens, Closes
+    ));
+  }
+
+  sum = arr.reduce(NkPonds, 0.0, \r, e -> return r + e[1];);
+  prop = 1.0 / math.toFloat(arr.size(NkPonds));
+  for (NkPond = NkPonds) {
+    nk = NkPond[0];
+    pond = NkPond[1] / sum;
+    Opens = arr.mp(db.qco(nk), \e -> return e[1];);
+    Closes = arr.mp(db.qco(nk), \e -> return e[2];);
+    for (i = 0:arr.size(MdList)) {
+      arr.push(Rss[i][1], model.calculate(
+        MdList[i], nk, prop, pond, Dates, Opens, Closes
+      ));
+    }
+  }
+
+  db.rsTb().write(Rss);
+};

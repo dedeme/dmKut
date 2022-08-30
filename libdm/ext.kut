@@ -40,7 +40,7 @@ md5 = \f -> {
 md5Str = \s ->
   return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | md5sum"])[0][:32];;
 
-/// Returns the sha256 sum of a file. . It calls "sha256sum 'f'".
+/// Returns the sha256 sum of a file. It calls "sha256sum 'f'".
 ///   f: File to check.
 /// \s -> s
 sha256 = \f -> {
@@ -55,4 +55,36 @@ sha256 = \f -> {
 /// \s -> s
 sha256Str = \s ->
   return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | sha256sum"])[0][:64];;
+
+/// Returns 'Files' converted to 'pdf'. It calls
+///     If 'isBook' is true:
+///     htmldoc --book --charset utf-8 --footer ... --size A4 -t pdf ['Files']
+///     If 'isBook' is false:
+///     htmldoc --webpage --charset utf-8 --footer ... --size A4 -t pdf ['Files']
+/// htmldoc documentation: https://www.msweet.org/htmldoc/htmldoc.html
+///   isBook: 'true' if a book shuld be generated.
+///   Files : Files in HTML to convert.
+/// \b, [s...] -> <bytes>
+htmldoc = \isBook, Files -> {
+  R = sys.cmd(
+    "htmldoc",
+    [ isBook ? "--book" : "--webpage",
+      "--charset", "utf-8", "--footer", "...", "--size", "A4", "-t", "pdf"
+    ] + Files
+  );
+  if (R[1] != "" & !str.starts(str.trim(R[1]), "PAGES:")) sys.fail(R[1]);
+  return bytes.fromStr(R[0]);
+};
+
+/// Returns 'html' converted to 'pdf'. It calls 'htmldoc'.
+///   isBook: 'true' if a book shuld be generated.
+///   html  : Text in HTML to convert.
+/// \b, s -> <bytes>
+htmldocStr = \isBook, html -> {
+  tmp = file.tmp("", "kut_htmldoc");
+  file.write(tmp, html);
+  r = htmldoc(isBook, [tmp]);
+  file.del(tmp);
+  return r;
+};
 

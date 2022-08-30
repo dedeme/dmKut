@@ -1,0 +1,30 @@
+// Copyright 21-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Simulation results.
+
+import "data/dayRs";
+import "data/order";
+
+/// Creates a new simRs of type array.
+///   Results: Daily results.
+///   Orders: Orders.
+/// \[<dayRs>...], [<order>...]  -> <simRs>
+new = \Results, Orders ->
+  return [Results, Orders];;
+
+///
+toJs = \R -> return js.wa([
+    js.wa(arr.mp(R[0], dayRs.toJs)),
+    js.wa(arr.mp(R[1], order.toJs))
+  ]);;
+
+///
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    arr.mp(js.ra(A[0]), dayRs.fromJs),
+    arr.mp(js.ra(A[1]), order.fromJs)
+  );
+};
+

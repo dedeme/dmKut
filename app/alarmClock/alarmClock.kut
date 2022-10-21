@@ -53,117 +53,139 @@ db = jstb.new(
   \j -> return arr.mp(js.ra(j), js.ri);
 );
 
-list = \now -> {
-  R = arr.filter(db.read(), \t -> return t > now;);
-  db.write(R);
-  arr.sort(R, \t1, t2 -> return t1 < t2;);
-  return R;
-};
-
-if (a == "set") {
-  RtErr = sys.cmd("zenity", [
-    "--entry",
-    '--title=clockAlarm',
-    '--text=Momento de la alarma\n(p.e. 1:23 o 15.3 o 06,04)'
-  ]);
-  tmStr = str.replace(str.replace(str.trim(RtErr[0]), ",", ":"), ".", ":");
-  if (str.len(tmStr) == 0) {
-    msg("No se ha añadido ninguna alarma.");
-    return;
-  }
-
-  Ps = str.split(tmStr, ":");
-  if (arr.size(Ps) != 2) {
-    err(a + " no es una entrada válida");
-    return;
-  }
-  H = math.toIntOp(Ps[0]);
-  M = math.toIntOp(Ps[1]);
-  if (arr.empty(H) | arr.empty(M)) {
-    err(a + " no es una entrada válida");
-    return;
-  }
-
-  hStr = str.len(Ps[0]) == 2 ? Ps[0] : "0" + Ps[0];
-  mStr = str.len(Ps[1]) == 2 ? Ps[1] : "0" + Ps[1];
-  now = time.now();
-  hnow = time.hour(now);
-  mnow = time.minute(now);
-
-  tm = time.fromClock(
-    H! < hnow | (H! == hnow & M! <= mnow) ? time.addDays(now, 1) : now,
-    hStr + ":" + mStr + ":00"
-  );
-
-  L = list(now);
-  arr.push(L, tm);
-  db.write(L);
-
-  msg("Añadida una alarma a las " + tmStr);
-
-  Continue = [true];
-  thread.run(\-> {
-    sys.sleep(tm - now);
-    msg("Alarma de las " + tmStr);
-    Continue! = false;
-  });
-
-  while () {
-    L = list(now);
-    if (!arr.any(L, \t -> return t == tm;) | !Continue!) break;
-    sys.sleep(15000);
-  }
-} else if (a == "list") {
-  now = time.now();
-  hnow = time.hour(now);
-  mnow = time.minute(now);
-
-  L = list(now);
-  OpList = [];
-  for (i = 0:arr.size(L)) {
-    arr.push(OpList, '""');
-    arr.push(OpList, math.toStr(i + 1));
-    t = L[i];
-    h = time.hour(t);
-    m = time.minute(t);
-
-    arr.push(
-      OpList,
-      (h > hnow | (h == hnow & m > mnow) ? "Hoy - " : "Mañana - ") +
-      time.format("%t", t)[:5]
-    );
+main = \a -> {
+  list = \now -> {
+    R = arr.filter(db.read(), \t -> return t > now;);
+    db.write(R);
+    arr.sort(R, \t1, t2 -> return t1 < t2;);
+    return R;
   };
 
-  RtErr = sys.cmd("zenity", [
-      "--list",
-      "--title=clockAlarm",
-      "--text=Selecciona la(s) alarma(s) para borrar",
-      "--column=",
-      "--column=N",
-      "--column=Alarma"
-    ] +
-    (!arr.empty(L) ? ["--checklist"] : []) +
-    OpList
-  );
+  if (a == "set") {
+    RtErr = sys.cmd("zenity", [
+      "--entry",
+      '--title=clockAlarm',
+      '--text=Momento de la alarma\n(p.e. 1:23 o 15.3 o 06,04)'
+    ]);
+    tmStr = str.replace(str.replace(str.trim(RtErr[0]), ",", ":"), ".", ":");
+    if (str.len(tmStr) == 0) {
+      msg("Alarm Clock ha sido cancelado.");
+      main("list");
+      return;
+    }
 
-  if (str.len(str.trim(RtErr[0])) == 0) return;
-  Ns = str.splitTrim(RtErr[0], "|");
-  Nms = arr.mp(Ns, \n -> return math.toInt(n););
+    Ps = str.split(tmStr, ":");
+    if (arr.size(Ps) != 2) {
+      err(tmStr + " no es una entrada válida");
+      main(a);
+      return;
+    }
+    H = math.toIntOp(Ps[0]);
+    M = math.toIntOp(Ps[1]);
+    if (arr.empty(H) | arr.empty(M)) {
+      err(tmStr + " no es una entrada válida");
+      main(a);
+      return;
+    }
 
-  N = [0];
-  db.write(arr.filter(L, \t -> {
-    N! += 1;
-    return !arr.any(Nms, \n -> return n == N!;);
-  }));
+    hStr = str.len(Ps[0]) == 2 ? Ps[0] : "0" + Ps[0];
+    mStr = str.len(Ps[1]) == 2 ? Ps[1] : "0" + Ps[1];
+    now = time.now();
+    hnow = time.hour(now);
+    mnow = time.minute(now);
 
-  msg(
-    (arr.size(Ns) == 1
-      ? "Se eliminó la alarma "
-      : "Se eliminaron las alarmas "
-    ) + RtErr[0]
-  );
+    Tm = time.fromClockOp(
+      H! < hnow | (H! == hnow & M! <= mnow) ? time.addDays(now, 1) : now,
+      hStr + ":" + mStr + ":00"
+    );
+    if (arr.empty(Tm)) {
+      err(tmStr + " no es una entrada válida");
+      main(a);
+      return;
+    }
+    tm = Tm!;
 
-} else {
-  err(help);
-}
+    L = list(now);
+    arr.push(L, tm);
+    db.write(L);
 
+    day = time.day(tm) == time.day(now) ? "hoy" : "mañana";
+    msg("Añadida una alarma " + day + ", a las " + tmStr);
+
+    newAlarm = thread.start(\-> {
+      main(a);
+    });
+    oldAlarm = thread.start(\-> {
+      Continue = [true];
+      thread.run(\-> {
+        sys.sleep(tm - now);
+        msg("Alarma de las " + tmStr);
+        Continue! = false;
+      });
+
+      while () {
+        L = list(now);
+        if (!arr.any(L, \t -> return t == tm;) | !Continue!) break;
+        sys.sleep(15000);
+      }
+    });
+
+    thread.join(newAlarm);
+    thread.join(oldAlarm);
+  } else if (a == "list") {
+    now = time.now();
+    hnow = time.hour(now);
+    mnow = time.minute(now);
+
+    L = list(now);
+    OpList = [];
+    for (i = 0:arr.size(L)) {
+      arr.push(OpList, '""');
+      arr.push(OpList, math.toStr(i + 1));
+      t = L[i];
+      h = time.hour(t);
+      m = time.minute(t);
+
+      arr.push(
+        OpList,
+        (h > hnow | (h == hnow & m > mnow) ? "Hoy - " : "Mañana - ") +
+        time.format("%t", t)[:5]
+      );
+    };
+
+    RtErr = sys.cmd("zenity", [
+        "--list",
+        "--title=clockAlarm",
+        "--text=Selecciona la(s) alarma(s) para borrar",
+        "--column=",
+        "--column=N",
+        "--column=Alarma"
+      ] +
+      (!arr.empty(L) ? ["--checklist"] : []) +
+      OpList
+    );
+
+    if (str.len(str.trim(RtErr[0])) == 0) return;
+    Ns = str.splitTrim(RtErr[0], "|");
+    Nms = arr.mp(Ns, \n -> return math.toInt(n););
+
+    N = [0];
+    db.write(arr.filter(L, \t -> {
+      N! += 1;
+      return !arr.any(Nms, \n -> return n == N!;);
+    }));
+
+    msg(
+      (arr.size(Ns) == 1
+        ? "Se eliminó la alarma "
+        : "Se eliminaron las alarmas "
+      ) + RtErr[0]
+    );
+
+  } else {
+    err(help);
+  }
+
+};
+
+main(a);

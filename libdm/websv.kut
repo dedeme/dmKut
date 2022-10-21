@@ -74,8 +74,9 @@ Mimetypes = {
 ///               -Binary files must be in 'root'/bin.
 ///               -Data directory will be in 'root'/dmcgi.
 ///   handler: Function to process requests.
-/// \i, i, s, (\s->s) -> ()
-start = \port, tm, root, handler -> {
+///   ferror : Function to process errors.
+/// \i, i, s, (\s->s), (\s->()) -> ()
+start = \port, tm, root, handler, ferror -> {
   if (!arr.empty(Sv)) return;
 
   arr.push(Sv, tcp.server(port));
@@ -86,12 +87,22 @@ start = \port, tm, root, handler -> {
     if (arr.empty(Sv)) break;
 
     connErr = tcp.accept(Sv!, tm);
-    if (connErr[1] != "") sys.fail("Connection failed");
+    if (connErr[1] != "") {
+      ferror("Connection failed: " + connErr[1]);
+      continue;
+    }
     conn = connErr[0];
 
     thread.run(\ -> {
-      tx = tcp.read(conn, 10_000_000);
-      tcp.writeBin(conn, bytes.fromStr(handler(tx)));
+      txErr = tcp.read(conn, 10_000_000);
+      if (txErr[1] != "") {
+        ferror(txErr[1]);
+      } else {
+        Err = tcp.writeBin(conn, bytes.fromStr(handler(txErr[0])));
+        if (!arr.empty(Err)) {
+          ferror(Err[0]);
+        }
+      }
       tcp.closeConnection(conn);
     });
   }

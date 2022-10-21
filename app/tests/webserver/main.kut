@@ -3,6 +3,8 @@
 
 import "/dm/dmKut/libdm/websv";
 
+ferror = \s -> sys.println(s);;
+
 if (!file.isDirectory("www") | !file.isDirectory("bin"))
   sys.fail("Tests in 'main.kut' must be lauched in '/dm/dmKut/app/tests/webserver'");
 
@@ -15,4 +17,4 @@ websv.start(5055, 0, "./", \rq -> {
   }
 
   return Rp!;
-});
+}, ferror);

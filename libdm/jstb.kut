@@ -35,7 +35,7 @@
 ///   read   : Returns the object which was serialized.
 ///   writeJs: Writes JSON text in the table file (overwriting it).
 ///   write  : Writes in the table file (overwriting it) an object.
-/// (\s, \-> s, \* -> s, \s -> *) -> Jstb
+/// (\s, \-> s, \* -> s, \s -> *) -> m<jstb>
 new = \fpath, init, toJs, fromJs -> {
   if (!file.exists(fpath)) {
     file.write(fpath, init());
@@ -63,7 +63,7 @@ new = \fpath, init, toJs, fromJs -> {
 ///   read   : Returns the array which was serialized.
 ///   writeJs: Writes JSON text in the table file (overwriting it).
 ///   write  : Writes in the table file (overwriting it) an array.
-/// (\s, \-> s, \* -> s, \s -> *) -> Jstb
+/// (\s, \-> s, \* -> s, \s -> *) -> m<jstb>
 newArr = \fpath, init, toJs, fromJs -> {
   if (!file.exists(fpath)) {
     file.write(fpath, init());
@@ -77,7 +77,7 @@ newArr = \fpath, init, toJs, fromJs -> {
   };
 };
 
-/// Returns 'true' if 'Tb' is of type Jstb.
+/// Returns 'true' if 'Tb' is of type m<jstb>.
 /// \* -> b
 checkType = \Tb -> {
   return sys.type(Tb) == "map" &

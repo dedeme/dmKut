@@ -1,0 +1,145 @@
+// Copyright 04-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "libdm/log";
+import "libdm/websv";
+import "libdm/cgi";
+import "global";
+
+Args = sys.args();
+
+if (arr.size(Args) != 1) return help();
+
+sys.rand();
+cgi.init(global.cgiRoot, global.texpiration);
+log.init(global.logPath, false);
+sys.ffail(\msg -> {
+  sys.println(msg);
+  log.error(msg);
+  sys.exit(1);
+});
+
+switch (Args[0]) {
+  "help": return help();
+  "start": server();
+  default: {
+    trace(Args);
+  }
+}
+
+// Functions -----------------------------------------------
+
+help = \ -> {
+  sys.println(str.fmt("""
+    Use:
+      KtWeb argument
+    Where argument can be:
+      start: Launch server in %s if it is not lanched yet.
+      end  : Stop server.
+      help : Show this message.
+      other: Program call.
+    """,
+    [global.port]
+  ));
+  return 0;
+};
+
+server = \ -> {
+  websv.start(
+    global.port,
+    global.rpTime,
+    global.root,
+    response,
+    log.error
+  );
+};
+
+// s -> s
+response = \rq -> {
+  // GET
+
+  Html = websv.getRq(rq);
+
+  if (arr.size(Html) == 1) {
+    return Html!;
+  }
+
+  // POST
+
+  rqUnix = str.replace(rq, "\r", "");
+  ix0 = str.index(rq, "\n");
+
+  if (ix0 == -1) return websv.badRequestRp(rq);
+
+  rq0 = str.trim(rq[:ix0]);
+  if (rq0 != "POST /cgi-bin/ccgi.sh HTTP/1.1")
+    return websv.badRequestRp("Bad POST request\n" + rq);
+
+
+  ix1 = str.index(rqUnix, "\n\n");
+  if (ix1 == -1) return websv.badRequestRp(rq);
+
+  rqUnix0 = str.trim(rqUnix[ix1+2:]);
+  ix3 = str.index(rqUnix0, ":");
+  if (ix3 == -1) return websv.badRequestRp(rq);
+
+  cmd = rqUnix0[:ix3];
+  par = rqUnix0[ix3+1:];
+  if (cmd != global.appName)
+    return websv.badRequestRp("Unauthorized source '" + cmd + "'");
+
+  return websv.textRp(rqProcess(par));
+};
+
+// Processes a POST request.
+// s -> s
+rqProcess = \rq -> {
+	ix0 = str.index(rq, ":");
+
+	// CONNECTION --------------------------------------------------------------
+
+	if (ix0 == -1) return cgi.connect(rq);
+
+	// AUTHENTICATION ----------------------------------------------------------
+
+	if (ix0 == 0) {
+		key = cryp.key(global.appName, cgi.klen);
+		data = cryp.decode(key, rq[1:]);
+		Ps = str.split(data, ":");
+		return cgi.authentication(key, Ps[0], Ps[1], Ps[2] == "1");
+	}
+
+	// NORMAL DATA -------------------------------------------------------------
+
+	sessionId = rq[:ix0];
+	ConKey = [""];
+	Rest = [rq[ix0+1:]];
+	ix1 = str.index(Rest!, ":");
+	if (ix1 != -1) {
+		ConKey! = Rest![:ix1];
+		Rest! = Rest![ix1+1:];
+	}
+	ComKey = cgi.getComKey(sessionId, ConKey!);
+	if (arr.size(ComKey) > 0) {
+		j = cryp.decode(ComKey!, Rest!);
+		Data = js.ro(j);
+		return processHub(ComKey!, Data);
+	} else {
+		return cgi.rpExpired();
+	}
+};
+
+// Processes POST normal data
+// s, m -> s
+processHub = \ck, Rq -> {
+  prg = js.rs(Rq.prg);
+  return switch(prg) {
+    "Main": sys.cmd("kut", ["prgs/Main/kut/main", ck, js.wo(Rq)])[0];
+    default: sys.fail("Value of prg (" + prg + ") is not valid");
+  };
+};
+
+
+

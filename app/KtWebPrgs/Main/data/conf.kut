@@ -1,0 +1,17 @@
+// Copyright 06-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Configuration data.
+
+/// Returns a map with the following fields:
+///   lang: s
+/// \-> m<conf>
+new = \-> return {
+  lang: "es"
+};;
+
+/// \m<conf> -> s
+toJs = \C -> return js.wo(C);;
+
+/// \s -> m<conf>
+fromJs = \j -> return js.ro(j);;

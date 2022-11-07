@@ -202,12 +202,12 @@ htmlRp = \h -> {
 };
 
 /// Return a text valid response.
-///   h: HTML text.
+///   tx: Plain text.
 /// \s -> s
 textRp = \tx -> {
   return "HTTP/1.1 200 OK\n" +
     "Server: Kut Webserver\n" +
-    "Content-type: text/text\n" +
+    "Content-type: text/plain\n" +
     "Content-length: " + math.toStr(str.len(tx)) + "\n\n" +
     tx;
 };

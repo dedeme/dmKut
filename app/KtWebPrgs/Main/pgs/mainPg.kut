@@ -1,0 +1,29 @@
+// Copyright 04-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "libdm/cgi";
+import "KtWeb/rp";
+import "KtWeb/global";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "lang": {
+      ConfTb = db.getConfTb();
+      sys.print(rp.mk({
+        "lang": js.ws(ConfTb.read()["lang"])
+      }));
+    }
+    "close": {
+      cgi.init(global.cgiRoot, global.texpiration);
+      sessionId = js.rs(Rq.sessionId);
+      cgi.delSession(sessionId);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};

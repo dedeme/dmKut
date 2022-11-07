@@ -1,0 +1,22 @@
+// Copyright 04-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Cgi response maker.
+
+ComKey = [""];
+
+/// Initialize responses.
+///   comKey: Comunications key.
+/// \s -> ()
+init = \comKey -> ComKey! = comKey;;
+
+/// Returns a generic response to send to client.
+///  Rp: Response. It is a Json object.
+///      Example of reponse:
+///        {"error": js.ws(msg)}
+/// \m -> s
+mk = \Rp -> return cryp.encode(ComKey!, js.wo(Rp));;
+
+/// Returns an empty response.
+/// \-> s
+mkEmpty = \-> return mk({});;

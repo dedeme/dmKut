@@ -11,3 +11,5 @@ sys.println("The value of B is: " + B!);
 C = [10, 20];
 sys.println("First value of C is: " + math.toStr(C[0]));
 sys.println("Second value of C is: " + math.toStr(C[1]));
+
+trace(-1_234 + 2);

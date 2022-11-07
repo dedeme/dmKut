@@ -1,0 +1,9 @@
+// Unzip a complete directory.
+// Drop in a directory and call
+//    kut unzip
+L = file.dir("./");
+arr.filterIn(L, \n -> return str.ends(n, ".zip"););
+for (f = L) {
+  sys.cmd("unzip", [f]);
+}
+

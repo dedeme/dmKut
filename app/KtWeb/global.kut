@@ -1,0 +1,24 @@
+// Copyright 04-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global variables.
+
+// Directories
+
+/// s
+appName = "KtWeb";
+/// s
+root = "/dm/dmWeb/app/KtWeb";
+/// s
+cgiRoot = root + "/dmcgi";
+/// s
+logPath = cgiRoot + "/log.txt";
+
+// Comunications
+
+/// i
+port = 8008;
+/// i
+rpTime = 30000; // 1/2 minute
+/// i
+texpiration = 900; // seconds = 15'

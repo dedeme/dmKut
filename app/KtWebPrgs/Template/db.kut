@@ -1,0 +1,39 @@
+// Copyright 08-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base of jstb's.
+
+import "libdm/jstb";
+import "KtWeb/global";
+import "data/cts";
+import "data/conf";
+import "data/text";
+
+DbPath = [""];
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = path.cat([global.cgiRoot, cts.appName]);
+  DbPath! = dbPath;
+  if (!file.exists(dbPath)) file.mkdir(dbPath);
+};
+
+/// Returns the table of 'm<conf>' in "conf.tb"
+/// \-> m<jsdb>
+confTb = \-> return jstb.new(
+  DbPath! + "/conf.tb",
+  \-> return conf.toJs(conf.init());,
+  conf.toJs,
+  conf.fromJs
+);;
+
+/// Returns the table of 's' in "text.tb"
+/// \-> m<jsdb>
+textTb = \-> return jstb.new(
+  DbPath! + "/text.tb",
+  \-> return text.toJs(text.init());,
+  text.toJs,
+  text.fromJs
+);;
+

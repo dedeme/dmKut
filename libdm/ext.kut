@@ -13,12 +13,13 @@
 /// If the reading fails, it returns an empty string.
 /// \s, b -> s
 wget = \url, isMozilla -> {
-  moz = "--user-agent Mozilla " +
+  Moz = [
+    "--user-agent", "Mozilla",
     "--load-cookies=/home/deme/" +
-    ".mozilla/firefox/bfrqeymk.default/cookies.sqlite "
-  ;
-  Opts = ["-q", "--no-cache", "-O", "-", url];
-  if (isMozilla) arr.unshift(Opts, moz);
+      ".mozilla/firefox/bfrqeymk.default/cookies.sqlite"
+  ];
+  Base = ["-q", "--no-cache", "-O", "-", url];
+  Opts = isMozilla ? Moz + Base : Base;
   R = sys.cmd("wget", Opts);
   if (R[1] != "" | R[0] == "") return "";
   else return R[0];

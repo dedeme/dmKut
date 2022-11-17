@@ -1,0 +1,60 @@
+// Copyright 16-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base reader.
+
+import "data/cts";
+import "data/accAnn";
+
+// Current year
+year = time.year(time.now());
+
+// Years range
+YearsRange = [
+  (year - 5 > 2022) ? year - 5 : 2022,
+  year
+];
+
+// i -> <accAnn>
+readDiary = \year -> {
+  y = math.toStr(year) + ".db";
+  pth = path.cat([cts.accPath, y]);
+  A = js.ra(file.read(pth));
+  R = [];
+  for (annJs = js.ra(A[3])) {
+    Ps = js.ra(annJs);
+    Amount = [];
+    CtAmJs = iter.find(
+      map.toIter(js.ro(Ps[2])),
+      \P -> return P[0] == cts.holidaysAcc;
+    );
+    if (arr.empty(CtAmJs)) {
+      CtAmJs = iter.find(
+        map.toIter(js.ro(Ps[3])),
+        \P -> return P[0] == cts.holidaysAcc;
+      );
+      if (!arr.empty(CtAmJs))
+        arr.push(Amount, -js.rf(CtAmJs![1]));
+    } else {
+      arr.push(Amount, js.rf(CtAmJs![1]));
+    }
+
+    if (!arr.empty(Amount)) arr.push(R, accAnn.new(Ps[0], Ps[1], Amount!));
+  }
+  return R;
+};
+
+/// Read stays annotations.
+/// \-> <accAnn>
+readStays = \ -> {
+  R = [];
+  for (year = YearsRange[0] : YearsRange[1] + 1) {
+    y = math.toStr(year) + ".db";
+    pth = path.cat([cts.accPath, y]);
+    A = js.ra(file.read(pth));
+    for (annJs = js.ra(A[3])) {
+    }
+  }
+  return R;
+};
+

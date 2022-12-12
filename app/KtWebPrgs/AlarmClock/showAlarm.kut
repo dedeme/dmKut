@@ -1,0 +1,30 @@
+// Copyright 25-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Show an alarm.
+
+import "db";
+
+/// Show the alarm with key 'id' if it exists.
+/// \s -> ()
+run = \id -> {
+  AlarmsTb = db.alarmsTb();
+  As = AlarmsTb.read();
+  ix = arr.index(As, \A -> return A[0] == id;);
+  if (ix != -1) {
+    tm = math.toInt(As[ix][1]);
+    sys.sleep(tm - time.now());
+    As = AlarmsTb.read();
+    ix2 = arr.index(As, \A -> return A[0] == id;);
+    if (ix2 != 1) {
+      arr.remove(As, ix2);
+      AlarmsTb.write(As);
+      sys.cmd("zenity", [
+        "--info",
+        "--width=400",
+        '--title=alarmClock',
+        '--text=Alarma de las ' + time.format("%t", tm)[:5]
+      ]);
+    }
+  }
+};

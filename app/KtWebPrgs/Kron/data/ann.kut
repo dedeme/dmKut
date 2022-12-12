@@ -1,0 +1,144 @@
+// Copyright 21-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Entry of annotations table.
+
+/// Annotation type
+typePERIODIC = 0;
+/// Annotation type
+typeFIX = 1;
+/// Annotation type
+typeMANUAL = 2;
+
+/// Creates a new a<Ann>
+/// id  : Annotation identifier.
+/// type: Type of annotation.
+/// data: JSON array with the following fields:
+///       if type == PERIODIC: 0 -> Float (time in seconds),
+///                            1 -> Array<Int (Weekday 0[Monday]-6)>
+///       if type == FIX: 0 -> Float (time in seconds)
+///       if type == MANUAL: No fields.
+/// text: Command to execute.
+/// \i, i, s, s -> <Ann>
+new = \id, type, data, text -> return [id, type, data, text];;
+
+/// Returns a new a<Ann> with the identifier changed.
+/// \<Ann>, i -> <Ann>
+setId = \A, id -> return [id, A[1], A[2], A[3]];;
+
+/// Execute an Ann. If there is an error, returns [error]. Otherwise, returns [].
+/// \<Ann> -> [s]|[]
+execute = \A -> {
+  // Returns first token and rest of 'tx'.
+  // If there are not more tokens, return [["", ""]].
+  // If there are a error, returns [error].
+  // \s -> [s, s] | [s]
+  nextToken =  \tx -> {
+    readQuotes = \q, read, rest -> {
+      if (rest == "") return ["Quotes not closed in '" + rest + "'"];
+      rrest = rest[1:];
+      return switch (rest[0]) {
+        q: [read + q, rrest];
+        "\\": rrest == ""
+          ? ["Quotes not closed in '" + rest + "'"]
+          : rrest[0] == "\\"
+            ? readQuotes(q, read + "\\", rrest[1:])
+            : rrest[0] == q
+              ? readQuotes(q, read + q, rrest[1:])
+              : ["Bad escape sequence in '" + rest + "'"];
+        default: readQuotes(q, read + rest[0], rrest);
+      };
+    };
+
+    readSymbol = \read, rest -> {
+      if (rest == "") return [read, ""];
+      rrest = rest[1:];
+      return switch (rest[0]) {
+        '"': [read, rest];
+        "'": [read, rest];
+        default: rest[0] <= " "
+          ? [read, rest]
+          : readSymbol(read + rest[0], rrest);
+      };
+    };
+
+    tx0 = str.ltrim(tx);
+    if (tx0 == "") return ["", ""];
+    return switch(tx0[0]) {
+      '"': readQuotes('"', '"', tx0[1:]);
+      "'": readQuotes("'", "'", tx0[1:]);
+      default: readSymbol(tx0[0], tx0[1:]);
+    };
+  };
+
+  Ps = [];
+  Tx = [A[3]];
+  while () {
+    tkRst = nextToken(Tx!);
+    if (arr.size(tkRst) == 1) return tkRst;
+    if (tkRst[0] == "") break;
+    arr.push(Ps, tkRst[0]);
+    Tx! = tkRst[1];
+  }
+
+  if (arr.empty(Ps)) return ["Command is missing in annotation"];
+
+  cmd = arr.shift(Ps);
+  thread.run(\-> sys.cmd(cmd, Ps););
+  sys.sleep(500);
+  return [];
+};
+
+/// Add a new annotation to an array in place.
+/// \[<Ann>,...], Ann -> ()
+add = \As, A -> {
+  sz = arr.size(As);
+  newA = setId(A, sz == 0 ? 0 : As[sz - 1][0] + 1);
+  arr.push(As, newA);
+};
+
+/// Remove an annotation from an array in place
+/// \[<Ann>,...], i -> ()
+del = \As, id -> {
+  arr.filterIn(As, \A -> return A[0] != id;);
+};
+
+/// Modify an annotation from an array in place
+/// \[<Ann>,...], Ann -> ()
+modify = \As, A -> {
+  id = A[0];
+  for (i = 0:arr.size(As))
+    if (As[i][0] == id)
+      As[i] = A;
+};
+
+/// Execute an annotation from an array
+/// If the execution fails, returns [error]. Otherwise, returns [].
+/// \[<Ann>,...], i -> [s]|[]
+executeId = \As, id -> {
+  for (A = As)
+    if (A[0] == id)
+      return execute(A);
+
+  return ["Annotation " + math.toStr(id) + " not found"];
+};
+
+
+/// \<Ann> -> s
+toJs = \A -> return js.wa([
+  js.wi(A[0]),
+  js.wi(A[1]),
+  A[2],
+  js.ws(A[3])
+]);;
+
+/// s -> <Ann>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new (
+    js.ri(A[0]),
+    js.ri(A[1]),
+    A[2],
+    js.rs(A[3])
+  );
+};

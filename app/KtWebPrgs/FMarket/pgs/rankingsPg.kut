@@ -1,15 +1,21 @@
-// Copyright 15-Nov-2022 ºDeme
+// Copyright 01-Dic-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Settings page.
+/// Rankings page.
 
 import "KtWeb/rp";
+import "db";
 
 /// \m -> ()
 process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
-    "idata": sys.print(rp.mkEmpty());
+    "idata": {
+      sys.print(rp.mk({
+        modelIds: sys.cmd("fmarket", ["models"])[0],
+        rankings: db.rankingsJs()
+      }));
+    }
     default: sys.fail("Value of rq (" + rq + ") is not valid");
   }
 };

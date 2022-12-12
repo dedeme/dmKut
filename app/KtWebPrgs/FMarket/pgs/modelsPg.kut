@@ -1,19 +1,21 @@
-// Copyright 16-Nov-2022 ºDeme
+// Copyright 01-Dic-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Stays page.
+/// Models page.
 
 import "KtWeb/rp";
 import "db";
-import "data/accAnn";
 
 /// \m -> ()
 process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
-    "idata": sys.print(rp.mk({
-        "anns": js.wa(arr.mp(db.readStays(), accAnn.toJs))
+    "idata": {
+      sys.print(rp.mk({
+        modelIds: sys.cmd("fmarket", ["models"])[0],
+        mdStats: db.mdStatsJs()
       }));
+    }
     default: sys.fail("Value of rq (" + rq + ") is not valid");
   }
 };

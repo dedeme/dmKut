@@ -138,6 +138,9 @@ processHub = \ck, Rq -> {
   return switch(prg) {
     "Main": sys.cmd("kut", ["prgs/Main/kut/main", ck, js.wo(Rq)])[0];
     "Template": sys.cmd("kut", ["prgs/Template/kut/main", ck, js.wo(Rq)])[0];
+    "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ck, js.wo(Rq)])[0];
+    "FMarket": sys.cmd("kut", ["prgs/FMarket/kut/main", ck, js.wo(Rq)])[0];
+    "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ck, js.wo(Rq)])[0];
     "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, js.wo(Rq)])[0];
     default: sys.fail("Value of prg (" + prg + ") is not valid");
   };

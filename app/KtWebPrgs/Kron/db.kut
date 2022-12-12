@@ -1,0 +1,37 @@
+// Copyright 20-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base of jstb's.
+
+import "libdm/jstb";
+
+import "data/cts";
+import "data/ann";
+
+DbPath = [""];
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  DbPath! = cts.dbPath;
+  if (!file.exists(DbPath!)) file.mkdir(DbPath!);
+};
+
+/// Returns the table of 's' in 'sessionId.tb'
+/// \-> s<jstb>
+sessionIdTb = \-> return jstb.new(
+  DbPath! + "/sessionId.tb",
+  \-> return js.ws("");,
+  js.ws,
+  js.rs
+);;
+
+/// Returns the table of [<Ann>, ...] in "anns.tb"
+/// \-> a[<Ann>]<jstb>
+annsTb = \-> return jstb.newArr(
+  DbPath! + "/anns.tb",
+  \-> return "[]";,
+  ann.toJs,
+  ann.fromJs
+);;
+

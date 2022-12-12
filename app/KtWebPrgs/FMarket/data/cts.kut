@@ -1,0 +1,22 @@
+// Copyright 01-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Progam constants
+
+import "KtWeb/global";
+
+/// s
+appName = "FMarket";
+
+/// Data base path
+/// s
+dbPath = path.cat([global.cgiRoot, appName]);
+
+/// Log path
+/// s
+logPath = path.cat([dbPath, "log.txt"]);
+
+/// Go command to make calculations.
+/// s
+goCmd = "fmarket";
+

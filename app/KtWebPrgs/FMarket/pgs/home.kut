@@ -1,0 +1,35 @@
+// Copyright 01-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata":
+      sys.print(rp.mk({
+        activity: db.activityTb().readJs()
+      }));
+    "getLog":
+      sys.print(rp.mk({
+        log: log.readJs()
+      }));
+    "resetLog": {
+      log.reset();
+      sys.print(rp.mkEmpty());
+    }
+    "activate": {
+      thread.run(\-> sys.cmd(cts.goCmd, ["start"]););
+      sys.sleep(500);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};
+

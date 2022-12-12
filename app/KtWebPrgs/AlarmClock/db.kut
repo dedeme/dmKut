@@ -1,0 +1,29 @@
+// Copyright 08-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base of jstb's.
+
+import "libdm/jstb";
+import "KtWeb/global";
+import "data/cts";
+import "data/alarm";
+
+DbPath = [""];
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = path.cat([global.cgiRoot, cts.appName]);
+  DbPath! = dbPath;
+  if (!file.exists(dbPath)) file.mkdir(dbPath);
+};
+
+/// Returns the table of 'a<alarm>' in "alarms.tb"
+/// \-> m<jsdb>
+alarmsTb = \-> return jstb.newArr(
+  DbPath! + "/alarms.tb",
+  \-> return "[]";,
+  alarm.toJs,
+  alarm.fromJs
+);;
+

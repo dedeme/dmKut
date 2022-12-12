@@ -7,13 +7,9 @@
 /// \s, s, f -> <accAnn>[s, s, f]
 new = \date, description, amount -> return [date, description, amount];;
 
-/// Returns true if annotation amount is greater or equals to 150.
-/// \<accAnn>[s, s, f] -> b
-isStay = \AA -> return AA[2] >= 150.0;;
-
 /// \<accAnn>[s, s, f] -> s
 toJs = \AA -> return js.wa([
   js.ws(AA[0]),
   js.ws(AA[1]),
-  js.wf(AA[2])
+  js.wf2(AA[2], 2)
 ]);;

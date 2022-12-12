@@ -1,0 +1,39 @@
+// Copyright 20-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "libdm/log";
+import "KtWeb/rp";
+import "db";
+import "server";
+import "pgs/home";
+import "pgs/periodic";
+import "pgs/fix";
+import "pgs/manual";
+import "data/cts";
+
+db.init();
+log.init(cts.logPath, true);
+
+Args = sys.args();
+ck = Args[0];
+
+if (ck == "start") {
+  server.start();
+  return;
+}
+
+Rq = js.ro(Args[1]);
+
+rp.init(ck);
+source = js.rs(Rq.source);
+switch(source) {
+  "Home": home.process(Rq);
+  "Periodic": periodic.process(Rq);
+  "Fix": fix.process(Rq);
+  "Manual": manual.process(Rq);
+  default: sys.fail("Value of source (" + source + ") is not valid");
+}
+
+

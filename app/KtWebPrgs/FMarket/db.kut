@@ -1,0 +1,32 @@
+// Copyright 01-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base of jstb's.
+
+import "libdm/jstb";
+import "data/cts";
+
+DbPath = [""];
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = cts.dbPath;
+  DbPath! = dbPath;
+  if (!file.exists(dbPath)) file.mkdir(dbPath);
+};
+
+/// Returns the table of 's' in 'activity.tb'
+/// \-> s<jstb>
+activityTb = \-> return jstb.new(
+  path.cat([DbPath!, "activity.tb"]),
+  \-> return js.ws("stopped");,
+  js.ws,
+  js.rs
+);;
+
+/// Returns the JSON table 'rankings.tb'
+rankingsJs = \-> return file.read(path.cat([DbPath!, "rankings.tb"]));;
+
+/// Returns the JSON table 'mdStats.tb'
+mdStatsJs = \-> return file.read(path.cat([DbPath!, "mdStats.tb"]));;

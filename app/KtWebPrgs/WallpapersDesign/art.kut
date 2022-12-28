@@ -1,0 +1,157 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image operations.
+
+import "libdm/img";
+
+/// Change 'img' extension to '.jpg'
+/// s -> s
+changeExt = \i -> {
+  ix = str.lastIndex(i, ".");
+  if (ix == -1) return i + ".jpg";
+  return i[:ix] + ".jpg";
+};
+
+/// Standard width
+/// i
+stdW = 1920;
+
+/// Standard height
+/// i
+stdH = 1080;
+
+/// Directory with source images
+/// It must be set with 'setDirectories'
+/// [s]|[]
+SourceDir = ["tests/source"];
+
+/// Directory with adjusted images
+/// It must be set with 'setDirectories'
+/// [s]|[]
+TargetDir = ["tests/target"];
+
+/// Set source and target directories.
+/// \s, s -> ()
+setDirectories = \source, target -> {
+  SourceDir! = source;
+  TargetDir! = target;
+};
+
+/// Generates a new image cut from top.
+/// \s, i -> ()
+cutFromTop = \i, top -> {
+  source = path.cat([SourceDir!, i]);
+  target = path.cat([TargetDir!, changeExt(i)]);
+  WH = img.dim(source);
+  newH = WH[0] * stdH / stdW;
+  t = top + newH > WH[1] ? WH[1] - newH : top;
+  img.crop(source, target, 0, t, WH[0], newH);
+  img.fill(target, target, stdW, stdH);
+};
+
+/// Generates a new image cut from top.
+/// \s, i -> ()
+cutFromLeft = \i, left -> {
+  source = path.cat([SourceDir!, i]);
+  target = path.cat([TargetDir!, changeExt(i)]);
+  WH = img.dim(source);
+  newW = WH[1] * stdW / stdH;
+  l = left + newW > WH[0] ? WH[0] - newW : left;
+  img.crop(source, target, l, 0, newW, WH[1]);
+  img.fill(target, target, stdW, stdH);
+};
+
+/// Generates a new adjusted image from 'i' filling the default size.
+///   i: Source image.
+/// \s -> ()
+defaultConversion = \i -> {
+  target = path.cat([TargetDir!, changeExt(i)]);
+  img.fill(path.cat([SourceDir!, i]), target, stdW, stdH);
+
+  WH = img.dim(target);
+  if (WH[0] == stdW) {
+    top = (WH[1] - stdH) / 2;
+    img.crop(target, target, 0, top, stdW, stdH);
+  } else {
+    left = (WH[0] - stdW) / 2;
+    img.crop(target, target,left, 0, stdW, stdH);
+  }
+};
+
+/// Equals to 'goteleTune(i, color, 0.5, 0.3)'.
+/// \s, s -> ()
+gotele = \i, color -> goteleTune(i, color, 0.5, 0.3);;
+
+/// Generate a new adjusted image from 'i' filling the default height or the
+/// default width, filling the rest of default size with a 'gotele' image.
+///   i: Source image.
+///   color: 'Gotele' color in format '#ffffff'.
+///   blur: Point blur (from 0 to 1).
+///   light: Light contrast (from 0 to 1). If its value is 0, the background
+///          will be plane.
+/// \s, s, f, f -> ()
+goteleTune = \i, color, blur, light -> {
+  target = path.cat([TargetDir!, changeExt(i)]);
+  tmp = file.tmp("", "img") + ".jpg";
+  img.noise(blur, light, color, stdW, stdH, target);
+  img.fit(path.cat([SourceDir!, i]), tmp, stdW, stdH);
+  img.over(tmp, target, target, "center");
+
+  file.del(tmp);
+};
+
+/// Equals to 'stretchTune(i, 10)'.
+/// \s -> ()
+stretch = \i -> stretchTune(i, 10);;
+
+/// Generate a new adjusted image, stretching pixels at the left and
+/// at the right.
+///   i: Source image.
+///   width: Pixels to stretch (between 1 and 100, both inclusive).
+/// \s, i -> ()
+stretchTune = \i, width -> {
+  if (width < 1) sys.fail("width < 1");
+  if (width > 100) sys.fail("width > 100");
+  source = path.cat([SourceDir!, i]);
+  target = path.cat([TargetDir!, changeExt(i)]);
+  WH = img.dim(source);
+  if (WH[1] < math.toInt(math.toFloat(WH[0]) * 0.8)) {
+    sys.fail(str.fmt(
+      "Image height (%v) is less than image width (%v) * 0.8.",
+      [WH[1], WH[0]]
+    ));
+  }
+
+  tmp = file.tmp("", "img") + ".jpg";
+  tmpL = file.tmp("", "img") + ".jpg";
+  tmpC = file.tmp("", "img") + ".jpg";
+  tmpR = file.tmp("", "img") + ".jpg";
+  img.fit(source, tmpC, stdW, stdH);
+  img.crop(tmpC, tmp, 0, 0, width, stdH);
+  WH2 = img.dim(tmpC);
+  stretchW = (stdW - WH2[0]) / 2 + width;
+  img.resize(tmp, tmpL, stretchW, stdH);
+  img.crop(tmpC, tmp, WH2[0] - width, 0, width, stdH);
+  img.resize(tmp, tmpR, stretchW, stdH);
+
+  img.new("", stdW, stdH, target);
+  img.over(tmpC, target, target, "center");
+  img.over(tmpL, target, target, "west");
+  img.over(tmpR, target, target, "east");
+
+  file.del(tmp);
+  file.del(tmpL);
+  file.del(tmpC);
+  file.del(tmpR);
+};
+
+/// Generate a new blured image.
+blur = \i, ratio -> {
+  r = ratio < 0.0 ? 0.0 : ratio > 1.0 ? 1.0 : ratio;
+  img.blur(
+    path.cat([SourceDir!, i]),
+    path.cat([TargetDir!, changeExt(i)]),
+    r
+  );
+};

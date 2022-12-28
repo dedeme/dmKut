@@ -1,0 +1,15 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image 'blur' data
+
+/// Creates new 'blur' parameters.
+///   ratio: Value between 0 and 100 (both inclusive).
+/// \i -> m<imgBlur>
+new = \ratio -> return {ratio};;
+
+/// \<imgBlur> -> s
+toJs = \IB -> return js.wi(IB.ratio);;
+
+/// \s -> <imgBlur>
+fromJs = \j -> return new (js.ri(j));;

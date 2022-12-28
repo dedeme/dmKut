@@ -1,7 +1,7 @@
 // Copyright 16-Nov-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base reader.
+/// Data base.
 
 import "KtWeb/global";
 import "libdm/jstb";

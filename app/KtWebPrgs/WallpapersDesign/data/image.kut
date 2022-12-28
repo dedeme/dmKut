@@ -1,0 +1,55 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image data.
+
+import "data/imgCut";
+import "data/imgAdjustment";
+import "data/imgBlur";
+
+/// \s, [<imgCut>]|[], [<imgAdjustment>]|[], [<imgBlur>]|[] -> m<image>
+new = \id, cut, adjustment, blur -> return {id, cut, adjustment, blur};;
+
+/// Default constructor: A image without modications.
+newDefault = \id -> return new(id, [], [], []);;
+
+/// \<image> -> s
+toJs = \I -> return js.wa([
+    js.ws(I.id),
+    arr.empty(I.cut) ? js.wn() : imgCut.toJs(I.cut!),
+    arr.empty(I.adjustment) ? js.wn() : imgAdjustment.toJs(I.adjustment!),
+    arr.empty(I.blur) ? js.wn() : imgBlur.toJs(I.blur!)
+  ]);;
+
+/// \s -> <image>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    js.isNull(A[1]) ? [] : [imgCut.fromJs(A[1])],
+    js.isNull(A[2]) ? [] : [imgAdjustment.fromJs(A[2])],
+    js.isNull(A[3]) ? [] : [imgBlur.fromJs(A[3])]
+  );
+};
+
+/// Updates image data list from image source list in a new image data list.
+/// \[<image>,...], [s,...] -> [<image>,...]
+update = \Data, Source -> {
+  R = arr.filter(
+    Data,
+    \I -> return arr.any(
+        Source,
+        \id -> return id == I.id;
+      );
+  );
+  News = arr.filter(
+    Source,
+    \id -> return !arr.any(
+        Data,
+        \I -> return id == I.id;
+      );
+  );
+  for (id = News) arr.push(R, newDefault(id));
+
+  return R;
+};

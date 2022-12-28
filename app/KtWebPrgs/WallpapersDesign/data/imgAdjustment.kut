@@ -1,0 +1,43 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image 'adjustment' data
+
+/// Creates new 'adjustment' parameters.
+///   type: Adjustment type. One of "cut", "background" or "stretch".
+///   Params: Paramentes wich meaning depenends on type.
+/// \s, [i, ...] -> m<imgAdjustment>
+new = \type, Params -> return {type, Params};;
+
+/// Creates a 'imgAdjstment' of type "cut".
+///   top: Top value to start cutting.
+/// \i -> m<imgAdjustment>
+newCut = \top -> return new("cut", [top]);;
+
+/// Creates a 'imgAdjstment' of type "background".
+///   color: Backgroun color in format RGB.
+///   blur: Ratio of burriness. Value between 0 and 100 (both inclusive).
+///   light: Ratio of light. Value between 0 and 100 (both inclusive).
+/// \i, i, i -> m<imgAdjustment>
+newBackground = \color, blur, light ->
+  return new("background", [color, blur, light]);;
+
+/// Creates a 'imgAdjstment' of type "stretch".
+///   pixels: Value between 1 and 100 (both inclusive).
+/// \i -> m<imgAdjustment>
+newStretch = \pixels -> return new("stretch", [pixels]);;
+
+/// \<imgAdjustment> -> s
+toJs = \IA -> return js.wa([
+    js.ws(IA.type),
+    js.wa(arr.mp(IA.Params, js.wi))
+  ]);;
+
+/// \s -> <imgAdjustment>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new (
+    js.rs(A[0]),
+    arr.mp(js.ra(A[1]), js.ri)
+  );
+};

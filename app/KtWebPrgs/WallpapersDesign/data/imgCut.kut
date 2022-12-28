@@ -1,0 +1,32 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image 'cut' data
+
+/// Creates new 'cut' parameters.
+///   left: Left point to cut.
+///   top: Top point to cut.
+///   right: Right point to cut.
+///   bottom: Bottom point to cut.
+/// \i, i, i, i -> m<imgCut>
+new = \left, top, right, bottom -> return {left, top, right, bottom};;
+
+/// \<imgCut> -> s
+toJs = \IC -> return js.wa([
+    js.wi(IC.left),
+    js.wi(IC.top),
+    js.wi(IC.right),
+    js.wi(IC.bottom)
+  ]);;
+
+/// \s -> <imgCut>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.ri(A[0]),
+    js.ri(A[1]),
+    js.ri(A[2]),
+    js.ri(A[3])
+  );
+};
+

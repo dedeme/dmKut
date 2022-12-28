@@ -1,0 +1,95 @@
+// Copyright 23-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Tr widget page.
+
+import "KtWeb/rp";
+import "libdm/img";
+import "data/cts";
+import "data/image";
+import "db";
+import "art";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata": {
+      im = image.fromJs(Rq.image);
+      ok = file.exists(path.cat([cts.sourcePath, im.id]));
+      processImg(im);
+      sys.print(rp.mk({
+        ok: js.wb(ok)
+      }));
+    }
+    "update": {
+      db.imagesTb().writeJs(Rq.images);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};
+
+/// \<image> -> ()
+processImg = \im -> {
+  ix = str.lastIndex(im.id, ".");
+  newId = ix == -1 ? im.id + ".jpg" : im.id[:ix] + ".jpg";
+  sourceImg = path.cat([cts.sourcePath, im.id]);
+  cutImg = path.cat([db.cutPath(), newId]);
+  adjustImg = path.cat([db.adjustmentPath(), newId]);
+  targetImg = path.cat([cts.targetPath, newId]);
+
+  if (arr.empty(im.cut))
+    img.copy(sourceImg, cutImg);
+  else {
+    WH = img.dim(sourceImg);
+    c = im.cut!;
+    img.crop(
+      sourceImg, cutImg,
+      c.left, c.top,
+      WH[0] - c.left - c.right,
+      WH[1] - c.top - c.bottom
+    );
+  }
+
+  art.SourceDir! = db.cutPath();
+  art.TargetDir! = db.adjustmentPath();
+  if (arr.empty(im.adjustment)) {
+    art.defaultConversion(newId);
+  } else {
+    a = im.adjustment!;
+    switch (a.type) {
+      "cut": {
+          WH = img.dim(cutImg);
+          if (WH[0] < WH[1]) {
+
+            art.cutFromTop(newId, a.Params[0]);
+          } else {
+            art.cutFromLeft(newId, a.Params[0]);
+          }
+        }
+      "background": art.goteleTune(
+          newId,
+          "#" + ("00000" + math.toHex(a.Params[0]))[-6:],
+          math.toFloat(a.Params[1]) / 100.0,
+          math.toFloat(a.Params[2]) / 100.0
+        );
+      "stretch": {
+        WH = img.dim(cutImg);
+        if (WH[1] < math.toInt(math.toFloat(WH[0]) * 0.8))
+          img.copy(cutImg, adjustImg);
+        else
+          art.stretchTune(newId, a.Params[0]);
+      }
+    }
+  }
+
+  if (arr.empty(im.blur)) {
+    img.copy(adjustImg, targetImg);
+  } else {
+    art.SourceDir! = db.adjustmentPath();
+    art.TargetDir! = cts.targetPath;
+    art.blur(newId, math.toFloat(im.blur!.ratio) / 100.0);
+  }
+
+};

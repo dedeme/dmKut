@@ -1,0 +1,20 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Tests.
+
+import "tests/t1";
+import "tests/t2";
+import "tests/t3";
+import "tests/t4";
+import "tests/t5";
+import "tests/t6";
+
+t1.run();
+t2.run();
+t3.run();
+t4.run();
+t5.run();
+t6.run();
+
+

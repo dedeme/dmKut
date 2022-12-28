@@ -29,6 +29,7 @@ Mimetypes = {
   ".ico": "image/vnd.microsoft.icon",
   ".jar": "application/java-archive",
   ".jpeg": "image/jpeg",
+  ".jpg": "image/jpg",
   ".js": "text/javascript",
   ".json": "application/json",
   ".mid": "audio/x-midi",

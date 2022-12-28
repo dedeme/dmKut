@@ -1,0 +1,12 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "art";
+
+run = \-> {
+  sys.println("t5");
+
+  art.blur("img5.jpeg", 0.8);
+
+  sys.println("  Done");
+};

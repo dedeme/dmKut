@@ -1,0 +1,13 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "art";
+
+run = \-> {
+  sys.println("t2");
+
+  art.gotele("img2.jpeg", "#e6ceab");
+  art.goteleTune("imgB2.jpeg", "#b69e7b", 0.7, 0.7);
+
+  sys.println("  Done");
+};

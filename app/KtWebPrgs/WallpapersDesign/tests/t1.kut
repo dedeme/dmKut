@@ -1,0 +1,13 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "art";
+
+run = \-> {
+  sys.println("t1");
+
+  art.defaultConversion("img1.jpeg");
+  art.defaultConversion("imgB1.jpeg");
+
+  sys.println("  Done");
+};

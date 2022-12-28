@@ -24,9 +24,7 @@ sys.ffail(\msg -> {
 switch (Args[0]) {
   "help": return help();
   "start": server();
-  default: {
-    trace(Args);
-  }
+  default: trace(Args);
 }
 
 // Functions -----------------------------------------------
@@ -37,7 +35,6 @@ help = \ -> {
       KtWeb argument
     Where argument can be:
       start: Launch server in %s if it is not lanched yet.
-      end  : Stop server.
       help : Show this message.
       other: Program call.
     """,
@@ -142,6 +139,7 @@ processHub = \ck, Rq -> {
     "FMarket": sys.cmd("kut", ["prgs/FMarket/kut/main", ck, js.wo(Rq)])[0];
     "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ck, js.wo(Rq)])[0];
     "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, js.wo(Rq)])[0];
+    "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ck, js.wo(Rq)])[0];
     default: sys.fail("Value of prg (" + prg + ") is not valid");
   };
 };

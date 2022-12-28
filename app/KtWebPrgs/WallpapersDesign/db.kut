@@ -1,0 +1,113 @@
+// Copyright 22-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base
+
+import "KtWeb/global";
+import "libdm/jstb";
+import "data/image";
+import "data/cts";
+
+// EXTERN DATA BASES
+
+/// Source directory.
+/// s
+source = cts.sourcePath;
+
+/// Target directory.
+/// s
+target = cts.targetPath;
+
+/// Save orignal and adjusted pictures, clearing source an target directories.
+/// \s -> ()
+savePictures = \group -> {
+  for (f = file.dir(source)) {
+    pt = path.cat([source, f]);
+    file.copy(pt, cts.originalAchivePath);
+    file.del(pt);
+  }
+  for (f = file.dir(target)) {
+    pt = path.cat([target, f]);
+    file.copy(pt, cts.adjustedArchivePath + "/" + group);
+    file.del(pt);
+  }
+};
+
+/// Returns an array with duplicates of 'list' in archived ".jpg's"
+///   list: List of .jpg images names.
+/// \[s, ...] -> [s, ...]
+duplicates = \list -> {
+  R = [];
+  for (i = 0:10) {
+    for (p = file.dir(path.cat([cts.adjustedArchivePath, math.toStr(i)])))
+      if (arr.index(list, \im -> return im == p;) != -1)
+        arr.push(R, math.toStr(i) + "/" + p);
+  }
+  return R;
+};
+
+/// Returns the group with less pictures (sights)
+/// \-> s
+lessPicturesGroup = \-> {
+  G = ["0"];
+  N = [2000000];
+  for (i = 0:10) {
+    n = arr.reduce(
+      js.ra(file.read(
+        path.cat([cts.wallpapersDataPath, "picts" + math.toStr(i) + ".db"])
+      )),
+      0,
+      \r, jsField -> return r + js.ri(js.ra(jsField)[0]);
+    );
+
+    if (n < N!) {
+      N! = n;
+      G! = math.toStr(i);
+    }
+  }
+  return G!;
+};
+
+// PROGAM DATA BASE
+
+/// Program data base path.
+/// [s]
+DbPath = [""];
+
+/// Path for images cut.
+/// \-> s
+cutPath = \-> return path.cat([DbPath!, "cuts"]);;
+
+/// Path for images adjusted.
+/// \-> s
+adjustmentPath = \-> return path.cat([DbPath!, "adjustments"]);;
+
+/// Clears cut and adjustement paths.
+/// \-> ()
+clearIntermediatePaths = \-> {
+  file.del(cutPath());
+  file.mkdir(cutPath());
+  file.del(adjustmentPath());
+  file.mkdir(adjustmentPath());
+};
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = path.cat([global.cgiRoot, cts.appName]);
+  DbPath! = dbPath;
+  if (!file.exists(dbPath)) {
+    file.mkdir(dbPath);
+    file.mkdir(cutPath());
+    file.mkdir(adjustmentPath());
+  }
+};
+
+/// Returns the table of images in "images.tb"
+/// \-> m[s]<jsdb>
+imagesTb = \-> return jstb.newArr(
+  DbPath! + "/images.tb",
+  \-> return "[]";,
+  image.toJs,
+  image.fromJs
+);;

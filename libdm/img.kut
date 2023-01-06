@@ -2,7 +2,10 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Image handling.
-/// This module requires imagemagick version 6.9
+/// This module requires imagemagick version 6.9, using the following programs:
+///   - convert
+///   - identify
+///   - composite
 
 
 // \s, [s,...] -> s

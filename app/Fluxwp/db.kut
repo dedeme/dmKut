@@ -1,0 +1,71 @@
+// Copyright 05-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base of jstb's.
+
+import "libdm/jstb";
+import "KtWeb/global";
+import "data/cts";
+import "data/pict";
+
+// EXTERNAL DATA BASE
+
+/// Path of source pictures.
+/// s
+sourcePath = "/dm/fondosEscritorio/jpg";
+
+/// Path of Wallpapers program data.
+/// s
+wallpapersDataPath = "/dm/wwwcgi/dmcgi/Wallpapers/data";
+
+/// Data of a table of a pictures group ([<pict>, ...]).
+///   group: A number between 0 and 9 (both inclusive)
+/// \i -> <jstb>
+sourcePictsDb = \group -> return jstb.newArr(
+  path.cat([wallpapersDataPath, "picts" + math.toStr(group) + ".db"]),
+  \-> return "[]";,
+  pict.toJs,
+  pict.fromJs
+);;
+
+// INTERNAL DATA BASE
+
+DbPath = [""];
+
+/// Directory of selected pictures
+/// \-> s
+pictsPath = \-> return path.cat([DbPath!, "picts"]);;
+
+/// Directory of selected pictures
+/// \-> s
+trashPath = \-> return path.cat([DbPath!, "trash"]);;
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = path.cat([global.cgiRoot, cts.appName]);
+  DbPath! = dbPath;
+  if (!file.exists(dbPath)) {
+    file.mkdir(dbPath);
+    file.mkdir(pictsPath());
+    file.mkdir(trashPath());
+  }
+};
+
+/// Returns the table of pictures ([s, ...]) ready to show in "box.tb".
+/// \-> a<jsdb>
+boxTb = \-> return jstb.newArr(
+  path.cat([DbPath!, "box.tb"]),
+  \-> return "[]";,
+  js.ws,
+  js.rs
+);;
+
+/// Returns a configuration pseudotable with the initialization for
+/// stock pictures.
+confTb = \-> return {
+  read: \-> return {
+      width: cts.width,
+      height: cts.height
+    };
+};;

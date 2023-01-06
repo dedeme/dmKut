@@ -1,0 +1,25 @@
+// Copyright 05-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Picture data to read from Wallpapers
+
+/// Creates a new <pict>.
+///   level: Picture level.
+///   sights: Picutre sigths.
+///   id: Picture identifier.
+/// \i, i, s -> m<pic>
+new = \level, sights, id -> return { level, sights, id };;
+
+/// Disabled.
+/// \<pict> -> s
+toJs = \P -> sys.fail("<pict> is read only");;
+
+/// \s -> <pict>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.ri(A[0]),
+    js.ri(A[1]),
+    js.rs(A[2])
+  );
+};

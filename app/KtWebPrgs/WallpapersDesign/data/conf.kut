@@ -1,0 +1,27 @@
+// Copyright 31-Dic-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Creates a new configuration.
+///   width: Traget image width.
+///   height: Target image height.
+/// \i, i-> m<conf>
+new = \width, height -> return { width, height };;
+
+/// Creates a default confituration.
+/// \-> m<conf>
+mk = \-> return new(1920, 1080);;
+
+/// \<conf> -> s
+toJs = \C -> return js.wa([
+  js.wi(C.width),
+  js.wi(C.height)
+]);;
+
+/// \s -> <conf>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.ri(A[0]),
+    js.ri(A[1])
+  );
+};

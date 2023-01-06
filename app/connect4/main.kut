@@ -1,0 +1,9 @@
+// Copyright 06-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/board";
+import "tests/allTests";
+
+sys.rand();
+
+allTests.run();

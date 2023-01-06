@@ -51,10 +51,22 @@ process = \Rq -> {
         group: js.ws(group)
       }));
     }
+    "dim": sys.print(rp.mk({
+        width: js.wi(db.confTb().read().width),
+        height: js.wi(db.confTb().read().height)
+      }));
     "save": {
       group = js.rs(Rq.group);
       db.savePictures(group);
       db.clearIntermediatePaths();
+      sys.print(rp.mkEmpty());
+    }
+    "changeDim": {
+      confTb = db.confTb();
+      conf = confTb.read();
+      conf.width = js.ri(Rq.width);
+      conf.heigth = js.ri(Rq.height);
+      confTb.write(conf);
       sys.print(rp.mkEmpty());
     }
     default: sys.fail("Value of rq (" + rq + ") is not valid");

@@ -4,6 +4,7 @@
 /// Image operations.
 
 import "libdm/img";
+import "db";
 
 /// Change 'img' extension to '.jpg'
 /// s -> s
@@ -15,11 +16,11 @@ changeExt = \i -> {
 
 /// Standard width
 /// i
-stdW = 1920;
+stdW = db.confTb().read().width;
 
 /// Standard height
 /// i
-stdH = 1080;
+stdH = db.confTb().read().height;
 
 /// Directory with source images
 /// It must be set with 'setDirectories'

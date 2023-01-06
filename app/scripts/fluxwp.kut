@@ -1,0 +1,237 @@
+// Copyright 05-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// This script depends of the following extern ones:
+///   - fbsetwg
+///   - Externs of "libdm/img"
+
+import "libdm/img";
+import "libdm/jstb";
+
+//  CONSTANTS -----------------------------------------------
+
+//  Home directory
+home = "/home/deme/.dmKutApp/fluxwp";
+//  Selected picture path
+pictDir = path.cat([home, "picture.jpg"]);
+//  Picture width
+width = 1280;
+//  Picture height
+height = 1024;
+//  Pictures source directory.
+sourceDirAll = "/dm/fondosEscritorio/jpg";
+//  Maximum of ponderation values.
+maxPonderation = 1024;
+
+//  DATA ----------------------------------------------------
+
+//  OBJECT <pict> -------------------------------------------
+//  Picture contructors
+//  \i, s, i -> <pict>
+newPict = \group, name, rejections -> return [group, name, rejections];;
+//  \i, s -> <pict>
+mkPict = \group, name -> return newPict(group, name, maxPonderation);;
+// Picture fields
+//  \<pict> -> i
+pictGroup = \P -> return P[0];;
+//  \<pict> -> s
+pictName = \P -> return P[1];;
+//  \<pict> -> s
+pictPonderation = \P -> return P[2];;
+// Returns true if P1 and P2 have equals group and equals name.
+pictEq = \P1, P2 -> return P1[0] == P2[0] & P1[1] == P2[1];;
+//  Serialization
+//  \pict> -> s
+pictToJs = \P -> return js.wa([
+    js.wi(P[0]),
+    js.ws(P[1]),
+    js.wi(P[2])
+  ]);;
+//  s -> <pict>
+pictFromJs = \j -> {
+  A = js.ra(j);
+  return newPict(
+    js.ri(A[0]),
+    js.rs(A[1]),
+    js.ri(A[2])
+  );
+};
+
+//  DATA BASE -----------------------------------------------
+
+//  Initialize database
+//  \-> ()
+initDb = \-> {
+  if (!file.exists(home)) {
+    file.mkdir(home);
+    sync();
+  }
+};
+
+//  Current picture data.
+//  \-> s<jstb>
+currentTb = \-> return jstb.new(
+  path.cat([home, "current.tb"]),
+  \-> return "init value";,
+  pictToJs,
+  pictFromJs
+);;
+
+//  Pictures data
+//  \-> <pictAll><jstb>
+pictsTb = \-> return jstb.newArr(
+  path.cat([home, "picts.tb"]),
+  \-> return "[]";,
+  pictToJs,
+  pictFromJs
+);;
+
+//  FUNCTIONS -----------------------------------------------
+
+//  Source directory of a group.
+//  \i -> s
+sourceDir = \group ->
+  return path.cat([sourceDirAll, math.toStr(group)]);
+;
+
+//  Generates a new adjusted image from 'i' filling the default size.
+//    i: Source image name.
+//  \s -> ()
+imgConversion = \group, im -> {
+  target = pictDir;
+  img.fill(path.cat([sourceDir(group), im]), target, width, height);
+
+  WH = img.dim(target);
+  if (WH[0] == width) {
+    top = (WH[1] - height) / 2;
+    img.crop(target, target, 0, top, width, height);
+  } else {
+    left = (WH[0] - width) / 2;
+    img.crop(target, target,left, 0, width, height);
+  }
+};
+
+//  Help message
+//  \->()
+help = \-> {
+  sys.println("""
+    fluxwp bad arguments.
+
+    Use:
+
+    kut fluxwp reject
+    or
+    kut fluxwp change
+  """
+  );
+};
+
+//  Synchronize a group of pictures.
+//  \[<pict>, ...], i -> [<pict>, ...]
+syncGr = \Picts, group -> {
+  SourcePicts = file.dir(sourceDir(group));
+  for (Sp = SourcePicts)
+    if (!arr.any(Picts, \P -> return pictName(P) == Sp;))
+      arr.push(Picts, mkPict(group, Sp));
+  return arr.filter(
+    Picts,
+    \P -> return arr.any(SourcePicts, \Sp -> return pictName(P) == Sp;);
+  );
+};
+
+//  Synchronize all the pictures.
+sync = \-> {
+  psTb = pictsTb();
+  Picts = psTb.read();
+  NewPicts = [];
+  for (i = 0:10) {
+    Ps = syncGr(arr.filter(Picts, \p -> return pictGroup(p) == i;), i);
+    for (p = Ps) arr.push(NewPicts, p);
+  }
+  psTb.write(NewPicts);
+};
+
+//  Show a new current picture.
+show = \-> {
+  Picts = pictsTb().read();
+  lim = arr.reduce(Picts, 0, \r, e -> return r + pictPonderation(e););
+  More = [true];
+  while (More!) {
+    ix = math.rndi(lim);
+    Sum = [0];
+    for (P = Picts) {
+      Sum! += pictPonderation(P);
+      if (Sum! >= ix) {
+        pgroup = pictGroup(P);
+        pname = pictName(P);
+        sourcePict = path.cat([sourceDir(pgroup), pname]);
+        if (file.exists(sourcePict)) {
+          currentTb().write(P);
+          imgConversion(pgroup, pname);
+          sys.cmd("fbsetbg", [pictDir]);
+          More! = false;
+        }
+        break;
+      }
+    }
+  }
+  sync();
+};
+
+//  Process a rejection of picture.
+//  \->()
+reject = \-> {
+  P = currentTb().read();
+  oldPonderation = pictPonderation(P);
+  dif = maxPonderation - oldPonderation;
+  newPonderation = oldPonderation == 0
+    ? 0
+    : oldPonderation == maxPonderation
+      ? maxPonderation - 1
+      : maxPonderation - dif - dif
+  ;
+  NewP = newPict(pictGroup(P), pictName(P), newPonderation);
+
+  PictsTb = pictsTb();
+  Picts = PictsTb.read();
+  arr.filterIn(Picts, \P -> return !pictEq(NewP, P););
+  arr.push(Picts, NewP);
+  PictsTb.write(Picts);
+
+  show();
+};
+
+//  Process a change of picture.
+//  \->()
+change = \-> {
+  P = currentTb().read();
+  oldPonderation = pictPonderation(P);
+  dif = maxPonderation - oldPonderation;
+  newPonderation = maxPonderation - dif / 2;
+  NewP = newPict(pictGroup(P), pictName(P), newPonderation);
+
+  PictsTb = pictsTb();
+  Picts = PictsTb.read();
+  arr.filterIn(Picts, \P -> return !pictEq(NewP, P););
+  arr.push(Picts, NewP);
+  PictsTb.write(Picts);
+
+  show();
+};
+
+//  MAIN ----------------------------------------------------
+
+sys.rand();
+initDb();
+
+Args = sys.args();
+
+if (arr.empty(Args)) {
+  help();
+} else {
+  switch (Args[0]) {
+    "reject": reject();
+    "change": change();
+    default: help();
+  }
+}

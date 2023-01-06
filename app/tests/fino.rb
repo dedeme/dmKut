@@ -5,4 +5,4 @@ end
 
 tm = Time.now.to_i
 puts fib(40)
-puts Time.now.to_i - tm
+puts (Time.now.to_i - tm) * 1000

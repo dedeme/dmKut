@@ -1,26 +1,21 @@
-// Copyright 22-Dic-2022 ºDeme
+// Copyright 05-Nov-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main script.
-/// This program depends on the following extern ones:
-///   - Externs of "libdm/img"
 
 import "KtWeb/rp";
-import "tests";
-import "db";
-import "web/home";
-import "web/tr";
+import "pgs/home";
 
 Args = sys.args();
 ck = Args[0];
 Rq = js.ro(Args[1]);
 
 rp.init(ck);
-db.init();
 
 source = js.rs(Rq.source);
 switch(source) {
   "Home": home.process(Rq);
-  "Tr": tr.process(Rq);
   default: sys.fail("Value of source (" + source + ") is not valid");
 }
+
+

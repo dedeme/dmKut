@@ -34,7 +34,7 @@ toJsPartial = \M -> return js.wa([
 /// Returns the list of models.
 list = \-> return [
     cm.new(),
-    appr.new(0.20, 0.02)
+    appr.new(0.10, 0.016)
   ];;
 
 // \<model>, s, f, [s...], [f...], [f...] -> [[f...], <nkRs>]

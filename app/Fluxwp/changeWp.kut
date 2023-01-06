@@ -1,0 +1,26 @@
+// Copyright 05-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "libdm/jstb";
+import "db";
+
+/// Changes fluxbox wallpaper.
+/// \-> ()
+run = \ -> {
+  while (true) {
+    boxTb = db.boxTb();
+    picts = boxTb.read();
+    if (arr.size(picts) == 0) {
+      for (f = file.dir(db.pictsPath()))
+        arr.push(picts, path.cat([db.pictsPath(), f]));
+      arr.shuffle(picts);
+    }
+
+    sel = picts[0];
+    boxTb.write(picts[1:]);
+    if (file.exists(sel)) {
+      sys.cmd("fbsetbg", [sel]);
+      break;
+    }
+  }
+};

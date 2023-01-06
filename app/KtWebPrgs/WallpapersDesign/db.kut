@@ -7,6 +7,7 @@ import "KtWeb/global";
 import "libdm/jstb";
 import "data/image";
 import "data/cts";
+import "data/conf";
 
 // EXTERN DATA BASES
 
@@ -103,10 +104,19 @@ init = \ -> {
   }
 };
 
+/// Configuration data
+/// \-> m[i, i]<jsdb>
+confTb = \-> return jstb.new(
+  path.cat([DbPath!, "conf.tb"]),
+  \-> return conf.toJs(conf.mk());,
+  conf.toJs,
+  conf.fromJs
+);;
+
 /// Returns the table of images in "images.tb"
-/// \-> m[s]<jsdb>
+/// \-> [s]<jsdb>
 imagesTb = \-> return jstb.newArr(
-  DbPath! + "/images.tb",
+  path.cat([DbPath!, "images.tb"]),
   \-> return "[]";,
   image.toJs,
   image.fromJs

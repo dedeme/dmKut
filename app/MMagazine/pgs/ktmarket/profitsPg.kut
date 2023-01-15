@@ -3,8 +3,8 @@
 
 /// Profits page.
 
-import "dm/cgi";
-import "cts";
+import "KtWeb/rp";
+import "data/cts";
 import "data/dailyProfitsEntry";
 import "data/profitsEntry";
 import "ex/ktmarket/profits";
@@ -20,7 +20,7 @@ process = \Rq -> {
         [0:cts.investors], \inv -> return profits.read(year, inv);
       ));
       Pfs = dailyProfitsEntry.mkProfits(InvPs);
-      return cgi.rp({
+      return rp.mk({
         "investors": js.wi(cts.investors),
         "profits": js.wa(arr.mp(Pfs, \e -> return profitsEntry.toJs(e);))
       });

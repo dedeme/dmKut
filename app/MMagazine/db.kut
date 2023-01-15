@@ -3,30 +3,30 @@
 
 /// Data base initializer
 
-import "dm/jstb";
-import "dm/log";
+import "libdm/jstb";
+import "libdm/log";
 import "data/ibexSundays";
 import "data/modelEvals";
 import "data/modelFloats";
 import "data/hotMap";
 import "ex/ktmmarket/evals";
 import "ex/ktmmarket/results";
-import "cts";
+import "data/cts";
 import "fns";
 
 init = \-> {
-  if (!file.exists(cts.dbHome)) {
-    file.mkdir(cts.dbHome);
-    file.mkdir(path.cat([cts.dbHome, "simulation"]));
-    file.mkdir(path.cat([cts.dbHome, "hotMaps"]));
-    log.init(path.cat([cts.dbHome, "log.tb"]), true);
+  if (!file.exists(cts.dbPath)) {
+    file.mkdir(cts.dbPath);
+    file.mkdir(path.cat([cts.dbPath, "simulation"]));
+    file.mkdir(path.cat([cts.dbPath, "hotMaps"]));
+    log.init(path.cat([cts.dbPath, "log.tb"]), true);
   }
 };
 
 /// Returns model evaluations table of several dates.
 /// \-> <Jstb> of [<ModelEvals>...]
 modelEvalsTb = \-> return jstb.newArr(
-  path.cat([cts.dbHome, "modelEvals.tb"]),
+  path.cat([cts.dbPath, "modelEvals.tb"]),
   \-> return js.wa([modelEvals.toJs(modelEvals.new(
     fns.lastSunday(),
     evals.ranking()
@@ -38,7 +38,7 @@ modelEvalsTb = \-> return jstb.newArr(
 /// Returns total profits of each model in simulation.
 /// \-> <Jstb> of [<ModelFloats>...]
 totalsModelSimProfitsDb = \-> return jstb.newArr(
-  path.cat([cts.dbHome, "simulation", "totals.tb"]),
+  path.cat([cts.dbPath, "simulation", "totals.tb"]),
   \-> return js.wa([modelFloats.toJs(modelFloats.new(
     fns.lastSunday(),
     results.totalsRanking()
@@ -50,7 +50,7 @@ totalsModelSimProfitsDb = \-> return jstb.newArr(
 /// Returns cash profits of each model in simulation.
 /// \-> <Jstb> of [<ModelFloats>...]
 cashesModelSimProfitsDb = \-> return jstb.newArr(
-  path.cat([cts.dbHome, "simulation", "cashes.tb"]),
+  path.cat([cts.dbPath, "simulation", "cashes.tb"]),
   \-> return js.wa([modelFloats.toJs(modelFloats.new(
     fns.lastSunday(),
     results.cashesRanking()
@@ -62,7 +62,7 @@ cashesModelSimProfitsDb = \-> return jstb.newArr(
 /// Returns references (risk) profits of each model in simulation.
 /// \-> <Jstb> of [<ModelFloats>...]
 refsModelSimProfitsDb = \-> return jstb.newArr(
-  path.cat([cts.dbHome, "simulation", "refs.tb"]),
+  path.cat([cts.dbPath, "simulation", "refs.tb"]),
   \-> return js.wa([modelFloats.toJs(modelFloats.new(
     fns.lastSunday(),
     results.refsRanking()
@@ -74,7 +74,7 @@ refsModelSimProfitsDb = \-> return jstb.newArr(
 /// Returns hot maps of a model sorted by date.
 /// \s -> <Jstb> of [<HotMap>...]
 hotMapsDb = \model -> return jstb.newArr(
-  path.cat([cts.dbHome, "hotMaps", model + ".tb"]),
+  path.cat([cts.dbPath, "hotMaps", model + ".tb"]),
   \-> return js.wa([hotMap.toJs(hotMap.new(
     fns.lastSunday(),
     evals.paramsEvals(model)
@@ -86,7 +86,7 @@ hotMapsDb = \model -> return jstb.newArr(
 /// Returns a table with sunday ibex values.
 /// \-> <Jstb> of <IbexSundays>
 ibexTb = \-> return jstb.new(
-  path.cat([cts.dbHome, "ibex.tb"]),
+  path.cat([cts.dbPath, "ibex.tb"]),
   \-> return ibexSundays.toJs(ibexSundays.new([]));,
   ibexSundays.toJs,
   ibexSundays.fromJs

@@ -3,18 +3,13 @@
 
 /// Main module.
 
-import "dm/cgi";
-import "pgs/main/dmenu";
 import "pgs/main/home";
-import "pgs/main/changePass";
 
 /// \m -> s
 process = \Rq -> {
   source = js.rs(Rq.source);
   switch (source) {
-    "Dmenu": return dmenu.process(Rq);
     "Home": return home.process(Rq);
-    "ChangePass": return changePass.process(Rq);
     default: sys.fail("Value of source (" + source + ") is not valid");
   };
 };

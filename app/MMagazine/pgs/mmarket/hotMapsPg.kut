@@ -3,7 +3,7 @@
 
 /// Rankings page.
 
-import "dm/cgi";
+import "KtWeb/rp";
 import "db";
 import "ex/ktmmarket/evals";
 
@@ -16,7 +16,7 @@ process = \Rq -> {
       Mds = evals.list();
       model = arr.any(Mds, \md -> return md == rqModel;) ? rqModel : Mds[0];
 
-      return cgi.rp({
+      return rp.mk({
         "models": js.wa(arr.mp(Mds, \md -> return js.ws(md);)),
         "model": js.ws(model),
         "mapsGroup": db.hotMapsDb(model).readJs()

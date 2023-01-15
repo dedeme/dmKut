@@ -3,8 +3,8 @@
 
 /// Home page.
 
-import "dm/cgi";
-import "dm/log";
+import "libdm/log";
+import "KtWeb/rp";
 import "db";
 import "ex/ktmarket/investors";
 import "data/paramsEval";
@@ -14,23 +14,33 @@ process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "idata": {
-      Mds = ["QFIJO", "QMOV", "APRX"];
+      Ips = arr.mp(
+        investors.read(),
+        \Ps -> return arr.mp(Ps, \p -> return js.rf(p););
+      );
+      Mds = ["QFIJO", "QMOV", "APRX"]; // ordered by investor!
+      IParEvals = [];
       ParEvals = [];
-      for (m = Mds) {
+      for (m, i = Mds) {
         Pevs = db.hotMapsDb(m).read()[0].entries;
-        arr.push(ParEvals, arr.reduce(Pevs, Pevs[0], \Rs, E ->
+        arr.push(ParEvals, arr.reduce(Pevs, Pevs[0], \Rs, E -> {
+          if (paramsEval.eqParams(E[0], Ips[i])) arr.push(IParEvals, E);
           return E[paramsEval.eval] > Rs[paramsEval.eval] ? E : Rs;
-        ));
+        }));
       }
-      return cgi.rp({
-        "iparams": js.wa(arr.mp(investors.read(), \ps -> return js.wa(ps);)),
+      return rp.mk({
+        "iparamsEvals": js.wa(arr.mp(IParEvals, paramsEval.toJs)),
         "models": js.wa(arr.mp(Mds, js.ws)),
         "paramsEvals": js.wa(arr.mp(ParEvals, paramsEval.toJs))
       });
     }
-    "getLog": return cgi.rp({
+    "getLog": return rp.mk({
       "log": log.readJs()
       });
+    "resetLog": {
+      log.reset();
+      return rp.mkEmpty();
+    }
     default: sys.fail("Value of rq (" + rq + ") is not valid");
   };
 };

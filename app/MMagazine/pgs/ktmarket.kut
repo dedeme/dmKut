@@ -3,7 +3,6 @@
 
 /// Main module.
 
-import "dm/cgi";
 import "pgs/ktmarket/profitsPg";
 import "pgs/ktmarket/percentsPg";
 

@@ -139,6 +139,7 @@ processHub = \ck, Rq -> {
     "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, js.wo(Rq)])[0];
     "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ck, js.wo(Rq)])[0];
     "Main": sys.cmd("kut", ["prgs/Main/kut/main", ck, js.wo(Rq)])[0];
+    "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ck, js.wo(Rq)])[0];
     "SimpleTemplate": sys.cmd("kut", ["prgs/SimpleTemplate/kut/main", ck, js.wo(Rq)])[0];
     "Template": sys.cmd("kut", ["prgs/Template/kut/main", ck, js.wo(Rq)])[0];
     "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ck, js.wo(Rq)])[0];

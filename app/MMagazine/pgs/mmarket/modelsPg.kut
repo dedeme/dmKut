@@ -3,7 +3,7 @@
 
 /// Models page.
 
-import "dm/cgi";
+import "KtWeb/rp";
 import "db";
 import "data/modelFloats";
 import "data/modelFloat";
@@ -37,7 +37,7 @@ process = \Rq -> {
           ));
         }
       }
-      return cgi.rp(Rp);
+      return rp.mk(Rp);
     }
     default: sys.fail("Value of rq (" + rq + ") is not valid");
   };

@@ -21,6 +21,7 @@ run = \-> {
     if (!arr.empty(V)) {
       ibexTb = db.ibexTb();
       Ibex = ibexTb.read();
+      if (time.format("%Y", Ibex.data[0][0]) != lastSunday[:4]) arr.clear(Ibex);
       ibexSundays.add(Ibex, today, V!);
       ibexTb.write(Ibex);
       break;

@@ -3,14 +3,18 @@
 
 /// Global constants
 
+import "KtWeb/global";
+
 /// Application name.
 appName = "MMagazine";
 /// Application version.
-version = "202203";
-/// Home for cgi data.
-webHome = "/dm/wwwcgi/dmcgi/" + appName;
-/// Home for command data.
-dbHome = "/home/deme/.dmKutApp/" + appName;
+version = "202301";
+/// Data base path
+/// s
+dbPath = path.cat([global.cgiRoot, appName]);
+/// Log path
+/// s
+logPath = path.cat([dbPath, "log.tb"]);
 
 /// Number of investors.
 investors = 3;

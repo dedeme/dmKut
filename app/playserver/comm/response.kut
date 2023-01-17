@@ -1,0 +1,17 @@
+// Copyright 09-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Server responses.
+/// Every response is a JSON seroalization of an oject:
+
+/// Error response.
+/// \s -> s
+error = \msg -> return js.wo({
+    "type": js.ws("error"),
+    "message": js.ws(msg)
+  });;
+
+/// 'Without opponent' response.
+withoutOpponent = \-> return js.wo({
+    "type": js.ws("withoutOpponent")
+  });;

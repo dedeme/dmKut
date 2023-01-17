@@ -1,0 +1,25 @@
+// Copyright 09-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants
+
+import "games/connect4";
+
+/// Program name.
+/// s
+prgName = "playserver";
+
+/// Home directory.
+/// s
+home = path.cat([sys.environ()["HOME"], ".dmKutApp", prgName]);
+
+/// Request types
+/// m[s, ...]
+rqTypes = {
+    "start": "start"
+  };
+
+/// Map from name of games to creators of their match.
+games = {
+  "connect4": connect4.new
+};

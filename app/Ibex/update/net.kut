@@ -8,7 +8,7 @@ import "dm/log";
 getIbex = \-> {
   R = [];
 
-  html = ext.wget("https://www.infobolsa.es/indice/historico-ibex_35", false);
+  html = ext.wget("https://www.infobolsa.es/indice/historico-ibex_35", false)!;
 
   I1 = [0];
   I2 = [0];

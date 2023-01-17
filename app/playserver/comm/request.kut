@@ -1,0 +1,63 @@
+// Copyright 09-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Client requests
+
+/// Client connection.
+Connection = [];
+
+/// Last error
+LastError = [""];
+
+Busy = [false];
+
+annotate = \conn, error -> {
+  if (Busy!) {
+    sys.sleep(10);
+  }
+  thread.sync(\-> {
+    Busy! = true;
+    arr.push(Connection, conn);
+    LastError! = error;
+  });
+};
+
+free = \-> {
+  thread.sync(\-> {
+    arr.clear(Connection);
+    LastError! = "";
+    Busy! = false;
+  });
+};
+
+/// \<tcpConnection>, s -> m[s]
+get = \conn, rq -> {
+  annotate(conn, "Bad request");
+  Rq = js.ro(rq);
+  free();
+  return Rq;
+};
+
+/// Reads a key from a request.
+/// \<tcpConnection>, m[s], s -> s
+read = \conn, Rq, key -> {
+  annotate(conn, "Key '" + key + "' not found");
+  valueJs = map.get(Rq, key);
+  free();
+  annotate(conn, "Value of '" + key + "' is not valid");
+  value = js.rs(valueJs);
+  free();
+  return value;
+};
+
+/// Reads a json value.
+///   conn: Client connection.
+///   fjs : JSON function (one of js.ri, js.rf, js.rs, ...).
+///   j   : JSON string.
+/// \<tcpConnection>, \s->*, s -> *
+json = \conn, fjs, j -> {
+  annotate(conn, "Bad JSON in '" + j + "'");
+  value = fjs(j);
+  free();
+  return value;
+};

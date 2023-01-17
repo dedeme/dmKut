@@ -1,0 +1,112 @@
+// Copyright 09-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Match data
+
+import "data/player";
+import "data/idGen";
+import "data/cts";
+import "comm/response";
+
+/// Result of match can continue.
+/// i
+more = 0;
+/// Result of draw end.
+/// i
+draw = 1;
+/// Result of win end.
+/// i
+win = 2;
+/// Movement not valid.
+/// i
+reject = 3;
+
+/// Maximun time by player 5 minutes
+/// s
+time5 = "5";
+
+/// Maximun time by player 15 minutes
+/// s
+time15 = "15";
+
+/// Maximun time by player 30 minutes
+/// s
+time30 = "30";
+
+/// Maximun time by player 60 minutes
+/// s
+time60 = "60";
+
+// [[<match>, i], ...]
+MatchTimes = []; // array of matches - time when they were requested.
+
+/// Create a <match> type map.
+///   id: Math identifier.
+///   player1: Player which starts match.
+///   player2: The other player.
+///   timeByPlayer: Time in milliseconds.
+///   fput: Function to annotate a movement.
+///         fput takes:
+///           - A JSON string with the movement to annotate.
+///         fput returns:
+///             'more'  : If the match can continue,
+///             'draw'  : If the match has finished in draw.
+///             'win'   : If the match has finished winning the annotated movement.
+///             'reject': If the annotated movement is not valid.
+/// \[<player>]|[], [<player>]|[], i, \s->i -> m<match>
+new = \id, player1, player2, timeByPlayer, fput ->
+  return { id, player1, player2, timeByPlayer, fput };;
+
+/// Equals to new(id, [], [], timeByPlayer, fput)
+/// \id, i, \s->i -> m<match>
+mk = \id, timeByPlayer, fput -> return new(id, [], [], timeByPlayer, fput);;
+
+/// \s, <tcpConnection>, s, i -> ()
+addPlayer = \game, pl, whiteBlack, tm -> {
+  now = time.now();
+  arr.filterIn(
+    MatchTimes,
+    \MatchTm -> {
+      M = MatchTm[0];
+      ok = now - MatchTm[1] < M.timeByPlayer;
+      if (!ok) {
+        tcp.write(M.pl.conn, response.withoutOpponent);
+        tcp.closeConnection();
+      }
+      return ok;
+    }
+  );
+  MatchTime = arr.find(
+    MatchTimes,
+    \MatchTm -> {
+      M = MatchTm[0];
+      return M.id == game &
+        M.timeByPlayer == tm &
+        (whiteBlack ? arr.empty(M.player2) : arr.empty(M.player1))
+      ;
+    }
+  );
+
+  if (arr.empty(MatchTime)) {
+    Fnew = map.get(cts.games, game);
+    if (arr.empty(Fnew)) {
+      player.error(pl, response.error("Game '" + game + "' not found"));
+      tcp.closeConnection();
+      return;
+    }
+
+    M = Fnew(idGen.run(), tm);
+    if (whiteBlack) M.player1 = pl;
+    else M.player2 = pl;
+
+    arr.push(MatchTimes, [M, now]);
+    return;
+  }
+
+  M = MatchTime[0];
+  if (whiteBlack) M.player1 = pl;
+  else M.player2 = pl;
+  start(M);
+};
+
+

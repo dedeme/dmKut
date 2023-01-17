@@ -7,7 +7,12 @@
 Args = sys.args();
 
 if (arr.size(Args) != 3) {
-  sys.println("Use:\nkut findText path ext text");
+  sys.println("""
+    Use:
+      kut findText path ext text
+    For example:
+      kut findText /dm/dmKut kut ext.wget"""
+  );
   return;
 }
 

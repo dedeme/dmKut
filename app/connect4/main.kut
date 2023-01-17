@@ -2,8 +2,200 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 import "data/board";
+import "data/node";
+import "data/globals";
 import "tests/allTests";
+import "db";
+import "moves";
+import "msgs";
 
 sys.rand();
 
-allTests.run();
+help = \ -> sys.println("""
+    Use:
+    connect4 option
+
+    Where option can be:
+      help -> Show this message.
+      startW -> Start a match. User play first.
+      stopW -> Finish a match. User play first.
+      startB -> Start a match. Machine play first.
+      stopB -> Finish a match. Machine play first.
+      test -> Make all tests.
+    """
+  );;
+
+// \i, <board>
+play = \port, Bo, move, CurrentNode -> {
+  Move = [move];
+  while (true) {
+    bmove = port == -1
+      ? moves.human(Move!)
+      : port == -2
+        ? moves.trainer(Move!)
+        : \-> {sys.fail("Unimplemented");} ()
+    ;
+    if (bmove == -1) {
+      sys.println("Match stoped.");
+      break;
+    }
+
+    r = board.put(Bo, bmove, true);
+    if (r != board.more) {
+      if (r == board.win) {
+        msgs.youWin(port, Bo, bmove);
+        node.annotateResult(CurrentNode!, node.lost);
+      } else {
+        msgs.draw(port, Bo, bmove);
+        node.annotateResult(CurrentNode!, node.draw);
+      }
+      break;
+    }
+    NewNode = node.child(CurrentNode!, bmove);
+    if (arr.empty(NewNode)) arr.push(NewNode, node.mk(Bo, CurrentNode!, bmove));
+
+    // Make move
+
+    Node = NewNode!;
+    Children = node.children(Node);
+    N0 = Children[0];
+    Sel = [N0];
+    Pond = [math.toFloat(node.evalW(N0)) / math.toFloat(node.evalL(N0))];
+    for (N = Children[1:]) {
+      p = math.toFloat(node.evalW(N)) / math.toFloat(node.evalL(N));
+      if (p > Pond!) {
+        Sel! = N;
+        Pond! = p;
+      }
+    }
+
+    responseMove = node.move(Sel!);
+    r2 = board.put(Bo, responseMove, false);
+    if (r2 != board.more) {
+      if (r2 == board.win) {
+        msgs.iWin(port, Bo, responseMove);
+        node.annotateResult(Sel!, node.win);
+      }
+      else {
+        msgs.draw(port, Bo, responseMove);
+        node.annotateResult(Sel!, node.draw);
+      }
+      break;
+    }
+
+    Move! = responseMove;
+    CurrentNode! = Sel!;
+  }
+};
+
+// Starts a play machine black.
+//  port: Comunications port.
+//        -1: Human player.
+//        -2: Training.
+playBlack = \port -> {
+  GlobalsTb = db.globalsTb();
+  Globals = GlobalsTb.read();
+  if (Globals.blackStarted){
+    sys.println("Machine player is running.\nTo stop it write 'connect4 stopW'.");
+    return;
+  }
+  Globals.blackStarted = true;
+  GlobalsTb.write(Globals);
+
+
+  Bo = board.new();
+  NodeTb = db.blackNodeTb();
+  RootNode = NodeTb.read();
+  CurrentNode = [RootNode];
+
+  play(port, Bo, -1, CurrentNode);
+
+  stopBlack();
+  NodeTb.write(RootNode);
+};
+
+stopBlack = \-> {
+  GlobalsTb = db.globalsTb();
+  Globals = GlobalsTb.read();
+  Globals.blackStarted = false;
+  GlobalsTb.write(Globals);
+};
+
+// Starts a play machine white.
+//  port: Comunications port.
+//        -1: Human player.
+//        -2: Training.
+playWhite = \port -> {
+  GlobalsTb = db.globalsTb();
+  Globals = GlobalsTb.read();
+  if (Globals.whiteStarted){
+    sys.println("Machine player is running.\nTo stop it write 'connect4 stopB'.");
+    return;
+  }
+  Globals.whiteStarted = true;
+  GlobalsTb.write(Globals);
+
+  Bo = board.new();
+  NodeTb = db.whiteNodeTb();
+  RootNode = NodeTb.read();
+
+  // Make move
+
+  Children = node.children(RootNode);
+  N0 = Children[0];
+  Sel = [N0];
+  Pond = [math.toFloat(node.evalW(N0)) / math.toFloat(node.evalL(N0))];
+  for (N = Children[1:]) {
+    p = math.toFloat(node.evalW(N)) / math.toFloat(node.evalL(N));
+    if (p > Pond!) {
+      Sel! = N;
+      Pond! = p;
+    }
+  }
+
+  move = node.move(Sel!);
+  board.put(Bo, move, false);
+  play(port, Bo, move, Sel);
+
+  stopWhite();
+  NodeTb.write(RootNode);
+};
+
+stopWhite = \-> {
+  GlobalsTb = db.globalsTb();
+  Globals = GlobalsTb.read();
+  Globals.whiteStarted = false;
+  GlobalsTb.write(Globals);
+};
+
+training = \ -> {
+  for (i = 0:10) {
+    trace(i);
+    thBlack = thread.start(\-> playBlack(-2););
+    thWhite = thread.start(\-> playWhite(-2););
+    thread.join(thBlack);
+    thread.join(thWhite);
+  }
+};
+
+// MAIN ----------------------------------------------------
+
+db.init();
+
+Args = sys.args();
+
+if (arr.empty(Args)) {
+  help();
+  return;
+}
+
+switch (Args[0]) {
+  "startW": playBlack(-1);
+  "stopW": stopBlack();
+  "startB": playWhite(-1);
+  "stopB": stopWhite();
+  "training": training();
+  "test": allTests.run();
+  default: help();
+}
+

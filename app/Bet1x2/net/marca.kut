@@ -54,7 +54,7 @@ read = \-> {
     "https://www.marca.com/futbol/primera-division/calendario.html" +
       "?intcmp=MENUMIGA&s_kw=calendario#top",
     false
-  );
+  )!;
 
   size = arr.size(cts.CurrentTeams);
   // [[([<Result>]|[])...]...]

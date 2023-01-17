@@ -19,12 +19,15 @@ new = \-> return [
     "       "
   ];;
 
+//  Board position value (returns "O", "X", " " or "")
+//  \<board>, i, i -> s
 checkerAt = \B, row, col ->
   return row >= 0 & row < 6 & col >= 0 & col < 7 ? B[row][col] : "";
 ;
 
 
 /// Puts a checker in a column of boar and returns its result.
+/// Values for column are 0, 1, 2, 3, 4, 5 or 6.
 /// The result can be:
 ///   board.more -> The match is not finished.
 ///   board.draw -> The match has finished with draw.
@@ -88,7 +91,9 @@ put = \B, column, isWhite -> {
 
   };
 
-
+/// Returns values of top row.
+/// \<board> -> s
+topRow = \B -> return B[0];;
 
 /// \<board> -> s
 toStr = \B -> return arr.join(
@@ -97,7 +102,7 @@ toStr = \B -> return arr.join(
       \r -> return "|" + arr.join(str.split(r, ""), "|") + "|";
     ),
     "\n"
-  ) + "\n---------------";;
+  ) + "\n---------------\n 1 2 3 4 5 6 7";;
 
 /// \<board> -> s
 toJs = \B -> return js.wa(arr.mp(B, \r -> return js.ws(r);));;

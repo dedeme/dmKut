@@ -1,0 +1,52 @@
+// Copyright 08-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Send messages.
+
+import "data/board";
+import "moves";
+
+send = \port, msg -> {
+  if (port == -1) {
+    sys.println(msg);
+  }
+};
+
+/// 'You win' message.
+/// port: Comunications port.
+///        -1: Human player.
+///        -2: Training.
+/// \i, <board> -> ();
+youWin = \port, Bo, move -> {
+  if (port == -1) send(port, board.toStr(Bo) + "\nYou win.");
+  else if (port == -2) {
+    moves.trainer(move);
+    moves.trainer(-2);
+  } else send(port, "youWin", move);
+};
+
+/// 'I win' message.
+/// port: Comunications port.
+///        -1: Human player.
+///        -2: Training.
+/// \i, <board> -> ();
+iWin = \port, Bo, move -> {
+  if (port == -1) send(port, board.toStr(Bo) + "\nI win.");
+  else if (port == -2) {
+    moves.trainer(move);
+    moves.trainer(-2);
+  } else send(port, "iWin", move);
+};
+
+/// 'Draw' message.
+/// port: Comunications port.
+///        -1: Human player.
+///        -2: Training.
+/// \i, <board> -> ();
+draw = \port, Bo, move -> {
+  if (port == -1) send(port, board.toStr(Bo) + "\nDraw.");
+  else if (port == -2) {
+    moves.trainer(move);
+    moves.trainer(-2);
+  } else send(port, "draw", move);
+};

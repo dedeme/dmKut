@@ -1,0 +1,83 @@
+// Copyright 09-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main module.
+
+import "libdm/log";
+import "data/cts";
+import "data/player";
+import "data/match";
+import "comm/response";
+import "comm/request";
+import "db";
+import "test";
+
+db.init();
+log.init(path.cat([cts.home, "log.tb"]), false);
+sys.ffail(\msg -> {
+  if (arr.empty(request.Connection)) {
+    log.error(msg);
+    sys.println(msg);
+  } else {
+    tcp.write(request.Connection!, request.LastError!);
+    tcp.closeConnection(request.Connection!);
+  }
+});
+
+Args = sys.args();
+
+if (Args[0] == "test") {
+  test.run();
+  return;
+}
+
+port = math.toInt(Args[0]);
+
+sv = tcp.server(port);
+while (true) {
+  ConErr = tcp.accept(sv, 0);
+  err = ConErr[1];
+  if (err != "") log.warning(err);
+  else thread.run(\-> {
+    conn = ConErr[0];
+    RqErr = tcp.read(conn, 10000);
+    err = RqErr[1];
+    if (err != "") log.warning(err);
+    else {
+      pl = player.new(conn);
+      process(pl, request.get(pl.conn, RqErr[0]));
+    }
+  });
+}
+
+process = \pl, Rq -> {
+  conn = pl.conn;
+  whiteBlack = request.read(conn, Rq, "whiteBlack");
+  if (whiteBlack != "white" & whiteBlack != "black") {
+    player.error(pl, "Value for whiteBlack '" + whiteBlack + " is not valid.");
+    return;
+  }
+
+  ptime = request.read(conn, Rq, "time");
+  tm = switch(ptime) {
+    match.time5: 300_000;
+    match.time15: 900_000;
+    match.time30: 1_800_000;
+    match.time60: 3_600_000;
+    default: -1;
+  };
+  if (tm == -1) {
+    player.error(pl, "Value for time '" + tm + "' is not valid.");
+    return;
+  }
+
+  game = request.read(conn, Rq, "game");
+  switch (game) {
+    "connect4":
+      match.addPlayer(game, pl, whiteBlack, tm);
+    default: {
+      player.error(pl, "Game '" + game + "'not found");
+      return;
+    }
+  }
+};

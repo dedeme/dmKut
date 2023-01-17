@@ -1,0 +1,23 @@
+// Copyright 08-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global variables
+
+/// Creates a map with global variables.
+/// \b, b -> m<globals>
+new = \whiteStarted, blackStarted -> return { whiteStarted, blackStarted };;
+
+/// \<globals> -> s
+toJs = \G -> return js.wa([
+    js.wb(G.whiteStarted),
+    js.wb(G.blackStarted)
+  ]);;
+
+/// \s -> <globals>
+fromJs = \j -> {
+    A = js.ra(j);
+    return new(
+      js.rb(A[0]),
+      js.rb(A[1])
+    );
+  };

@@ -57,7 +57,7 @@ read = \-> {
   t = ext.wget(
     "https://resultados.as.com/resultados/futbol/primera/calendario/",
     false
-  );
+  )!;
 
   size = arr.size(cts.CurrentTeams);
   // [[([<Result>]|[])...]...]

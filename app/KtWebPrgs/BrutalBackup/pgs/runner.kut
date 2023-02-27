@@ -1,0 +1,47 @@
+// Copyright 12-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Runner page.
+
+import "KtWeb/rp";
+import "db";
+import "data/bkPaths";
+import "data/cts";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "run": {
+      id = js.rs(Rq.id);
+      thread.run(\-> sys.cmd("kut", [cts.mainPath, "@", id]););
+      sys.sleep(100);
+      sys.print(rp.mkEmpty());
+    }
+    "state": {
+      id = js.rs(Rq.id);
+
+      BkListTbJs = db.bkListTb();
+      BkListTb = [BkListTbJs.read()];
+      if (BkListTb!.lock) {
+        sys.sleep(100);
+        BkListTb! = BkListTbJs.read();
+      }
+
+      List = BkListTb!.list;
+      BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
+      R = {
+        "state": js.wa([]),
+        "errors": js.wa([js.ws("Backup '" + id + "'not found")])
+      };
+      if (!arr.empty(BkPaths)) {
+        R.state = js.wa(arr.mp(BkPaths!.state, js.wi));
+        R.errors = js.wa(arr.mp(BkPaths!.msgs, js.ws));
+      }
+
+      sys.print(rp.mk(R));
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};
+

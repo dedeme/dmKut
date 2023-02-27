@@ -1,0 +1,33 @@
+// Copyright 21-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Editor page.
+
+import "KtWeb/rp";
+import "db";
+import "jsFns";
+import "data/tpath";
+import "data/editorRp";
+import "data/fieldChange";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata": {
+      tp = tpath.fromJs(Rq.tpath);
+      sys.print(rp.mk({
+          response: editorRp.toJs(jsFns.processTpath(tp, fieldChange.mkUndef()))
+        }));
+    }
+    "set": {
+      tp = tpath.fromJs(Rq.tpath);
+      change = fieldChange.fromJs(Rq.change);
+      sys.print(rp.mk({
+          response: editorRp.toJs(jsFns.processTpath(tp, change))
+        }));
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};
+

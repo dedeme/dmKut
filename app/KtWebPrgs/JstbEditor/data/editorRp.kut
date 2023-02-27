@@ -1,0 +1,43 @@
+// Copyright 22-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Response of Editor page.
+
+import "data/tpath";
+import "data/jsData";
+
+/// Response "NoTable" -> Table not found.
+noTable = "NoTable";
+/// Response "NoJSON" -> Table not found.
+noJSON = "NoJSON";
+/// Response "Modified" -> Table was changed by a extern source.
+modified = "Modified";
+
+/// Creates a new editor response.
+/// Dont use directly. Use mkXXXX.
+///   error: "" if there is no error. Oterwise one of noTable, noTpath or modified.
+///   jsData: JSON data if there is no error. Otherwise empty array.
+/// \s, [<jdata>]|[] -> m<edtorRp>
+new = \error, jdata -> return { error, jdata };;
+
+/// Creates a 'noTable' response
+/// \-> m<editorRp>
+mkNoTable = \-> return new(noTable, []);;
+
+/// Creates a 'noJSON' response
+/// \-> m<editorRp>
+mkNoJSON = \-> return new(noJSON, []);;
+
+/// Creates a 'modified' response. (Response to a 'set' request)
+/// \-> m<editorRp>
+mkModified = \-> return new(modified, []);;
+
+/// Creates an 'ok' response.
+/// \<jsData> -> m<editorRp>
+mkOk = \data -> return new("", [data]);;
+
+/// \<editorRp> -> s
+toJs = \E -> return js.wa([
+  js.ws(E.error),
+  arr.empty(E.jdata) ? js.wn() : jsData.toJs(E.jdata!)
+]);;

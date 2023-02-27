@@ -1,0 +1,19 @@
+import "data/cts";
+
+/// Returns a list with paths in 'cts.kutRoot' which are symbolic links to 'target'
+///   target: Canonical link target.
+/// \s -> [s, ...]
+linksFind = \target -> {
+  R = [];
+  find = \fpath -> {
+    if (file.isLink(fpath)) {
+      OutErr = sys.cmd("readlink", ["-f", fpath]);
+      if (OutErr[1] == "" & str.trim(OutErr[0]) == target)
+        arr.push(R, fpath);
+    } else if (file.isDirectory(fpath))
+      for (f = file.dir(fpath))
+        find(path.cat([fpath, f]));
+  };
+  find(cts.kutRoot);
+  return R;
+};

@@ -1,0 +1,26 @@
+// Copyright 20-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "KtWeb/rp";
+import "db";
+import "pgs/tlistEditor";
+import "pgs/editor";
+
+db.init();
+
+Args = sys.args();
+ck = Args[0];
+Rq = js.ro(Args[1]);
+
+rp.init(ck);
+
+source = js.rs(Rq.source);
+switch(source) {
+  "TlistEditor": tlistEditor.process(Rq);
+  "Editor": editor.process(Rq);
+  default: sys.fail("Value of source (" + source + ") is not valid");
+}
+
+

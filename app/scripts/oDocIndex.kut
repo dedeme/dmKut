@@ -1,0 +1,27 @@
+
+/****/
+module = "lib/str.ml";
+/****/
+
+extract = \l -> {
+  trim = \l, i -> {
+    tmp = l[i:];
+    return str.trim(tmp[:str.index(tmp, " ")]);
+  };
+  if (str.starts(l, "let rec ")) return trim(l, 8);
+  else if (str.starts(l, "let ")) return trim(l, 4);
+  else return "";
+};
+
+tx = file.read(module);
+L = [];
+for (l = str.split(tx, "\n")) {
+  e = extract(l);
+  if (e != "") arr.push(L, e);
+}
+arr.sort(L, \e1, e2 -> return e1 < e2;);
+sys.println(arr.join(arr.mp(
+  L,
+  \e -> return str.fmt("{{!%s} %s}", [e, e]);
+), " | "));
+

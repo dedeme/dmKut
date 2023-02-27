@@ -1,0 +1,33 @@
+// Copyright 09-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// BrutalBackup main.
+
+import "KtWeb/rp";
+import "db";
+import "backup";
+import "pgs/bkListEditor";
+import "pgs/runner";
+
+db.init();
+
+Args = sys.args();
+ck = Args[0];
+
+if (ck == "@") {
+  backup.run(Args[1]);
+  return;
+}
+
+Rq = js.ro(Args[1]);
+
+rp.init(ck);
+
+source = js.rs(Rq.source);
+switch(source) {
+  "BkListEditor": bkListEditor.process(Rq);
+  "Runner": runner.process(Rq);
+  default: sys.fail("Value of source (" + source + ") is not valid");
+}
+
+

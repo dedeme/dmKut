@@ -1,0 +1,77 @@
+// Copyright 09-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Backup process.
+
+import "libdm/dsync";
+import "db";
+
+
+run = \id -> {
+  BkListTbJs = db.bkListTb();
+  BkListTb = [BkListTbJs.read()];
+  if (BkListTb!.lock) {
+    sys.sleep(100);
+    BkListTb! = BkListTbJs.read();
+  }
+  BkListTb!.lock = true;
+  BkListTbJs.write(BkListTb!);
+
+  List = BkListTb!.list;
+  BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
+  ps = BkPaths!;
+  backupCheck = path.cat([ps.backup, "BrutalBackups.txt"]);
+  if (!file.exists(backupCheck)) {
+    ps.state = [];
+    ps.msgs = ["'" + backupCheck + "' no found"];
+    BkListTb!.lock = false;
+    BkListTbJs.write(BkListTb!);
+    return;
+  }
+  sourceCheck = path.cat([ps.source, "BrutalBackups.txt"]);
+  file.write(sourceCheck, "");
+
+
+  if (!arr.empty(ps.state)) {
+    BkListTb!.lock = false;
+    BkListTbJs.write(BkListTb!);
+    return;
+  }
+
+  ps.state = [0, 100];
+  ps.msgs = [];
+  BkListTb!.lock = false;
+  BkListTbJs.write(BkListTb!);
+
+  Syn = dsync.newFiles (
+    ps.source,
+    ps.backup,
+    \Msg -> {
+      BkListTb = [BkListTbJs.read()];
+      if (BkListTb!.lock) {
+        sys.sleep(100);
+        BkListTb! = BkListTbJs.read();
+      }
+      BkListTb!.lock = true;
+      BkListTbJs.write(BkListTb!);
+
+      List = BkListTb!.list;
+      BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
+      ps = BkPaths!;
+
+      Data = dsync.msgData(Msg);
+      switch (dsync.msgType(Msg)) {
+        dsync.state: ps.state = Data;
+        dsync.errCopy: arr.push(ps.msgs, "Fail copying:\n  " + Data);
+        dsync.errDel: arr.push(ps.msgs, "Fail deleting:\n  " + Data);
+        default: arr.push(ps.msgs, Data);
+      }
+
+      BkListTb!.lock = false;
+      BkListTbJs.write(BkListTb!);
+    }
+  );
+
+  dsync.update(Syn);
+  file.del(sourceCheck);
+};

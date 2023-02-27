@@ -1,0 +1,63 @@
+// Copyright 10-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Backup paths data.
+
+/// Constructor:
+///   id: Backup paths identifier.
+///   source: Absolute path of backup source.
+///   sourceError: Error reading 'source' or "".
+///   backup: Absolute path of backup target.
+///   backupError: Error reading 'backup' or "".
+///   msgs: Error messages from backup process.
+///   state: It can be:
+///     []    : Backup stoped.
+///     [0]   : Backup starting.
+///     [x, y]: Backup processing operation 'x' of 'y'.
+/// \s, s, s, s, s, [s], [i] -> m<backPaths>
+new = \id, source, sourceError, backup, backupError, msgs, state ->
+  return { id, source, sourceError, backup, backupError, msgs, state };;
+
+// \<bkPaths> -> s
+toJs = \BkP -> return js.wa([
+    js.ws(BkP.id),
+    js.ws(BkP.source),
+    js.ws(BkP.sourceError),
+    js.ws(BkP.backup),
+    js.ws(BkP.backupError),
+    js.wa(arr.mp(BkP.msgs, js.ws)),
+    js.wa(arr.mp(BkP.state, js.wi))
+  ]);;
+
+// \s -> <bkPaths>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    js.rs(A[1]),
+    js.rs(A[2]),
+    js.rs(A[3]),
+    js.rs(A[4]),
+    arr.mp(js.ra(A[5]), js.rs),
+    arr.mp(js.ra(A[6]), js.ri)
+  );
+};
+
+/// Create a table of <bkPaths>
+/// \b, [<bkPaths, ...] -> m<bkPathsTable>
+newTable = \lock, list -> return { lock, list };;
+
+/// \<baPathsTable> -> s
+tableToJs = \T -> return js.wa([
+    js.wb(T.lock),
+    js.wa(arr.mp(T.list, toJs))
+  ]);;
+
+/// \s -> <bkPahtsTable>
+tableFromJs = \j -> {
+  A = js.ra(j);
+  return newTable(
+    js.rb(A[0]),
+    arr.mp(js.ra(A[1]), fromJs)
+  );
+};

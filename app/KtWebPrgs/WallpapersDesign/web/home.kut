@@ -65,7 +65,7 @@ process = \Rq -> {
       confTb = db.confTb();
       conf = confTb.read();
       conf.width = js.ri(Rq.width);
-      conf.heigth = js.ri(Rq.height);
+      conf.height = js.ri(Rq.height);
       confTb.write(conf);
       sys.print(rp.mkEmpty());
     }

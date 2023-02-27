@@ -1,0 +1,61 @@
+// Copyright 09-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Editor links page.
+
+import "KtWeb/rp";
+import "db";
+import "fns";
+import "data/lpath";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata": {
+      Lpath = lpath.fromJs(Rq.lpath);
+
+      Llist = db.llistTb().read();
+      for (L = Llist) {
+        try {
+          L.found = file.isDirectory(L.fpath);
+        } catch e {
+          L.found = false;
+        }
+      }
+
+      sys.print(rp.mk({
+        "llist": js.wa(arr.mp(
+            arr.filter(Llist, \L -> return L.found & L.id != Lpath.id;),
+            lpath.toJs
+          )),
+        "list": js.wa(arr.mp(fns.linksFind(Lpath.fpath), js.ws))
+      }));
+    }
+    "update": {
+      Links = arr.mp(js.ra(Rq.links), js.rs);
+      target = js.rs(Rq.target);
+      if (!file.isDirectory(target)) {
+        sys.print(rp.mk({
+          "linksFailed": Rq.links
+        }));
+      } else {
+        linksFailed = [];
+        for (l = Links) {
+          try {
+            file.del(l);
+            OutErr = sys.cmd("ln", ["-s", target, l]);
+            if (OutErr[1] != "") arr.push(linksFailed, l);
+          } catch e {
+            arr.push(linksFailed, l);
+          }
+        }
+        sys.print(rp.mk({
+          "linksFailed": js.wa(arr.mp(linksFailed, js.ws))
+        }));
+      }
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};
+

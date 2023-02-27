@@ -1,0 +1,189 @@
+// Copyright 09-Feb-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data synchronizer.
+/// Semantic:
+///   - element: Element to copy to or delete in backup. In a file system is a
+///              file.
+///   - group  : Group of elements. In a file system is a directory.
+///   - source : Group root of source elements
+///   - backup : Group root to do backup.
+
+/// Undefined error.
+error = "error";
+
+/// Error copying source.
+errCopy = "copy";
+
+/// Error deleting backup.
+errDel = "del";
+
+/// Advance state of process.
+state = "state";
+
+/// Returns one of 'error, 'errCopy', 'errDel' or 'state'
+msgType = \Msg -> return Msg[0];;
+
+/// Returns message data.
+/// According its type, data is:
+///   - error -> (s) Description of error.
+///   - errCopy -> (*) The source element which failed.
+///   - errDel -> (*) The backup which failed.
+///   - state -> ([i, i]) An empty array if the process is finisied. Otherwise
+///              a pair [amountProcessed, amountTotal].
+msgData = \Msg -> return Msg[1];;
+
+/// Create a new data synchronizer.
+///   sourceList : Returns every element of source.
+///   backupList : Returns every element of backup.
+///   ponderation: Function(s) which returns the value of a source element 's'
+///                for work done mesure of copy operations. In a file system
+///                it returns the source file size.
+///   isBackup   : Function (s, b) which returns 'true' if the backup element 'b'
+///                is a backup of the source element 's'.
+///   isUpdated  : Function (s, b) which returns 'true' if the backup element 'b'
+///                is an updated backup of the source element 's'.
+///   copy       : Function(s) which make a copy of source element 'a'. A fail
+///                in this function is automatically cached with a message
+///                type 'errCopy'.
+///   del        : Function(b) which delete a backup element 'b'. A fail in this
+///                function is automatically cached with a message type 'errDel'.
+///   msg        : Function(msg) to process operations messages. The value of 'msg'
+///                should be read with 'msgType' and 'msgData'.
+/// \
+///   \->a,
+///   \->a,
+///   \*->i,
+///   \*,*->b,
+///   \*,*->b,
+///   \*->()
+///   \*->()
+///   \s->()
+///     -> m<dsync>
+new = \sourceList, backupList, ponderation,
+       isBackup, updated, copy, del, msg -> {
+  return { sourceList, backupList, ponderation,
+           isBackup, updated, copy, del, msg };
+};
+
+/// Creates a data synchronizer for regular files.
+///   source: Absolute path of source directory.
+///   backup: Absolute path of backup directory.
+///   msg        : Function(msg) to process operations messages. The value of 'msg'
+///                should be read with 'msgType' and 'msgData'.
+newFiles = \source, backup, msg -> {
+  // Returns an array of relative paths (backup elements)
+  mkList = \dir -> {
+    cut = str.len(dir) + 1;
+    R = [];
+    list = \d -> {
+      for (f = file.dir(d)) {
+        p = path.cat([d, f]);
+        if (file.isDirectory(p)) list(p);
+        else if (file.isRegular(p)) arr.push(R, p[cut:]);
+      }
+    };
+    list(dir);
+    return R;
+  };
+
+  source2 = path.canonical(source);
+  if (source2 == "/" | source2[0] != "/")
+    sys.fail("Bad source directory '" + source2 + "'");
+
+  backup2 = path.canonical(backup);
+  if (backup2 == "/" | backup2[0] != "/")
+    sys.fail("Bad backup directory '" + backup2 + "'");
+
+  // elements to backup are relative paths.
+  return new(
+    mkList(source2),
+    mkList(backup2),
+    \pth -> return file.size(path.cat([source2, pth]));,
+    \pth1, pth2 -> return pth1 == pth2;,
+    \pth1, pth2 -> return
+      file.tm(path.cat([backup2, pth2])) >=
+      file.tm(path.cat([source2, pth1]));,
+    \pth -> {
+      bpath = path.cat([backup2, pth]);
+      if (!file.exists(path.parent(bpath))) file.mkdir(path.parent(bpath));
+      file.copy(path.cat([source2, pth]), bpath);
+    },
+    \pth -> file.del(path.cat([backup2, pth]));,
+    msg
+  );
+};
+
+/// Update data
+update = \Dsync -> {
+  try {
+
+    Ss = Dsync.sourceList;
+    Bs = Dsync.backupList;
+
+    // DELETE LIST
+
+    ToDel = [];
+    Bs2 = [];
+    for (b = Bs) {
+      DoDel = [true];
+      for (s = Ss) {
+        if (Dsync.isBackup(s, b)) {
+          DoDel! = false;
+          break;
+        }
+      }
+      if (DoDel!) arr.push(ToDel, b);
+      else arr.push(Bs2, b);
+    }
+
+    // COPY LIST
+
+    Total = [arr.size(ToDel)];
+    ToCopy = [];
+    for (s = Ss) {
+      DoCopy = [true];
+      for (b = Bs2) {
+        if (Dsync.isBackup(s, b) & Dsync.updated(s, b)) {
+          DoCopy! = false;
+          break;
+        }
+      }
+      if (DoCopy!) {
+        arr.push(ToCopy, s);
+        Total! += Dsync.ponderation(s);
+      }
+    }
+    total = Total!;
+
+    // DELETE OPERATIONS
+
+    Sum = [0];
+    for (b = ToDel) {
+      try {
+        Dsync.del(b);
+        Sum! += 1;
+        Dsync.msg([state, [Sum!, total]]);
+      } catch e {
+        Dsync.msg([errDel, b]);
+      }
+    }
+
+    // COPY OPERATIONS
+    for (s = ToCopy) {
+      try {
+        Dsync.copy(s);
+        Sum! += Dsync.ponderation(s);
+        Dsync.msg([state, [Sum!, total]]);
+      } catch e {
+        Dsync.msg([errCopy, s]);
+      }
+    }
+
+    Dsync.msg([state, []]);
+
+  } catch e {
+    Dsync.msg([error, e]);
+  }
+};
+

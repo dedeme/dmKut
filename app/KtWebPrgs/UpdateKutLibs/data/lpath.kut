@@ -1,0 +1,29 @@
+// Copyright 09-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Identifier and path of a library.
+
+/// Constructor.
+///   id: Library identifer.
+///   fpath: Absolute library path.
+///   found: 'true' if library path is found.
+/// \s, s, b -> m<lpath>
+new = \id, fpath, found -> return { id, fpath, found };;
+
+/// \<lpath> -> s
+toJs = \L -> return js.wa([
+  js.ws(L.id),
+  js.ws(L.fpath),
+  js.wb(L.found)
+]);;
+
+/// \s -> <lpath>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    js.rs(A[1]),
+    js.rb(A[2])
+  );
+};
+

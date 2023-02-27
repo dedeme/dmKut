@@ -1,0 +1,25 @@
+// Copyright 20-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// File path of a table.
+
+/// Create a new m<table>
+/// \s, s -> m<table>
+new = \fpath, error -> return { fpath, error };;
+
+/// \<table> -> s
+toJs = \T -> return js.wa([
+  js.ws(T.fpath),
+  js.ws(T.error)
+]);;
+
+/// \s -> <table>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.rs(A[0]),
+    js.rs(A[1])
+  );
+};;
+
+

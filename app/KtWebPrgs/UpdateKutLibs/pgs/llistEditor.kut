@@ -1,0 +1,53 @@
+// Copyright 09-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Library list page.
+
+import "KtWeb/rp";
+import "db";
+import "data/lpath";
+
+/// \m -> ()
+process = \Rq -> {
+  rq = js.rs(Rq.rq);
+  switch (rq) {
+    "idata": {
+      Llist = db.llistTb().read();
+      for (L = Llist) {
+        try {
+          L.found = file.isDirectory(L.fpath);
+        } catch e {
+          L.found = false;
+        }
+      }
+      sys.print(rp.mk({
+        "list": js.wa(arr.mp(Llist, lpath.toJs))
+      }));
+    }
+    "new": {
+      Lpath = lpath.fromJs(Rq.lpath);
+      if (file.exists(Lpath.fpath)) {
+        OutErr = sys.cmd("readlink", ["-f", Lpath.fpath]);
+        newPath = str.trim(OutErr[0]);
+        if (newPath != Lpath.fpath & OutErr[1] == "")
+          Lpath.fpath = newPath;
+      }
+
+      LlistTb = db.llistTb();
+      Llist = LlistTb.read();
+      arr.push(Llist, Lpath);
+      LlistTb.write(Llist);
+      sys.print(rp.mkEmpty());
+    }
+    "del": {
+      id = js.rs(Rq.id);
+      LlistTb = db.llistTb();
+      Llist = LlistTb.read();
+      arr.filterIn(Llist, \L -> return L.id != id;);
+      LlistTb.write(Llist);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.fail("Value of rq (" + rq + ") is not valid");
+  }
+};
+

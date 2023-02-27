@@ -1,0 +1,28 @@
+// Copyright 20-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// JSON data.
+
+/// Creates a new JSON data.
+///   control: Control string to check data base integrity.
+///   tooBig: 'true' if 'data' is too big to be modified.
+///   data: Has the following values:
+///     null: Js.wn()
+///     boolean: js.wb()
+///     number: js.wi() or js.wf()
+///     string: js.ws() (Can be truncated)
+///     array: js.wa([length, [[index, value]]])
+///            (values are js-strings possibly truncated)
+///     map: js.wa([[allKeys], map[value])
+///          (values are js-strings possibly truncated)
+///   type: One of fieldChange constants null, boolean, number, string, array or map.
+/// \s, b, i, s -> m<jsData>
+new = \control, tooBig, type, data -> return { control, tooBig, type, data };;
+
+/// \<jsData> -> s
+toJs = \JD -> return js.wa([
+  js.ws(JD.control),
+  js.wb(JD.tooBig),
+  js.wi(JD.type),
+  JD.data
+]);;

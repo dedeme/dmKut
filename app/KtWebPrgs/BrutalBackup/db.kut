@@ -1,0 +1,28 @@
+// Copyright 10-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base
+
+import "libdm/jstb";
+import "KtWeb/global";
+import "data/cts";
+import "data/bkPaths";
+
+DbPath = [""];
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = path.cat([global.cgiRoot, cts.appName]);
+  DbPath! = dbPath;
+  if (!file.exists(dbPath)) file.mkdir(dbPath);
+};
+
+/// Returns the table of 'm<bkPathsTable>' in "bkPathsList.tb"
+/// \-> m<jsdb>
+bkListTb = \-> return jstb.new(
+  DbPath! + "/bkPathsList.tb",
+  \-> return bkPaths.tableToJs(bkPaths.newTable(false, []));,
+  bkPaths.tableToJs,
+  bkPaths.tableFromJs
+);;

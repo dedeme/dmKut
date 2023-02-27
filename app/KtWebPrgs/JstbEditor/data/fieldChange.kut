@@ -1,0 +1,54 @@
+// Copyright 22-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Field change operation.
+
+import "data/type";
+
+/// Type of map modification.
+mapAdd = -1;
+/// Type of map modification.
+mapDel = 0;
+/// Type of map modification.
+mapKey = 1;
+/// Type of map modification.
+mapDup = 2;
+
+/// Creates a new field change operation.
+///   type: one of 'type' contants.
+///   hash: Value to control table modificability.
+///   ix  : According 'type'
+///     array -> Index of entry to modify or -1 for adding a 'null' entry at '0'.
+///     map -> mapAdd: for adding a 'null' entry
+///            mapDel: Delete entry
+///            mapKey: Change key
+///            mapDup: Make a duplicate
+///     OTHERS -> -1
+///   value: JSON value describing the change operation, according type:
+///     undef => js.ws("")
+///     null => js.wi(intValue). New type null, boolean, number, string, or map.
+///     boolean => js.wb(booleanValue)
+///     number => js.wi(intValue) or js.wf(floatValue)
+///     string => js.ws(stringValue)
+///     array => js.wb(booleanValue). 'true'->duplicate; 'false' delete.
+///     map => ix == mapAdd: Js.ws(newKey)
+///            ix == mapDel: Js.ws(oldKey)
+///            ix == mapKey: Js.wa([oldKey, newKey])
+///            ix == mapDup: Js.wa([oldKey, newKey])
+/// \i, s, i, s -> m<fieldChange>
+new = \type, hash, ix, value -> return { type, hash, ix, value };;
+
+/// Creates a undef operation.
+/// \-> m<fieldChange>
+mkUndef = \-> return new(type.undef, "", -1, js.ws(""));;
+
+/// \s -> <fieldChange>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    js.ri(A[0]),
+    js.rs(A[1]),
+    js.ri(A[2]),
+    A[3]
+  );
+};

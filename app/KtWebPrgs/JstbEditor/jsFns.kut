@@ -1,0 +1,274 @@
+// Copyright 22-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Functions to manage JSON tables.
+
+import "data/editorRp";
+import "data/type";
+import "data/field";
+import "data/fieldCf";
+import "data/jsData";
+import "data/cts";
+import "data/fieldChange";
+
+// If 'j' is not a valid JSON, it returns 'type.undef'.
+// \s -> i
+getType = \j -> {
+  if (js.isNull(j)) return type.null;
+  try { js.rb(j); return type.boolean; }
+  catch e { try { js.ri(j); return type.number; }
+  catch e { try { js.rf(j); return type.number; }
+  catch e { try { js.rs(j); return type.string; }
+  catch e { try { js.ra(j); return type.array; }
+  catch e { try { js.ro(j); return type.map; }
+  catch e {return type.undef;}}}}}}
+};
+
+// If 'j' is not a JSON o type != 'type', it returns 'type.undef'.
+// \i, s -> i
+isType = \tp, j -> {
+  switch (tp) {
+    type.null:
+      return js.isNull(j) ? tp : getType(j);
+    type.boolean:
+      try { js.rb(j); return tp; } catch e return getType(j);
+    type.number:
+      try { js.ri(j); return tp; }
+      catch e { try { js.rf(j); return tp; }
+      catch e { return getType(j);}}
+    type.string:
+      try { js.rs(j); return tp; } catch e return getType(j);
+    type.array:
+      try { js.ra(j); return tp; } catch e return getType(j);
+    type.map:
+      try { js.ro(j); return tp; } catch e return getType(j);
+    default:
+      sys.fail(str.fmt("Type '%v' is not valid", [tp]));
+  }
+};
+
+// Returns a pair [response, newJSON].
+// If 'Ch.type == type.undef', newJSON=="".
+// \s, b, s, <tpath>, <fieldChange> -> [<editorRp>, s]
+pTpath = \hash, tooBig, jdata, Tp, Ch -> {
+  if (arr.empty(Tp.field.Entries)) {
+    tp = Ch.type == type.undef
+      ? getType(jdata)
+      : isType(Ch.type, jdata)
+    ;
+
+    if (tp == type.undef) return [editorRp.mkNoJSON(), ""];
+
+    if (
+      Ch.type != type.undef &
+      Ch.type != type.null &
+      Ch.type != tp
+    )
+      sys.fail(str.fmt(
+        "Bad type.\n  Expected: %v\n    Actual: %v",
+        [Ch.type, tp]
+      ));
+
+    if (Ch.type == type.undef) {
+      Data = [jdata];
+      if (tp == type.array) {
+        A0 = js.ra(jdata);
+        len = arr.size(A0);
+
+        Ix = [0];
+        // [[i, s], ...]
+        A1 = arr.mp(A0, \j -> {
+          ix = Ix!;
+          Ix! += 1;
+          return [ix, j];
+        });
+
+        Cf = Tp.fieldCf;
+
+        // [[i, s], ...]
+        A2 = !arr.empty(Cf) & !arr.empty(Cf!.IndexKeyFilter)
+          ? A1[Cf!.IndexKeyFilter!.startRange : Cf!.IndexKeyFilter!.endRange]
+          : A1
+        ;
+
+        if (!arr.empty(Cf) & !arr.empty(Cf!.ValueFilter)) {
+          arr.filterIn(
+            A2,
+            \Ij -> return str.index(Ij[1], Cf!.ValueFilter!) != -1;
+          );
+        }
+
+        // [s, ...]
+        A3 = arr.mp(A2, \Ij -> return js.wa([
+          js.wi(Ij[0]),
+          js.ws(str.len(Ij[1]) > cts.fieldLimit
+            ? Ij[1][:cts.fieldLimit-3] + "..."
+            : Ij[1]
+          )
+        ]););
+
+        Data! = js.wa([
+          js.wi(len),
+          js.wa(A3)
+        ]);
+      } else if (tp == type.map) {
+        // [[s, s], ...]
+        A1 = map.toArr(js.ro(jdata));
+        Keys = arr.mp(A1, \Kv -> return js.ws(Kv[0]););
+
+        Cf = Tp.fieldCf;
+
+        if (!arr.empty(Cf)) {
+          cf = Cf!;
+
+          if (!arr.empty(cf.IndexKeyFilter)) {
+            f = cf.IndexKeyFilter!;
+            text = f.isUpper ? str.toUpper(f.text) : f.text;
+            kfilter = \key -> {
+              k = f.isUpper ? str.toUpper(key) : key;
+              return switch (f.searchType) {
+                fieldCf.starts: str.starts(k, text);
+                fieldCf.in: str.index(k, text) != -1;
+                fieldCf.equals: k == text;
+              };
+            };
+            arr.filterIn(A1, \Kv -> return kfilter(Kv[0]););
+          }
+
+          if (!arr.empty(cf.ValueFilter)) {
+            arr.filterIn(
+              A1,
+              \Kv -> return str.index(Kv[1], cf.ValueFilter!) != -1;
+            );
+          }
+        }
+
+        // [[s, s], ...]
+        A2 = arr.mp(A1, \Kv -> return [
+            Kv[0],
+            js.ws(str.len(Kv[1]) > cts.fieldLimit
+              ? Kv[1][:cts.fieldLimit-3] + "..."
+              : Kv[1]
+            )
+          ];);
+
+        Data! = js.wa([
+          js.wa(Keys),
+          js.wo(map.fromArr(A2))
+        ]);      }
+      return [editorRp.mkOk(jsData.new(hash, tooBig, tp, Data!)), ""];
+    } else if (js.isNull(Ch.value)) {
+      return [editorRp.mkOk(jsData.new(hash, tooBig, Ch.type, jdata)), js.wn()];
+    } else {
+      rpOk  = editorRp.mkOk(jsData.new(hash, tooBig, Ch.type, jdata));
+      newJs = switch (tp) {
+        type.null: switch (js.ri(Ch.value)) {
+            type.null: js.wn();
+            type.boolean: js.wb(false);
+            type.number: js.wi(0);
+            type.string: js.ws("");
+            type.array: js.wa([]);
+            type.map: js.wo({});
+          };
+        type.boolean: Ch.value;
+        type.number: Ch.value;
+        type.string: Ch.value;
+        type.array: Ch.ix == -1
+          ? \-> {
+              A = js.ra(jdata);
+              arr.unshift(A, js.wn());
+              return js.wa(A);
+            }()
+          : js.rb(Ch.value)
+              ? \-> {
+                  A = js.ra(jdata);
+                  arr.unshift(A, A[Ch.ix]);
+                  return js.wa(A);
+                }()
+              : \-> {
+                  A = js.ra(jdata);
+                  arr.remove(A, Ch.ix);
+                  return js.wa(A);
+                }()
+          ;
+        type.map: \-> {
+            M = js.ro(jdata);
+            switch (Ch.ix) {
+              fieldChange.mapAdd:
+                M[js.rs(Ch.value)] = js.wn();
+              fieldChange.mapDel:
+                map.remove(M, js.rs(Ch.value));
+              fieldChange.mapKey: {
+                Keys = js.ra(Ch.value);
+                oldKey = js.rs(Keys[0]);
+                newKey = js.rs(Keys[1]);
+                M[newKey] = M[oldKey];
+                map.remove(M, oldKey);
+              }
+              fieldChange.mapDup: {
+                Keys = js.ra(Ch.value);
+                oldKey = js.rs(Keys[0]);
+                newKey = js.rs(Keys[1]);
+                M[newKey] = M[oldKey];
+              }
+            }
+            return js.wo(M);
+          }();
+        default:
+          sys.fail(str.fmt("Unkown type %v", Ch.type));
+      };
+      return [rpOk, newJs];
+    }
+  } else {
+    Entry = arr.shift(Tp.field.Entries);
+    if (Entry.isMap) {
+      key = Entry.key;
+      M = js.ro(jdata);
+      if (!map.hasKey(M, key)) return [editorRp.mkModified(), js.wn()];
+      RpJs = pTpath(hash, tooBig, M[key], Tp, Ch);
+      Rp = RpJs[0];
+      if (Rp.error == "" & Ch.type != type.undef) {
+        M[key] = RpJs[1];
+        return [Rp, js.wo(M)];
+      } else {
+        return RpJs;
+      }
+    } else {
+      ix = Entry.ix;
+      A = js.ra(jdata);
+      RpJs = pTpath(hash, tooBig, A[ix], Tp, Ch);
+      Rp = RpJs[0];
+      if (Rp.error == "" & Ch.type != type.undef) {
+        A[ix] = RpJs[1];
+        return [Rp, js.wa(A)];
+      } else {
+        return RpJs;
+      }
+    }
+  }
+};
+
+/// Searchs the matching field pointed by 'tpath'
+/// \<tpath>, <fieldChange> -> <editorRp>
+processTpath = \Tp, Ch -> {
+  table = Tp.table.fpath;
+
+  // RETURN
+  if (!file.exists(table)) return editorRp.mkNoTable();
+
+  jdata = file.read(table);
+  hash = cryp.key(jdata, 500);
+
+  // RETURN
+  if (Ch.type != type.undef & hash != Ch.hash) return editorRp.mkModified();
+
+  tooBig = file.size(table) > cts.tableLimit;
+  RpJs = pTpath(hash, tooBig, jdata, Tp, Ch);
+  Rp = RpJs[0];
+  if (Rp.error == "" & Ch.type != type.undef) {
+    file.write(table, RpJs[1]);
+    return RpJs[0];
+  } else {
+    return RpJs[0];
+  }
+};

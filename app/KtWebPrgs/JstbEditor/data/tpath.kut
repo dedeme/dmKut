@@ -1,0 +1,33 @@
+// Copyright 21-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Path that defines a table field and its configuration.
+
+import "data/table";
+import "data/field";
+import "data/fieldCf";
+
+/// Creates a new table-field-configuration.
+///   table: Table to edit.
+///   field: Field path.
+///   fieldCf: Optional field configuration.
+/// \<table>, <field>, [<fieldCf>]|[] -> m<tpath>
+new = \table, field, fieldCf -> return { table, field, fieldCf };;
+
+/// \<tpath> -> s
+toJs = \T -> return js.wa([
+  table.toJs(T.table),
+  field.toJs(T.field),
+  arr.empty(T.fieldCf) ? js.wn() : fieldCf.toJs(T.fieldCf!)
+]);;
+
+/// \s -> <tpath>
+fromJs = \j -> {
+  A = js.ra(j);
+  return new(
+    table.fromJs(A[0]),
+    field.fromJs(A[1]),
+    js.isNull(A[2]) ? [] : [fieldCf.fromJs(A[2])]
+  );
+};
+

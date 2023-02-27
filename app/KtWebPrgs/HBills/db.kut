@@ -36,6 +36,10 @@ readBills = \ -> {
       Fields = js.ra(annJs);
       Am = map.get(js.ro(Fields[2]), cts.billsAcc);
       Am2 = map.get(js.ro(Fields[3]), cts.staysAcc);
+      if (arr.empty(Am)) {
+        Am0 = map.get(js.ro(Fields[3]), cts.billsAcc);
+        if (!arr.empty(Am0)) arr.push(Am, "-" + Am0!);
+      }
       if (!arr.empty(Am) & arr.empty(Am2)) {
         mdate = js.rs(Fields[0])[0:6];
         if (mdate > Month!) {
@@ -60,7 +64,8 @@ readStays = \ -> {
     y = math.toStr(year) + ".db";
     pth = path.cat([cts.accPath, y]);
     A = js.ra(file.read(pth));
-    for (annJs = js.ra(A[3])) {
+    for (annJs, i = js.ra(A[3])) {
+      if (i == 0) continue;
       Fields = js.ra(annJs);
       Am = map.get(js.ro(Fields[2]), cts.staysAcc);
       if (!arr.empty(Am)) {

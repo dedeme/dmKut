@@ -9,29 +9,23 @@ File = [];
 /// It is mandatory to call this function previously to call any other of this
 /// file.
 ///   fpath  : File path.
-///   logFail: If 'true', failures of program will be resgitered with 'sys.ffail'.
 /// \s -> ()
-init = \fpath, logFail -> {
+init = \fpath -> {
   arr.push(File, fpath);
   if (!file.exists(fpath)) file.write(fpath, "[]");
-  if (logFail)
-    sys.ffail(\msg -> {
-      error(msg);
-      sys.println(msg);
-    });
 };
 
 /// Returns 'true' if 'log' was initialized.
-isInit = \-> return !arr.empty(File);;
+isInit = \-> return !File;;
 
 // () -> s
-date = \-> return time.format("%D/%M/%Y(%t)", time.now());;
+date = \-> return time.fmt("%D/%M/%Y(%t)", time.now());;
 
 // [[b,s,s]...] -> ()
 write = \L -> file.write(
   File!,
   js.wa(
-    arr.mp(
+    arr.map(
       L,
       \e -> return js.wa([
         js.wb(e[0]),
@@ -43,7 +37,7 @@ write = \L -> file.write(
 );;
 
 // \-> [[b,s,s]...]
-read = \-> return arr.mp(
+read = \-> return arr.map(
   js.ra(file.read(File!)),
   \e -> {
     a = js.ra(e);
@@ -59,14 +53,14 @@ readJs = \-> return file.read(File!);;
 warning = \msg -> {
   L = read();
   arr.push(L, [false, date(), msg]);
-  write(L);
+  write(arr.drop(L, arr.size(L) - 1000));
 };
 
 /// Adds an error to log.
 error = \msg -> {
   L = read();
   arr.push(L, [true, date(), msg]);
-  write(L);
+  write(arr.drop(L, arr.size(L) - 1000));
 };
 
 /// Reset log.

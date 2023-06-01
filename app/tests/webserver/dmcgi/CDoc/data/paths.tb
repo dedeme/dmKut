@@ -1,1 +1,1 @@
-[["CDoc","/dm/dmWeb/app/CDoc/c",false,true],["*libdmc","/dm/dmC/lib/libdmc/",true,true],["*libtx","/dm/dmC/lib/libtx",true,true],["Kron","/dm/dmWeb/app/Kron/c",true,true],["MMarket","/dm/dmWeb/app/MMarket/c",false,true]]
+[["CDoc","/dm/dmWeb/app/CDoc/c",false,true],["*libdmc","/dm/dmC/lib/libdmc/",false,true],["*libtx","/dm/dmC/lib/libtx",true,true],["MMarket","/dm/dmWeb/app/MMarket/c",false,true],["*libkut","/dm/dmC/lib/libkut",false,true],["kut","/dm/dmC/app/kut/",true,false]]

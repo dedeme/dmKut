@@ -112,13 +112,13 @@ stretch = \i -> stretchTune(i, 10);;
 ///   width: Pixels to stretch (between 1 and 100, both inclusive).
 /// \s, i -> ()
 stretchTune = \i, width -> {
-  if (width < 1) sys.fail("width < 1");
-  if (width > 100) sys.fail("width > 100");
+  if (width < 1) sys.throw("width < 1");
+  if (width > 100) sys.throw("width > 100");
   source = path.cat([SourceDir!, i]);
   target = path.cat([TargetDir!, changeExt(i)]);
   WH = img.dim(source);
-  if (WH[1] < math.toInt(math.toFloat(WH[0]) * 0.8)) {
-    sys.fail(str.fmt(
+  if (WH[1] < math.ftoi(math.itof(WH[0]) * 0.8)) {
+    sys.throw(str.fmt(
       "Image height (%v) is less than image width (%v) * 0.8.",
       [WH[1], WH[0]]
     ));

@@ -12,20 +12,6 @@ import "data/nkRs";
 new = \model, NkResults ->
   return [model, NkResults];;
 
-///
-toJs = \R -> {
-  return js.wa([
-    js.ws(R[0]),
-    js.wa(arr.mp(R[1], nkRs.toJs))
-  ]);
-};
-
-///
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.rs(A[0]),
-    arr.mp(js.ra(A[1]), nkRs.fromJs)
-  );
-};
+/// \[*(JS)...] -> <rs>
+fromJs = \A -> return new(A[0], arr.map(A[1], nkRs.fromJs));;
 

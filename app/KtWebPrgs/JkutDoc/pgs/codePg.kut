@@ -1,0 +1,28 @@
+// Copyright 09-May-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Code page.
+
+import "KtWeb/rp";
+import "db";
+
+/// Process request.
+/// \m -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "code": {
+      Code = [];
+      Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == Rq.pack;);
+      if (arr.size(Ppath) != 0) {
+        fpath = path.cat([Ppath[0].path, Rq.path + ".jkut"]);
+        if (file.exists(fpath)) arr.push(Code, file.read(fpath));
+      }
+      sys.println(rp.mk({
+        code: Code
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+

@@ -11,23 +11,20 @@ import "data/fieldCf";
 ///   table: Table to edit.
 ///   field: Field path.
 ///   fieldCf: Optional field configuration.
-/// \<table>, <field>, [<fieldCf>]|[] -> m<tpath>
+/// \<table>, <field>, [<fieldCf>]|[] -> d<tpath>
 new = \table, field, fieldCf -> return { table, field, fieldCf };;
 
-/// \<tpath> -> s
-toJs = \T -> return js.wa([
+/// \<tpath> -> [*(JS)...]
+toJs = \T -> return [
   table.toJs(T.table),
   field.toJs(T.field),
-  arr.empty(T.fieldCf) ? js.wn() : fieldCf.toJs(T.fieldCf!)
-]);;
+  T.fieldCf ? [fieldCf.toJs(T.fieldCf!)] : []
+];;
 
-/// \s -> <tpath>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
+/// \[*(JS)...] -> <tpath>
+fromJs = \A -> return new(
     table.fromJs(A[0]),
     field.fromJs(A[1]),
-    js.isNull(A[2]) ? [] : [fieldCf.fromJs(A[2])]
-  );
-};
+    A[2] ? [fieldCf.fromJs(A[2]!)] : []
+  );;
 

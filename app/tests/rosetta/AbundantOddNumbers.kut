@@ -1,5 +1,5 @@
 getSum = \n -> {
-  sqrt = math.toInt(math.sqrt(math.toFloat(n)));
+  sqrt = math.ftoi(math.sqrt(math.itof(n)));
   return iter.reduce(
     [3:sqrt],
     sqrt * sqrt == n ? sqrt + 1 : 1,
@@ -15,8 +15,8 @@ while () {
   sum = getSum(n);
   if (sum > n) {
     if (C! < 25)
-      sys.println(("  " + math.toStr(n))[-5:] +
-        " proper divisor sum: " + ("  " + math.toStr(sum))[-5:]
+      sys.println(("  " + math.itos(n))[-5:] +
+        " proper divisor sum: " + ("  " + math.itos(sum))[-5:]
       );
     else if (C! == 999) {
       sys.println("1000th abundant odd number:");

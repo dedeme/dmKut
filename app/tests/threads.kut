@@ -1,0 +1,38 @@
+
+Args = sys.args();
+if (arr.size(Args) > 0) {
+  if (Args[0] == "delay") {
+    sys.sleep(6000);
+    file.write("tmp.txt", "End delay");
+    return;
+  }
+  if (Args[0] == "request") {
+    th3();
+    return;
+  }
+}
+
+th3 = \-> {
+sys.println("in");
+  thread.run(\-> {
+    sys.cmd("kut", ["threads", "delay"]);
+  });
+  sys.sleep(50);
+  sys.print("1");
+};
+
+th2 = \-> {
+  return sys.cmd("kut", ["threads", "request"])[0];
+};
+
+th1 = \-> {
+  thread.run(\-> {
+    sys.println(th2());
+  });
+};
+
+thread.run(th1);
+sys.sleep(10000);
+
+sys.test(file.read("tmp.txt"), "End delay");
+file.del("tmp.txt");

@@ -15,23 +15,11 @@ import "data/simRs";
 new = \nick, Closes, Refs, PropResults, PondResults ->
   return [nick, Closes, Refs, PropResults, PondResults];;
 
-///
-toJs = \R -> return js.wa([
-    js.ws(R[0]),
-    js.wa(arr.mp(R[1], \c -> return js.wf2(c, 4);)),
-    js.wa(arr.mp(R[2], \c -> return js.wf2(c, 4);)),
-    simRs.toJs(R[3]),
-    simRs.toJs(R[4])
-  ]);;
-
-///
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.rs(A[0]),
-    arr.mp(js.ra(A[1]), js.rf),
-    arr.mp(js.ra(A[2]), js.rf),
+/// \[*(JS)...] -> <nkRs>
+fromJs = \A -> return new(
+    A[0],
+    A[1],
+    A[2],
     simRs.fromJs(A[3]),
     simRs.fromJs(A[4])
-  );
-};
+  );;

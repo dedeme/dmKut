@@ -1,31 +1,16 @@
-// Copyright 04-Mar-2022 ºDeme
+// Copyright 06-May-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Configuration data.
 
-/// \s, s, b -> m
-new = \path, lang, showAll -> return {
-    "path": path,
-    "lang": lang,
-    "showAll": showAll
-  };
-;
+/// Constructor. <conf> is directly JSONizable.
+///   path: Default source path.
+///   showAll: 'true' if all libraries should be shown.
+/// \s, s, b -> <conf>{s, b}
+new = \path, lang, showAll -> return {path, lang, showAll};;
 
-/// \m -> s
-toJs = \Cf -> return js.wa([
-    js.ws(Cf.path),   
-    js.ws(Cf.lang),   
-    js.wb(Cf.showAll)
-  ]);
-;  
+/// \<conf> -> \[JS...]
+toJs = \Cf -> return [Cf.path, Cf.lang, Cf.showAll];;
 
-/// \s -> m
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.rs(A[0]),
-    js.rs(A[1]),
-    js.rb(A[2])
-  );
-};
-
+/// \[JS...] -> <conf>
+fromJs = \A -> return new (A[0], A[1], A[2]);;

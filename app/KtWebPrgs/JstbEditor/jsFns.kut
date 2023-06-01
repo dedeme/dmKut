@@ -16,12 +16,12 @@ import "data/fieldChange";
 getType = \j -> {
   if (js.isNull(j)) return type.null;
   try { js.rb(j); return type.boolean; }
-  catch e { try { js.ri(j); return type.number; }
-  catch e { try { js.rf(j); return type.number; }
-  catch e { try { js.rs(j); return type.string; }
-  catch e { try { js.ra(j); return type.array; }
-  catch e { try { js.ro(j); return type.map; }
-  catch e {return type.undef;}}}}}}
+  catch(e) { try { js.ri(j); return type.number; }
+  catch(e) { try { js.rf(j); return type.number; }
+  catch(e) { try { js.rs(j); return type.string; }
+  catch(e) { try { js.ra(j); return type.array; }
+  catch(e) { try { js.ro(j); return type.dict; }
+  catch(e) {return type.undef;}}}}}}
 };
 
 // If 'j' is not a JSON o type != 'type', it returns 'type.undef'.
@@ -31,19 +31,19 @@ isType = \tp, j -> {
     type.null:
       return js.isNull(j) ? tp : getType(j);
     type.boolean:
-      try { js.rb(j); return tp; } catch e return getType(j);
+      try { js.rb(j); return tp; } catch(e) return getType(j);
     type.number:
       try { js.ri(j); return tp; }
-      catch e { try { js.rf(j); return tp; }
-      catch e { return getType(j);}}
+      catch(e) { try { js.rf(j); return tp; }
+      catch(e) { return getType(j);}}
     type.string:
-      try { js.rs(j); return tp; } catch e return getType(j);
+      try { js.rs(j); return tp; } catch(e) return getType(j);
     type.array:
-      try { js.ra(j); return tp; } catch e return getType(j);
-    type.map:
-      try { js.ro(j); return tp; } catch e return getType(j);
+      try { js.ra(j); return tp; } catch(e) return getType(j);
+    type.dict:
+      try { js.ro(j); return tp; } catch(e) return getType(j);
     default:
-      sys.fail(str.fmt("Type '%v' is not valid", [tp]));
+      sys.throw(str.fmt("Type '%v' is not valid", [tp]));
   }
 };
 
@@ -51,7 +51,7 @@ isType = \tp, j -> {
 // If 'Ch.type == type.undef', newJSON=="".
 // \s, b, s, <tpath>, <fieldChange> -> [<editorRp>, s]
 pTpath = \hash, tooBig, jdata, Tp, Ch -> {
-  if (arr.empty(Tp.field.Entries)) {
+  if (!Tp.field.Entries) {
     tp = Ch.type == type.undef
       ? getType(jdata)
       : isType(Ch.type, jdata)
@@ -64,7 +64,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
       Ch.type != type.null &
       Ch.type != tp
     )
-      sys.fail(str.fmt(
+      sys.throw(str.fmt(
         "Bad type.\n  Expected: %v\n    Actual: %v",
         [Ch.type, tp]
       ));
@@ -77,7 +77,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
 
         Ix = [0];
         // [[i, s], ...]
-        A1 = arr.mp(A0, \j -> {
+        A1 = arr.map(A0, \j -> {
           ix = Ix!;
           Ix! += 1;
           return [ix, j];
@@ -86,12 +86,12 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
         Cf = Tp.fieldCf;
 
         // [[i, s], ...]
-        A2 = !arr.empty(Cf) & !arr.empty(Cf!.IndexKeyFilter)
+        A2 = Cf & Cf!.IndexKeyFilter
           ? A1[Cf!.IndexKeyFilter!.startRange : Cf!.IndexKeyFilter!.endRange]
           : A1
         ;
 
-        if (!arr.empty(Cf) & !arr.empty(Cf!.ValueFilter)) {
+        if (Cf & Cf!.ValueFilter) {
           arr.filterIn(
             A2,
             \Ij -> return str.index(Ij[1], Cf!.ValueFilter!) != -1;
@@ -99,7 +99,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
         }
 
         // [s, ...]
-        A3 = arr.mp(A2, \Ij -> return js.wa([
+        A3 = arr.map(A2, \Ij -> return js.wa([
           js.wi(Ij[0]),
           js.ws(str.len(Ij[1]) > cts.fieldLimit
             ? Ij[1][:cts.fieldLimit-3] + "..."
@@ -111,17 +111,17 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
           js.wi(len),
           js.wa(A3)
         ]);
-      } else if (tp == type.map) {
+      } else if (tp == type.dict) {
         // [[s, s], ...]
-        A1 = map.toArr(js.ro(jdata));
-        Keys = arr.mp(A1, \Kv -> return js.ws(Kv[0]););
+        A1 = dic.toArr(js.ro(jdata));
+        Keys = arr.map(A1, \Kv -> return js.ws(Kv[0]););
 
         Cf = Tp.fieldCf;
 
-        if (!arr.empty(Cf)) {
+        if (Cf) {
           cf = Cf!;
 
-          if (!arr.empty(cf.IndexKeyFilter)) {
+          if (cf.IndexKeyFilter) {
             f = cf.IndexKeyFilter!;
             text = f.isUpper ? str.toUpper(f.text) : f.text;
             kfilter = \key -> {
@@ -129,13 +129,13 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
               return switch (f.searchType) {
                 fieldCf.starts: str.starts(k, text);
                 fieldCf.in: str.index(k, text) != -1;
-                fieldCf.equals: k == text;
+                default: k == text;
               };
             };
             arr.filterIn(A1, \Kv -> return kfilter(Kv[0]););
           }
 
-          if (!arr.empty(cf.ValueFilter)) {
+          if (cf.ValueFilter) {
             arr.filterIn(
               A1,
               \Kv -> return str.index(Kv[1], cf.ValueFilter!) != -1;
@@ -144,7 +144,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
         }
 
         // [[s, s], ...]
-        A2 = arr.mp(A1, \Kv -> return [
+        A2 = arr.map(A1, \Kv -> return [
             Kv[0],
             js.ws(str.len(Kv[1]) > cts.fieldLimit
               ? Kv[1][:cts.fieldLimit-3] + "..."
@@ -154,7 +154,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
 
         Data! = js.wa([
           js.wa(Keys),
-          js.wo(map.fromArr(A2))
+          js.wo(dic.fromArr(A2))
         ]);      }
       return [editorRp.mkOk(jsData.new(hash, tooBig, tp, Data!)), ""];
     } else if (js.isNull(Ch.value)) {
@@ -168,7 +168,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
             type.number: js.wi(0);
             type.string: js.ws("");
             type.array: js.wa([]);
-            type.map: js.wo({});
+            default: js.wo({});
           };
         type.boolean: Ch.value;
         type.number: Ch.value;
@@ -191,21 +191,21 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
                   return js.wa(A);
                 }()
           ;
-        type.map: \-> {
+        type.dict: \-> {
             M = js.ro(jdata);
             switch (Ch.ix) {
-              fieldChange.mapAdd:
+              fieldChange.dicAdd:
                 M[js.rs(Ch.value)] = js.wn();
-              fieldChange.mapDel:
-                map.remove(M, js.rs(Ch.value));
-              fieldChange.mapKey: {
+              fieldChange.dicDel:
+                dic.remove(M, js.rs(Ch.value));
+              fieldChange.dicKey: {
                 Keys = js.ra(Ch.value);
                 oldKey = js.rs(Keys[0]);
                 newKey = js.rs(Keys[1]);
                 M[newKey] = M[oldKey];
-                map.remove(M, oldKey);
+                dic.remove(M, oldKey);
               }
-              fieldChange.mapDup: {
+              fieldChange.dicDup: {
                 Keys = js.ra(Ch.value);
                 oldKey = js.rs(Keys[0]);
                 newKey = js.rs(Keys[1]);
@@ -215,16 +215,16 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
             return js.wo(M);
           }();
         default:
-          sys.fail(str.fmt("Unkown type %v", Ch.type));
+          sys.throw(str.fmt("Unkown type %v", Ch.type));
       };
       return [rpOk, newJs];
     }
   } else {
     Entry = arr.shift(Tp.field.Entries);
-    if (Entry.isMap) {
+    if (Entry.isDic) {
       key = Entry.key;
       M = js.ro(jdata);
-      if (!map.hasKey(M, key)) return [editorRp.mkModified(), js.wn()];
+      if (!dic.hasKey(M, key)) return [editorRp.mkModified(), js.wn()];
       RpJs = pTpath(hash, tooBig, M[key], Tp, Ch);
       Rp = RpJs[0];
       if (Rp.error == "" & Ch.type != type.undef) {

@@ -1,0 +1,48 @@
+// Copyright 27-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Sunday data of ibex.
+
+/// Creates a new <IbexSundays>
+///   Data: Array of pairs date-value. It can be empty.
+/// \[[i, f]...] -> d<IbexSundays>
+new = \data -> return {
+  data
+};;
+
+/// \<IbexSundays> -> [i...]
+dates = \Is -> return arr.map(Is.data, \e -> return e[0];);;
+
+/// \<IbexSundays> -> [f...]
+values = \Is -> return arr.map(Is.data, \e -> return e[1];);;
+
+/// Returns values of 'Is' divided by 'Is[0]'
+/// \<IbexSundays> -> [f...]
+ratios = \Is -> {
+  D = Is.data;
+  if (arr.size(D) == 0) return [];
+  base = D[0][1];
+  return arr.map(D, \e -> return (e[1] - base) / base;);
+};
+
+/// Adds a new entry if there is no another with the same date.
+/// \<IbexSundays>, i, f -> ()
+add = \Is, date, value -> {
+  day = time.toStr(date);
+  D = Is.data;
+  if (!arr.any(D, \e -> return time.toStr(e[0]) == day;))
+    arr.push(D, [date, value]);
+};
+
+/// \<IbexSundays> -> [*(JS)...]
+toJs = \Is ->
+  return arr.map(
+    Is.data,
+    \e -> return [time.toStr(e[0]), str.fmt("%.2f", [e[1]])];
+  );;
+
+/// \[*(JS)...] -> <IbexSundays>
+fromJs = \A -> return new(arr.map(
+    A,
+    \E -> return [time.fromStr(E[0]), math.stof(E[1])!];
+  ));;

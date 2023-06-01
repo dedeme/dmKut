@@ -1,4 +1,4 @@
 A = [1, 2, 3];
 B = [4, 5, 6];
-sys.println(arr.toStr(A) + " + " + arr.toStr(B) + " = " + arr.toStr(A + B));
+sys.println(sys.toStr(A) + " + " + sys.toStr(B) + " = " + sys.toStr(A + B));
 

@@ -25,28 +25,13 @@ eq = \R1, R2 -> return R1[0] == R2[0] & R1[1] == R2[1];;
 /// \<Rs> -> i
 value = \R -> return R[0] > R[1] ? cts.r1 : R[1] > R[0] ? cts.r2 : cts.rx;;
 
-/// \<Rs> -> s
-toJs = \R -> return js.wa([
-  js.wi(R[0]),
-  js.wi(R[1])
-]);;
+/// \[*(JS)...] -> <Rs>
+fromJs = \A -> return new(
+    math.ftoi(A[0]),
+    math.ftoi(A[1])
+  );;
 
-/// \s -> <Rs>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.ri(A[0]),
-    js.ri(A[1])
-  );
-};
-
-/// \[([<Rs>]|[])...] -> s
-rowToJs = \Row -> return js.wa(arr.mp(
-  Row, \Cell -> return arr.empty(Cell) ? js.wn() : toJs(Cell!);
-));;
-
-/// \s -> [([<Rs>]|[])...]
-rowFromJs = \j -> return arr.mp(
-  js.ra(j), \c -> return js.isNull(c) ? [] : [fromJs(c)];
-);;
-
+/// \[*(JS)...] -> [([<Rs>]|[])...]
+rowFromJs = \A -> return arr.map(
+    A, \Cell -> return Cell ? [fromJs(Cell!)] : [];
+  );;

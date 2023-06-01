@@ -25,31 +25,3 @@ new = \r1, rx, r2 -> return [r1, rx, r2];;
 /// \<Bet>, i -> f
 incomes = \Bet, rs ->
   return rs == cts.r1 ? Bet[r1] : rs == cts.r2 ? Bet[r2] : Bet[rx];;
-
-/// \<Bet> -> s
-toJs = \B -> return js.wa([
-  js.wf(B[r1]),
-  js.wf(B[rx]),
-  js.wf(B[r2])
-]);;
-
-/// s -> <Bet>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.rf(A[0]),
-    js.rf(A[1]),
-    js.rf(A[2])
-  );
-};
-
-/// \[([<Bet>]|[])...] -> s
-rowToJs = \Row -> return js.wa(arr.mp(
-  Row, \Cell -> return arr.empty(Cell) ? js.wn() : toJs(Cell!);
-));;
-
-/// \s -> [([<Bet>]|[])...]
-rowFromJs = \j -> return arr.mp(
-  js.ra(j), \c -> return js.isNull(c) ? [] : [fromJs(c)];
-);;
-

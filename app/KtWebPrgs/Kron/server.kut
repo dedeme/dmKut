@@ -12,7 +12,7 @@ pt = "/dm/dmWeb/app/KtWeb/dmcgi/Kron/tmp.txt";
 /// Server start.
 /// \-> ()
 start = \ -> {
-  ssId = math.toStr(time.now());
+  ssId = math.itos(time.now());
 
   SessionIdTb = db.sessionIdTb();
   SessionIdTb.write(ssId);
@@ -44,7 +44,7 @@ start = \ -> {
             if (A[1] == ann.typePERIODIC) {
               data = js.ra(A[2]);
               if (arr.any(js.ra(data[1]), \wd -> return js.ri(wd) == wday;)) {
-                t0 = math.toInt(js.rf(data[0]) * 1000.0);
+                t0 = math.ftoi(js.rf(data[0]) * 1000.0);
                 cmdTm = time.new(
                   time.day(tm), time.month(tm), time.year(tm),
                   time.hour(t0), time.minute(t0), 0
@@ -72,7 +72,7 @@ start = \ -> {
       Anns,
       \A -> {
         if (A[1] == ann.typeFIX) {
-          return math.toInt(js.rf(A[2]) * 1000.0) <= tm;
+          return math.ftoi(js.rf(A[2]) * 1000.0) <= tm;
         } else {
           return false;
         }
@@ -87,6 +87,6 @@ start = \ -> {
 
     // END PROCESS
 
-    sys.sleep(60000);
+    sys.sleep(6000);
   }
 };

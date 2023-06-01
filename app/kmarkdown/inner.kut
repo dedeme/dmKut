@@ -254,7 +254,7 @@ process = \tx -> {
       "·"    :  Store[0] = Store[0] + "&nbsp;";
       "&"    :  Store[0] = Store[0] + "&amp;";
       "<"    :  Store[0] = Store[0] + "&lt;";
-      default: sys.fail("Unexpected value: " + Store[1]);
+      default: sys.throw("Unexpected value: " + Store[1]);
     }
   }
 

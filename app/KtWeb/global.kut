@@ -19,6 +19,6 @@ logPath = cgiRoot + "/log.txt";
 /// i
 port = 8008;
 /// i
-rpTime = 30000; // 1/2 minute
+rpTime = 30; // 1/2 minute
 /// i
 texpiration = 900; // seconds = 15'

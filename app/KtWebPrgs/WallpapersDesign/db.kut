@@ -40,9 +40,9 @@ savePictures = \group -> {
 duplicates = \list -> {
   R = [];
   for (i = 0:10) {
-    for (p = file.dir(path.cat([cts.adjustedArchivePath, math.toStr(i)])))
+    for (p = file.dir(path.cat([cts.adjustedArchivePath, math.itos(i)])))
       if (arr.index(list, \im -> return im == p;) != -1)
-        arr.push(R, math.toStr(i) + "/" + p);
+        arr.push(R, math.itos(i) + "/" + p);
   }
   return R;
 };
@@ -55,7 +55,7 @@ lessPicturesGroup = \-> {
   for (i = 0:10) {
     n = arr.reduce(
       js.ra(file.read(
-        path.cat([cts.wallpapersDataPath, "picts" + math.toStr(i) + ".db"])
+        path.cat([cts.wallpapersDataPath, "picts" + math.itos(i) + ".db"])
       )),
       0,
       \r, jsField -> return r + js.ri(js.ra(jsField)[0]);
@@ -63,7 +63,7 @@ lessPicturesGroup = \-> {
 
     if (n < N!) {
       N! = n;
-      G! = math.toStr(i);
+      G! = math.itos(i);
     }
   }
   return G!;
@@ -96,6 +96,7 @@ clearIntermediatePaths = \-> {
 /// \-> ()
 init = \ -> {
   dbPath = path.cat([global.cgiRoot, cts.appName]);
+
   DbPath! = dbPath;
   if (!file.exists(dbPath)) {
     file.mkdir(dbPath);
@@ -105,7 +106,7 @@ init = \ -> {
 };
 
 /// Configuration data
-/// \-> m[i, i]<jsdb>
+/// \-> d[i, i]<jsdb>
 confTb = \-> return jstb.new(
   path.cat([DbPath!, "conf.tb"]),
   \-> return conf.toJs(conf.mk());,
@@ -117,7 +118,7 @@ confTb = \-> return jstb.new(
 /// \-> [s]<jsdb>
 imagesTb = \-> return jstb.newArr(
   path.cat([DbPath!, "images.tb"]),
-  \-> return "[]";,
+  \-> return [];,
   image.toJs,
   image.fromJs
 );;

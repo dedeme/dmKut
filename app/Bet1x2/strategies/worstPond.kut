@@ -24,10 +24,10 @@ mk = \-> return strategy.new(
   "Poderation-Worst",
   "Choose the worst prospect, crossing ponderation of results and payments.",
   \Points, Bet -> {
-    psum = math.toFloat(Points[home] + Points[out]);
-    v1 = math.toFloat(Points[home]) * pond1 * (Bet[r1] - 1.0) / psum;
-    v2 = math.toFloat(Points[out]) * pond2 * (Bet[r2] - 1.0) / psum;
-    vx = (1.0 - math.abs(math.toFloat(Points[home] - Points[out]))) *
+    psum = math.itof(Points[home] + Points[out]);
+    v1 = math.itof(Points[home]) * pond1 * (Bet[r1] - 1.0) / psum;
+    v2 = math.itof(Points[out]) * pond2 * (Bet[r2] - 1.0) / psum;
+    vx = (1.0 - math.abs(math.itof(Points[home] - Points[out]))) *
       pondx * (Bet[rx] - 1.0);
 
     return v1 < vx & v1 < v2

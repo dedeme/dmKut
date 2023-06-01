@@ -1,0 +1,42 @@
+// Copyright 01-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Models page.
+
+import "KtWeb/rp";
+import "db";
+import "data/modelFloats";
+import "data/modelFloat";
+
+/// \m -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Rp = {type: js.w(Rq.type), dataGroups: []};
+      switch (Rq.type) {
+        "total": Rp.dataGroups = db.totalsModelSimProfitsDb().readJs();
+        "cash": Rp.dataGroups = db.cashesModelSimProfitsDb().readJs();
+        "ref": Rp.dataGroups = db.refsModelSimProfitsDb().readJs();
+        default: {
+          Rp.type = js.ws("points");
+          Rp.dataGroups = js.w(arr.map(
+            db.modelEvalsTb().read(),
+            \e -> return modelFloats.toJs(
+              modelFloats.new(
+                e.date,
+                arr.map(
+                  e.evals,
+                  \ev -> return modelFloat.new(
+                    ev.model, math.itof(ev.eval) / 100.0
+                  );
+                )
+              )
+            );
+          ));
+        }
+      }
+      return rp.mkJs(Rp);
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -9,19 +9,18 @@ import "data/lpath";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       Llist = db.llistTb().read();
       for (L = Llist) {
         try {
           L.found = file.isDirectory(L.fpath);
-        } catch e {
+        } catch(e) {
           L.found = false;
         }
       }
       sys.print(rp.mk({
-        "list": js.wa(arr.mp(Llist, lpath.toJs))
+        "list": arr.map(Llist, lpath.toJs)
       }));
     }
     "new": {
@@ -40,14 +39,13 @@ process = \Rq -> {
       sys.print(rp.mkEmpty());
     }
     "del": {
-      id = js.rs(Rq.id);
       LlistTb = db.llistTb();
       Llist = LlistTb.read();
-      arr.filterIn(Llist, \L -> return L.id != id;);
+      arr.filterIn(Llist, \L -> return L.id != Rq.id;);
       LlistTb.write(Llist);
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

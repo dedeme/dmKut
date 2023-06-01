@@ -21,5 +21,5 @@ fmtf = \n -> {
     return r == "" ? s : r;
   };
 
-  return rm0s(math.toStr(math.round(n, 6)));
+  return rm0s(math.ftos(math.round(n, 6)));
 };

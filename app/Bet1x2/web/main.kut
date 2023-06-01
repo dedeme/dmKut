@@ -3,8 +3,8 @@
 
 /// Main page
 
-import "dm/cgi";
-import "dm/log";
+import "libdm/cgi";
+import "libdm/log";
 import "db";
 import "strategies";
 
@@ -13,6 +13,6 @@ process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "close": return cgi.delSession(js.rs(Rq.sessionId));
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

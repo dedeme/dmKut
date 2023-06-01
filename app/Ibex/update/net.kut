@@ -1,8 +1,8 @@
 // Copyright 19-Aug-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-import "dm/ext";
-import "dm/log";
+import "libdm/ext";
+import "libdm/log";
 
 /// \->[[s, f]...]
 getIbex = \-> {
@@ -41,13 +41,13 @@ getIbex = \-> {
     v0 = str.trim(html[I1!+1:I2!]);
 
     D = time.fromIsoOp(d0, "/");
-    if (arr.empty(D)) {
+    if (!D) {
       log.error("net.getIbex: Bad date\n" + d0);
       return [];
     }
 
     V = math.fromIso(v0);
-    if (arr.empty(V)) {
+    if (!V) {
       log.error("net.getIbex: Bad value\n" + v0);
       return [];
     }
@@ -61,7 +61,7 @@ getIbex = \-> {
   PrevDate = ["000000"];
   for (DtVal = R) {
     d = DtVal[0];
-    if (arr.empty(time.fromStrOp(d))) {
+    if (!time.fromStrOp(d)) {
       log.error("Bad date: " + d);
       DatesOk! = false;
     }

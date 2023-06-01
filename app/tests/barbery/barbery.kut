@@ -5,8 +5,6 @@ import "clock";
 import "client";
 import "barber";
 
-sys.rand();
-
 clockTh = thread.start(clock.run);
 clientMakerTh = thread.start(client.makerRun);
 barberTh = thread.start(barber.run);

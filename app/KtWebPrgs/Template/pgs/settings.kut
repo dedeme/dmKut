@@ -8,20 +8,19 @@ import "db";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
-    "idata": sys.print(rp.mk({
+  switch (Rq.rq) {
+    "idata": sys.print(rp.mkJs({
         "conf": db.confTb().readJs()
       }));
     "setColor": {
-        color = js.rs(Rq.color);
+        color = Rq.color;
         ConfTb = db.confTb();
         Conf = ConfTb.read();
         Conf.color = color;
         ConfTb.write(Conf);
         sys.print(rp.mkEmpty());
       }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

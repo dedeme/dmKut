@@ -1,0 +1,23 @@
+// Copyright 03-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Hot dic of a model.
+
+import "data/paramsEval";
+
+/// Returns a dic with the following values.
+///   date: Date of data.
+///   entries: Parameters-Evaluations of a model.
+/// \s, a[<paramsEval>...] -> d<HotMap>
+new = \date, entries -> {
+  return {
+    date,
+    entries
+  };
+};
+
+/// \[*(JS)...] -> <HotMap>
+fromJs = \D -> return new(
+    D.date,
+    arr.map(D.entries, \e -> return paramsEval.fromJs(e);)
+  );;

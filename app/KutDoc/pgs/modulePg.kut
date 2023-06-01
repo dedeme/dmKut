@@ -3,7 +3,7 @@
 
 /// Module page.
 
-import "dm/cgi";
+import "libdm/cgi";
 import "readers/mdReader";
 import "data/doc";
 
@@ -19,11 +19,11 @@ process = \Rq -> {
       return cgi.rp({
         "doc": arr.size(Doc) == 0
           ? js.wn()
-          : doc.toJs(Doc[0])
+          : js.w(doc.toJs(Doc[0]))
       });
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };
 
 

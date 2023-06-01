@@ -9,12 +9,11 @@ import "data/bkPaths";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       BkListTb = db.bkListTb().read();
       NewList = [];
-      for (B = BkListTb.list) {
+      for (B = BkListTb) {
         source = B.source;
         SourceError = [""];
         try {
@@ -23,11 +22,11 @@ process = \Rq -> {
           else if (!file.isDirectory(source))
             SourceError! = "'" + source + "' is not a directory.";
           else if (
-            arr.empty(B.state) &
+            !B.state &
             file.exists(path.cat([source, "BrutalBackups.txt"]))
           )
             SourceError! = "'BrutalBackups.txt' found in '" + source + "'";
-        } catch e {
+        } catch(e) {
           ix = str.index(e, "\n");
           SourceError! = ix == -1 ? e : e[:ix];
         }
@@ -41,69 +40,49 @@ process = \Rq -> {
             BackupError! = "'" + backup + "' is not a directory.";
           else if (!file.exists(path.cat([backup, "BrutalBackups.txt"])))
             BackupError! = "'BrutalBackups.txt' not found in '" + backup + "'";
-        } catch e {
+        } catch(e) {
           ix = str.index(e, "\n");
           BackupError! = ix == -1 ? e : e[:ix];
         }
 
         arr.push(
           NewList,
-          bkPaths.new(
-            B.id, source, SourceError!, backup, BackupError!, B.msgs, B.state
+          bkPaths.mk(
+            B.id, source, SourceError!, backup, BackupError!, B.msgs, B.tm, B.state
           )
         );
 
       }
 
       sys.print(rp.mk({
-        "list": js.wa(arr.mp(NewList, bkPaths.toJs))
+        "list": arr.map(NewList, bkPaths.toJs)
       }));
     }
     "addModify": {
-      id = js.rs(Rq.id);
-      from = js.rs(Rq.from);
-      to = js.rs(Rq.to);
-
       BkListTbJs = db.bkListTb();
-      BkListTb = [BkListTbJs.read()];
-      if (BkListTb!.lock) {
-        sys.sleep(100);
-        BkListTb! = BkListTbJs.read();
-      }
-      BkListTb!.lock = true;
-      BkListTbJs.write(BkListTb!);
+      List = BkListTbJs.read();
 
-      List = BkListTb!.list;
-      BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
-      if (arr.empty(BkPaths)) {
-        arr.push(List, bkPaths.new(id, from, "", to, "", [], []));
+      BkPaths = arr.find(List, \Bk -> return Bk.id == Rq.id;);
+      if (BkPaths) {
+        BkPaths!.source = Rq.from;
+        BkPaths!.backup = Rq.to;
       } else {
-        BkPaths!.source = from;
-        BkPaths!.backup = to;
+        arr.push(List, bkPaths.mk(Rq.id, Rq.from, "", Rq.to, "", [], -1, []));
       }
-      BkListTbJs.write(bkPaths.newTable(false, List));
+      BkListTbJs.write(List);
 
       sys.print(rp.mkEmpty());
     }
     "del": {
-      id = js.rs(Rq.id);
-
       BkListTbJs = db.bkListTb();
-      BkListTb = [BkListTbJs.read()];
-      if (BkListTb!.lock) {
-        sys.sleep(100);
-        BkListTb! = BkListTbJs.read();
-      }
-      BkListTb!.lock = true;
-      BkListTbJs.write(BkListTb!);
+      List = BkListTbJs.read();
 
-      arr.filterIn(BkListTb!.list, \Bk -> return Bk.id != id;);
-      BkListTb!.lock = false;
-      BkListTbJs.write(BkListTb!);
+      arr.filterIn(List, \Bk -> return Bk.id != Rq.id;);
+      BkListTbJs.write(List);
 
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

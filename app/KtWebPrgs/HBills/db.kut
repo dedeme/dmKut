@@ -11,12 +11,12 @@ import "data/monthAnn";
 
 // EXTERN DATA BASE
 
-// Current year
-// i
+/// Current year
+/// i
 year = time.year(time.now());
 
-// Years range (from [0] to [1] both inclusive - see 'readBills()')
-// [i, i]
+/// Years range (from [0] to [1] both inclusive - see 'readBills()')
+/// [i, i]
 YearsRange = [
   (year - 5 > 2022) ? year - 5 : 2022,
   year
@@ -26,24 +26,24 @@ YearsRange = [
 /// \-> [<monthAnn>...]
 readBills = \ -> {
   R = [];
-  Month = [math.toStr(YearsRange[0]) + "01"];
+  Month = [math.itos(YearsRange[0]) + "01"];
   Sum = [0.0];
   for (year = YearsRange[0] : YearsRange[1] + 1) {
-    y = math.toStr(year) + ".db";
+    y = math.itos(year) + ".db";
     pth = path.cat([cts.accPath, y]);
     A = js.ra(file.read(pth));
     for (annJs = js.ra(A[3])) {
       Fields = js.ra(annJs);
-      Am = map.get(js.ro(Fields[2]), cts.billsAcc);
-      Am2 = map.get(js.ro(Fields[3]), cts.staysAcc);
-      if (arr.empty(Am)) {
-        Am0 = map.get(js.ro(Fields[3]), cts.billsAcc);
-        if (!arr.empty(Am0)) arr.push(Am, "-" + Am0!);
+      Am = dic.get(js.ro(Fields[2]), cts.billsAcc);
+      Am2 = dic.get(js.ro(Fields[3]), cts.staysAcc);
+      if (!Am) {
+        Am0 = dic.get(js.ro(Fields[3]), cts.billsAcc);
+        if (Am0) arr.push(Am, "-" + Am0!);
       }
-      if (!arr.empty(Am) & arr.empty(Am2)) {
+      if (Am & !Am2) {
         mdate = js.rs(Fields[0])[0:6];
         if (mdate > Month!) {
-          arr.push(R, monthAnn.new(Month!, [], Sum!));
+          arr.push(R, monthAnn.mk(Month!, [], Sum!));
           Month! = mdate;
           Sum! = js.rf(Am!);
         } else {
@@ -52,7 +52,7 @@ readBills = \ -> {
       }
     }
   }
-  arr.push(R, monthAnn.new(Month!, [], Sum!));
+  arr.push(R, monthAnn.mk(Month!, [], Sum!));
   return arr.filter(R, \a -> return a[2] > 0.0;);
 };
 
@@ -61,17 +61,20 @@ readBills = \ -> {
 readStays = \ -> {
   R = [];
   for (year = YearsRange[0] : YearsRange[1] + 1) {
-    y = math.toStr(year) + ".db";
+    y = math.itos(year) + ".db";
     pth = path.cat([cts.accPath, y]);
-    A = js.ra(file.read(pth));
-    for (annJs, i = js.ra(A[3])) {
+    A = js.r(file.read(pth));
+    for (annJs, i = A[3]) {
       if (i == 0) continue;
-      Fields = js.ra(annJs);
-      Am = map.get(js.ro(Fields[2]), cts.staysAcc);
-      if (!arr.empty(Am)) {
+      Fields = annJs;
+      Am = year == 2022
+        ? dic.get(Fields[2], cts.staysAcc22)
+        : dic.get(Fields[2], cts.staysAcc)
+      ;
+      if (Am) {
         arr.push(
           R,
-          accAnn.new(js.rs(Fields[0]), js.rs(Fields[1]), js.rf(Am!))
+          accAnn.mk(Fields[0], Fields[1], Am!)
         );
       }
     }
@@ -92,16 +95,10 @@ init = \ -> {
 };
 
 /// Returns the table of places in "places.tb"
-/// \-> m[s]<jsdb>
+/// \-> d[s]<jsdb>
 placesTb = \-> return jstb.new(
   DbPath! + "/places.tb",
-  \-> return "{}";,
-  \P -> return js.wo(map.fromArr(arr.mp(
-      map.toArr(P),
-      \A -> return [A[0], js.ws(A[1])];
-    )));,
-  \j -> return map.fromArr(arr.mp(
-      map.toArr(js.ro(j)),
-      \A -> return [A[0], js.rs(A[1])];
-    ));
+  \-> return {};,
+  sys.id,
+  sys.id
 );;

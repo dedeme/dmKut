@@ -10,20 +10,19 @@ import "data/monthAnn";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       Years = [];
       for (year = db.YearsRange[0] : db.YearsRange[1] + 1) {
-        arr.push(Years, js.ws(math.toStr(year)));
+        arr.push(Years, math.itos(year));
       }
       sys.print(rp.mk({
-        "years": js.wa(Years),
-        "billAnns": js.wa(arr.mp(db.readBills(), monthAnn.toJs)),
-        "stayAnns": js.wa(arr.mp(db.readStays(), accAnn.toJs))
+        "years": Years,
+        "billAnns": db.readBills(),
+        "stayAnns": db.readStays()
       }));
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

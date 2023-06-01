@@ -19,11 +19,11 @@ init = \ -> {
 };
 
 /// Returns the table of 'a<alarm>' in "alarms.tb"
-/// \-> m<jsdb>
+/// \-> d<jsdb>
 alarmsTb = \-> return jstb.newArr(
   DbPath! + "/alarms.tb",
-  \-> return "[]";,
-  alarm.toJs,
-  alarm.fromJs
+  \-> return [];,
+  sys.id,
+  sys.id
 );;
 

@@ -20,9 +20,9 @@ init = \ -> {
 /// \-> s<jstb>
 activityTb = \-> return jstb.new(
   path.cat([DbPath!, "activity.tb"]),
-  \-> return js.ws("stopped");,
-  js.ws,
-  js.rs
+  \-> return "stopped";,
+  sys.id,
+  sys.id
 );;
 
 /// Returns the JSON table 'rankings.tb'

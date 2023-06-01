@@ -9,15 +9,18 @@ import "KtWeb/global";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "changePass": {
+      user = Rq.user;
+      old = Rq.old;
+      new = Rq.new;
       cgi.init(global.cgiRoot, global.texpiration);
-      user = js.rs(Rq.user);
-      old = js.rs(Rq.old);
-      new = js.rs(Rq.new);
-      sys.print(rp.mk(js.ro(cryp.decode("",cgi.changePass(user, old, new)))));
+      key = cryp.genK(cgi.klen);
+      cgi.authentication(key, user, old, true);
+      sys.print(rp.mkJs(js.ro(cryp.decode(
+        key,cgi.changePass(user, old, new)
+      ))));
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

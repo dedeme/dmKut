@@ -1,31 +1,42 @@
-// Copyright 06-Mar-2022 ºDeme
+// Copyright 08-May-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
-
-import "data/docEntry";
 
 /// Module documentation data.
 
-/// \s, [m...], [m...] -> m
-new = \documentation, functions, values -> return {
-  "documentation": documentation,
-  "functions": functions,
-  "values": values
-};;
+/// Documentation entry constructor.
+///   name: Entry name.
+///   doc : Entry documentation.
+///   code: Entry code.
+///   link: Entry code page link.
+/// \s, s, s, s -> <docEntry>
+newEntry = \name, doc, code, link ->
+  return { name, doc, code, link };;
 
-/// \m -> s
-toJs = \D -> {
-  return js.wa([
-  js.ws(D.documentation),
-  js.wa(arr.mp(D.functions, \F -> return docEntry.toJs(F);)),
-  js.wa(arr.mp(D.values, \F -> return docEntry.toJs(F);))
-]);};
+/// \<docEntry> -> [Js...]
+entryToJs = \D -> return [D.name, D.doc, D.code, D.link];;
 
-/// \s -> m
-fromJs = \j -> {
-  a = js.ra(j);
-  return new([
-    js.rs(a[0]),
-    arr.mp(js.ra(a[1]), \ejs -> return docEntry.fromJs(ejs);),
-    arr.mp(js.ra(a[2]), \ejs -> return docEntry.fromJs(ejs);)
-  ]);
-};
+/// \[JS...] -> <docEntry>
+entryFromJs = \A -> return newEntry(A[0], A[1], A[2], A[3]);;
+
+/// Documentation constructor.
+///   doc      : Module documentation.
+///   functions: Functions documentation.
+///   values   : Values documentation.
+/// \s, [<docEntry>...], [<docEntry>...] -> <doc>
+new = \doc, Functions, Values -> return { doc, Functions, Values };;
+
+/// \<doc> -> [Js...]
+toJs = \D -> return [
+    D.doc,
+    arr.map(D.Functions, entryToJs),
+    arr.map(D.Values, entryToJs)
+  ];;
+
+/// \[JS...] -> <doc>
+fromJs = \A -> return new(
+    A[0],
+    arr.map(A[1], entryFromJs),
+    arr.map(A[2], entryFromJs)
+  );;
+
+

@@ -5,26 +5,27 @@ import "art";
 import "db";
 import "data/cts";
 
+///
 run = \-> {
   sys.println("t6");
 
   D1 = [];
   for (i = 0:9) {
-    L = file.dir(path.cat([cts.adjustedArchivePath, math.toStr(i)]));
+    L = file.dir(path.cat([cts.adjustedArchivePath, math.itos(i)]));
     arr.push(D1, L[math.rndi(arr.size(L))]);
   }
   D2 = ["-xxx.jpg", "--xxx.jpg", "---xxx.jpg"];
   D = D1 + D2;
 
   Dups = db.duplicates(D);
-  assert arr.all(
+  sys.assert(arr.all(
     D1,
     \im -> return arr.any(Dups, \im2 -> return im == im2[2:];);
-  );
-  assert !arr.any(
+  ));
+  sys.assert(!arr.any(
     D2,
     \im -> return arr.any(Dups, \im2 -> return im == im2[2:];);
-  );
+  ));
 
   sys.println("  Done");
 };

@@ -31,13 +31,13 @@ list = [
   bestPond.mk(),
   mediumPond.mk(),
   worstPond.mk()
-];;
+];
 
 /// Returns the strategy with identifier 'id'.
 /// \s -> <Stragegy>
 get = \id -> {
   R = arr.find(list, \e -> return e.id == id;);
-  if (arr.empty(R)) sys.fail("Strategy '" + id + "' not found");
+  if (!R) sys.throw("Strategy '" + id + "' not found");
   return R!;
 };
 
@@ -59,7 +59,7 @@ yearProfits = \S, description, Results, Points, Bets -> {
       R = Results[i][j];
       P = Points[i][j];
       B = Bets[i][j];
-      if (arr.empty(R) | arr.empty(P) | arr.empty(B)) continue;
+      if (!R | !P | !B) continue;
       pfs = strategy.profits(S, R!, P!, B!);
       if (pfs < 0.0) Fails! += 1;
       else Hits! += 1;
@@ -78,7 +78,7 @@ yearProfits = \S, description, Results, Points, Bets -> {
 ///   Bets   : Several year bets tables.
 /// \<Strategy>, [s...], [[[([<Rs>]|[])...]...]...], [[[([<Rs>]|[])...]...]...],
 ///  [[[([<Bet>]|[])...]...]...] -> [<Profits>...]
-yearsProfits = \S, Years, Results, Points, Bets -> return arr.fromIter(iter.mp(
+yearsProfits = \S, Years, Results, Points, Bets -> return arr.fromIter(iter.map(
   [0:arr.size(Years)],
   \i -> return yearProfits(S, Years[i], Results[i], Points[i], Bets[i]);
 ));;
@@ -91,7 +91,7 @@ yearsProfits = \S, Years, Results, Points, Bets -> return arr.fromIter(iter.mp(
 ///   Bets       : Year bets table.
 /// \[<Strategy>...], [[([<Rs>]|[])...]...], [[([<Rs>]|[])...]...],
 ///  [[([<Bet>]|[])...]...] -> [<Profits>...]
-yearGroupProfits = \Ss, Results, Points, Bets -> return arr.mp(
+yearGroupProfits = \Ss, Results, Points, Bets -> return arr.map(
   Ss,
   \S -> return yearProfits(S, S.id, Results, Points, Bets);
 );;
@@ -104,9 +104,9 @@ yearGroupProfits = \Ss, Results, Points, Bets -> return arr.mp(
 ///   Bets   : Several year bets tables.
 /// \[<Strategy>...], [[[([<Rs>]|[])...]...]...], [[[([<Rs>]|[])...]...]...],
 ///  [[[([<Bet>]|[])...]...]...] -> [<Profits>...]
-yearsGroupProfits = \Ss, Results, Points, Bets -> return arr.mp(
+yearsGroupProfits = \Ss, Results, Points, Bets -> return arr.map(
   Ss,
-  \S -> return profits.sum(arr.fromIter(iter.mp(
+  \S -> return profits.sum(arr.fromIter(iter.map(
       [0:arr.size(Results)],
       \i -> return yearProfits(S, "", Results[i], Points[i], Bets[i]);
     )), S.id);

@@ -11,13 +11,13 @@
 // \s, [s,...] -> s
 cmd = \c, Ps -> {
   OutErr = sys.cmd(c, Ps);
-  if (OutErr[1] != "") sys.fail(OutErr[1]);
+  if (OutErr[1] != "") sys.throw(OutErr[1]);
   return OutErr[0];
 };
 
 /// Returns [width, height] of the image 'im'
 /// \s -> [i, i]
-dim = \im -> return arr.mp(
+dim = \im -> return arr.map(
   str.split(
     str.split(
       cmd("identify", [im]),
@@ -25,7 +25,7 @@ dim = \im -> return arr.mp(
     )[2],
     "x"
   ),
-  math.toInt
+  \n -> return math.stoi(n)!;
 );;
 
 /// Copy a imgSource in a new imgTarget
@@ -41,11 +41,11 @@ blur = \imgSource, imgTarget, ratio -> {
   tmp = file.tmp("", "tmp") + ".png";
   WH = dim(imgSource);
   bl = ratio > 1.0 ? 0.015 : ratio < 0.01 ? 1.5 : (1.0 - ratio) * 1.5;
-  toStr = \n, p -> return math.toStr(
-    math.toInt(math.toFloat(n) * p)
+  toStr = \n, p -> return math.itos(
+    math.ftoi(math.itof(n) * p)
   );;
   dm = toStr(WH[0], bl) + "x" + toStr(WH[1], bl) + "!";
-  dm2 = math.toStr(WH[0]) + "x" + math.toStr(WH[1]) + "!";
+  dm2 = math.itos(WH[0]) + "x" + math.itos(WH[1]) + "!";
   cmd("convert", ["-resize", dm, imgSource, tmp]);
   cmd("convert", ["-resize", dm2, tmp, imgTarget]);
   file.del(tmp);
@@ -65,8 +65,8 @@ crop = \imgSource, imgTarget, left, top, width, height -> {
   t = (top < 0 | top >= dm[1]) ? 0 : top;
   w = (width < 0 | left + width > dm[0]) ? dm[0] : width;
   h = (height < 0 | top + height > dm[1]) ? dm[1] : height;
-  params = math.toStr(w) + "x" + math.toStr(h) + "+" +
-    math.toStr(l) + "+" + math.toStr(t) + "!"
+  params = math.itos(w) + "x" + math.itos(h) + "+" +
+    math.itos(l) + "+" + math.itos(t) + "!"
   ;
   cmd("convert", ["-crop", params, imgSource, imgTarget]);
 };
@@ -77,7 +77,7 @@ crop = \imgSource, imgTarget, left, top, width, height -> {
 fit = \imgSource, imgTarget, width, height -> {
   w = width < 1 ? 1 : width;
   h = height < 1 ? 1 : height;
-  params = math.toStr(w) + "x" + math.toStr(h);
+  params = math.itos(w) + "x" + math.itos(h);
   cmd("convert", ["-resize", params, imgSource, imgTarget]);
 };
 
@@ -85,7 +85,7 @@ fit = \imgSource, imgTarget, width, height -> {
 /// imgTarget will be greater or equals to imgSource.
 /// \s, s, i, i -> ()
 fill = \imgSource, imgTarget, width, height -> {
-  params = math.toStr(width) + "x" + math.toStr(height) + "^";
+  params = math.itos(width) + "x" + math.itos(height) + "^";
   cmd("convert", ["-resize", params, imgSource, imgTarget]);
 };
 
@@ -95,7 +95,7 @@ fill = \imgSource, imgTarget, width, height -> {
 resize = \imgSource, imgTarget, width, height -> {
   w = width < 1 ? 1 : width;
   h = height < 1 ? 1 : height;
-  params = math.toStr(w) + "x" + math.toStr(h) + "+" + "!";
+  params = math.itos(w) + "x" + math.itos(h) + "+" + "!";
   cmd("convert", ["-resize", params, imgSource, imgTarget]);
 };
 
@@ -106,7 +106,7 @@ resize = \imgSource, imgTarget, width, height -> {
 ///   img   : Image file path. If 'img' already exists, it is overwrite.
 /// \s, i, i, s -> ()
 new = \color, width, height, img -> {
-  dm = math.toStr(width) + "x" + math.toStr(height);
+  dm = math.itos(width) + "x" + math.itos(height);
   if (color == "") {
     cmd("convert", ["-size", dm, "-type", "TrueColor", "xc:transparent", img]);
   } else {
@@ -130,25 +130,25 @@ new = \color, width, height, img -> {
 noise = \blur, light, color, width, height, img -> {
   color2 = \ -> {
     toHex = \n -> {
-      i0 = math.toInt(n);
+      i0 = math.ftoi(n);
       i = i0 > 255 ? 255 : i0 < 0 ? 0 : i0;
-      r = math.toHex(i);
+      r = math.itoh(i);
       return str.len(r) == 1 ? "0" + r : r;
     };
     more = \-> {
       lg = light >= 1.0 ? 1.0 : light * 2.0 - 1.0;
-      Cs = arr.mp(
+      Cs = arr.map(
         [color[1:3], color[3:5], color[5:]],
-        \hx -> return math.toFloat(math.fromHex(hx)!);
+        \hx -> return math.itof(math.fromHex(hx)!);
       );
       for (c, i = Cs) Cs[i] = c + (255.0 - c) * lg;
       return "#" + toHex(Cs[0]) + toHex(Cs[1]) + toHex(Cs[2]);
     };
     less = \-> {
       lg = light >= 0.5 ? 1.0 : light * 2.0;
-      Cs = arr.mp(
+      Cs = arr.map(
         [color[1:3], color[3:5], color[5:]],
-        \hx -> return math.toFloat(math.fromHex(hx)!);
+        \hx -> return math.itof(math.fromHex(hx)!);
       );
       for (c, i = Cs) Cs[i] = c * lg;
       return "#" + toHex(Cs[0]) + toHex(Cs[1]) + toHex(Cs[2]);
@@ -156,8 +156,8 @@ noise = \blur, light, color, width, height, img -> {
 
     return light > 0.5 ? more() : less();
   };
-  toStr = \n, p -> return math.toStr(
-    math.toInt(math.toFloat(n) * p)
+  toStr = \n, p -> return math.itos(
+    math.ftoi(math.itof(n) * p)
   );;
   bl = blur > 1.0 ? 0.015 : blur < 0.01 ? 1.5 : (1.0 - blur) * 1.5;
   dm = toStr(width, bl) + "x" + toStr(height, bl);
@@ -213,8 +213,8 @@ over = \img1, img2, imgTarget, position ->
 /// Img2 is placed at 'left', 'top'.
 /// \s, s, s, i, i - ()
 overAt = \img1, img2, imgTarget, left, top -> {
-  l = left >= 0 ? "+" + math.toStr(left) : math.toStr(left);
-  t = top >= 0 ? "+" + math.toStr(top) : math.toStr(top);
+  l = left >= 0 ? "+" + math.itos(left) : math.itos(left);
+  t = top >= 0 ? "+" + math.itos(top) : math.itos(top);
   cmd("composite", ["-geometry", l + t, img1, img2, imgTarget]);
 };
 

@@ -6,7 +6,7 @@
 import "vector";
 import "fn";
 
-/// Constructor type map.
+/// Constructor type dic.
 /// \f, f, f -> <point>
 new = \x, y, z -> return {x, y, z};;
 

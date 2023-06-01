@@ -6,56 +6,36 @@
 import "libdm/dsync";
 import "db";
 
-
+///
 run = \id -> {
   BkListTbJs = db.bkListTb();
-  BkListTb = [BkListTbJs.read()];
-  if (BkListTb!.lock) {
-    sys.sleep(100);
-    BkListTb! = BkListTbJs.read();
-  }
-  BkListTb!.lock = true;
-  BkListTbJs.write(BkListTb!);
+  List = BkListTbJs.read();
 
-  List = BkListTb!.list;
   BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
   ps = BkPaths!;
   backupCheck = path.cat([ps.backup, "BrutalBackups.txt"]);
   if (!file.exists(backupCheck)) {
     ps.state = [];
     ps.msgs = ["'" + backupCheck + "' no found"];
-    BkListTb!.lock = false;
-    BkListTbJs.write(BkListTb!);
+    BkListTbJs.write(List);
     return;
   }
   sourceCheck = path.cat([ps.source, "BrutalBackups.txt"]);
   file.write(sourceCheck, "");
 
-
-  if (!arr.empty(ps.state)) {
-    BkListTb!.lock = false;
-    BkListTbJs.write(BkListTb!);
+  if (ps.state) {
     return;
   }
 
-  ps.state = [0, 100];
+  ps.state = [0];
   ps.msgs = [];
-  BkListTb!.lock = false;
-  BkListTbJs.write(BkListTb!);
+  BkListTbJs.write(List);
 
   Syn = dsync.newFiles (
     ps.source,
     ps.backup,
     \Msg -> {
-      BkListTb = [BkListTbJs.read()];
-      if (BkListTb!.lock) {
-        sys.sleep(100);
-        BkListTb! = BkListTbJs.read();
-      }
-      BkListTb!.lock = true;
-      BkListTbJs.write(BkListTb!);
-
-      List = BkListTb!.list;
+      List = BkListTbJs.read();
       BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
       ps = BkPaths!;
 
@@ -67,11 +47,14 @@ run = \id -> {
         default: arr.push(ps.msgs, Data);
       }
 
-      BkListTb!.lock = false;
-      BkListTbJs.write(BkListTb!);
+      BkListTbJs.write(List);
     }
   );
 
   dsync.update(Syn);
+
+  ps.state = [];
+  BkListTbJs.write(List);
+
   file.del(sourceCheck);
 };

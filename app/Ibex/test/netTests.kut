@@ -3,6 +3,7 @@
 
 import "update/net";
 
+///
 run = \ -> {
   // To initialize qibex
   // db.qibex().write(net.getIbex());
@@ -13,7 +14,7 @@ run = \ -> {
   PrevDate = ["000000"];
   for (DtVal = Qs) {
     d = DtVal[0];
-    if (arr.empty(time.fromStrOp(d))) {
+    if (!time.fromStrOp(d)) {
       sys.println("Bad date: " + d);
       DatesOk! = false;
     }
@@ -25,8 +26,8 @@ run = \ -> {
 
     ValSum! += DtVal[1];
   }
-  assert DatesOk!;
-  assert ValSum! > 0.0;
+  sys.assert(DatesOk!);
+  sys.assert(ValSum! > 0.0);
 
   sys.println("net tests finished");
 };

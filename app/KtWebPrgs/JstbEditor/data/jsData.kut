@@ -13,16 +13,16 @@
 ///     string: js.ws() (Can be truncated)
 ///     array: js.wa([length, [[index, value]]])
 ///            (values are js-strings possibly truncated)
-///     map: js.wa([[allKeys], map[value])
+///     dic: js.wa([[allKeys], dic[value])
 ///          (values are js-strings possibly truncated)
-///   type: One of fieldChange constants null, boolean, number, string, array or map.
-/// \s, b, i, s -> m<jsData>
+///   type: One of fieldChange constants null, boolean, number, string, array or dic.
+/// \s, b, i, s -> d<jsData>
 new = \control, tooBig, type, data -> return { control, tooBig, type, data };;
 
-/// \<jsData> -> s
-toJs = \JD -> return js.wa([
-  js.ws(JD.control),
-  js.wb(JD.tooBig),
-  js.wi(JD.type),
-  JD.data
-]);;
+/// \<jsData> -> [*(JS)...]
+toJs = \JD -> return [
+    JD.control,
+    JD.tooBig,
+    JD.type,
+    js.r(JD.data)
+  ];;

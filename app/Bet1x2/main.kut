@@ -3,8 +3,8 @@
 
 /// Program start.
 
-import "dm/cgi";
-import "dm/log";
+import "libdm/cgi";
+import "libdm/log";
 import "data/cts";
 import "db";
 import "web";
@@ -19,15 +19,23 @@ if (arr.size(args) != 1) {
   return;
 }
 
+log.init(path.cat([cts.dbHome, "log.tb"]));
+
 rq = sys.args()[0];
-if (!map.hasKey(sys.environ(), "USER")) {
+if (!dic.hasKey(sys.environ(), "USER")) {
   cgi.init(cts.webHome, 900);
-  log.init(path.cat([cts.dbHome, "log.tb"]), false);
   web.process(rq);
 } else {
   db.init();
+
   switch (rq) {
-    "update": update.run();
+    "update": {
+        try { update.run(); }
+        catch(e) {
+          log.error(e);
+          sys.throw(e);
+        }
+      }
     "tests": tests.run();
     "resetLog": log.reset();
     default: sys.println(help);

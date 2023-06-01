@@ -7,20 +7,4 @@
 ///   savings: Total saving until date.
 ///   assets: Total assets until date.
 /// \f, f -> <dayRs>
-new = \savings, assets ->
-  return [savings, assets];;
-
-///
-toJs = \R -> return js.wa([
-    js.wf2(R[0], 2),
-    js.wf2(R[1], 2)
-  ]);;
-
-///
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.rf(A[0]),
-    js.rf(A[1])
-  );
-};
+new = \savings, assets -> return [savings, assets];;

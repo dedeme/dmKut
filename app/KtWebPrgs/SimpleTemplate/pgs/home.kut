@@ -7,12 +7,11 @@ import "KtWeb/rp";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": sys.print(rp.mk({
-        "text": js.ws("Here")
+        "text": "Here"
       }));
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

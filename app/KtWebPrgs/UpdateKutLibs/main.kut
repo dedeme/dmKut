@@ -12,15 +12,14 @@ db.init();
 
 Args = sys.args();
 ck = Args[0];
-Rq = js.ro(Args[1]);
+Rq = js.r(Args[1]);
 
 rp.init(ck);
 
-source = js.rs(Rq.source);
-switch(source) {
+switch(Rq.source) {
   "LlistEditor": llistEditor.process(Rq);
   "Editor": editor.process(Rq);
-  default: sys.fail("Value of source (" + source + ") is not valid");
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
 }
 
 

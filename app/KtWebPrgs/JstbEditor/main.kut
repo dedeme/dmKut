@@ -20,7 +20,7 @@ source = js.rs(Rq.source);
 switch(source) {
   "TlistEditor": tlistEditor.process(Rq);
   "Editor": editor.process(Rq);
-  default: sys.fail("Value of source (" + source + ") is not valid");
+  default: sys.throw("Value of source (" + source + ") is not valid");
 }
 
 

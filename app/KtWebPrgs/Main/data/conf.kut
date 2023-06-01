@@ -3,15 +3,16 @@
 
 /// Configuration data.
 
-/// Returns a map with the following fields:
-///   lang: s
-/// \-> m<conf>
-new = \-> return {
-  lang: "es"
-};;
+/// Returns configutation data.
+///   lang: Applications default language.
+/// \s -> d<conf>
+new = \lang -> return { lang : lang };;
 
-/// \m<conf> -> s
-toJs = \C -> return js.wo(C);;
+/// Returns the default configuration data.
+mk = \-> return new ("es");;
 
-/// \s -> m<conf>
-fromJs = \j -> return js.ro(j);;
+/// \d<conf> -> [*(JS)...]
+toJs = \C -> return [C.lang];;
+
+/// \[*(JS)...] -> d<conf>
+fromJs = \A -> return new(A[0]);;

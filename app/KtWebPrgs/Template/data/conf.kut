@@ -5,24 +5,17 @@
 
 /// Constructor
 ///   color: Message background color in fomart '#ffffff'.
-/// \s -> m<conf>
+/// \s -> d<conf>
 new = \color -> return {
   color: color
 };;
 
 /// Returns an initialized configuration.
-/// \ -> m<conf>
+/// \ -> d<conf>
 init = \ -> return new("#ffffff");;
 
-/// \m<conf> -> s
-toJs = \C -> return js.wa([
-  js.ws(C.color)
-]);;
+/// \d<conf> -> [*(JS)...]
+toJs = \C -> return [C.color];;
 
-/// \s -> m<conf>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.ws(A[0])
-  );
-};
+/// \[*(JS)...] -> d<conf>
+fromJs = \A -> return new(A[0]);;

@@ -15,19 +15,19 @@ process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "idata": {
-      tp = tpath.fromJs(Rq.tpath);
+      tp = tpath.fromJs(js.r(Rq.tpath));
       sys.print(rp.mk({
           response: editorRp.toJs(jsFns.processTpath(tp, fieldChange.mkUndef()))
         }));
     }
     "set": {
-      tp = tpath.fromJs(Rq.tpath);
-      change = fieldChange.fromJs(Rq.change);
+      tp = tpath.fromJs(js.r(Rq.tpath));
+      change = fieldChange.fromJs(js.r(Rq.change));
       sys.print(rp.mk({
           response: editorRp.toJs(jsFns.processTpath(tp, change))
         }));
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
   }
 };
 

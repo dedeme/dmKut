@@ -3,8 +3,8 @@
 
 /// Standings page
 
-import "dm/cgi";
-import "dm/log";
+import "libdm/cgi";
+import "libdm/log";
 import "db";
 import "data/cts";
 import "strategies";
@@ -14,8 +14,8 @@ process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "idata": return cgi.rp({
-      years: js.wa(arr.mp(db.years(), \y -> return js.ws(y);)),
-      teams: js.wa(arr.mp(
+      years: js.wa(arr.map(db.years(), \y -> return js.ws(y);)),
+      teams: js.wa(arr.map(
         cts.CurrentTeams,
         \t -> return js.wa([js.ws(t), js.ws(cts.Teams[t])]);
       )),
@@ -25,13 +25,13 @@ process = \Rq -> {
       y = js.rs(Rq.year);
       currentTeams = db.teams(y).read();
       return cgi.rp({
-        teams: js.wa(arr.mp(
+        teams: js.wa(arr.map(
           currentTeams,
           \t -> return js.wa([js.ws(t), js.ws(cts.Teams[t])]);
         )),
         results: db.results(y).readJs()
       });
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

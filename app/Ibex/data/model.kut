@@ -12,7 +12,7 @@ import "data/order";
 import "data/dayRs";
 import "data/simRs";
 
-/// Creates a new model type map.
+/// Creates a new model type dic.
 ///   id: Model identifer.
 ///   name: Model name.
 ///   params: Model parameters.
@@ -28,7 +28,7 @@ toJsPartial = \M -> return js.wa([
     js.ws(M.id),
     js.ws(M.name),
     js.ws(M.doc),
-    js.wa(arr.mp(M.Params, js.wf))
+    js.wa(arr.map(M.Params, js.wf))
   ]);;
 
 /// Returns the list of models.
@@ -56,7 +56,7 @@ simulation = \Model, initialCapital, Dates, Opens, Closes -> {
     if (St!.order == "b") {
       open = Opens[i];
       cash = Cash!;
-      Stocks! = math.toInt(cash / open);
+      Stocks! = math.ftoi(cash / open);
       StocksValue! = broker.buy(Stocks!, open);
       while (StocksValue! > cash) {
         Stocks! -= 1;
@@ -84,7 +84,7 @@ simulation = \Model, initialCapital, Dates, Opens, Closes -> {
     St! = next(St!, close);
     arr.push(Refs, St!.ref);
     arr.push(Rs, dayRs.new(
-      Savings!, Savings! + Cash! + math.toFloat(Stocks!) * close
+      Savings!, Savings! + Cash! + math.itof(Stocks!) * close
     ));
   }
 
@@ -107,7 +107,7 @@ calculate = \Model, nick, proportion, ponderation, Dates, Opens, Closes -> {
   if (nick == "IBEX") {
     RefsSim = simulation(Model, cts.initialCapital, Dates, Opens, Closes);
     return nkRs.new(nick, Closes, RefsSim[0], RefsSim[1], RefsSim[1]);
-  };
+  }
 
   RefsPropSim = simulation(
     Model, cts.initialCapital * proportion, Dates, Opens, Closes

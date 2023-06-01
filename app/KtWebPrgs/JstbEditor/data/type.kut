@@ -21,7 +21,7 @@ string = 3;
 /// Set an array field
 /// i
 array = 4;
-/// Set a map field
+/// Set a dic field
 /// i
-map = 5;
+dict = 5;
 

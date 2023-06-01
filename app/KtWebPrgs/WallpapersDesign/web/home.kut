@@ -11,8 +11,7 @@ import "data/image";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       for (f = file.dir(cts.targetPath))
         file.del(path.cat([cts.targetPath, f]));
@@ -20,7 +19,7 @@ process = \Rq -> {
       ImgsSource = file.dir(cts.sourcePath);
       for (im, i = ImgsSource) {
         pt = path.cat([cts.sourcePath, im]);
-        im2 = arr.join(arr.mp(
+        im2 = arr.join(arr.map(
           str.split(im, ""),
           \c -> return (
               (c >= "a" & c <= "z") |
@@ -38,25 +37,25 @@ process = \Rq -> {
       }
       Imgs = image.update(ImgsData, ImgsSource);
       sys.print(rp.mk({
-        images: js.wa(arr.mp(Imgs, image.toJs))
+        images: arr.map(Imgs, image.toJs)
       }));
     }
     "idata2": {
-      duplicates = db.duplicates(arr.mp(
+      duplicates = db.duplicates(arr.map(
         file.dir(cts.sourcePath), art.changeExt
       ));
       group = db.lessPicturesGroup();
-      sys.print(rp.mk({
-        duplicates: js.wa(arr.mp(duplicates, js.ws)),
+      sys.print(rp.mkJs({
+        duplicates: js.wa(arr.map(duplicates, js.ws)),
         group: js.ws(group)
       }));
     }
     "dim": sys.print(rp.mk({
-        width: js.wi(db.confTb().read().width),
-        height: js.wi(db.confTb().read().height)
+        width: db.confTb().read().width,
+        height: db.confTb().read().height
       }));
     "save": {
-      group = js.rs(Rq.group);
+      group = Rq.group;
       db.savePictures(group);
       db.clearIntermediatePaths();
       sys.print(rp.mkEmpty());
@@ -64,11 +63,11 @@ process = \Rq -> {
     "changeDim": {
       confTb = db.confTb();
       conf = confTb.read();
-      conf.width = js.ri(Rq.width);
-      conf.height = js.ri(Rq.height);
+      conf.width = Rq.width;
+      conf.height = Rq.height;
       confTb.write(conf);
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

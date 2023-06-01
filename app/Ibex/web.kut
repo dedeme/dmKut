@@ -3,8 +3,8 @@
 
 /// Web pages management.
 
-import "dm/cgi";
-import "dm/log";
+import "libdm/cgi";
+import "libdm/log";
 import "data/cts";
 import "data/market";
 import "data/model";
@@ -62,7 +62,7 @@ processHub = \Rq -> {
     "Main": mainProcess(Rq);
     "Home": homeProcess(Rq);
     "ChangePass": changePassProcess(Rq);
-    default: sys.fail("Value of source (" + source + ") is not valid");
+    default: sys.throw("Value of source (" + source + ") is not valid");
   };
 };
 
@@ -73,13 +73,13 @@ mainProcess = \Rq -> {
     "close": return cgi.delSession(js.rs(Rq.sessionId));
     "idata": return cgi.rp({
       "market": market.toJs(
-          js.wa(arr.mp(model.list(), model.toJsPartial)),
+          js.wa(arr.map(model.list(), model.toJsPartial)),
           db.nkpond().readJs(),
-          js.wa(arr.mp(db.qibex().read(), \e -> return js.ws(e[0]);)),
+          js.wa(arr.map(db.qibex().read(), \e -> return js.ws(e[0]);)),
           db.rsTb().readJs()
         )
       });
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
   }
 };
 
@@ -90,7 +90,7 @@ homeProcess = \Rq -> {
     "getLog": return cgi.rp({
         "log": log.readJs()
       });
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
   }
 };
 
@@ -103,8 +103,8 @@ changePassProcess = \Rq -> {
       js.rs(Rq.old),
       js.rs(Rq.new)
     );
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };
 
 

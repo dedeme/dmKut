@@ -14,25 +14,5 @@
 new = \date, bs, stocks, price, value, profits ->
   return [date, bs, stocks, price, value, profits];;
 
-///
-toJs = \O -> return js.wa([
-    js.ws(O[0]),
-    js.ws(O[1]),
-    js.wi(O[2]),
-    js.wf2(O[3], 4),
-    js.wf2(O[4], 2),
-    js.wf2(O[5], 2)
-  ]);;
-
-///
-fromJs = \j -> {
-  A = js.ra(j);
-  return  new(
-    js.rs(A[0]),
-    js.rs(A[1]),
-    js.ri(A[2]),
-    js.rf(A[3]),
-    js.rf(A[4]),
-    js.rf(A[5])
-  );
-};
+/// \[*(JS)...] -> <order>
+fromJs = \A -> return  new(A[0], A[1], math.ftoi(A[2]), A[3], A[4], A[5]);;

@@ -31,7 +31,7 @@ r2 =2;
 year = "2022";
 
 /// Team index.
-/// m[s]
+/// d[s]
 Teams = {
   almeria: "U.D. Almería",
   alaves: "Deportivo Alavés",

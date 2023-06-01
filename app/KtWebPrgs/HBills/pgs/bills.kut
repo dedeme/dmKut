@@ -9,31 +9,29 @@ import "data/monthAnn";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       Places = db.placesTb().read();
-      Bills = arr.mp(
+      Bills = arr.map(
         db.readBills(),
         \b -> {
-          b[1] = map.get(Places, b[0]);
+          b[1] = dic.get(Places, b[0]);
           return b;
         }
       );
       sys.print(rp.mk({
-        "anns": js.wa(arr.mp(Bills, monthAnn.toJs))
+        "anns": Bills
       }));
     }
     "setPlace": {
-      month = js.rs(Rq.month);
-      place = js.isNull(Rq.place) ? "" : js.rs(Rq.place);
+      place = Rq.place ? Rq.place! : "";
       PlacesTb = db.placesTb();
       Places = PlacesTb.read();
-      Places[month] = place;
+      dic.put(Places, Rq.month, place);
       PlacesTb.write(Places);
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

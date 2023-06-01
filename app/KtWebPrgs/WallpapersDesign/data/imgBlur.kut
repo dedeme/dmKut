@@ -5,11 +5,11 @@
 
 /// Creates new 'blur' parameters.
 ///   ratio: Value between 0 and 100 (both inclusive).
-/// \i -> m<imgBlur>
+/// \i -> d<imgBlur>
 new = \ratio -> return {ratio};;
 
-/// \<imgBlur> -> s
-toJs = \IB -> return js.wi(IB.ratio);;
+/// \<imgBlur> -> *(JS)
+toJs = \IB -> return IB.ratio;;
 
-/// \s -> <imgBlur>
-fromJs = \j -> return new (js.ri(j));;
+/// \*(JS) -> <imgBlur>
+fromJs = \j -> return new (math.ftoi(j));;

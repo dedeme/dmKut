@@ -7,46 +7,42 @@ import "KtWeb/rp";
 import "db";
 import "data/alarm";
 import "data/cts";
+import "showAlarm";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       AlarmsTb = db.alarmsTb();
       As = AlarmsTb.read();
       alarm.update(As);
       AlarmsTb.write(As);
-      sys.print(rp.mk({
+      sys.print(rp.mkJs({
         alarms: AlarmsTb.readJs()
       }));
     }
     "add": {
-      key = js.rs(Rq.key);
-      tmSec = js.rf(Rq.tm);
       AlarmsTb = db.alarmsTb();
       As = AlarmsTb.read();
-      isDup = !alarm.add(As, alarm.new(key, tmSec));
+      isDup = !alarm.add(As, alarm.mk(Rq.key, Rq.tm));
       if (!isDup) {
         AlarmsTb.write(As);
-        thread.run(\-> {
-          sys.cmd("kut", [cts.mainPath, "alarm!", key]);
-        });
-        sys.sleep(500);
+        thread.run(\-> sys.cmd("kut", [cts.mainPath, "alarm!", Rq.key]););
+        sys.sleep(200);
+        //  showAlarm.run(key); // Lock program
       }
       sys.print(rp.mk({
-          isDup: js.wb(isDup)
+          isDup: isDup
         }));
     }
     "del": {
-      A = alarm.fromJs(Rq.alarm);
       AlarmsTb = db.alarmsTb();
       As = AlarmsTb.read();
-      alarm.del(As, A);
+      alarm.del(As, Rq.alarm);
       AlarmsTb.write(As);
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

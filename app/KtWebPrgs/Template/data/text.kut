@@ -12,12 +12,3 @@ new = \text -> return text;;
 /// \ -> s
 init = \ -> return new("");;
 
-/// \s -> s
-toJs = \t -> return js.ws(t);;
-
-/// \s -> s
-fromJs = \j -> {
-  return new(
-    js.rs(j)
-  );
-};

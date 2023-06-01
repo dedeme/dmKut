@@ -81,12 +81,16 @@ execute = \A -> {
     Tx! = tkRst[1];
   }
 
-  if (arr.empty(Ps)) return ["Command is missing in annotation"];
+  if (!Ps) return ["Command is missing in annotation"];
 
+  R = [];
   cmd = arr.shift(Ps);
-  thread.run(\-> sys.cmd(cmd, Ps););
+  thread.run(\-> {
+      OE = sys.cmd(cmd, Ps);
+      if (OE[1] != "") arr.push(R, OE[1]);
+    });
   sys.sleep(500);
-  return [];
+  return R;
 };
 
 /// Add a new annotation to an array in place.
@@ -120,25 +124,19 @@ executeId = \As, id -> {
     if (A[0] == id)
       return execute(A);
 
-  return ["Annotation " + math.toStr(id) + " not found"];
+  return ["Annotation " + math.itos(id) + " not found"];
 };
 
 
-/// \<Ann> -> s
-toJs = \A -> return js.wa([
-  js.wi(A[0]),
-  js.wi(A[1]),
-  A[2],
-  js.ws(A[3])
-]);;
+/// \<Ann> -> [*(JS)...]
+toJs = \A -> return [A[0], A[1], js.r(A[2]), A[3]];;
 
-/// s -> <Ann>
-fromJs = \j -> {
-  A = js.ra(j);
+/// [*(JS)...] -> <Ann>
+fromJs = \A -> {
   return new (
-    js.ri(A[0]),
-    js.ri(A[1]),
-    A[2],
-    js.rs(A[3])
+    math.ftoi(A[0]),
+    math.ftoi(A[1]),
+    js.w(A[2]),
+    A[3]
   );
 };

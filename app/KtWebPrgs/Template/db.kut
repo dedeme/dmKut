@@ -19,8 +19,8 @@ init = \ -> {
   if (!file.exists(dbPath)) file.mkdir(dbPath);
 };
 
-/// Returns the table of 'm<conf>' in "conf.tb"
-/// \-> m<jsdb>
+/// Returns the table of 'd<conf>' in "conf.tb"
+/// \-> d<jsdb>
 confTb = \-> return jstb.new(
   DbPath! + "/conf.tb",
   \-> return conf.toJs(conf.init());,
@@ -29,11 +29,11 @@ confTb = \-> return jstb.new(
 );;
 
 /// Returns the table of 's' in "text.tb"
-/// \-> m<jsdb>
+/// \-> d<jsdb>
 textTb = \-> return jstb.new(
   DbPath! + "/text.tb",
-  \-> return text.toJs(text.init());,
-  text.toJs,
-  text.fromJs
+  \-> return text.init();,
+  sys.id,
+  sys.id
 );;
 

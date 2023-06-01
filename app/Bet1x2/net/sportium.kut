@@ -3,7 +3,7 @@
 
 /// Sportium reader.
 
-import "dm/ext";
+import "libdm/ext";
 import "data/cts";
 import "data/bet";
 import "data/tBet";
@@ -36,69 +36,69 @@ readBets = \t -> {
 
     dix1 = str.indexFrom(t2, "date", Pos!);
     if (dix1 == -1)
-      sys.fail(str.fmt("'date' not found in\n%s", [t2[Pos! : 80]]));
+      sys.throw(str.fmt("'date' not found in\n%s", [t2[Pos! : 80]]));
     dix2 = str.indexFrom(t2, ">", dix1 + 1);
     if (dix2 == -1)
-      sys.fail(str.fmt("'>' not found in\n%s", [t2[dix1+1 : dix1+80]]));
+      sys.throw(str.fmt("'>' not found in\n%s", [t2[dix1+1 : dix1+80]]));
     dix3 = str.indexFrom(t2, " ", dix2 + 1);
     if (dix3 == -1)
-      sys.fail(str.fmt("' ' not found in\n%s", [t2[dix2+1 : dix2+80]]));
-    day = math.toInt(str.trim(t2[dix2+1:dix3]));
+      sys.throw(str.fmt("' ' not found in\n%s", [t2[dix2+1 : dix2+80]]));
+    day = math.stoi(str.trim(t2[dix2+1:dix3]))!;
 
     hix1 = str.indexFrom(t2, "\"seln-name\"", dix3 + 1);
     if (hix1 == -1)
-      sys.fail(str.fmt("'seln-name' not found in\n%s", [t2[dix3+1: dix3+80]]));
+      sys.throw(str.fmt("'seln-name' not found in\n%s", [t2[dix3+1: dix3+80]]));
     hix2 = str.indexFrom(t2, ">", hix1 + 1);
     if (hix2 == -1)
-      sys.fail(str.fmt("'>' not found in\n%s", [t2[hix1+1 : hix1+80]]));
+      sys.throw(str.fmt("'>' not found in\n%s", [t2[hix1+1 : hix1+80]]));
     hix3 = str.indexFrom(t2, "<", hix2 + 1);
     if (hix3 == -1)
-      sys.fail(str.fmt("'<' not found in\n%s", [t2[hix2+1 : hix2+80]]));
+      sys.throw(str.fmt("'<' not found in\n%s", [t2[hix2+1 : hix2+80]]));
     home = str.trim(t2[hix2+1:hix3]);
 
     r1ix1 = str.indexFrom(t2, "\"price dec\"", hix3 + 1);
     if (r1ix1 == -1)
-      sys.fail(str.fmt("'price dec' not found in\n%s", [t2[hix3+1: hix3+80]]));
+      sys.throw(str.fmt("'price dec' not found in\n%s", [t2[hix3+1: hix3+80]]));
     r1ix2 = str.indexFrom(t2, ">", r1ix1 + 1);
     if (r1ix2 == -1)
-      sys.fail(str.fmt("'>' not found in\n%s", [t2[r1ix1+1 : r1ix1+80]]));
+      sys.throw(str.fmt("'>' not found in\n%s", [t2[r1ix1+1 : r1ix1+80]]));
     r1ix3 = str.indexFrom(t2, "<", r1ix2 + 1);
     if (r1ix3 == -1)
-      sys.fail(str.fmt("'<' not found in\n%s", [t2[r1ix2+1 : r1ix2+80]]));
-    r1 = math.toFloat(t2[r1ix2+1:r1ix3]);
+      sys.throw(str.fmt("'<' not found in\n%s", [t2[r1ix2+1 : r1ix2+80]]));
+    r1 = math.stof(t2[r1ix2+1:r1ix3])!;
 
     rxix1 = str.indexFrom(t2, "\"price dec\"", r1ix3 + 1);
     if (rxix1 == -1)
-      sys.fail(str.fmt("'price dec' not found in\n%s", [t2[r1ix3+1: r1ix3+80]]));
+      sys.throw(str.fmt("'price dec' not found in\n%s", [t2[r1ix3+1: r1ix3+80]]));
     rxix2 = str.indexFrom(t2, ">", rxix1 + 1);
     if (rxix2 == -1)
-      sys.fail(str.fmt("'>' not found in\n%s", [t2[rxix1+1 : rxix1+80]]));
+      sys.throw(str.fmt("'>' not found in\n%s", [t2[rxix1+1 : rxix1+80]]));
     rxix3 = str.indexFrom(t2, "<", rxix2 + 1);
     if (rxix3 == -1)
-      sys.fail(str.fmt("'<' not found in\n%s", [t2[rxix2+1 : rxix2+80]]));
-    rx = math.toFloat(t2[rxix2+1:rxix3]);
+      sys.throw(str.fmt("'<' not found in\n%s", [t2[rxix2+1 : rxix2+80]]));
+    rx = math.stof(t2[rxix2+1:rxix3])!;
 
     oix1 = str.indexFrom(t2, "\"seln-name\"", rxix3 + 1);
     if (oix1 == -1)
-      sys.fail(str.fmt("'seln-name' not found in\n%s", [t2[rxix3+1: rxix3+80]]));
+      sys.throw(str.fmt("'seln-name' not found in\n%s", [t2[rxix3+1: rxix3+80]]));
     oix2 = str.indexFrom(t2, ">", oix1 + 1);
     if (oix2 == -1)
-      sys.fail(str.fmt("'>' not found in\n%s", [t2[oix1+1 : oix1+80]]));
+      sys.throw(str.fmt("'>' not found in\n%s", [t2[oix1+1 : oix1+80]]));
     oix3 = str.indexFrom(t2, "<", oix2 + 1);
     if (oix3 == -1)
-      sys.fail(str.fmt("'<' not found in\n%s", [t2[oix2+1 : oix2+80]]));
+      sys.throw(str.fmt("'<' not found in\n%s", [t2[oix2+1 : oix2+80]]));
     out = str.trim(t2[oix2+1:oix3]);
 
     r2ix1 = str.indexFrom(t2, "\"price dec\"", oix3 + 1);
     if (r2ix1 == -1)
-      sys.fail(str.fmt("'price dec' not found in\n%s", [t2[oix3+1: oix3+80]]));
+      sys.throw(str.fmt("'price dec' not found in\n%s", [t2[oix3+1: oix3+80]]));
     r2ix2 = str.indexFrom(t2, ">", r2ix1 + 1);
     if (r2ix2 == -1)
-      sys.fail(str.fmt("'>' not found in\n%s", [t2[r2ix1+1 : r2ix1+80]]));
+      sys.throw(str.fmt("'>' not found in\n%s", [t2[r2ix1+1 : r2ix1+80]]));
     r2ix3 = str.indexFrom(t2, "<", r2ix2 + 1);
     if (r2ix3 == -1)
-      sys.fail(str.fmt("'<' not found in\n%s", [t2[r2ix2+1 : r2ix2+80]]));
-    r2 = math.toFloat(t2[r2ix2+1:r2ix3]);
+      sys.throw(str.fmt("'<' not found in\n%s", [t2[r2ix2+1 : r2ix2+80]]));
+    r2 = math.stof(t2[r2ix2+1:r2ix3])!;
 
     arr.push(R, tBet.new(day, home, out, bet.new(r1, rx, r2)));
     Pos! = r2ix3 + 1;
@@ -138,14 +138,14 @@ read = \-> {
         \tm -> return tm == tbet[tBet.home];
       );
       if (homeTeam == -1)
-        sys.fail(str.fmt("'%s' team not found", [tbet[tBet.home]]));
+        sys.throw(str.fmt("'%s' team not found", [tbet[tBet.home]]));
 
       outTeam = arr.index(
         cts.SportiumTeams,
         \tm -> return tm == tbet[tBet.out];
       );
       if (outTeam == -1)
-        sys.fail(str.fmt("'%s' team not found", [tbet[tBet.out]]));
+        sys.throw(str.fmt("'%s' team not found", [tbet[tBet.out]]));
 
       R[homeTeam][outTeam] = [tbet[tBet.bet]];
     }

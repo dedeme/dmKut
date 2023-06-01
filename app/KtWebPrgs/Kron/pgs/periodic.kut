@@ -10,17 +10,15 @@ import "data/ann";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": sys.print(rp.mk({
-        anns: js.wa(
-          arr.mp(
+        anns: arr.map(
             arr.filter(
               db.annsTb().read(),
               \A -> return A[1] == ann.typePERIODIC;
             ),
             ann.toJs
-          ))
+          )
       }));
     "new": {
       Ann = ann.fromJs(Rq.ann);
@@ -31,7 +29,7 @@ process = \Rq -> {
       sys.print(rp.mkEmpty());
     }
     "delete": {
-      id = js.ri(Rq.id);
+      id = math.ftoi(Rq.id);
       AnnTb = db.annsTb();
       Anns = AnnTb.read();
       ann.del(Anns, id);
@@ -47,14 +45,14 @@ process = \Rq -> {
       sys.print(rp.mkEmpty());
     }
     "run": {
-      id = js.ri(Rq.id);
+      id = math.ftoi(Rq.id);
       R = ann.executeId(db.annsTb().read(), id);
-      error = arr.empty(R) ? "" : R!;
+      error = R ? R! : "";
       sys.print(rp.mk({
-        error: js.ws(error)
+        error: error
       }));
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

@@ -8,25 +8,17 @@
 ///   top: Top point to cut.
 ///   right: Right point to cut.
 ///   bottom: Bottom point to cut.
-/// \i, i, i, i -> m<imgCut>
+/// \i, i, i, i -> d<imgCut>
 new = \left, top, right, bottom -> return {left, top, right, bottom};;
 
-/// \<imgCut> -> s
-toJs = \IC -> return js.wa([
-    js.wi(IC.left),
-    js.wi(IC.top),
-    js.wi(IC.right),
-    js.wi(IC.bottom)
-  ]);;
+/// \<imgCut> -> [*(JS)...]
+toJs = \IC -> return [IC.left, IC.top, IC.right, IC.bottom];;
 
-/// \s -> <imgCut>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.ri(A[0]),
-    js.ri(A[1]),
-    js.ri(A[2]),
-    js.ri(A[3])
-  );
-};
+/// \[*(JS)...] -> <imgCut>
+fromJs = \A -> return new(
+    math.ftoi(A[0]),
+    math.ftoi(A[1]),
+    math.ftoi(A[2]),
+    math.ftoi(A[3])
+  );;
 

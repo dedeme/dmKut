@@ -11,6 +11,7 @@ cutHair = \cl -> {
   sys.sleep(cts.barberTime);
 };
 
+///
 run = \ -> {
   sys.println("Barber: Go out from home");
   sys.sleep(1000);

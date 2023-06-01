@@ -22,21 +22,10 @@ bet = 3;
 /// \i, s, s, <Bet> -> <TBet>
 new = \day, home, out, bet -> return [day, home, out, bet];;
 
-/// \<TBet> -> s
-toJs = \T -> return js.wa([
-  js.wi(T[day]),
-  js.ws(T[home]),
-  js.ws(T[out]),
-  bt.toJs(T[bet])
-]);;
-
-/// \s -> <TBet>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.ri(A[0]),
-    js.rs(A[1]),
-    js.rs(A[2]),
-    bt.fromJs(A[3])
-  );
-};
+/// \[*(JS)...] -> <TBet>
+fromJs = \A -> return new(
+    math.ftoi(A[0]),
+    math.ftoi(A[1]),
+    math.ftoi(A[2]),
+    A[3]
+  );;

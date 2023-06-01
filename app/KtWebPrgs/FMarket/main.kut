@@ -15,17 +15,16 @@ Args = sys.args();
 ck = Args[0];
 
 db.init();
-log.init(cts.logPath, true);
+log.init(cts.logPath);
 
-Rq = js.ro(Args[1]);
+Rq = js.r(Args[1]);
 rp.init(ck);
 
-source = js.rs(Rq.source);
-switch(source) {
+switch(Rq.source) {
   "Home": home.process(Rq);
   "RankingsPg": rankingsPg.process(Rq);
   "ModelsPg": modelsPg.process(Rq);
-  default: sys.fail("Value of source (" + source + ") is not valid");
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
 }
 
 

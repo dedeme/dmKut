@@ -3,8 +3,8 @@
 
 /// Package index page.
 
-import "dm/cgi";
-import "db/pathsTb";
+import "libdm/cgi";
+import "db";
 
 /// Process request.
 /// \m -> s
@@ -14,24 +14,24 @@ process = \Rq -> {
     "code": {
       pack = js.rs(Rq.pack);
       pt = js.rs(Rq.path);
-      
+
       Code = [];
-      Ppath = arr.find(pathsTb.read(), \P -> return P.id == pack;);
+      Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
       if (arr.size(Ppath) != 0) {
         fpath = path.cat([Ppath[0].path, pt + ".kut"]);
         if (file.exists(fpath)) {
           arr.push(Code, file.read(fpath));
         }
       }
-      
+
       return cgi.rp({
         "code": arr.size(Code) == 0
           ? js.wn()
           : js.ws(Code[0])
       });
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };
 
 

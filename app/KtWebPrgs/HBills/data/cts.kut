@@ -14,6 +14,10 @@ accPath = "/dm/wwwcgi/dmcgi/Hconta/data";
 /// s
 billsAcc = "60013";
 
-/// HConta reservations account number
+/// HConta expenses account number
 /// s
-staysAcc = "44001";
+staysAcc = "62904";
+
+/// HConta reservations account number of 2022 year
+/// s
+staysAcc22 = "44001";

@@ -91,7 +91,7 @@ pictsTb = \-> return jstb.newArr(
 //  Source directory of a group.
 //  \i -> s
 sourceDir = \group ->
-  return path.cat([sourceDirAll, math.toStr(group)]);
+  return path.cat([sourceDirAll, math.itos(group)]);
 ;
 
 //  Generates a new adjusted image from 'i' filling the default size.
@@ -221,17 +221,16 @@ change = \-> {
 
 //  MAIN ----------------------------------------------------
 
-sys.rand();
 initDb();
 
 Args = sys.args();
 
-if (arr.empty(Args)) {
-  help();
-} else {
+if (Args) {
   switch (Args[0]) {
     "reject": reject();
     "change": change();
     default: help();
   }
+} else {
+  help();
 }

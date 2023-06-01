@@ -27,7 +27,7 @@ solve = \row, col -> {
   r = solve(row + 1, col + 1);
   return Data[row][col] + (l > r ? l : r);
 };
-sys.println(math.toStr(solve(0, 0)));
+sys.println(solve(0, 0));
 */
 
 Rs = Data[arr.size(Data) - 1];
@@ -38,4 +38,4 @@ for (r = arr.size(Data) - 2:-1) {
     Rs[i] = n + (l > r ? l : r);
   }
 }
-sys.println(math.toStr(Rs[0]));
+sys.println(Rs[0]);

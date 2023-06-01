@@ -26,8 +26,8 @@ processP = \isNumbered, Hs, tx -> {
   if (str.starts(txt, "* ")) return prpmarks.h1(txt[2:]);
   if (str.starts(txt, "** ")) {
     Txt = [txt[3:]];
-    if (isNumbered) Txt! = math.toStr(Nheader!) + ". " + Txt!;
-    nlink = ("00" + math.toStr(Nheader!))[-3:];
+    if (isNumbered) Txt! = math.itos(Nheader!) + ". " + Txt!;
+    nlink = ("00" + math.itos(Nheader!))[-3:];
     Txt! = inner.process(Txt!);
     arr.push(Hs, nlink + Txt!);
 

@@ -3,7 +3,7 @@
 
 /// quotes data.
 
-import "dm/log";
+import "libdm/log";
 
 /// Returns new data for qibex table.
 ///   OldIbex: [[date, value]...]. Old data of qibex table.
@@ -34,7 +34,7 @@ ibexMix = \OldIbex, NewQuotes, CoQuotes -> {
           log.error("quotes.ibexMix: Ibex quotes no found in " + d);
           arr.push(R, [d, R[cix - 1][1]]);
         } else {
-          sys.fail("Ibex quotes no found in " + d);
+          sys.throw("Ibex quotes no found in " + d);
         }
       }
     }

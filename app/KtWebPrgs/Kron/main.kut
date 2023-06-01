@@ -14,26 +14,30 @@ import "pgs/manual";
 import "data/cts";
 
 db.init();
-log.init(cts.logPath, true);
+log.init(cts.logPath);
 
 Args = sys.args();
 ck = Args[0];
 
 if (ck == "start") {
-  server.start();
+  try { server.start(); }
+  catch(e) {
+    log.error(e);
+    sys.throw(e);
+  }
+
   return;
 }
 
-Rq = js.ro(Args[1]);
+Rq = js.r(Args[1]);
 
 rp.init(ck);
-source = js.rs(Rq.source);
-switch(source) {
+switch(Rq.source) {
   "Home": home.process(Rq);
   "Periodic": periodic.process(Rq);
   "Fix": fix.process(Rq);
   "Manual": manual.process(Rq);
-  default: sys.fail("Value of source (" + source + ") is not valid");
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
 }
 
 

@@ -7,23 +7,12 @@
 ///   id: Library identifer.
 ///   fpath: Absolute library path.
 ///   found: 'true' if library path is found.
-/// \s, s, b -> m<lpath>
+/// \s, s, b -> d<lpath>
 new = \id, fpath, found -> return { id, fpath, found };;
 
-/// \<lpath> -> s
-toJs = \L -> return js.wa([
-  js.ws(L.id),
-  js.ws(L.fpath),
-  js.wb(L.found)
-]);;
+/// \<lpath> -> [*(JS)...]
+toJs = \L -> return [L.id, L.fpath, L.found];;
 
-/// \s -> <lpath>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.rs(A[0]),
-    js.rs(A[1]),
-    js.rb(A[2])
-  );
-};
+/// \[*(JS)...] -> <lpath>
+fromJs = \A -> return new(A[0], A[1], A[2]);;
 

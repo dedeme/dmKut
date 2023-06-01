@@ -4,6 +4,7 @@
 import "cts";
 import "shop";
 
+///
 makerRun = \ -> {
   I = [0];
   while (shop.IsPreopen! | shop.IsOpen!) {
@@ -13,8 +14,10 @@ makerRun = \ -> {
   }
 };
 
-new = \i -> return math.toStr(i);;
+///
+new = \i -> return math.itos(i);;
 
+///
 run = \cl -> {
   msg = \m -> sys.println(str.fmt("Client %s: %s", [cl, m]));;
 

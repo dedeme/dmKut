@@ -3,7 +3,7 @@
 
 /// All the years profits of one strategy view.
 
-import "dm/cgi";
+import "libdm/cgi";
 import "db";
 import "strategies";
 import "data/profits";
@@ -15,15 +15,15 @@ process = \Rq -> {
     "idata": {
       S = strategies.get(js.rs(Rq.strategy));
       Years = db.years();
-      Results = arr.mp(Years, \y -> return db.results(y).read(););
-      Points = arr.mp(Years, \y -> return db.points(y).read(););
-      Bets = arr.mp(Years, \y -> return db.bets(y).read(););
+      Results = arr.map(Years, \y -> return db.results(y).read(););
+      Points = arr.map(Years, \y -> return db.points(y).read(););
+      Bets = arr.map(Years, \y -> return db.bets(y).read(););
       Strategies = strategies.yearsProfits(S, Years, Results, Points, Bets);
       return cgi.rp({
-        strategies: js.wa(arr.mp(Strategies, \P -> return profits.toJs(P);)),
-        sum: profits.toJs(profits.sum(Strategies, "Total"))
+        strategies: js.w(arr.map(Strategies, \P -> return profits.toJs(P);)),
+        sum: js.w(profits.toJs(profits.sum(Strategies, "Total")))
       });
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

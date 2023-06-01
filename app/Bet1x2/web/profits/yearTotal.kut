@@ -3,7 +3,7 @@
 
 /// Year total profits view.
 
-import "dm/cgi";
+import "libdm/cgi";
 import "db";
 import "strategies";
 import "data/profits";
@@ -19,12 +19,12 @@ process = \Rq -> {
       Points = db.points(y).read();
       Bets = db.bets(y).read();
       return cgi.rp({
-        strategies: js.wa(arr.mp(
+        strategies: js.wa(arr.map(
             strategies.yearGroupProfits(Ss, Results, Points, Bets),
             \P -> return profits.toJs(P);
           ))
       });
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

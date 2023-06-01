@@ -3,7 +3,7 @@
 
 /// Model state data
 
-/// Creates a new mkSt of type map.
+/// Creates a new mkSt of type dic.
 ///   Internal: Internal object. It is diferent in each model.
 ///   ref: Reference.
 ///   order: Can be "b"(buy), "s"(sell) or ""(no order)

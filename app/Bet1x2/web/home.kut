@@ -3,8 +3,8 @@
 
 /// Home page
 
-import "dm/cgi";
-import "dm/log";
+import "libdm/cgi";
+import "libdm/log";
 import "db";
 import "strategies";
 
@@ -14,15 +14,15 @@ process = \Rq -> {
   switch (rq) {
     "idata": {
       doc = {};
-      for (s = strategies.list) doc[s.id] = js.ws(s.doc);
+      for (s = strategies.list) dic.put(doc, s.id, js.ws(s.doc));
       return cgi.rp({
-        years: js.wa(arr.mp(db.years(), \y -> return js.ws(y);)),
+        years: js.wa(arr.map(db.years(), \y -> return js.ws(y);)),
         doc: js.wo(doc)
       });
     }
     "getLog": return cgi.rp({
       log: log.readJs()
     });
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

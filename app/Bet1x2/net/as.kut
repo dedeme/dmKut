@@ -3,7 +3,7 @@
 
 /// As reader.
 
-import "dm/ext";
+import "libdm/ext";
 import "data/cts";
 import "data/rs";
 
@@ -11,16 +11,16 @@ import "data/rs";
 getTeam = \t, ix -> {
   ix2 = str.indexFrom(t, "_", ix);
   if (ix2 == -1)
-    sys.fail(str.fmt("'_' not found in\n%s", t[ix : ix+80]));
+    sys.throw(str.fmt("'_' not found in\n%s", t[ix : ix+80]));
 
   ix3 = str.indexFrom(t, '"', ix2);
   if (ix3 == -1)
-    sys.fail(str.fmt("'\"' not found in\n%s", t[ix : ix+80]));
+    sys.throw(str.fmt("'\"' not found in\n%s", t[ix : ix+80]));
 
   team = t[ix2+1 : ix3];
   r = arr.index(cts.AsTeams, \mt -> return mt == team;);
   if (r == -1)
-    sys.fail(str.fmt("'%s' is not a valid team in\n%s", [team, t[ix : ix+80]]));
+    sys.throw(str.fmt("'%s' is not a valid team in\n%s", [team, t[ix : ix+80]]));
 
   return r;
 };
@@ -29,23 +29,23 @@ getTeam = \t, ix -> {
 getResult = \t, ix -> {
   ix0 = str.indexFrom(t, "\"resultado\"", ix);
   if (ix0 == -1)
-    sys.fail(str.fmt("'\"resultado\"' not found in\n%s", t[ix : ix+80]));
+    sys.throw(str.fmt("'\"resultado\"' not found in\n%s", t[ix : ix+80]));
 
   ix2 = str.indexFrom(t, '>', ix0);
   if (ix2 == -1)
-    sys.fail(str.fmt("'>' not found in\n%s", t[ix : ix+80]));
+    sys.throw(str.fmt("'>' not found in\n%s", t[ix : ix+80]));
 
   ix3 = str.indexFrom(t, '-', ix2);
   if (ix == -1)
-    sys.fail(str.fmt("'-' not found in\n%s", t[ix : ix+80]));
+    sys.throw(str.fmt("'-' not found in\n%s", t[ix : ix+80]));
 
   ix4 = str.indexFrom(t, '<', ix3);
   if (ix4 == -1)
-    sys.fail(str.fmt("'<' not found in\n%s", t[ix : ix+80]));
+    sys.throw(str.fmt("'<' not found in\n%s", t[ix : ix+80]));
 
   return rs.new(
-    math.toInt(str.trim(t[ix2+1 : ix3])),
-    math.toInt(str.trim(t[ix3+1 : ix4]))
+    math.stoi(str.trim(t[ix2+1 : ix3]))!,
+    math.stoi(str.trim(t[ix3+1 : ix4]))!
   );
 };
 
@@ -77,7 +77,7 @@ read = \-> {
 
     ix2 = str.indexFrom(t, "col-equipo-visitante", ix + 10);
     if (ix2 == -1)
-      sys.fail(str.fmt("Out team is missing in\n%s", t[ix : ix+80]));
+      sys.throw(str.fmt("Out team is missing in\n%s", t[ix : ix+80]));
 
     ixr = str.indexFrom(t, "col-resultado finalizado", ix + 10);
     if (ixr != -1) {

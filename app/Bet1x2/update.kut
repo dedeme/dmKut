@@ -20,12 +20,12 @@ updateResults = \-> {
   // [[([<Rs>]|[])...]...]
   MarcaResults = marca.read();
   if (arr.size(AsResults) != arr.size(MarcaResults))
-    sys.fail(str.fmt(
+    sys.throw(str.fmt(
       "Number of results of As (%d) and Marca (%d) does not match",
       [arr.size(AsResults), arr.size(MarcaResults)]
     ));
   if (arr.size(AsResults) != teamsSize)
-    sys.fail(str.fmt(
+    sys.throw(str.fmt(
       "Wrong number of result got from Internet. Expected: %d, got: %d.",
       [arr.size(AsResults), teamsSize]
     ));
@@ -36,16 +36,16 @@ updateResults = \-> {
       MarcaRs = MarcaResults[row][col];
 
       if (
-        (arr.empty(AsRs) & !arr.empty(MarcaRs)) |
-        (!arr.empty(AsRs) & arr.empty(MarcaRs)) |
-        (!arr.empty(AsRs) & !arr.empty(MarcaRs) & !rs.eq(AsRs!, MarcaRs!))
+        (!AsRs & MarcaRs) |
+        (AsRs & !MarcaRs) |
+        (AsRs & MarcaRs & !rs.eq(AsRs!, MarcaRs!))
       )
-        sys.fail(str.fmt(
+        sys.throw(str.fmt(
           "Results for %s - %s, does not match:\nAs: %s, Marca: %s.",
           [ cts.Teams[Teams[row]],
             cts.Teams[Teams[col]],
-            arr.empty(AsRs) ? "[]" : rs.toJs(AsRs!),
-            arr.empty(MarcaRs) ? "[]" : rs.toJs(MarcaRs!)
+            AsRs ? js.w(AsRs!) : "[]",
+            MarcaRs ? js.w(MarcaRs!) : "[]"
           ]
         ));
     }
@@ -60,7 +60,7 @@ evaluate = \Rss, team -> {
 
   for (i = 0:arr.size(Rss)) {
     R = Rss[i][team];
-    if (!arr.empty(R)) {
+    if (R) {
       PlPt[0] += 1;
       rsh = R![rs.home];
       rso = R![rs.out];
@@ -70,7 +70,7 @@ evaluate = \Rss, team -> {
   Trs = Rss[team];
   for (i = 0:arr.size(Trs)) {
     R = Rss[team][i];
-    if (!arr.empty(R)) {
+    if (R) {
       PlPt[0] += 1;
       rsh = R![rs.home];
       rso = R![rs.out];
@@ -83,7 +83,7 @@ evaluate = \Rss, team -> {
 
 // \-> ()
 updatePoints = \-> {
-  pyear = math.toStr(math.toInt(cts.year) - 1);
+  pyear = math.itos(math.stoi(cts.year)! - 1);
   existsPyear = arr.any(db.years(), \y -> return y == pyear;);
   // [[([<Rs>]|[])...]...]
   Prss = existsPyear ? db.results(pyear).read() : [];
@@ -108,7 +108,7 @@ updatePoints = \-> {
     Points = [PlPt[1]];
 
 
-    if (!arr.empty(Prss) & !arr.empty(Pteams) & played < midMatches) {
+    if (Prss & Pteams & played < midMatches) {
       prevPond = (midMatches - played) * 2;
       currentPond = totalMatches - prevPond;
       teamId = Teams[team];
@@ -127,7 +127,7 @@ updatePoints = \-> {
       if (row == col) continue;
       R = Rss[row][col];
       P = Points[row][col];
-      if (arr.empty(R) | arr.empty(P)) {
+      if (!R | !P) {
         r = rs.new(Tpoints[row], Tpoints[col]);
         Points[row][col] = [r];
       }
@@ -150,7 +150,7 @@ updateBets = \-> {
   // [[([<Bet>]|[])...]...]
   SportiumBets = sportium.read();
   if (arr.size(SportiumBets) != tnumber) {
-    sys.fail(str.fmt(
+    sys.throw(str.fmt(
       "Bad number of 'SportiumBets' rows. Expected %d, found %d.",
       tnumber, arr.size(SportiumBets)
     ));
@@ -161,7 +161,7 @@ updateBets = \-> {
     for (col = 0:tnumber) {
       Pbet = Pbets[row][col];
       Sportium = SportiumBets[row][col];
-      if (arr.empty(Pbet) & !arr.empty(Sportium)) {
+      if (!Pbet & Sportium) {
         Changed! = true;
         Pbets[row][col] = Sportium;
       }

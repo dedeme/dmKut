@@ -3,7 +3,7 @@
 
 /// All the years profits of one strategy view.
 
-import "dm/cgi";
+import "libdm/cgi";
 import "db";
 import "strategies";
 import "data/cts";
@@ -12,15 +12,15 @@ import "data/decision";
 
 // \<Strategy>, [[([<Rs]|[])...]...], [[([<Rs]|[])...]...],
 //   [[([<Rs]|[])...]...] -> [[([<Decision>]|[])...]...]
-decs = \S, Results, Points, Bets -> return arr.fromIter(iter.mp(
+decs = \S, Results, Points, Bets -> return arr.fromIter(iter.map(
   [0:arr.size(Results)],
-  \row -> return arr.fromIter(iter.mp(
+  \row -> return arr.fromIter(iter.map(
     [0:arr.size(Results)],
     \col -> {
       R = Results[row][col];
       P = Points[row][col];
       B = Bets[row][col];
-      if (arr.empty(R) | arr.empty(P) | arr.empty(B)) return [];
+      if (!R | !P | !B) return [];
       return [decision.new(R!, P!, B!, S.decision(P!, B!))];
     }
   ));
@@ -39,20 +39,14 @@ process = \Rq -> {
       Bets = db.bets(y).read();
       Pfs = strategies.yearProfits(S, S.id, Results, Points, Bets);
       return cgi.rp({
-        teams: js.wa(arr.mp(
+        teams: js.w(arr.map(
           Cteams,
-          \ct -> return js.wa([js.ws(ct), js.ws(cts.Teams[ct])]);
+          \ct -> return [ct, cts.Teams[ct]];
         )),
-        decisions: js.wa(arr.mp(
-          decs(S, Results, Points, Bets),
-          \row -> return js.wa(arr.mp(
-            row,
-            \Cell -> return arr.empty(Cell) ? js.wn() : decision.toJs(Cell!);
-          ));
-        )),
-        profits: profits.toJs(Pfs)
+        decisions: js.w(decs(S, Results, Points, Bets)),
+        profits: js.w(profits.toJs(Pfs))
       });
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

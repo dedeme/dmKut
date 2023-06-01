@@ -3,7 +3,7 @@
 
 /// Deduction page.
 
-import "dm/cgi";
+import "libdm/cgi";
 import "db";
 
 /// \m -> s
@@ -26,6 +26,6 @@ process = \Rq -> {
       db.writeBook(Rq.book);
       return cgi.rpEmpty();
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

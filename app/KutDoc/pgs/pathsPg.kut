@@ -3,10 +3,9 @@
 
 /// Paths page.
 
-import "dm/cgi";
-import "db/confTb";
-import "db/pathsTb";
-import "data/ppath";
+import "libdm/cgi";
+import "db";
+import "data/dpath";
 
 /// Process request.
 /// \m -> s
@@ -14,54 +13,60 @@ process = \Rq -> {
   rq = js.rs(Rq.rq);
   switch (rq) {
     "changeLang": {
-      Cf = confTb.read();
+      ConfTb = db.confTb();
+      Cf = ConfTb.read();
       Cf.lang = Cf.lang == "es" ? "en" : "es";
-      confTb.write(Cf);
+      ConfTb.write(Cf);
       return cgi.rpEmpty();
     }
     "changeShowAll": {
-      Cf = confTb.read();
+      ConfTb = db.confTb();
+      Cf = ConfTb.read();
       Cf.showAll = Cf.showAll == true ? false : true;
-      confTb.write(Cf);
+      ConfTb.write(Cf);
       return cgi.rpEmpty();
     }
     "new": {
       id = js.rs(Rq.id);
       path = js.rs(Rq.path);
-      Ps = pathsTb.read();
-      arr.push(Ps, ppath.new(id, path, true, false));
-      pathsTb.write(Ps);
+      PathsTb = db.pathsTb();
+      Ps = PathsTb.read();
+      arr.push(Ps, dpath.new(id, path, true, false));
+      PathsTb.write(Ps);
       return cgi.rpEmpty();
     }
     "changeShown": {
       id = js.rs(Rq.id);
-      Ps = pathsTb.read();
+      PathsTb = db.pathsTb();
+      Ps = PathsTb.read();
       for (P = Ps)
-        if (P.id == id) P.isShown = P.isShown ? false : true;;
-      pathsTb.write(Ps);
+        if (P.id == id) P.isShown = P.isShown ? false : true;
+      PathsTb.write(Ps);
       return cgi.rpEmpty();
     }
     "delete": {
       id = js.rs(Rq.id);
-      Ps = pathsTb.read();
+      PathsTb = db.pathsTb();
+      Ps = PathsTb.read();
       arr.filterIn(Ps, \P -> return P.id != id;);
-      pathsTb.write(Ps);
+      PathsTb.write(Ps);
       return cgi.rpEmpty();
     }
     "modify": {
       id = js.rs(Rq.id);
       newId = js.rs(Rq.newId);
       path = js.rs(Rq.path);
-      Ps = pathsTb.read();
+      PathsTb = db.pathsTb();
+      Ps = PathsTb.read();
       for (P = Ps) if (P.id == id) {
         P.id = newId;
         P.path = path;
-      };
-      pathsTb.write(Ps);
+      }
+      PathsTb.write(Ps);
       return cgi.rpEmpty();
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };
 
 

@@ -3,7 +3,7 @@
 
 /// Data base management.
 
-import "dm/cgi";
+import "libdm/cgi";
 
 // book.json -------------------------------------------------------------------
 

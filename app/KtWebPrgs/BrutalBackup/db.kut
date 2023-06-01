@@ -18,11 +18,11 @@ init = \ -> {
   if (!file.exists(dbPath)) file.mkdir(dbPath);
 };
 
-/// Returns the table of 'm<bkPathsTable>' in "bkPathsList.tb"
-/// \-> m<jsdb>
-bkListTb = \-> return jstb.new(
+/// Returns the table of 'a<bkPaths>' in "bkPathsList.tb"
+/// \-> a<jsdb>
+bkListTb = \-> return jstb.newArr(
   DbPath! + "/bkPathsList.tb",
-  \-> return bkPaths.tableToJs(bkPaths.newTable(false, []));,
-  bkPaths.tableToJs,
-  bkPaths.tableFromJs
+  \-> return [];,
+  bkPaths.toJs,
+  bkPaths.fromJs
 );;

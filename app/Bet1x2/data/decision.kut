@@ -23,11 +23,3 @@ dcIx = 3;
 /// \<Rs>, <Rs>, <Bet>, i -> a<Decision>.
 new = \Result, Points, Bet, decision ->
   return [Result, Points, Bet, decision];;
-
-/// \<Decision> -> s
-toJs = \D -> return js.wa([
-  rs.toJs(D[rsIx]),
-  rs.toJs(D[ptIx]),
-  bet.toJs(D[btIx]),
-  js.wi(D[dcIx])
-]);;

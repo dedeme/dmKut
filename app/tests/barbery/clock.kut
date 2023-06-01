@@ -3,8 +3,10 @@
 
 import "cts";
 
+///
 TimeOver = [false];
 
+///
 run = \ -> {
   sys.sleep(cts.clockTime);
   sys.println("Clock: Time is over");

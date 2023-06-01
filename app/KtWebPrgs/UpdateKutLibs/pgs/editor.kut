@@ -10,8 +10,7 @@ import "data/lpath";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       Lpath = lpath.fromJs(Rq.lpath);
 
@@ -19,43 +18,41 @@ process = \Rq -> {
       for (L = Llist) {
         try {
           L.found = file.isDirectory(L.fpath);
-        } catch e {
+        } catch(e) {
           L.found = false;
         }
       }
 
       sys.print(rp.mk({
-        "llist": js.wa(arr.mp(
+        "llist": arr.map(
             arr.filter(Llist, \L -> return L.found & L.id != Lpath.id;),
             lpath.toJs
-          )),
-        "list": js.wa(arr.mp(fns.linksFind(Lpath.fpath), js.ws))
+          ),
+        "list": fns.linksFind(Lpath.fpath)
       }));
     }
     "update": {
-      Links = arr.mp(js.ra(Rq.links), js.rs);
-      target = js.rs(Rq.target);
-      if (!file.isDirectory(target)) {
+      if (!file.isDirectory(Rq.target)) {
         sys.print(rp.mk({
           "linksFailed": Rq.links
         }));
       } else {
         linksFailed = [];
-        for (l = Links) {
+        for (l = Rq.links) {
           try {
             file.del(l);
-            OutErr = sys.cmd("ln", ["-s", target, l]);
+            OutErr = sys.cmd("ln", ["-s", Rq.target, l]);
             if (OutErr[1] != "") arr.push(linksFailed, l);
-          } catch e {
+          } catch(e) {
             arr.push(linksFailed, l);
           }
         }
         sys.print(rp.mk({
-          "linksFailed": js.wa(arr.mp(linksFailed, js.ws))
+          "linksFailed": linksFailed
         }));
       }
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

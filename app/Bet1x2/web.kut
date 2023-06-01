@@ -3,7 +3,7 @@
 
 /// Web pages management.
 
-import "dm/cgi";
+import "libdm/cgi";
 import "data/cts";
 import "web/main";
 import "web/home";
@@ -75,7 +75,7 @@ processHub = \Rq -> {
     "BetsPg": betsPg.process(Rq);
     "DocPg": docPg.process(Rq);
     "ChangePass": changePass.process(Rq);
-    default: sys.fail("Value of source (" + source + ") is not valid");
+    default: sys.throw("Value of source (" + source + ") is not valid");
   };
 };
 

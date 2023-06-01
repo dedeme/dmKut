@@ -10,38 +10,44 @@ import "data/cts";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "run": {
-      id = js.rs(Rq.id);
-      thread.run(\-> sys.cmd("kut", [cts.mainPath, "@", id]););
+      thread.run(\-> sys.cmd("kut", [cts.mainPath, "@", Rq.id]););
       sys.sleep(100);
-      sys.print(rp.mkEmpty());
+
+      List = db.bkListTb().read();
+      BkPaths = arr.find(List, \Bk -> return Bk.id == Rq.id;);
+      tm = BkPaths ? BkPaths!.tm : -1;
+
+      sys.print(rp.mk({
+        "tm": tm
+      }));
     }
     "state": {
-      id = js.rs(Rq.id);
-
-      BkListTbJs = db.bkListTb();
-      BkListTb = [BkListTbJs.read()];
-      if (BkListTb!.lock) {
-        sys.sleep(100);
-        BkListTb! = BkListTbJs.read();
-      }
-
-      List = BkListTb!.list;
-      BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
+      List = db.bkListTb().read();
+      BkPaths = arr.find(List, \Bk -> return Bk.id == Rq.id;);
       R = {
-        "state": js.wa([]),
-        "errors": js.wa([js.ws("Backup '" + id + "'not found")])
+        "state": [],
+        "errors": ["Backup '" + Rq.id + "'not found"]
       };
-      if (!arr.empty(BkPaths)) {
-        R.state = js.wa(arr.mp(BkPaths!.state, js.wi));
-        R.errors = js.wa(arr.mp(BkPaths!.msgs, js.ws));
+      if (BkPaths) {
+        R.state = BkPaths!.state;
+        R.errors = BkPaths!.msgs;
       }
 
       sys.print(rp.mk(R));
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    "setTm": {
+      BkListTb = db.bkListTb();
+      List = BkListTb.read();
+      BkPaths = arr.find(List, \Bk -> return Bk.id == Rq.id;);
+      if (BkPaths) {
+        BkPaths!.tm = math.ftoi(Rq.tm);
+        BkListTb.write(List);
+      }
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

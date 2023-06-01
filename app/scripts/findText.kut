@@ -17,7 +17,7 @@ if (arr.size(Args) != 3) {
 }
 
 p = Args[0];
-lenP1 = str.len(p) + 1;
+lenP1 = p == "." | p == "./" ? 0 : str.len(p) + 1;
 ext = "." + Args[1];
 text = Args[2];
 
@@ -32,7 +32,7 @@ searchFile = \fpath, msgs -> {
   fcut = fpath[lenP1:];
   NLine = [1];
   L = [file.readLine(f)];
-  while (!arr.empty(L!)) {
+  while (L!) {
     if (str.index(L!!, text) != -1) {
       arr.push(msgs, str.fmt("%v:%v:\n  %v", [
         fcut, NLine!, str.trim(L!!)
@@ -45,6 +45,7 @@ searchFile = \fpath, msgs -> {
 };
 
 searchDir = \p, msgs -> {
+  if (file.isLink(p)) return;
   for (f = file.dir(p)) {
     fpath = path.cat([p, f]);
     if (file.isDirectory(fpath)) searchDir(fpath, msgs);

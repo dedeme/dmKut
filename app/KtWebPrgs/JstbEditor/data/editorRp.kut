@@ -17,27 +17,27 @@ modified = "Modified";
 /// Dont use directly. Use mkXXXX.
 ///   error: "" if there is no error. Oterwise one of noTable, noTpath or modified.
 ///   jsData: JSON data if there is no error. Otherwise empty array.
-/// \s, [<jdata>]|[] -> m<edtorRp>
+/// \s, [<jdata>]|[] -> d<editorRp>
 new = \error, jdata -> return { error, jdata };;
 
 /// Creates a 'noTable' response
-/// \-> m<editorRp>
+/// \-> d<editorRp>
 mkNoTable = \-> return new(noTable, []);;
 
 /// Creates a 'noJSON' response
-/// \-> m<editorRp>
+/// \-> d<editorRp>
 mkNoJSON = \-> return new(noJSON, []);;
 
 /// Creates a 'modified' response. (Response to a 'set' request)
-/// \-> m<editorRp>
+/// \-> d<editorRp>
 mkModified = \-> return new(modified, []);;
 
 /// Creates an 'ok' response.
-/// \<jsData> -> m<editorRp>
+/// \<jsData> -> d<editorRp>
 mkOk = \data -> return new("", [data]);;
 
-/// \<editorRp> -> s
-toJs = \E -> return js.wa([
-  js.ws(E.error),
-  arr.empty(E.jdata) ? js.wn() : jsData.toJs(E.jdata!)
-]);;
+/// \<editorRp> -> [*(JS)...]
+toJs = \E -> return [
+  E.error,
+  E.jdata ? [jsData.toJs(E.jdata!)] : []
+];;

@@ -8,21 +8,20 @@ import "db";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
-    "idata": sys.print(rp.mk({
+  switch (Rq.rq) {
+    "idata": sys.print(rp.mkJs({
         "conf": db.confTb().readJs(),
         "text": db.textTb().readJs()
       }));
     "modify": {
-        db.textTb().writeJs(Rq.text);
+        db.textTb().writeJs(js.w(Rq.text));
         sys.print(rp.mkEmpty());
       }
     "delete": {
         db.textTb().write("");
         sys.print(rp.mkEmpty());
       }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

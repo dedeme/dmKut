@@ -1,7 +1,7 @@
 // Copyright 14-Apr-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Type m<Strategy>. Bet strategy data.
+/// Type d<Strategy>. Bet strategy data.
 
 import "data/rs";
 import "data/bet";
@@ -12,7 +12,7 @@ import "data/decision";
 ///   doc: Function which returns the stragegy documentation.
 ///   decision: Functión to decide bet. It returns: 'cts.r1', 'cts.rx' or 'cts.r2'.
 ///             Its parameters are points and bet.
-/// \(\->s), (\->s), (\<Rs>, <Bet>->i) -> m<Strategy>
+/// \(\->s), (\->s), (\<Rs>, <Bet>->i) -> d<Strategy>
 new = \id, doc, decision -> {
   return {
     id: id,

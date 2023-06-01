@@ -8,22 +8,20 @@ import "db";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "getLang": {
       ConfTb = db.getConfTb();
-      sys.print(rp.mk({
+      sys.print(rp.mkJs({
         "lang": js.ws(ConfTb.read()["lang"])
       }));
     }
     "setLang": {
-      lang = js.rs(Rq.lang);
       ConfTb = db.getConfTb();
       Cf = ConfTb.read();
-      Cf.lang = lang;
+      Cf.lang = Rq.lang;
       ConfTb.write(Cf);
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

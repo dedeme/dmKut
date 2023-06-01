@@ -1,0 +1,26 @@
+// Copyright 08-May-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Module page.
+
+import "KtWeb/rp";
+import "readers/mdReader";
+import "data/doc";
+
+/// Process request.
+/// \m -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "doc": {
+      Doc = mdReader.read(Rq.pack, Rq.path);
+      sys.println(rp.mk({
+        "doc": Doc
+          ? [doc.toJs(Doc!)]
+          : []
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+

@@ -14,4 +14,4 @@ perm = \A -> {
   return R;
 };
 
-for (P = perm([1, 2, 3])) sys.println(arr.toStr(P));
+for (P = perm([1, 2, 3])) sys.println(sys.toStr(P));

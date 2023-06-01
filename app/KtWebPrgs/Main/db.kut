@@ -17,11 +17,11 @@ init = \ -> {
   if (!file.exists(dbPath)) file.mkdir(dbPath);
 };
 
-/// Returns ConfTb (table of m<conf>) in "Main/conf.tb"
-/// \-> m<jsdb>
+/// Returns ConfTb (table of d<conf>) in "Main/conf.tb"
+/// \-> d<jsdb>
 getConfTb = \-> return jstb.new(
   DbPath! + "/conf.tb",
-  \-> return conf.toJs(conf.new());,
+  \-> return conf.toJs(conf.mk());,
   conf.toJs,
   conf.fromJs
 );;

@@ -3,7 +3,7 @@
 
 /// Program start
 
-import "dm/cgi";
+import "libdm/cgi";
 import "cts";
 import "deductionPg";
 import "theoremsPg";
@@ -66,8 +66,8 @@ processMain = \Rq -> {
       cgi.delSession(sessionId);
       return cgi.rpEmpty();
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };
 
 // \m -> s
@@ -83,8 +83,8 @@ processHub = \Rq -> {
     "Main": return processMain(Rq);
     "Deduction": return deductionPg.process(Rq);
     "Theorems": return theoremsPg.process(Rq);
-    default: sys.fail("Value of source (" + source + ") is not valid");
-  };
+    default: sys.throw("Value of source (" + source + ") is not valid");
+  }
 };
 
 
@@ -95,7 +95,7 @@ if (arr.size(args) != 1) {
 }
 
 rq = sys.args()[0];
-if (!map.hasKey(sys.environ(), "USER")) {
+if (!dic.hasKey(sys.environ(), "USER")) {
   cgi.init(cts.webHome, 900);
   process(rq);
 } else {

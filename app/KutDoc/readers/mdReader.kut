@@ -2,8 +2,7 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 import "data/doc";
-import "data/docEntry";
-import "db/pathsTb";
+import "db";
 
 /// Module reader.
 
@@ -16,7 +15,7 @@ takeId = \s -> {
 
 /// \s, s -> [m]
 read = \pack, pt -> {
-  Ppath = arr.find(pathsTb.read(), \P -> return P.id == pack;);
+  Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
   if (arr.size(Ppath) == 0) return [];
 
   fpath = path.cat([Ppath!.path, pt + ".kut"]);
@@ -86,14 +85,14 @@ read = \pack, pt -> {
     "code0":
       if (l != "") {
         if (!str.starts(l, "\\")) {
-          arr.push(Vals, docEntry.new(Id!, DocBf!, Id!, Id!));
+          arr.push(Vals, doc.newEntry(Id!, DocBf!, Id!, Id!));
           St! = "init";
         } else {
           ix = str.index(l, "->");
           if (ix != -1) {
             arr.push(
               Funcs,
-              docEntry.new(
+              doc.newEntry(
                 Id!,
                 DocBf!,
                 Id! + " = " + l[:ix + 2],
@@ -112,7 +111,7 @@ read = \pack, pt -> {
       if (CodeLines! > 5) {
         arr.push(
           Funcs,
-          docEntry.new(
+          doc.newEntry(
             Id!,
             DocBf!,
             Code! + " ...",
@@ -126,7 +125,7 @@ read = \pack, pt -> {
           if (ix != -1) {
             arr.push(
               Funcs,
-              docEntry.new(
+              doc.newEntry(
                 Id!,
                 DocBf!,
                 Code! + "  " +  l[:ix + 2],

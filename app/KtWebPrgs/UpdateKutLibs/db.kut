@@ -18,11 +18,11 @@ init = \ -> {
   if (!file.exists(dbPath)) file.mkdir(dbPath);
 };
 
-/// Returns the table of 'm<table>' in "tlist.tb"
-/// \-> m<jsdb>
+/// Returns the table of 'd<table>' in "tlist.tb"
+/// \-> d<jsdb>
 llistTb = \-> return jstb.newArr(
   DbPath! + "/llist.tb",
-  \-> return "[]";,
+  \-> return [];,
   lpath.toJs,
   lpath.fromJs
 );;

@@ -11,12 +11,19 @@ ComKey = [""];
 init = \comKey -> ComKey! = comKey;;
 
 /// Returns a generic response to send to client.
+///  Rp: Response. It is a normal object.
+///      Example of reponse:
+///        {"error": msg}
+/// \m -> s
+mk = \Rp -> return cryp.encode(ComKey!, js.w(Rp));;
+
+/// Returns a generic response to send to client.
 ///  Rp: Response. It is a Json object.
 ///      Example of reponse:
 ///        {"error": js.ws(msg)}
 /// \m -> s
-mk = \Rp -> return cryp.encode(ComKey!, js.wo(Rp));;
+mkJs = \Rp -> return cryp.encode(ComKey!, js.wo(Rp));;
 
 /// Returns an empty response.
 /// \-> s
-mkEmpty = \-> return mk({});;
+mkEmpty = \-> return mkJs({});;

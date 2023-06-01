@@ -1,0 +1,26 @@
+// Copyright 03-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Rankings page.
+
+import "KtWeb/rp";
+import "db";
+import "ex/ktmmarket/evals";
+
+/// \m -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      rqModel =Rq.model;
+      Mds = evals.list();
+      model = arr.any(Mds, \md -> return md == rqModel;) ? rqModel : Mds[0];
+
+      return rp.mk({
+        "models": Mds,
+        "model": model,
+        "mapsGroup": js.r(db.hotMapsDb(model).readJs())
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -10,17 +10,17 @@
 ///
 /// tb = new(
 ///   "abc.tb", \-> return "[]";,
-///   \o -> return js.wa(arr.mp(o, \e -> return js.ws(e);));,
-///   \j -> return arr.mp(js.ra(j), \e -> return js.rs(e););
+///   \o -> return js.wa(arr.map(o, \e -> return js.ws(e);));,
+///   \j -> return arr.map(js.ra(j), \e -> return js.rs(e););
 /// );
 /// tb.write(["a", "b", "c"]);
-/// assert arr.toStr(tb.read()) == '["a", "b", "c"]';
+/// sys.assert(arr.toStr(tb.read()) == '["a", "b", "c"]');
 ///
 /// or
 ///
 /// tb = newArr("abc.tb", \-> return "[]";, js.ws, js.rs);
 /// tb.write(["a", "b", "c"]);
-/// assert arr.toStr(tb.read()) == '["a", "b", "c"]';
+/// sys.assert(arr.toStr(tb.read()) == '["a", "b", "c"]');
 
 /// Creates a new JSON table from a object.
 /// If 'fpath' does not exist, a file with the text 'init' is created.
@@ -35,7 +35,7 @@
 ///   read   : Returns the object which was serialized.
 ///   writeJs: Writes JSON text in the table file (overwriting it).
 ///   write  : Writes in the table file (overwriting it) an object.
-/// (\s, \-> s, \* -> s, \s -> *) -> m<jstb>
+/// (\s, \-> s, \* -> s, \s -> *) -> d<jstb>
 new = \fpath, init, toJs, fromJs -> {
   if (!file.exists(fpath)) {
     file.write(fpath, init());
@@ -63,7 +63,7 @@ new = \fpath, init, toJs, fromJs -> {
 ///   read   : Returns the array which was serialized.
 ///   writeJs: Writes JSON text in the table file (overwriting it).
 ///   write  : Writes in the table file (overwriting it) an array.
-/// (\s, \-> s, \* -> s, \s -> *) -> m<jstb>
+/// (\s, \-> s, \* -> s, \s -> *) -> d<jstb>
 newArr = \fpath, init, toJs, fromJs -> {
   if (!file.exists(fpath)) {
     file.write(fpath, init());
@@ -71,21 +71,21 @@ newArr = \fpath, init, toJs, fromJs -> {
   return {
     "fpath" : fpath,
     "readJs": \-> return file.read(fpath);,
-    "read": \-> return arr.mp(js.ra(file.read(fpath)), \e -> return fromJs(e););,
-    "writeJs": \s -> file.write(fpath, s);,
-    "write": \A -> file.write(fpath, js.wa(arr.mp(A, \e -> return toJs(e);)));
+    "read": \-> return arr.map(js.ra(file.read(fpath)), \e -> return fromJs(e););,
+    "writeJs": \s -> {file.write(fpath, s);},
+    "write": \A -> file.write(fpath, js.wa(arr.map(A, \e -> return toJs(e);)));
   };
 };
 
-/// Returns 'true' if 'Tb' is of type m<jstb>.
+/// Returns 'true' if 'Tb' is of type d<jstb>.
 /// \* -> b
 checkType = \Tb -> {
-  return sys.type(Tb) == "map" &
-    map.hasKey(Tb, "fpath") & sys.type(Tb["fpath"]) == "string" &
-    map.hasKey(Tb, "readJs") & sys.type(Tb["readJs"]) == "function" &
-    map.hasKey(Tb, "read") & sys.type(Tb["read"]) == "function" &
-    map.hasKey(Tb, "writeJs") & sys.type(Tb["writeJs"]) == "function" &
-    map.hasKey(Tb, "write") & sys.type(Tb["write"]) == "function"
+  return sys.type(Tb) == "dic" &
+    dic.hasKey(Tb, "fpath") & sys.type(Tb["fpath"]) == "string" &
+    dic.hasKey(Tb, "readJs") & sys.type(Tb["readJs"]) == "function" &
+    dic.hasKey(Tb, "read") & sys.type(Tb["read"]) == "function" &
+    dic.hasKey(Tb, "writeJs") & sys.type(Tb["writeJs"]) == "function" &
+    dic.hasKey(Tb, "write") & sys.type(Tb["write"]) == "function"
   ;
 };
 

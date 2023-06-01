@@ -3,8 +3,8 @@
 
 /// Program entry.
 
-import "dm/log";
-import "dm/cgi";
+import "libdm/log";
+import "libdm/cgi";
 import "test/allTests";
 import "data/cts";
 import "update";
@@ -12,7 +12,7 @@ import "web";
 
 install = \-> {
   if (!file.exists(cts.dbHome)) file.mkdir(cts.dbHome);
-  log.init(path.cat([cts.dbHome, "log.tb"]), true);
+  log.init(path.cat([cts.dbHome, "log.tb"]));
 };
 
 help = """
@@ -33,7 +33,7 @@ help = """
 ;
 
 Args = sys.args();
-if (arr.size(Args) != 1) sys.fail(help);
+if (arr.size(Args) != 1) sys.throw(help);
 a = Args[0];
 
 if (a == "install") {
@@ -42,23 +42,27 @@ if (a == "install") {
 }
 
 if (a == "resetLog") {
-  log.init(path.cat([cts.dbHome, "log.tb"]), false);
+  log.init(path.cat([cts.dbHome, "log.tb"]));
   log.reset();
   return;
 }
 
 if (a == "test" | a == "update") {
   if (a == "test") {
-    log.init(path.cat([cts.dbHome, "log.tb"]), false);
+    log.init(path.cat([cts.dbHome, "log.tb"]));
     allTests.run();
   } else {
-    log.init(path.cat([cts.dbHome, "log.tb"]), true);
-    update.run();
+    log.init(path.cat([cts.dbHome, "log.tb"]));
+    try { update.run(); }
+    catch(e) {
+      log.error(e);
+      sys.throw(e);
+    }
   }
 
   return;
 }
 
 cgi.init(cts.webHome, 900);
-log.init(path.cat([cts.dbHome, "log.tb"]), false);
+log.init(path.cat([cts.dbHome, "log.tb"]));
 web.process(a);

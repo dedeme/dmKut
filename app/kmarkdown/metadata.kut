@@ -35,7 +35,7 @@ newPage = \fpage, title, numbered, withUp, withDown -> return {
 /// \[m...], s -> ([m] | [])
 getCurrent = \PgMetas, fpage -> {
   for (PgMeta = PgMetas)
-    if (PgMeta.fpage == fpage) return [PgMeta];;
+    if (PgMeta.fpage == fpage) return [PgMeta];
   return [];
 };
 
@@ -46,7 +46,7 @@ getCurrent = \PgMetas, fpage -> {
 /// \[m...], s -> ([m] | [])
 getPrevious = \PgMetas, fpage -> {
   for (PgMeta, i = PgMetas)
-    if (PgMeta.fpage == fpage) return i > 0 ? [PgMetas[i - 1]] : [];;
+    if (PgMeta.fpage == fpage) return i > 0 ? [PgMetas[i - 1]] : [];
   return [];
 };
 
@@ -58,7 +58,7 @@ getPrevious = \PgMetas, fpage -> {
 getNext = \PgMetas, fpage -> {
   for (PgMeta, i = PgMetas)
     if (PgMeta.fpage == fpage)
-      return i < arr.size(PgMetas) - 1 ? [PgMetas[i + 1]] : [];;
+      return i < arr.size(PgMetas) - 1 ? [PgMetas[i + 1]] : [];
   return [];
 };
 
@@ -117,10 +117,10 @@ read = \Fkmds -> {
 
     f = file.ropen(fkmd);
     L = file.readLine(f);
-    if (arr.empty(L) | str.trim(L!) != "=") continue;
+    if (!L | str.trim(L!) != "=") continue;
     while () {
       L = file.readLine(f);
-      if (arr.empty(L)) break;
+      if (!L) break;
       if (process(L!)) break;
     }
     file.close(f);

@@ -12,21 +12,20 @@ import "art";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
       im = image.fromJs(Rq.image);
       ok = file.exists(path.cat([cts.sourcePath, im.id]));
       processImg(im);
-      sys.print(rp.mk({
+      sys.print(rp.mkJs({
         ok: js.wb(ok)
       }));
     }
     "update": {
-      db.imagesTb().writeJs(Rq.images);
+      db.imagesTb().writeJs(js.w(Rq.images));
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 
@@ -39,7 +38,7 @@ processImg = \im -> {
   adjustImg = path.cat([db.adjustmentPath(), newId]);
   targetImg = path.cat([cts.targetPath, newId]);
 
-  if (arr.empty(im.cut))
+  if (!im.cut)
     img.copy(sourceImg, cutImg);
   else {
     WH = img.dim(sourceImg);
@@ -54,7 +53,7 @@ processImg = \im -> {
 
   art.SourceDir! = db.cutPath();
   art.TargetDir! = db.adjustmentPath();
-  if (arr.empty(im.adjustment)) {
+  if (!im.adjustment) {
     art.defaultConversion(newId);
   } else {
     a = im.adjustment!;
@@ -70,13 +69,13 @@ processImg = \im -> {
         }
       "background": art.goteleTune(
           newId,
-          "#" + ("00000" + math.toHex(a.Params[0]))[-6:],
-          math.toFloat(a.Params[1]) / 100.0,
-          math.toFloat(a.Params[2]) / 100.0
+          "#" + ("00000" + math.itoh(a.Params[0]))[-6:],
+          math.itof(a.Params[1]) / 100.0,
+          math.itof(a.Params[2]) / 100.0
         );
       "stretch": {
         WH = img.dim(cutImg);
-        if (WH[1] < math.toInt(math.toFloat(WH[0]) * 0.8))
+        if (WH[1] < math.ftoi(math.itof(WH[0]) * 0.8))
           img.copy(cutImg, adjustImg);
         else
           art.stretchTune(newId, a.Params[0]);
@@ -84,12 +83,12 @@ processImg = \im -> {
     }
   }
 
-  if (arr.empty(im.blur)) {
+  if (!im.blur) {
     img.copy(adjustImg, targetImg);
   } else {
     art.SourceDir! = db.adjustmentPath();
     art.TargetDir! = cts.targetPath;
-    art.blur(newId, math.toFloat(im.blur!.ratio) / 100.0);
+    art.blur(newId, math.itof(im.blur!.ratio) / 100.0);
   }
 
 };

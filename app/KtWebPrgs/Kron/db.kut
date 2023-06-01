@@ -21,16 +21,16 @@ init = \ -> {
 /// \-> s<jstb>
 sessionIdTb = \-> return jstb.new(
   DbPath! + "/sessionId.tb",
-  \-> return js.ws("");,
-  js.ws,
-  js.rs
+  \-> return "";,
+  sys.id,
+  sys.id
 );;
 
 /// Returns the table of [<Ann>, ...] in "anns.tb"
 /// \-> a[<Ann>]<jstb>
 annsTb = \-> return jstb.newArr(
   DbPath! + "/anns.tb",
-  \-> return "[]";,
+  \-> return [];,
   ann.toJs,
   ann.fromJs
 );;

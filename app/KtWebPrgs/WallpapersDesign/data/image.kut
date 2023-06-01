@@ -3,32 +3,31 @@
 
 /// Image data.
 
-import "data/imgCut";
-import "data/imgAdjustment";
-import "data/imgBlur";
+import "imgCut";
+import "imgAdjustment";
+import "imgBlur";
 
-/// \s, [<imgCut>]|[], [<imgAdjustment>]|[], [<imgBlur>]|[] -> m<image>
+/// \s, [<imgCut>]|[], [<imgAdjustment>]|[], [<imgBlur>]|[] -> d<image>
 new = \id, cut, adjustment, blur -> return {id, cut, adjustment, blur};;
 
 /// Default constructor: A image without modications.
 newDefault = \id -> return new(id, [], [], []);;
 
-/// \<image> -> s
-toJs = \I -> return js.wa([
-    js.ws(I.id),
-    arr.empty(I.cut) ? js.wn() : imgCut.toJs(I.cut!),
-    arr.empty(I.adjustment) ? js.wn() : imgAdjustment.toJs(I.adjustment!),
-    arr.empty(I.blur) ? js.wn() : imgBlur.toJs(I.blur!)
-  ]);;
+/// \<image> -> [*(JS)...]
+toJs = \I -> return [
+    I.id,
+    I.cut ? [imgCut.toJs(I.cut!)] : [],
+    I.adjustment ? [imgAdjustment.toJs(I.adjustment!)] : [],
+    I.blur ? [imgBlur.toJs(I.blur!)] : []
+  ];;
 
-/// \s -> <image>
-fromJs = \j -> {
-  A = js.ra(j);
+/// \[*(JS)...] -> <image>
+fromJs = \A -> {
   return new(
-    js.rs(A[0]),
-    js.isNull(A[1]) ? [] : [imgCut.fromJs(A[1])],
-    js.isNull(A[2]) ? [] : [imgAdjustment.fromJs(A[2])],
-    js.isNull(A[3]) ? [] : [imgBlur.fromJs(A[3])]
+    A[0],
+    A[1] ? [imgCut.fromJs(A[1]!)]: [],
+    A[2] ? [imgAdjustment.fromJs(A[2]!)] : [],
+    A[3] ? [imgBlur.fromJs(A[3]!)] : []
   );
 };
 

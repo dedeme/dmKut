@@ -17,12 +17,12 @@ process = \Rq -> {
       for (T = Tlist) {
         try {
           T.error = file.exists(T.fpath) ? "" : "File not found";
-        } catch e {
+        } catch(e) {
           T.error = e;
         }
       }
       sys.print(rp.mk({
-        "list": js.wa(arr.mp(Tlist, table.toJs))
+        "list": arr.map(Tlist, table.toJs)
       }));
     }
     "new": {
@@ -43,7 +43,7 @@ process = \Rq -> {
       TlistTb.write(Tlist);
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
   }
 };
 

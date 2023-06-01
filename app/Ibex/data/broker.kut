@@ -17,7 +17,7 @@ fees = \amount -> {
 ///   price : Stocks price.
 /// \i, f -> f
 buy = \stocks, price -> {
-  amount = math.toFloat(stocks) * price;
+  amount = math.itof(stocks) * price;
   tobin = amount * 0.002;
   return amount + fees(amount) + tobin;
 };
@@ -27,6 +27,6 @@ buy = \stocks, price -> {
 ///   price : Stocks price.
 /// \i, f -> f
 sell = \stocks, price -> {
-	amount = math.toFloat(stocks) * price;
+	amount = math.itof(stocks) * price;
 	return amount - fees(amount);
 };

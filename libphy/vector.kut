@@ -47,7 +47,7 @@ sub = \V1, V2 -> return new(V1.x - V2.x, V1.y - V2.y, V1.z - V2.z);;
 /// \<vector>, f -> <vector>
 mul = \V, n -> return new(V.x * n, V.y * n, V.z * n);;
 
-/// Returns a map {len:f, theta:f, phi:f} with polar coordenates of V.
+/// Returns a dic {len:f, theta:f, phi:f} with polar coordenates of V.
 /// \<vector> -> m
 toPolar = \V -> {
   h = math.sqrt(V.x * V.x + V.y * V.y);

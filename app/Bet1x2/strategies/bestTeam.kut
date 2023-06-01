@@ -18,9 +18,9 @@ mk = \-> return strategy.new(
   "Team-Best",
   "Choose the best team.",
   \Points, Bet -> {
-    top = math.toFloat(Points[home] + Points[out]);
+    top = math.itof(Points[home] + Points[out]);
     sum = top * 2.0;
-    dif = math.toFloat(Points[home] - Points[out]);
+    dif = math.itof(Points[home] - Points[out]);
 
     up = sum * pond1 - top;
     down = sum * pondx - top;

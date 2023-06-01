@@ -9,19 +9,18 @@ import "KtWeb/global";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "getLog": {
-      log.init(global.logPath, false);
-      sys.print(rp.mk({
+      log.init(global.logPath);
+      sys.print(rp.mkJs({
         "log": log.readJs()
       }));
     }
     "resetLog": {
-      log.init(global.logPath, false);
+      log.init(global.logPath);
       log.reset();
       sys.print(rp.mkEmpty());
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

@@ -1,0 +1,45 @@
+// Copyright 03-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "libdm/log";
+import "KtWeb/rp";
+import "db";
+import "ex/ktmarket/investors";
+import "data/paramsEval";
+
+/// \m -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Ips = arr.map(
+        investors.read(),
+        \Ps -> return arr.map(Ps, \p -> return js.rf(p););
+      );
+      Mds = ["QFIJO", "QMOV", "APRX"]; // ordered by investor!
+      IParEvals = [];
+      ParEvals = [];
+      for (m, i = Mds) {
+        Pevs = db.hotMapsDb(m).read()[0].entries;
+        arr.push(ParEvals, arr.reduce(Pevs, Pevs[0], \Rs, E -> {
+          if (paramsEval.eqParams(E[0], Ips[i])) arr.push(IParEvals, E);
+          return E[paramsEval.eval] > Rs[paramsEval.eval] ? E : Rs;
+        }));
+      }
+      return rp.mk({
+        "iparamsEvals": IParEvals,
+        "models": Mds,
+        "paramsEvals": ParEvals
+      });
+    }
+    "getLog": return rp.mkJs({
+      "log": log.readJs()
+      });
+    "resetLog": {
+      log.reset();
+      return rp.mkEmpty();
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

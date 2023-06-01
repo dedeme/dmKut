@@ -24,7 +24,7 @@ writeIndex = \dir, header, Meta -> {
     """,
     [Meta.book]
   );
-  index = arr.join(arr.mp(Meta.pages, \p ->
+  index = arr.join(arr.map(Meta.pages, \p ->
     return "<a href='" + path.base(p.fpage) + ".html'>" + p.title + "</a>";
   ), "<br>\n");
 
@@ -49,9 +49,9 @@ processFile = \header, Meta, fkmd -> {
   PageMeta = metadata.getCurrent(Meta.pages, fkmdName);
   PrevMeta = metadata.getPrevious(Meta.pages, fkmdName);
   NextMeta = metadata.getNext(Meta.pages, fkmdName);
-  numbered = arr.empty(PageMeta) ? false : PageMeta!.numbered;
-  withUp = arr.empty(PageMeta) ? false : PageMeta!.withUp;
-  withDown = arr.empty(PageMeta) ? false : PageMeta!.withDown;
+  numbered = PageMeta ? PageMeta!.numbered : false;
+  withUp = PageMeta ? PageMeta!.withUp : false;
+  withDown = PageMeta ? PageMeta!.withDown : false;
   head = Meta.book == ""
     ? ""
     : str.fmt("""
@@ -64,41 +64,41 @@ processFile = \header, Meta, fkmd -> {
         <p style="text-indent: 0px">%s<a href="index.html">Índice</a>%s</p>
         <hr>
         """,
-        [ arr.empty(PageMeta) ? "" : PageMeta!.title,
+        [ PageMeta ? PageMeta!.title : "",
           Meta.book,
-          arr.empty(PrevMeta)
-            ? ""
-            : "<a href='" +
+          PrevMeta
+            ? "<a href='" +
               path.base(PrevMeta!.fpage) +
               ".html'>Anterior (" +
               PrevMeta!.title +
-              ")</a> · ",
-          arr.empty(NextMeta)
-            ? ""
-            : " · <a href='" +
+              ")</a> · "
+            : "",
+          NextMeta
+            ? " · <a href='" +
               path.base(NextMeta!.fpage) +
               ".html'>Posterior (" +
               NextMeta!.title +
               ")</a>"
+            : ""
         ]
       )
   ;
   Hs = [];
   body = top.process(numbered, Hs, file.read(fkmd));
-  index = arr.empty(Hs)
-    ? ""
-    : str.fmt("""
+  index = Hs
+    ? str.fmt("""
         <p style='text-indent:0px'>
         %s
         <p>
         <hr>
         """,
-        [ arr.join(arr.mp(Hs, \h ->
+        [ arr.join(arr.map(Hs, \h ->
             return "<a href='#hp:" + h[:3] + "'>" +
               h[3:] + "</a>";
           ), "<br>\n")
         ]
       )
+    : ""
   ;
   fhtml = fkmd[:-3] + "html";
   file.write(fhtml,
@@ -151,10 +151,10 @@ processDir = \dir -> {
       processDir(fpath);
     } else if (str.ends(f, ".kmd")) {
       arr.push(Fkmds, fpath);
-    };
+    }
   }
 
-  if (arr.empty(Fkmds)) return ;
+  if (!Fkmds) return ;
 
   fheader = path.cat([dir, "000header.html"]);
   if (!file.exists(fheader)) {

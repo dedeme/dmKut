@@ -4,24 +4,15 @@
 /// Creates a new configuration.
 ///   width: Traget image width.
 ///   height: Target image height.
-/// \i, i-> m<conf>
+/// \i, i-> d<conf>
 new = \width, height -> return { width, height };;
 
 /// Creates a default confituration.
-/// \-> m<conf>
+/// \-> d<conf>
 mk = \-> return new(1920, 1080);;
 
-/// \<conf> -> s
-toJs = \C -> return js.wa([
-  js.wi(C.width),
-  js.wi(C.height)
-]);;
+/// \<conf> -> [*(JS)...]
+toJs = \C -> return [C.width, C.height];;
 
-/// \s -> <conf>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.ri(A[0]),
-    js.ri(A[1])
-  );
-};
+/// \[*(JS)...] -> <conf>
+fromJs = \A -> return new(math.ftoi(A[0]), math.ftoi(A[1]));;

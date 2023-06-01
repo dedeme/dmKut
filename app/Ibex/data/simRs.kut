@@ -10,21 +10,8 @@ import "data/order";
 ///   Results: Daily results.
 ///   Orders: Orders.
 /// \[<dayRs>...], [<order>...]  -> <simRs>
-new = \Results, Orders ->
-  return [Results, Orders];;
+new = \Results, Orders -> return [Results, Orders];;
 
-///
-toJs = \R -> return js.wa([
-    js.wa(arr.mp(R[0], dayRs.toJs)),
-    js.wa(arr.mp(R[1], order.toJs))
-  ]);;
-
-///
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    arr.mp(js.ra(A[0]), dayRs.fromJs),
-    arr.mp(js.ra(A[1]), order.fromJs)
-  );
-};
+/// \[*(JS)...] -> <simRs>
+fromJs = \A -> return new(A[0], arr.map(A[1], order.fromJs));;
 

@@ -24,9 +24,9 @@ run = \-> {
   Ibex = quotes.ibexMix(QibexData, NewIbexData, CoQuotes);
   QibexTb.write(Ibex);
 
-  Dates = arr.mp(Ibex, \DtVal -> return DtVal[0];);
+  Dates = arr.map(Ibex, \DtVal -> return DtVal[0];);
   MdList = model.list();
-  Rss = arr.mp(MdList, \m -> return rs.new(m.id, []););
+  Rss = arr.map(MdList, \m -> return rs.new(m.id, []););
 
   Closes = [];
   Opens = [Ibex[0][1]];
@@ -43,12 +43,12 @@ run = \-> {
   }
 
   sum = arr.reduce(NkPonds, 0.0, \r, e -> return r + e[1];);
-  prop = 1.0 / math.toFloat(arr.size(NkPonds));
+  prop = 1.0 / math.itof(arr.size(NkPonds));
   for (NkPond = NkPonds) {
     nk = NkPond[0];
     pond = NkPond[1] / sum;
-    Opens = arr.mp(db.qco(nk), \e -> return e[1];);
-    Closes = arr.mp(db.qco(nk), \e -> return e[2];);
+    Opens = arr.map(db.qco(nk), \e -> return e[1];);
+    Closes = arr.map(db.qco(nk), \e -> return e[2];);
     for (i = 0:arr.size(MdList)) {
       arr.push(Rss[i][1], model.calculate(
         MdList[i], nk, prop, pond, Dates, Opens, Closes

@@ -8,15 +8,14 @@ import "db";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": {
-      sys.print(rp.mk({
+      sys.print(rp.mkJs({
         modelIds: sys.cmd("fmarket", ["models"])[0],
         mdStats: db.mdStatsJs()
       }));
     }
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

@@ -12,7 +12,7 @@ run = \id -> {
   As = AlarmsTb.read();
   ix = arr.index(As, \A -> return A[0] == id;);
   if (ix != -1) {
-    tm = math.toInt(As[ix][1]);
+    tm = math.ftoi(As[ix][1]);
     sys.sleep(tm - time.now());
     As = AlarmsTb.read();
     ix2 = arr.index(As, \A -> return A[0] == id;);
@@ -23,7 +23,7 @@ run = \id -> {
         "--info",
         "--width=400",
         '--title=alarmClock',
-        '--text=Alarma de las ' + time.format("%t", tm)[:5]
+        '--text=Alarma de las ' + time.fmt("%t", tm)[:5]
       ]);
     }
   }

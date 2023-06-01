@@ -2,7 +2,7 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Field configuration.
-/// (Only for Arrays and Maps);
+/// (Only for Arrays and Dics);
 
 /// Value of search type
 /// i
@@ -14,57 +14,41 @@ starts = 1;
 /// i
 in = 2;
 
-/// Creates a filter for array index or map keys.
+/// Creates a filter for array index or dic keys.
 ///   startRange: Start range to show, inclusive.
 ///   endRange  : End range to show, exclusive.
-///   searchType: Search type to filter keys in Map.
+///   searchType: Search type to filter keys in Dic.
 ///               One of equals, starts or in.
-///   isUpper   : 'true' if filter keys in Map is done in uppercase.
-///   text      : Text to filter keys in Map.
-/// \i, i, i, b, s -> m<indexKeyFilter>
+///   isUpper   : 'true' if filter keys in Dic is done in uppercase.
+///   text      : Text to filter keys in Dic.
+/// \i, i, i, b, s -> d<indexKeyFilter>
 newIndexKeyFilter = \startRange, endRange, searchType, isUpper, text ->
   return { startRange, endRange, searchType, isUpper, text };;
 
-/// \<indexKeyFilter> -> s
-indexKeyFilterToJs = \F -> return js.wa([
-  js.wi(F.startRange),
-  js.wi(F.endRange),
-  js.wi(F.searchType),
-  js.wb(F.isUpper),
-  js.ws(F.text)
-]);;
+/// \<indexKeyFilter> -> [*(JS)...]
+indexKeyFilterToJs = \F -> return [
+    F.startRange, F.endRange, F.searchType, F.isUpper, F.text
+  ];;
 
-/// \s -> <indexKeyFilter>
-indexKeyFilterFromJs = \j -> {
-  A = js.ra(j);
-  return newIndexKeyFilter(
-    js.ri(A[0]),
-    js.ri(A[1]),
-    js.ri(A[2]),
-    js.rb(A[3]),
-    js.rs(A[4])
-  );
-};
+/// \[*(JS)...] -> <indexKeyFilter>
+indexKeyFilterFromJs = \A -> return newIndexKeyFilter(
+    math.ftoi(A[0]), math.ftoi(A[1]), math.ftoi(A[2]), A[3], A[4]
+  );;
 
 /// Creates a new field configurarion.
-///   IndexKeyFilter: Optional filter for array index or map keys.
+///   IndexKeyFilter: Optional filter for array index or dic keys.
 ///   ValueFilter   : Optional filter for values.
-/// \[<indexKeyFilter>]|[], [s]|[] -> m<fieldCf>
+/// \[<indexKeyFilter>]|[], [s]|[] -> d<fieldCf>
 new = \IndexKeyFilter, ValueFilter -> return { IndexKeyFilter, ValueFilter };;
 
-/// \<fieldCf> -> s
-toJs = \F -> return js.wa([
-  arr.size(F.IndexKeyFilter) == 0
-    ? js.wn()
-    : indexKeyFilterToJs(F.IndexKeyFilter!),
-  arr.size(F.ValueFilter) ? js.wn() : js.ws(F.ValueFilter)
-]);;
+/// \<fieldCf> -> [*(JS)...]
+toJs = \F -> return [
+  F.IndexKeyFilter ? [indexKeyFilterToJs(F.IndexKeyFilter!)] : [],
+  F.ValueFilter
+];;
 
-/// \j -> <fieldCf>
-fromJs = \j -> {
-  A = js.ra(j);
-  return new(
-    js.isNull(A[0]) ?  [] : [indexKeyFilterFromJs(A[0])],
-    js.isNull(A[1]) ?  [] : [js.rs(A[1])]
-  );
-};
+/// \[*(JS)...] -> <fieldCf>
+fromJs = \A -> return new(
+    A[0] ? [indexKeyFilterFromJs(A[0]!)] : [],
+    A[1]
+  );;

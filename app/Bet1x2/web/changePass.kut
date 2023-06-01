@@ -3,7 +3,7 @@
 
 /// Change password page
 
-import "dm/cgi";
+import "libdm/cgi";
 
 ///
 process = \Rq -> {
@@ -14,6 +14,6 @@ process = \Rq -> {
       js.rs(Rq.old),
       js.rs(Rq.new)
     );
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
-  };
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
 };

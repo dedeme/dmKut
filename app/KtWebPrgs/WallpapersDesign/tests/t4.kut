@@ -3,6 +3,7 @@
 
 import "art";
 
+///
 run = \-> {
   sys.println("t4");
 

@@ -9,12 +9,11 @@ import "data/accAnn";
 
 /// \m -> ()
 process = \Rq -> {
-  rq = js.rs(Rq.rq);
-  switch (rq) {
+  switch (Rq.rq) {
     "idata": sys.print(rp.mk({
-        "anns": js.wa(arr.mp(db.readStays(), accAnn.toJs))
+        "anns": db.readStays()
       }));
-    default: sys.fail("Value of rq (" + rq + ") is not valid");
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
 

@@ -1,0 +1,216 @@
+// Copyright 14-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Market quote.
+
+/// Create a new quote.
+///   date : Date of quote in format "YYYYMMDD".
+///   open : Open value.
+///   close: Close value.
+///   max  : Maximum value.
+///   min  : Minimum value.
+///   vol  : Valume value.
+///   force: 'true' if quote was modified manually.
+/// \s, f, f, f, f, i, b -> d<quote>
+new = \date, open, close, max, min, vol, force ->
+  return {date, open, close, max, min, vol, force};;
+
+/// Create a missing quote (every numeric value is < 0 and force == false)
+/// \s -> <quote>
+newMissing = \date -> return new(date, -1.0, -1.0, -1.0, -1.0, 1, false);;
+
+/// Returns true if 'this' is a missing quote.
+/// \<quote> -> b
+isMissing = \Q -> return Q.vol < 0;;
+
+/// Checks maximum and minimum and returns a new quote corrected, if it is
+/// necessary.
+///
+/// If this->force = true, quote will not be corrected.
+///
+/// If quote was corrected, its 'force' field is set to true.
+///
+///   Q: Quote to correct.
+///   ----
+///   Returns [Quote, Errors]:
+///     A[0] : Corrected quote.
+///     A[1] : Array of corrections (e.g. Close > Max).
+/// \<quote> -> [<quote>, [s...]]
+correct1 = \Q -> {
+  if (Q.force) return [Q, []];
+
+  if (isMissing(Q)) return [Q, ["Missing"]];
+
+  // [s...]
+  Errs = [];
+  Max = [Q.max];
+  Min = [Q.min];
+  if (Q.open > Q.max) {
+    Max! = Q.open;
+    arr.push(Errs, "Open > Max");
+  }
+  if (Q.close > Q.max) {
+    Max! = Q.close;
+    arr.push(Errs, "Close > Max");
+  }
+  if (Q.open < Q.min) {
+    Min! = Q.open;
+    arr.push(Errs, "Open < Min");
+  }
+  if (Q.close < Q.min) {
+    Min! = Q.close;
+    arr.push(Errs, "Close < Min");
+  }
+
+  Qr = Errs ?  new(Q.date, Q.open, Q.close, Max!, Min!, Q.vol, true) : Q;
+  return [Qr, Errs];
+};
+
+/// Checks maximum and minimum of 'Qcurrent', taken account 'Qprevious' and
+/// returns a new quote corrected, if it is necessary.
+///
+/// If last->force = true, quote will not be corrected.
+///
+/// If quote was corrected, its 'force' field is set to true.
+///
+///   Qcurrent : Quote to correct.
+///   Qprevious: Quote previous to "current"
+///    ----
+///     A[0] : Corrected quote.
+///     A[1] : Array of corrections (e.g. Close > Max).
+/// \<quote>, <quote> -> [<quote>, [s...]]
+correct2 = \Qcurrent, Qprevious -> {
+
+  if (Qcurrent.force) return [Qcurrent, []];
+
+  if (isMissing(Qcurrent)) return [Qcurrent, []];
+
+  // [s...]
+  Errs = [];
+  Open = Qcurrent.open;
+  Close = Qcurrent.close;
+  Max = Qcurrent.max;
+  Min = Qcurrent.min;
+
+  if (isMissing(Qprevious) | Qprevious.max < Qprevious.min)
+    return correct1(Qcurrent);
+
+  if (Qcurrent.open > Qcurrent.max) {
+    if (Qcurrent.open == Qprevious.open & Qcurrent.max != Qprevious.max)
+      Open! = Qcurrent.max;
+    else
+      Max! = Qcurrent.open;
+    arr.push(Errs, "Open > Max");
+  }
+  if (Qcurrent.close > Qcurrent.max) {
+    if (Qcurrent.close == Qprevious.close & Qcurrent.max != Qprevious.max)
+      Close! = Qcurrent.max;
+    else
+      Max! = Qcurrent.close;
+    arr.push(Errs, "Close > Max");
+  }
+  if (Qcurrent.open < Qcurrent.min) {
+    if (Qcurrent.open == Qprevious.open & Qcurrent.min != Qprevious.min)
+      Open! = Qcurrent.min;
+    else
+      Min! = Qcurrent.open;
+    arr.push(Errs, "Open < Min");
+  }
+  if (Qcurrent.close < Qcurrent.min) {
+    if (Qcurrent.close == Qprevious.close & Qcurrent.min != Qprevious.min)
+      Close! = Qcurrent.min;
+    else
+      Min! = Qcurrent.close;
+    arr.push(Errs, "Close < Min");
+  }
+
+  Qr = Errs
+    ? new(Qcurrent.date, Open!, Close!, Max!, Min!, Qcurrent.vol, true)
+    : Qcurrent
+  ;
+  return [Qr, Errs];
+};
+
+/// Checks increment (+-20%) and returns a new quote equals to 'Qcurrent', setting
+/// Qcurrent.force to true if such increment has happened.
+///
+///   Qcurrent : Quote to correct.
+///   Qprevious: Quote previous to "current"
+///    ----
+///     A[0] : Corrected quote.
+///     A[1] : Array of corrections (e.g. Close > Max).
+/// \<quote>, <quote> -> [<quote>, [s...]]
+correct3 = \Qcurrent, Qprevious -> {
+  if (Qcurrent.force) return [Qcurrent, []];
+  if (isMissing(Qcurrent) | isMissing(Qprevious)) return [Qcurrent, []];
+
+  // [s...]
+  Errs = [];
+
+  if (Qcurrent.open > Qprevious.open * 1.2) arr.push(Errs, "Open +20%");
+  if (Qcurrent.close > Qprevious.close * 1.2)  arr.push(Errs, "Close +20%");
+  if (Qcurrent.max > Qprevious.max * 1.2) arr.push(Errs, "Max +20%");
+  if (Qcurrent.min > Qprevious.min * 1.2) arr.push(Errs, "Min +20%");
+
+  if (Qcurrent.open < Qprevious.open * 0.8) arr.push(Errs, "Open -20%");
+  if (Qcurrent.close < Qprevious.close * 0.8) arr.push(Errs, "Close -20%");
+  if (Qcurrent.max < Qprevious.max * 0.8) arr.push(Errs, "Max -20%");
+  if (Qcurrent.min < Qprevious.min * 0.8) arr.push(Errs, "Min -20%");
+
+  Qr = Errs
+    ? new (
+        Qcurrent.date, Qcurrent.open, Qcurrent.close,
+        Qcurrent.max, Qcurrent.min, Qcurrent.vol, true
+      )
+    : Qcurrent
+  ;
+  return [Qr, Errs];
+};
+
+/// Returns a string representation of "this". Used to write in company tables
+/// NICK.tb.
+/// \<quote> -> s
+toStr = \Q -> return str.fmt(
+    "%v:%v:%v:%v:%v:%v:%v", [
+      Q.date,
+      math.ftos(Q.open, 4), math.ftos(Q.close, 4),
+      math.ftos(Q.max, 4), math.ftos(Q.min, 4), math.itos(Q.vol),
+      Q.force
+    ]
+  );;
+
+/// Returns a Quote from its string representation. Used to read in company tables.
+/// THROWS exception if it fails.
+fromStr = \s -> {
+  s = str.trim(s);
+  if (!s) sys.throw("Quote string is empty");
+
+  A = str.split(s, ":");
+
+  date = A[0];
+  if (str.len(date) != 8 | !math.isDigits(date))
+    sys.throw("Bad date value: '" + date + "'");
+
+  open = math.stof(A[1]);
+  if (!open) sys.throw("Bad open value: '" + open + "'");
+  close = math.stof(A[2]);
+  if (!open) sys.throw("Bad open value: '" + close + "'");
+  max = math.stof(A[3]);
+  if (!open) sys.throw("Bad open value: '" + max + "'");
+  min = math.stof(A[4]);
+  if (!open) sys.throw("Bad open value: '" + min + "'");
+  vol = math.stoi(A[5]);
+  if (!open) sys.throw("Bad open value: '" + vol + "'");
+
+  force = A[6];
+  if (force != "true" & force != "false")
+    sys.throw("Bad force value: '" + force + "'");
+
+  return new(date, open, close, max, min, vol, force == "true" ? true : false);
+};
+
+/// \<quote> -> [JS...]
+toJs = \Q -> return [Q.date, Q.open, Q.close, Q.max, Q.min, Q.vol, Q.force];;
+
+/// \[JS...] -> <quote>
+fromJs = \A -> return new(A[0], A[1], A[2], A[3], A[4], math.ftoi(A[5]), A[6]);;

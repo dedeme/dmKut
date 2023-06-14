@@ -24,7 +24,7 @@ process = \Rq -> {
       sys.print(rp.mkEmpty());
     }
     "activate": {
-      thread.run(\-> sys.cmd(cts.goCmd, ["start"]););
+      thread.run(\-> sys.cmd2(cts.goCmd, ["start"]););
       sys.sleep(500);
       sys.print(rp.mkEmpty());
     }

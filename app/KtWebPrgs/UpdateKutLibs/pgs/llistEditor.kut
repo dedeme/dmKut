@@ -26,10 +26,11 @@ process = \Rq -> {
     "new": {
       Lpath = lpath.fromJs(Rq.lpath);
       if (file.exists(Lpath.fpath)) {
-        OutErr = sys.cmd("readlink", ["-f", Lpath.fpath]);
-        newPath = str.trim(OutErr[0]);
-        if (newPath != Lpath.fpath & OutErr[1] == "")
-          Lpath.fpath = newPath;
+        R = sys.cmd("readlink", ["-f", Lpath.fpath]);
+        if (R[1]) {
+          newPath = str.trim(R!);
+          if (newPath != Lpath.fpath) Lpath.fpath = newPath;
+        }
       }
 
       LlistTb = db.llistTb();

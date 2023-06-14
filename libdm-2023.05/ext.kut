@@ -9,9 +9,9 @@
 ///   wget --user-agent Mozilla
 ///     --load-cookies=/home/deme/.mozilla/firefox/bfrqeymk.default/cookies.sqlite
 ///     -q --no-cache -O - url
-/// Returns a pair [html, error]. If the reading fails, it returns an error
-/// string. Otherwise returns error = "" and the html text.
-/// \s, b -> [s, s]
+/// If the reading fails, it returns [error, false], otherwise returns
+/// [html, true].
+/// \s, b -> [s, b]
 wget = \url, isMozilla -> {
   Moz = [
     "--user-agent", "Mozilla",
@@ -24,12 +24,12 @@ wget = \url, isMozilla -> {
 };
 
 /// Calls 'bash' with a script for 'node.js' to read a web page.
-/// Returns a pair [html, error]. If the reading fails, it returns an error
-/// string. Otherwise returns error = "" and the html text.
+/// If the reading fails, it returns [error, false], otherwise returns
+/// [html, true].
 ///   url: Url to read.
 ///   tm : Milliseconds to wait for reading.
-/// \s, i -> [s, s]
-puppeteer = \url, tm -> {
+/// \s, i -> [s, b]
+puppeteer = \url, tm -> {/*
   tmpName = file.tmp("/tmp", "libdm_ext_puppeteer");
   cm = str.fmt("node -e \""+
     "const puppeteer = require('puppeteer');"+
@@ -54,7 +54,29 @@ puppeteer = \url, tm -> {
   file.write(tmpName, cm);
   HtmlErr = sys.cmd("bash", [tmpName]);
   file.del(tmpName);
-  return HtmlErr;
+  return HtmlErr;*/
+
+  cm =  "const puppeteer = require('puppeteer');"+
+        "let done = false;" +
+        "(async () => {"+
+        "  try {"+
+        "    const browser = await puppeteer.launch();"+
+        "    const page = await browser.newPage();"+
+        "    page.setDefaultNavigationTimeout(%v);"+
+        "    await page.goto('%v',{waitUntil:'networkidle0'});"+
+        "    await page.cookies();"+
+        "    const ct = await page.content();"+
+        "    console.log(ct);"+
+        "    await browser.close();"+
+        "    done = true;" +
+        "  } catch (e) {"+
+        "    console.error(e.toString());"+
+        "    process.exit(1);"+
+        "  }"+
+        "})();"
+  ;
+  cm2 = str.fmt(cm, [tm, url]);
+  return sys.cmd("node", ["-e", cm2]);
 };
 
 /// Returns the md5 sum of a file. It calls "md5sum 'f'".
@@ -62,32 +84,38 @@ puppeteer = \url, tm -> {
 /// \s -> s
 md5 = \f -> {
   R = sys.cmd("md5sum", [f]);
-  if (R[1] != "") sys.throw(R[1]);
-  return R[0][:32];
+  if (R[1]) return R![:32];
+  sys.throw(R!);
 };
 
 /// Returns the md5 sum of a string. It calls
 ///     bash -c "echo -n " + js.ws('s') + " | md5sum"
 ///   s: String to check.
 /// \s -> s
-md5Str = \s ->
-  return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | md5sum"])[0][:32];;
+md5Str = \s -> {
+  R = sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | md5sum"]);
+  if (R[1]) return R![:32];
+  sys.throw(R!);
+};
 
 /// Returns the sha256 sum of a file. It calls "sha256sum 'f'".
 ///   f: File to check.
 /// \s -> s
 sha256 = \f -> {
   R = sys.cmd("sha256sum", [f]);
-  if (R[1] != "") sys.throw(R[1]);
-  return R[0][:64];
+  if (R[1]) return R![:64];
+  sys.throw(R!);
 };
 
 /// Returns the sha256 sum of a string. It calls
 ///     bash -c "echo -n " + js.ws('s') + " | sha256sum"
 ///   s: String to check.
 /// \s -> s
-sha256Str = \s ->
-  return sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | sha256sum"])[0][:64];;
+sha256Str = \s -> {
+  R = sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | sha256sum"]);
+  if (R[1]) return R![:64];
+  sys.throw(R!);
+};
 
 /// Returns 'Files' converted to 'pdf'. It calls
 ///     If 'isBook' is true:
@@ -99,7 +127,7 @@ sha256Str = \s ->
 ///   Files : Files in HTML to convert.
 /// \b, [s...] -> <bytes>
 htmldoc = \isBook, Files -> {
-  R = sys.cmd(
+  R = sys.cmd2(
     "htmldoc",
     [ isBook ? "--book" : "--webpage",
       "--charset", "utf-8", "--footer", "...", "--size", "A4", "-t", "pdf"

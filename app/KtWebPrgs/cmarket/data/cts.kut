@@ -1,0 +1,78 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+//Application ----------------------------------------------------------------
+
+/// Application name
+appName = "cmarket";
+
+/// Data version
+version = "202306";
+
+/// Data directory.
+dataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
+
+/// Number of quotes used to calculate companies volume.
+quotesVolume = 60;
+
+// Server --------------------------------------------------------------------
+
+/// Minimum entries for a valid reading of historic quotes.
+historicMinimumEntries = 4;
+
+/// Server configuration stopped
+serverStope = 0;
+
+/// Server configuration active
+serverActive = 1;
+
+/// Server configuration selected
+serverSelected = 2;
+
+// Scheduler -----------------------------------------------------------------
+
+/// Time to scheduler sleep (milliseconds)
+schedulerSleepTime = 900000; // 15'
+
+/// Time to scheduler sleep (milliseconds)
+schedulerWatchingTime = 120000; // 2'
+
+/// External servers (Infobolsa, Finanzas, etc.) delay in SECONDS
+serverDelay = 900; // 15 minutes
+
+/// Activity state
+actSleeping = "Sleeping";
+
+/// Activity state
+actActive = "Active";
+
+/// Hour to start actHistoric fase
+actHistoricStart = 2;
+
+// Models - Investors --------------------------------------------------------
+
+/// Number of investors (from 0 to 2)
+investors = 3;
+
+/// Number of quotes in historic tables
+historicQuotes = 610;
+
+/// Number of quotes for accounting charts.
+accountingQuotes = 250;
+
+/// Fleas initial capital for each cycle
+initialCapital = 100000.0;
+
+/// Bet
+bet = 10000.0;
+
+/// Minimun cash to bet
+minToBet = 11000.0;
+
+/// No lost multiplicator
+noLostMultiplicator = 1.05;
+
+/// Rebuy limit
+rebuyLimit = 300.0;

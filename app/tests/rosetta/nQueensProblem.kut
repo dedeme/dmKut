@@ -29,7 +29,8 @@ solve1 = \n -> {
     }
     return R;
   };
-  for (Rs = sub(n, n)) println(Rs);
+  //for (Rs = sub(n, n)) println(Rs);
+  sub(n, n);
 };
 
 solve2 = \n -> {
@@ -51,6 +52,72 @@ solve2 = \n -> {
   }
 };
 
-solve1(8);
-sys.println("||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-solve2(8);
+//solve1(8);
+//sys.println("||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+//solve2(8);
+
+solve3 = \n -> {
+  sub = \n, i, col, dg1, dg2 -> {
+    if (n == i) return 1;
+
+    Nsol = [0];
+    for (j = 0:n)
+      if (
+        bytes.get(col, j) == 0 &
+        bytes.get(dg1, i+j) == 0 &
+        bytes.get(dg2, i-j+n) == 0
+      ) {
+        bytes.set(col, j, 1);
+        bytes.set(dg1, i+j, 1);
+        bytes.set(dg2, i-j+n, 1);
+
+        Nsol! += sub(n, i + 1, col, dg1, dg2);
+
+        bytes.set(col, j, 0);
+        bytes.set(dg1, i+j, 0);
+        bytes.set(dg2, i-j+n, 0);
+      }
+    return Nsol!;
+  };
+
+  col = bytes.new(n);
+  dg1 = bytes.new(2 * n);
+  dg2 = bytes.new(2 * n);
+  return sub(n, 0, col, dg1, dg2);
+};
+
+solve4 = \n -> {
+  sub = \n, i, col, dg1, dg2 -> {
+    if (n == i) return 1;
+
+    Nsol = [0];
+    for (j = 0:n)
+      if (col[j] & dg1[i+j] & dg2[i-j+n]) {
+        col[j] = false;
+        dg1[i+j] = false;
+        dg2[i-j+n] = false;
+
+        Nsol! += sub(n, i + 1, col, dg1, dg2);
+
+        col[j] = true;
+        dg1[i+j] = true;
+        dg2[i-j+n] = true;
+      }
+    return Nsol!;
+  };
+
+  col = [];
+  for (i = 0:n) arr.push(col, true);
+  dg1 = col + col;
+  dg2 = arr.copy(dg1);
+  return sub(n, 0, col, dg1, dg2);
+};
+
+
+t1 = time.now();
+r1 = solve3(12);
+sys.println(str.fmt("Result: %v\nTime:%v", [r1, time.now() - t1]));
+
+t2 = time.now();
+r2 = solve4(12);
+sys.println(str.fmt("Result: %v\nTime:%v", [r2, time.now() - t2]));

@@ -1,0 +1,21 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Timetable data.
+
+/// Constructor.
+///   hopen : Open hour.
+///   mopen : Open minute.
+///   hclose: Close hour.
+///   mclose: Close minute.
+/// \i, i, i, i -> d<timetable>
+new = \hopen, mopen, hclose, mclose ->
+  return {hopen, mopen, hclose, mclose};;
+
+/// \<timetable> -> [JS...]
+toJs = \T -> return [T.hopen, T.mopen, T.hclose, T.mclose];;
+
+/// \[JS...] -> <timetable>
+fromJs = \A -> return new(
+    math.ftoi(A[0]), math.ftoi(A[1]), math.ftoi(A[2]), math.ftoi(A[3])
+  );;

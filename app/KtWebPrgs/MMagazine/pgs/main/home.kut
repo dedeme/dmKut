@@ -26,6 +26,9 @@ process = \Rq -> {
           if (paramsEval.eqParams(E[0], Ips[i])) arr.push(IParEvals, E);
           return E[paramsEval.eval] > Rs[paramsEval.eval] ? E : Rs;
         }));
+        // Value not found
+        if (arr.size(IParEvals) == i)
+          arr.push(IParEvals, paramsEval.new(Ips[i], 0));
       }
       return rp.mk({
         "iparamsEvals": IParEvals,

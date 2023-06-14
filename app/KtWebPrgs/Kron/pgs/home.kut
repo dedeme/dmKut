@@ -12,9 +12,9 @@ import "data/cts";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      OutErr = sys.cmd("ps", ["-x"]);
+      R = sys.cmd2("ps", ["-x"]);
       act = str.index(
-        OutErr[0],
+        R!,
         "kut /dm/dmKut/app/KtWebPrgs/Kron/main start"
       ) != -1;
       sys.print(rp.mkJs({
@@ -31,7 +31,7 @@ process = \Rq -> {
       sys.print(rp.mkEmpty());
     }
     "activate": {
-      thread.run(\-> sys.cmd("kut", [cts.mainPath, "start"]););
+      thread.run(\-> sys.cmd2("kut", [cts.mainPath, "start"]););
       sys.sleep(200);
       sys.print(rp.mkEmpty());
     }

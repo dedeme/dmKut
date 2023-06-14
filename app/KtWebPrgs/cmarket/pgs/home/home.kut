@@ -1,20 +1,24 @@
-// Copyright 01-Dic-2022 ºDeme
+// Copyright 12-Jun-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Models page.
+/// Home page.
 
 import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
 import "db";
 
 /// \m -> ()
 process = \Rq -> {
   switch (Rq.rq) {
-    "idata": {
+    "getLog":
       sys.print(rp.mkJs({
-        modelIds: sys.cmd2("fmarket", ["models"])!,
-        mdStats: db.mdStatsJs()
+        log: log.readJs()
       }));
-    }
+    "resetLog": {
+        log.reset();
+        sys.print(rp.mkEmpty());
+      }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

@@ -1,0 +1,22 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Market day data.
+
+/// Constructor.
+///   date  : Day.
+///   hopen : Open hour.
+///   mopen : Open minute.
+///   hclose: Close hour.
+///   mclose: Close minute.
+/// \s, i, i, i, i -> d<marketDay>
+new = \date, hopen, mopen, hclose, mclose ->
+  return {date, hopen, mopen, hclose, mclose};;
+
+/// \<marketDay> -> [JS...]
+toJs = \M -> return [M.date, M.hopen, M.mopen, M.hclose, M.mclose];;
+
+/// \[JS...] -> <marketDay>
+fromJs = \A -> return new(
+    A[0], math.ftoi(A[1]), math.ftoi(A[2]), math.ftoi(A[3]), math.ftoi(A[4])
+  );;

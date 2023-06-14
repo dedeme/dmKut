@@ -7,8 +7,8 @@ linksFind = \target -> {
   R = [];
   find = \fpath -> {
     if (file.isLink(fpath)) {
-      OutErr = sys.cmd("readlink", ["-f", fpath]);
-      if (OutErr[1] == "" & str.trim(OutErr[0]) == target)
+      R = sys.cmd("readlink", ["-f", fpath]);
+      if (R[1] & str.trim(R!) == target)
         arr.push(R, fpath);
     } else if (file.isDirectory(fpath))
       for (f = file.dir(fpath))

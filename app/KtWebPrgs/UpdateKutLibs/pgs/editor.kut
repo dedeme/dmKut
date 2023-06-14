@@ -41,8 +41,8 @@ process = \Rq -> {
         for (l = Rq.links) {
           try {
             file.del(l);
-            OutErr = sys.cmd("ln", ["-s", Rq.target, l]);
-            if (OutErr[1] != "") arr.push(linksFailed, l);
+            if (!sys.cmd("ln", ["-s", Rq.target, l])[1])
+              arr.push(linksFailed, l);
           } catch(e) {
             arr.push(linksFailed, l);
           }

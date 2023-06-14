@@ -19,7 +19,7 @@ run = \id -> {
     if (ix2 != 1) {
       arr.remove(As, ix2);
       AlarmsTb.write(As);
-      sys.cmd("zenity", [
+      sys.cmd2("zenity", [
         "--info",
         "--width=400",
         '--title=alarmClock',

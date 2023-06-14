@@ -42,20 +42,13 @@ pictPonderation = \P -> return P[2];;
 pictEq = \P1, P2 -> return P1[0] == P2[0] & P1[1] == P2[1];;
 //  Serialization
 //  \pict> -> s
-pictToJs = \P -> return js.wa([
+pictToJs = \P -> return [
     js.wi(P[0]),
     js.ws(P[1]),
     js.wi(P[2])
-  ]);;
+  ];;
 //  s -> <pict>
-pictFromJs = \j -> {
-  A = js.ra(j);
-  return newPict(
-    js.ri(A[0]),
-    js.rs(A[1]),
-    js.ri(A[2])
-  );
-};
+pictFromJs = \A -> return newPict(math.ftoi(A[0]), A[1], math.ftoi(A[2]));;
 
 //  DATA BASE -----------------------------------------------
 
@@ -72,8 +65,8 @@ initDb = \-> {
 //  \-> s<jstb>
 currentTb = \-> return jstb.new(
   path.cat([home, "current.tb"]),
-  \-> return "init value";,
-  pictToJs,
+  \-> return [];,
+  sys.id,
   pictFromJs
 );;
 
@@ -81,8 +74,8 @@ currentTb = \-> return jstb.new(
 //  \-> <pictAll><jstb>
 pictsTb = \-> return jstb.newArr(
   path.cat([home, "picts.tb"]),
-  \-> return "[]";,
-  pictToJs,
+  \-> return [];,
+  sys.id,
   pictFromJs
 );;
 

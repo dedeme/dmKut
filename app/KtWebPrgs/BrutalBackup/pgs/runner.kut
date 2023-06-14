@@ -12,7 +12,7 @@ import "data/cts";
 process = \Rq -> {
   switch (Rq.rq) {
     "run": {
-      thread.run(\-> sys.cmd("kut", [cts.mainPath, "@", Rq.id]););
+      thread.run(\-> sys.cmd2("kut", [cts.mainPath, "@", Rq.id]););
       sys.sleep(100);
 
       List = db.bkListTb().read();

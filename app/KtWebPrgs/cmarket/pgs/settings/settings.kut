@@ -1,0 +1,15 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Settings hub.
+
+import "calendarPg/calendarPg";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.source) {
+    "CalendarPg": calendarPg.process(Rq);
+    default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+  }
+};
+

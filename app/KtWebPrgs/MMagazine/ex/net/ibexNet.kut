@@ -4,8 +4,8 @@
 // \-> s
 getText = \ -> {
   url = "https://es.investing.com/indices/spain-35-historical-data";
-  Rs = sys.cmd("wget", ["-q", "--no-cache", "-O", "-", url]);
-  return Rs[0];
+  Rs = sys.cmd2("wget", ["-q", "--no-cache", "-O", "-", url]);
+  return Rs!;
 };
 
 // \s, i -> [f] | []

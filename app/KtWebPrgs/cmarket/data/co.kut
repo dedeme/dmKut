@@ -1,0 +1,16 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Company data
+
+/// Constructor.
+///   nick       : Identifier of company.
+///   isSelected: 'true' if company is selected to operate.
+/// \s, b -> d<co>
+new = \nick, isSelected -> return {nick, isSelected};;
+
+/// \<co> -> [JS...]
+toJs = \C -> return [C.nick, C.isSelected];;
+
+/// \[JS...] -> <co>
+fromJs = \A -> return new(A[0], A[1]);;

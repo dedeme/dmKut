@@ -9,9 +9,9 @@
 
 // \s, [s,...] -> s
 cmd = \c, Ps -> {
-  OutErr = sys.cmd(c, Ps);
-  if (OutErr[1] != "") sys.throw(OutErr[1]);
-  return OutErr[0];
+  R = sys.cmd(c, Ps);
+  if (R[1]) return R!;
+  sys.throw(R!);
 };
 
 /// Returns [width, height] of the image 'im'

@@ -1,0 +1,43 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Calendar page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/calendar/calendar";
+import "data/calendar/timetable";
+import "data/calendar/marketDay";
+import "db";
+import "db/calendarTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata":
+      sys.print(rp.mkJs({
+        calendar: calendarTb.readJs()
+      }));
+    "setGeneral": {
+      calendarTb.write(calendar.mkGeneral(
+        calendarTb.read(), timetable.fromJs(Rq.timetable)
+      ));
+      sys.print(rp.mkEmpty());
+    }
+    "setHolidays": {
+      calendarTb.write(calendar.mkHolidays(
+        calendarTb.read(), Rq.holidays
+      ));
+      sys.print(rp.mkEmpty());
+    }
+    "setSpecialDays": {
+      calendarTb.write(calendar.mkSpecialDays(
+        calendarTb.read(), arr.map(Rq.specialDays, marketDay.fromJs)
+      ));
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

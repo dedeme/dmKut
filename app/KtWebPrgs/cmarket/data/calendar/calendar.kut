@@ -1,0 +1,49 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Calendar data.
+
+import "timetable";
+import "marketDay";
+
+/// Constructor.
+///   general     : Default timetable of a market day.
+///   holidays    : Holiday dates.
+///   specialDays : Days with special timetable.
+/// \<timetable>, [s...], [<marketDay>...] -> d<calendar>
+new = \general, holidays, specialDays ->
+  return {general, holidays, specialDays};;
+
+/// Constructor from other <calendar> modifiyng a field.
+///   C      : Previous calendar.
+///   general: Default timetable of a market day.
+/// \<calendar>, <timetable> -> calendar
+mkGeneral = \C, general -> return new(general, C.holidays, C.specialDays);;
+
+/// Constructor from other <calendar> modifiyng a field.
+///   C       : Previous calendar.
+///   holidays: Holiday dates.
+/// \<calendar>, [s...] -> calendar
+mkHolidays = \C, holidays -> return new(C.general, holidays, C.specialDays);;
+
+
+/// Constructor from other <calendar> modifiyng a field.
+///   C          : Previous calendar.
+///   specialDays: Days with special timetable.
+/// \<calendar>, [<marketDay>...] -> calendar
+mkSpecialDays = \C, specialDays ->
+  return new(C.general, C.holidays, specialDays);;
+
+/// \<calendar> -> [JS...]
+toJs = \C -> return [
+    timetable.toJs(C.general),
+    C.holidays,
+    arr.map(C.specialDays, marketDay.toJs)
+  ];;
+
+/// \[JS...] -> <calendar>
+fromJs = \A -> return new(
+    timetable.fromJs(A[0]),
+    A[1],
+    arr.map(A[2], marketDay.fromJs)
+  );;

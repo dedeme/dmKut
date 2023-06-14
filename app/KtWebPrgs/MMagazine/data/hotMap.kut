@@ -16,7 +16,7 @@ new = \date, entries -> {
   };
 };
 
-/// \[*(JS)...] -> <HotMap>
+/// \d[*(JS)...] -> <HotMap>
 fromJs = \D -> return new(
     D.date,
     arr.map(D.entries, \e -> return paramsEval.fromJs(e);)

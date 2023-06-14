@@ -86,8 +86,8 @@ execute = \A -> {
   R = [];
   cmd = arr.shift(Ps);
   thread.run(\-> {
-      OE = sys.cmd(cmd, Ps);
-      if (OE[1] != "") arr.push(R, OE[1]);
+      R = sys.cmd(cmd, Ps);
+      if (!R[1]) arr.push(R, R!);
     });
   sys.sleep(500);
   return R;

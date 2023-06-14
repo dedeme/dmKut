@@ -19,7 +19,7 @@ process = \Rq -> {
       Points = db.points(y).read();
       Bets = db.bets(y).read();
       return cgi.rp({
-        strategies: js.wa(arr.map(
+        strategies: js.w(arr.map(
             strategies.yearGroupProfits(Ss, Results, Points, Bets),
             \P -> return profits.toJs(P);
           ))

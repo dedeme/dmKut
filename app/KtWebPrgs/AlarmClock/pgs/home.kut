@@ -27,7 +27,7 @@ process = \Rq -> {
       isDup = !alarm.add(As, alarm.mk(Rq.key, Rq.tm));
       if (!isDup) {
         AlarmsTb.write(As);
-        thread.run(\-> sys.cmd("kut", [cts.mainPath, "alarm!", Rq.key]););
+        thread.run(\-> sys.cmd2("kut", [cts.mainPath, "alarm!", Rq.key]););
         sys.sleep(200);
         //  showAlarm.run(key); // Lock program
       }

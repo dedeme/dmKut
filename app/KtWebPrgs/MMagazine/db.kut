@@ -75,10 +75,10 @@ refsModelSimProfitsDb = \-> return jstb.newArr(
 /// \s -> <Jstb> of [<HotMap>...]
 hotMapsDb = \model -> return jstb.newArr(
   path.cat([cts.dbPath, "hotMaps", model + ".tb"]),
-  \-> return hotMap.new(
+  \-> return [hotMap.new(
     fns.lastSunday(),
     evals.paramsEvals(model)
-  );,
+  )];,
   sys.id,
   hotMap.fromJs
 );;

@@ -1,0 +1,196 @@
+// Copyright 23-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes processing management.
+
+import "libdm/log";
+import "libmkt/qs";
+import "data/cts";
+import "db/quotesDb";
+import "db/svCodesTb";
+import "data/qsv";
+import "data/qsvs";
+
+/// Create a result without error nor warnings.
+///   value: Result value.
+/// \* -> d<qsprRs>
+ok = \value -> return {value, withWarnings: false, withError: false};;
+
+/// Create a result with error written in log. (qsprRs.value = [])
+///   msg: Error message.
+/// \s -> d<qsprRs>
+error = \msg -> {
+  log.error(msg);
+  return {value: [], withWarnings: false, withError: true};
+};
+
+/// Create a result with warnings written in log.
+///   msgs: Warning messages
+///   value: Result value.
+/// \[s...], * -> d<qsprRs>
+warning = \msgs, value -> {
+  for (w = msgs) log.warning(w);
+  return {value, withWarnings: true, withError: false};
+};
+
+/// Returns a new <qsprRs> such that:
+///   - If rs.withError == true -> rs is returned.
+///   - Otherwise 'fn' is run and its result is returned. If rs is withWarnings
+///     the final result is withWarnings too.
+///   rs: First result.
+///   fn: Function with 'rs.value' as argument.
+/// \<qsprRs>, (\* -> <qsprRs>) -> <qsprRs>
+bind = \rs, fn -> {
+  if (rs.withError) return rs;
+  rs2 = fn(rs.value);
+  rs2.withWarnings |= rs.withWarnings;
+  return rs2;
+};
+
+// UTILITIES -------------------------------------------------------------------
+
+// \s, s, i -> <qsprRs<<qs>>>
+toQs = \prefix, qts, size -> {
+  Qs = qs.fromStr(size, qts);
+  return Qs[1]
+    ? ok(Qs!)
+    : error(prefix + ": " + Qs!)
+  ;
+};
+
+// \s -> <qsprRs<<qs>>>
+getQs = \nick -> {
+  Qs = quotesDb.readQs(nick);
+  return Qs[1]
+    ? ok(Qs!)
+    : error("Reading company " + nick + ": " + Qs!)
+  ;
+};
+
+// \s, s -> <qsprRs<<qs>>>
+simpleCorrection = \prefix, qts ->
+  return bind(
+    toQs(prefix, qts, cts.historicQuotes),
+    \qts -> {
+      // [<qs>, [s...]]
+      Tp = qs.correct(qts);
+      return Tp[1]
+        ? warning(arr.map(Tp[1], \e -> return prefix + ": " + e;), Tp[0])
+        : ok(Tp[0])
+      ;
+    });;
+
+// \s, <qs>, <qs> -> <qsprRs<<qs>>>
+dateCorrection = \prefix, mqts, qts -> {
+  // [<qs>, [s...]]
+  Tp = qs.correctDates(mqts, qts);
+  return Tp[1]
+    ? warning(arr.map(Tp[1], \e -> return prefix + ": " + e;), Tp[0])
+    : ok(Tp[0])
+  ;
+};
+
+// \s, sv, s -> <qsprRs<s>>
+getCode = \prefix, nick -> {
+  Code = dic.get(svCodesTb.read(qsv.id(qsvs.currentHistoric())), nick);
+  if (Code) return ok(Code!);
+  return error(prefix + str.fmt(": Code of %v not found", [nick]));
+};
+
+// \s, s -> <qsprRs<<qs>>>
+downloadHistoric = \prefix, code -> {
+  sv = qsvs.currentHistoric();
+  Html = qsv.downloadHistoric(sv, code);
+  if (!Html[1]) return error(prefix + ": " + Html!);
+  Rs = qsv.readHistoric(sv, Html!);
+
+  Err = [""];
+  if (!Rs[0]) Err! = prefix + ": Quotes can not be read";
+  else {
+    Qs = Rs[0]!;
+    if (!Qs) Err! = prefix + ": No quotes found";
+    else if (qs.size(Qs) < cts.historicMinimumEntries)
+      Err! = prefix + str.fmt(
+        ": Only %v quotes found (Minimum %v)",
+        [qs.size(Qs), cts.historicMinimumEntries]
+      );
+  }
+
+  if (Err!) {
+    for (w = Rs[1]) log.warning(w);
+    return error(Err!);
+  }
+
+  return Rs[1]
+    ? warning(Rs[1], Rs[0]!)
+    : ok(Rs[0]!)
+  ;
+};
+
+merge = \prefix, mqs, nqs, oqs -> {
+  // [<qs>, [s...]]
+  Tp = qs.merge(mqs, nqs, oqs);
+  return Tp[1]
+    ? warning(arr.map(Tp[1], \e -> return prefix + ": " + e;), Tp[0])
+    : ok(Tp[0])
+  ;
+};
+
+// PUBLIC INTERFACE ------------------------------------------------------------
+
+/// Returns <qsprRs<s>> with 'qs' corected.
+/// Return and paremeter quotes are type file 'NICK.tb'.
+///   prefix: Prefix for errors and warnings.
+///   qts   : Copany quotes. (Company can not be main)
+/// \s, s -> <qsprRs<s>>
+correctStr = \prefix, qts ->
+  return bind(
+    simpleCorrection(prefix, qts),
+    \qts -> return ok(qs.toStr(qts));
+  );;
+
+/// Return <qsprRs<s>> with 'qs' corected.
+/// Return and paremeter quotes are type file 'NICK.tb'.
+///   prefix  : Prefix for errors and warnings.
+///   qs      : Copany quotes.
+///   mainNick: Main company nick.
+/// \s, s, s -> <qsprRs<s>>
+correctStr2 = \prefix, qts, mainNick ->
+  return bind(
+    simpleCorrection(prefix, qts),
+    \qts -> return bind(
+        getQs(mainNick),
+        \mqts -> return bind(
+          dateCorrection(prefix, mqts, qts),
+          \qts -> return ok(qs.toStr(qts));
+        );
+      );
+    );;
+
+/// Reads quotes of 'nick' from current server, merges with current quotes
+/// and corrects them.
+///   prefix  : Prefix for errors and warnings.
+///   mainNick: Main company nick.
+///   nick    : Company nick.
+/// \s, s, s -> <qsprRs<qs>>
+updateHistoric = \prefix, mainNick, nick ->
+    return bind(
+      getCode(prefix, nick),
+      \code -> return bind(
+        downloadHistoric(prefix, code),
+        \newQs -> return bind(
+          getQs(nick),
+          \oldQs -> return bind(
+            nick == mainNick
+              ? ok([])
+              : getQs(mainNick),
+            \mainQs -> {
+              R = merge(prefix, mainQs, newQs, oldQs);
+              quotesDb.write(nick, qs.toStr(R.value));
+              return R;
+            }
+          );
+        );
+      );
+    );;
+

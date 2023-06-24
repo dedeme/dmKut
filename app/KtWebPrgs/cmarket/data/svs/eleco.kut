@@ -1,0 +1,126 @@
+// Copyright 22-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data ELECO ("El Economista").
+
+import "data/qsv";
+
+// DIARY -----------------------------------------------------------------------
+// \s -> [[[s, f]...], [s...]]
+readDiary = \html -> {
+  // [[s, f]...]
+  Values = [];
+  // [s...]
+  Errs = [];
+  Ix = [0];
+  Ix2 = [0];
+
+  // \s -> [[s, f]...], [s...]]
+  retError = \err -> {
+    arr.push(Errs, err);
+    return [Values, Errs];
+  };
+
+  Ix! = str.index(html, "<tbody>");
+  if (Ix! == -1) return retError("Beginning of table not found");
+  Ix! += 7;
+
+  // Look for the second <tbody> is ok.
+  Ix! = str.indexFrom(html, "<tbody>", Ix!);
+  if (Ix! == -1) return retError("Beginning of table not found");
+  Ix! += 7;
+
+  endTable = str.indexFrom(html, "<footer", Ix!);
+  if (endTable == -1) return retError("End of table not found");
+
+  while () {
+    Ix! = str.indexFrom(html, "<tr i", Ix!);
+    if (Ix! == -1 | Ix! > endTable) break;
+    Ix! += 5;
+
+    endRow = str.indexFrom(html, "</tr>", Ix!);
+    if (endRow == -1) return retError("End of row not found");
+
+    // CODE
+    Ix! = str.indexFrom(html, "/empresa/", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'code' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 9;
+    Ix2! = str.indexFrom(html, "\"", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'code' not found");
+      Ix! = endRow;
+      continue;
+    }
+    code = html[Ix!:Ix2!];
+
+    // VALUE
+    Ix! = str.indexFrom(html, "_\">", Ix2! + 1);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'value' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 3;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'code' not found");
+      Ix! = endRow;
+      continue;
+    }
+    try {
+      arr.push(Values, [code, math.fromIso(html[Ix!:Ix2!])!]);
+    } catch(e) {
+      arr.push(Errs, "Bad quote : " + html[Ix!:Ix2!]);
+    }
+
+    // END
+    Ix! = endRow;
+  }
+
+  return [Values, Errs];
+};
+
+// HISTORIC --------------------------------------------------------------------
+
+// \s -> [<qs>|[], [s...]]
+readHistoric = \html -> {
+  sys.throw("Not implemented");
+};
+
+// OTHER -----------------------------------------------------------------------
+
+// \-> s
+id = \ -> return "ELECO";;
+
+// \-> s
+name = \ -> return "El Economista";;
+
+// \-> b
+withDiary = \ -> return true;;
+
+// \-> [s|s, b] ([html|error, ok])
+downloadDiary = \ -> {
+  url = "https://www.eleconomista.es/mercados/mercado-continuo";
+  return sys.cmd(
+    "timeout", ["-s", "KILL", "10", "wget", "-q", "--no-cache", "-O", "-", url]
+  );
+};
+
+// \-> b
+withHistoric = \ -> return false;;
+
+// \s -> [s|s, b] ([html|error, ok])
+downloadHistoric = \code -> {
+  sys.throw("Not implemented");
+};
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+    id, name, withDiary, downloadDiary, readDiary,
+    withHistoric, downloadHistoric, readHistoric
+  );;

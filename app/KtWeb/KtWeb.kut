@@ -90,7 +90,13 @@ response = \rqBs -> {
       websv.badRequestRp("Unauthorized source '" + cmd + "'")
     );
 
-  return bytes.fromStr(websv.textRp(rqProcess(par)));
+  Rp = [""];
+  try {
+    Rp! = websv.textRp(rqProcess(par));
+  } catch (e) {
+    Rp! = websv.textRp(e);
+  }
+  return bytes.fromStr(Rp!);
 };
 
 // Processes a POST request.

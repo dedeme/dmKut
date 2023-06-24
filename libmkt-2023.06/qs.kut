@@ -5,16 +5,16 @@
 
 import "quote";
 
-/// Returns a [quotes, ""] | [?, error] with quotes from the content of a
+/// Returns a [quotes|error, ok] with quotes from the content of a
 /// 'NICK.tb' file. (From after to before)
 /// If the final number of quotes is different to 'size', or
-/// same quote can not be read, the first error found is returned.
+/// some quote can not be read, the first error found is returned.
 ///   size: Number of quotes to return.
 ///   s   : Text from a 'NICK.tb' file.
-/// \i, s -> [<qs>|?, s]
+/// \i, s -> [<qs>|s, b]
 fromStr = \size, s -> {
   s = str.trim(s);
-  if (!s) return [[], "Quotes string is empty"];
+  if (!s) return [false, "Quotes string is empty"];
 
   // [<quote>...]
   Qs = [];
@@ -25,16 +25,16 @@ fromStr = \size, s -> {
     Err! = e;
   }
 
-  if (Err!) return [[], Err!];
+  if (Err!) return [Err!, false];
 
   if (arr.size(Qs) != size) {
     return [
-      [],
-      str.fmt("Wrong quotes number. Expected %d. Found %d", [size, arr.size(Qs)])
+      str.fmt("Wrong quotes number. Expected %d. Found %d", [size, arr.size(Qs)]),
+      false
     ];
   }
 
-  return [Qs, ""];
+  return [Qs, true];
 };
 
 /// Returns text to write in a 'NICK.tb' file.
@@ -58,7 +58,7 @@ correct = \qts -> {
 
   // \<quote>, [s...] -> ()
   appendErrs = \Q, NewErrs ->
-    for (e = NewErrs) arr.push(Errs, str.fmt("%v: %v", Q.date, e));;
+    for (e = NewErrs) arr.push(Errs, str.fmt("%v: %v", [Q.date, e]));;
 
   if (!qts) return [[], []];
 
@@ -71,11 +71,11 @@ correct = \qts -> {
     Q2! = qts[i];
 
     // [<quote>, [s...]]
-    Rs0 = quote.correct2(Q1!, !Q2!);
+    Rs0 = quote.correct2(Q1!, Q2!);
     appendErrs(Rs0[0], Rs0[1]);
 
     // [<quote>, [s...]]
-    Rs1 = quote.correct2(Rs0[0], !Q2!);
+    Rs1 = quote.correct2(Rs0[0], Q2!);
     appendErrs(Rs1[0], Rs1[1]);
 
     arr.push(NewQs, Rs1[0]);
@@ -101,9 +101,9 @@ correctDates = \mqts, qts -> {
   Errs = [];
 
   // \<quote>, s -> ()
-  appendErr = \Q, err -> arr.push(Errs, str.fmt("%v: %v", Q.date, err));;
+  appendErr = \Q, err -> arr.push(Errs, str.fmt("%v: %v", [Q.date, err]));;
 
-  // <quote>
+  // <qs>
   NewQs = [];
   MI = [0];
   mSz= arr.size(mqts);
@@ -177,7 +177,7 @@ merge = \mqts, newQts, qts -> {
   while () {
     i = I!;
     nqtsI = NqtsI!;
-    qtsI = qtsI!;
+    qtsI = QtsI!;
 
     if (i >= sz) break;
 
@@ -217,22 +217,22 @@ merge = \mqts, newQts, qts -> {
   }
 
   QsR = [Qs];
-  // [[s...]]
-  Errs = [[]];
+  // [s...]
+  Errs = [];
 
   if (mqts) {
     // [<qs>, [s...]]
     Rs = correctDates(mqts, QsR!);
     QsR! = Rs[0];
-    Errs! = Rs[1];
+    for (err = Rs[1]) arr.push(Errs, err);
   }
 
   // [<qs>, [s...]]
   Rs = correct(QsR!);
   QsR! = Rs[0];
-  Errs! = [Errs! + Rs[1]];
+  for (err = Rs[1]) arr.push(Errs, err);
 
-  return [QsR!, Errs!];
+  return [QsR!, Errs];
 };
 
 /// Returns an [<quote...], copy of this, ordered from before to after.
@@ -303,30 +303,27 @@ mins = \qts -> {
 };
 
 /// Returns the volume average (in €) of a company quotes.
-///   qts    : Historic quotes.
+///   qts    : Historic quotes. (From after to before).
 ///   samples: Number of quotes to take in account.
-/// \<qs>, i -> f
+/// \s, i -> f
 volumeAvg = \qts, samples -> {
-  // \<quote> - f
-  fval = \Q -> return (Q.max + Q.min) * math.itof(Q.vol) / 2.0;;
+  Entries = str.split(qts, "\n");
 
-  sz = arr.size(qts);
   Maxs = [0.0, 0.0, 0.0];
   Mins = [0.0, 0.0, 0.0];
   Count0 = [0];
   Count = [0];
   Sum = [0.0];
-  Ix = [0];
-  while (Count! < samples) {
-    ix = Ix!;
-    Ix! += 1;
-    if (ix >= sz)
-      sys.throw(str.fmt("Not enough samples: (%v / %v)", [Count!, samples]));
-    Q = qts[ix];
+  for (Entry = Entries) {
+    Ps = str.splitTrim(Entry, ":");
+    if (arr.size(Ps) != 7) continue;
+    Max = math.stof(Ps[3]);
+    Min = math.stof(Ps[4]);
+    Vol = math.stoi(Ps[5]);
 
-    if (quote.isMissing(Q)) continue;
+    if (!Max | !Min | !Vol | Vol! < 0) continue;
 
-    v = fval(Q);
+    v = (Max! + Min!) * math.itof(Vol!);
     if (Count0! < 3) {
       i = Count0!;
       Maxs[i] = v;
@@ -337,7 +334,7 @@ volumeAvg = \qts, samples -> {
 
     V = [v];
     More = [true];
-    for (i = [0:3])
+    for (i = 0:3)
       if (V! > Maxs[i]) {
         tmp = V!;
         V! = Maxs[i];
@@ -345,7 +342,7 @@ volumeAvg = \qts, samples -> {
         More! = false;
       }
     if (More!)
-      for (i = [0:3])
+      for (i = 0:3)
         if (V! < Mins[i]) {
           tmp = V!;
           V! = Mins[i];
@@ -354,8 +351,11 @@ volumeAvg = \qts, samples -> {
 
     Sum! += V!;
     Count! += 1;
+    if (Count! == samples) break;
   }
+  if (Count! < samples)
+    sys.throw(str.fmt("Not enough samples: (%v / %v)", [Count!, samples]));
 
-  return Sum! / math.itof(samples);
+  return Sum! / math.itof(samples * 2);
 };
 

@@ -4,11 +4,17 @@
 /// Settings hub.
 
 import "calendarPg/calendarPg";
+import "nicks/nicks";
+import "nicks/nkeditor";
+import "serversPg";
 
 /// \m -> ()
 process = \Rq -> {
   switch (Rq.source) {
     "CalendarPg": calendarPg.process(Rq);
+    "Nicks": nicks.process(Rq);
+    "Nicks/Editor": nkeditor.process(Rq);
+    "Servers": serversPg.process(Rq);
     default: sys.throw("Value of source (" + Rq.source + ") is not valid");
   }
 };

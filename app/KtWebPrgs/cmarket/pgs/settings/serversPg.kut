@@ -1,0 +1,114 @@
+// Copyright 21-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Servers page
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/qsvs";
+import "data/qsv";
+import "db/svCodesTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      selected = Rq.selected;
+
+      sys.print(rp.mk({
+       servers: arr.map(qsvs.list(), \s -> return [
+            qsv.id(s), qsv.name(s), qsv.withDiary(s), qsv.withHistoric(s)
+          ];),
+        dailyServer: qsv.id(qsvs.currentDiary()),
+        historicServer: qsv.id(qsvs.currentHistoric()),
+        codes: selected ? svCodesTb.read(selected) : {}
+      }));
+    }
+    "setCodes": {
+      server = Rq.server;
+      // {s...}
+      Codes = Rq.codes;
+      svCodesTb.write(server, Codes);
+      sys.print(rp.mkEmpty());
+    }
+    "testDiary": {
+      server = Rq.server;
+      WithErrors = [false];
+      WithWarnings = [false];
+      Sv = arr.find(qsvs.list(), \s -> return qsv.id(s) == server;);
+      if (Sv) {
+        Html = qsv.downloadDiary(Sv!);
+        if (Html[1]) {
+          //[[[s, f]...], [s...]]
+          Tp = qsv.readDiary(Sv!, Html!);
+          if (!Tp[0]) {
+            log.error("No value was read from server " + server);
+            WithErrors! = true;
+          } else {
+            if (Tp[1]) {
+              for (err = Tp[1]) log.error(err);
+              WithWarnings! = true;
+            }
+            Codes = arr.map(Tp[0], \cv -> return cv[0];);
+            for (c = svCodesTb.read(server))
+              if (!arr.any(Codes, \cd -> return cd == c;)) {
+                log.error(str.fmt("Value of '%v' not read", [c]));
+                WithErrors! = true;
+              }
+          }
+        } else {
+          log.error(Html!);
+          WithErrors! = true;
+        }
+      } else {
+        log.error(str.fmt("Server '%v' not found", [server]));
+        WithErrors! = true;
+      }
+
+      sys.print(rp.mk({
+        withErrors: WithErrors!,
+        withWarnings: WithWarnings!
+      }));
+    }
+    "testCo": {
+      server = Rq.server;
+      nick = Rq.nick;
+      code = Rq.code;
+      WithErrors = [false];
+      WithWarnings = [false];
+
+      Sv = arr.find(qsvs.list(), \s -> return qsv.id(s) == server;);
+      if (Sv) {
+        Html = qsv.downloadHistoric(Sv!, code);
+        if (Html[1]) {
+          // [[<qsv>]|[], [s...]]
+          Tp = qsv.readHistoric(Sv!, Html!);
+          if (Tp[0]) {
+            if (Tp[1]) {
+              for (err = Tp[1])
+                log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
+              WithWarnings! = true;
+            }
+          } else {
+            for (err = Tp[1])
+              log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
+            WithWarnings! = true;
+            WithErrors! = true;
+          }
+        } else {
+          log.error(Html!);
+          WithErrors! = true;
+        }
+      } else {
+        log.error(str.fmt("Server '%v' not found", [server]));
+        WithErrors! = true;
+      }
+
+      sys.print(rp.mk({
+        withErrors: WithErrors!,
+        withWarnings: WithWarnings!
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

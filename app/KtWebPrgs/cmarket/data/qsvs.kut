@@ -1,0 +1,30 @@
+// Copyright 21-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quote servers data.
+
+import "svs/infob";
+import "svs/bmania";
+import "svs/eleco";
+import "svs/finan";
+import "svs/inves";
+import "svs/yahoo";
+
+/// Returns an array with registered quotes servers.
+/// \-> [<qsv>...]
+list = \-> return [
+    infob.new(),
+    bmania.new(),
+    eleco.new(),
+    finan.new(),
+    inves.new(),
+    yahoo.new()
+  ];;
+
+/// Returns the current active diary server
+/// \-> <qsv>
+currentDiary = \-> return infob.new();;
+
+/// Returns the current active historic server
+/// \-> <qsv>
+currentHistoric = \-> return infob.new();;

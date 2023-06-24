@@ -1,2 +1,75 @@
-// Copyright 12-Jun-2023 ºDeme
+// Copyright 21-Jun-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quote server interface.
+
+/// Constructor
+///   id: Returns <qsv> identifier.
+///   name: Returns <qsv> name.
+///   withDiary: Returns 'true' if <qsv> read diary quotes.
+///   downloadDiary: Returns the result of executing sys.cmd to read diary quotes.
+///   readDiary: Returns tuple [[[companyCode, value]...], [error...]] from a web page.
+///   withHistoric: Returns 'true' if <qsv> read historic quotes.
+///   downloadHistoric: Returns the result of executing sys.cmd to read historic
+///                     quotes of a company.
+///   readHistoric: Returns tuple [[quotes]|[], [error...]] from a web page.
+/// \ \-> s,
+///   \-> s,
+///   \-> b,
+///   \-> [s|s, b] ([html|error, ok])
+///   \s -> [[[s, f]...], [s...]]
+///   \-> b,
+///   \s -> [s|s, b] ([html|error, ok])
+///   \s -> [<qs>|[], [s...]]
+/// -> x<qsv>
+new = \ id, name, withDiary, downloadDiary, readDiary,
+        withHistoric, downloadHistoric, readHistoric ->
+  return {
+    id, name, withDiary, downloadDiary, readDiary,
+    withHistoric, downloadHistoric, readHistoric
+  };;
+
+/// Returns Qsv identifier.
+/// \<qsv> -> s
+id = \sv -> return sv.id();;
+
+/// Returns this name.
+/// \<qsv> -> s
+name = \sv -> return sv.name();;
+
+/// Returns 'true' if this read diary quotes.
+/// \<qsv> -> b
+withDiary = \sv -> return sv.withDiary();;
+
+/// Returns values [html|error, ok] result of executing sys.cmd to read
+/// diary quotes.
+/// \<qsv> -> [s|s, b]
+downloadDiary = \sv -> return sv.downloadDiary();;
+
+/// Read a web page.
+///   sv: Quotes server.
+///   webPage: Content of web page.
+///   ----
+///    Returns tuple [[[companyCode, value]...], [error...]]
+/// NOTE: In both tuples, arrays can be empty.
+/// \<qsv>, s -> [[[s, f]...], [s...]]
+readDiary = \sv, webPage -> return sv.readDiary(webPage);;
+
+/// Returns 'true' if this read historic quotes.
+/// \<qsv> -> b
+withHistoric = \sv -> return sv.withHistoric();;
+
+/// Returns values [html|error, ok] result of executing sys.cmd to read
+/// historic quotes of a company.
+///   sv: Quotes server.
+///   code: Code of company in 'sv'.
+/// \<qsv>, s -> [s|s, b]
+downloadHistoric = \sv, code -> return sv.downloadHistoric(code);;
+
+/// Read a web page.
+///   sv: Quotes server.
+///   webPage: Content of web page.
+///   ----
+///   Returns tuple [[quotes]|[], [error...]] from a web page.
+/// \<qsv, s -> [[<qs>]|[], [s...]]
+readHistoric = \sv, webPage -> return sv.readHistoric(webPage);;

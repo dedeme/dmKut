@@ -11,18 +11,20 @@ import "data/cts";
 import "pgs/home/home";
 import "pgs/settings/settings";
 
-import "data/cosT";
+import "data/qsvs";
 
 help = """
   Usage:
+    cmarket version
+      Display version number.
     cmarket start
-     Starts server.
+      Starts server.
     cmarket stop
-     Stops server.
+      Stops server.
     cmarket init
-     Initialize database.
+      Initialize database.
     cmarket <commandKey> <JSON>
-     Executes a JSON command.
+      Executes a JSON command.
 """
 ;
 
@@ -35,6 +37,7 @@ if (!Args) {
 
 if (arr.size(Args) == 1) {
   switch (Args[0]) {
+    "version": sys.println(cts.version);
     "stop": server.stop();
     "start": server.start();
     "init": db.init();
@@ -42,6 +45,7 @@ if (arr.size(Args) == 1) {
   }
   return;
 }
+
 if (arr.size(Args) > 2) {
   sys.println(help);
   return;
@@ -59,5 +63,4 @@ switch(Rq.module) {
   "Settings": settings.process(Rq);
   default: sys.throw("Value of module (" + Rq.module + ") is not valid");
 }
-
 

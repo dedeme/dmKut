@@ -87,10 +87,10 @@ correct2 = \Qcurrent, Qprevious -> {
 
   // [s...]
   Errs = [];
-  Open = Qcurrent.open;
-  Close = Qcurrent.close;
-  Max = Qcurrent.max;
-  Min = Qcurrent.min;
+  Open = [Qcurrent.open];
+  Close = [Qcurrent.close];
+  Max = [Qcurrent.max];
+  Min = [Qcurrent.min];
 
   if (isMissing(Qprevious) | Qprevious.max < Qprevious.min)
     return correct1(Qcurrent);
@@ -173,8 +173,8 @@ correct3 = \Qcurrent, Qprevious -> {
 toStr = \Q -> return str.fmt(
     "%v:%v:%v:%v:%v:%v:%v", [
       Q.date,
-      math.ftos(Q.open, 4), math.ftos(Q.close, 4),
-      math.ftos(Q.max, 4), math.ftos(Q.min, 4), math.itos(Q.vol),
+      math.ftos(Q.open), math.ftos(Q.close),
+      math.ftos(Q.max), math.ftos(Q.min), math.itos(Q.vol),
       Q.force
     ]
   );;
@@ -191,22 +191,24 @@ fromStr = \s -> {
   if (str.len(date) != 8 | !math.isDigits(date))
     sys.throw("Bad date value: '" + date + "'");
 
-  open = math.stof(A[1]);
-  if (!open) sys.throw("Bad open value: '" + open + "'");
-  close = math.stof(A[2]);
-  if (!open) sys.throw("Bad open value: '" + close + "'");
-  max = math.stof(A[3]);
-  if (!open) sys.throw("Bad open value: '" + max + "'");
-  min = math.stof(A[4]);
-  if (!open) sys.throw("Bad open value: '" + min + "'");
-  vol = math.stoi(A[5]);
-  if (!open) sys.throw("Bad open value: '" + vol + "'");
+  Open = math.stof(A[1]);
+  if (!Open) sys.throw("Bad open value: '" + A[1] + "'");
+  Close = math.stof(A[2]);
+  if (!Close) sys.throw("Bad open value: '" + A[2] + "'");
+  Max = math.stof(A[3]);
+  if (!Max) sys.throw("Bad open value: '" + A[3] + "'");
+  Min = math.stof(A[4]);
+  if (!Min) sys.throw("Bad open value: '" + A[4] + "'");
+  Vol = math.stoi(A[5]);
+  if (!Vol) sys.throw("Bad open value: '" + A[5] + "'");
 
   force = A[6];
   if (force != "true" & force != "false")
     sys.throw("Bad force value: '" + force + "'");
 
-  return new(date, open, close, max, min, vol, force == "true" ? true : false);
+  return new(
+    date, Open!, Close!, Max!, Min!, Vol!, force == "true" ? true : false
+  );
 };
 
 /// \<quote> -> [JS...]

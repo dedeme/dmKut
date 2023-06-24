@@ -1,0 +1,256 @@
+// Copyright 22-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data INVES ("Investing").
+
+import "data/qsv";
+import "libmkt/qs";
+
+// \s -> s
+readVol = \tx -> {
+  if (!tx) return "0";
+  f = str.ends(tx, "K")
+    ? math.fromIso(tx[:-1])! * 1000.0
+    : str.ends(tx, "M")
+      ? math.fromIso(tx[:-1])! * 1000000.0
+      : math.fromIso(tx)!
+  ;
+  return math.itos(math.ftoi(f));
+};
+
+// DIARY -----------------------------------------------------------------------
+
+// \s -> [[[s, f]...], [s...]]
+readDiary = \html -> {
+  sys.throw("Not implemented");
+};
+
+// HISTORIC --------------------------------------------------------------------
+
+// \s -> [<qs>|[], [s...]]
+readHistoric = \html -> {
+  // [s...] (quotes type file 'NICK.tb')
+  Qs = [];
+  // [s...]
+  Errs = [];
+  Ix = [0];
+  Ix2 = [0];
+
+  // \-> [<qs>]|[]
+  mkQs = \-> {
+    QsR = qs.fromStr(arr.size(Qs), arr.join(Qs, "\n"));
+    if (QsR[1]) return [QsR!];
+    arr.push(Errs, QsR!);
+    return [];
+  };
+
+  // \s -> [<qs>|[], [s...]]
+  retError = \err -> {
+    arr.push(Errs, err);
+    return [mkQs(), Errs];
+  };
+
+  Ix! = str.index(html, "\"button\"><span>% var.</span>");
+  if (Ix! == -1) return retError("Beginning of table not found");
+  Ix! += 28;
+
+  endTable = str.indexFrom(html, "</tbody>", Ix!);
+  if (endTable == -1) return retError("End of table not found");
+
+  while () {
+    Ix! = str.indexFrom(html, "<tr ", Ix!);
+    if (Ix! == -1 | Ix! > endTable) break;
+    Ix! += 4;
+
+    endRow = str.indexFrom(html, "</tr>", Ix!);
+    if (endRow == -1) return retError("End of row not found");
+
+    // DATE
+    Ix! = str.indexFrom(html, "Time=\"", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'date' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+    Ix2! = str.indexFrom(html, "\"", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'date' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Date = [""];
+    try {
+      Date! = time.toStr(time.fromIso(str.trim(html[Ix!:Ix2!]), "."));
+    } catch(e) {
+      arr.push(Errs, "Bad date: " + html[Ix!:Ix2!]);
+    }
+    if (!Date) continue;
+
+    // CLOSE
+    Ix! = str.indexFrom(html, "ltr\">", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'close' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 5;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'close' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Close = [""];
+    try {
+      Close! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad close: " + html[Ix!:Ix2!]);
+    }
+    if (!Close) continue;
+
+    // OPEN
+    Ix! = str.indexFrom(html, "\">", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'open' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 2;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'open' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Open = [""];
+    try {
+      Open! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad open: " + html[Ix!:Ix2!]);
+    }
+    if (!Open) continue;
+
+    // MAX
+    Ix! = str.indexFrom(html, "\">", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'max' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 2;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'max' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Max = [""];
+    try {
+      Max! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad max: " + html[Ix!:Ix2!]);
+    }
+    if (!Max) continue;
+
+    // MIN
+    Ix! = str.indexFrom(html, "\">", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'min' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 2;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'min' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Min = [""];
+    try {
+      Min! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad min: " + html[Ix!:Ix2!]);
+    }
+    if (!Min) continue;
+
+    // VOL
+    Ix! = str.indexFrom(html, "\">", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'vol' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 2;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'vol' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Vol = [""];
+    try {
+      Vol! = readVol(str.trim(html[Ix!:Ix2!]));
+    } catch(e) {
+      arr.push(Errs, "Bad vol: " + html[Ix!:Ix2!]);
+    }
+    if (!Vol) continue;
+
+    // END
+    arr.push(Qs, str.fmt(
+      "%v:%v:%v:%v:%v:%v:false",
+      [Date!, Close!, Open!, Max!, Min!, Vol!]
+    ));
+    Ix! = endRow;
+  }
+
+  return [mkQs(), Errs];
+};
+
+// OTHER -----------------------------------------------------------------------
+
+// \-> s
+id = \ -> return "INVES";;
+
+// \-> s
+name = \ -> return "Investing";;
+
+// \-> b
+withDiary = \ -> return false;;
+
+// \-> [s|s, b] ([html|error, ok])
+downloadDiary = \ -> {
+  sys.throw("Not implemented");
+};
+
+// \-> b
+withHistoric = \ -> return true;;
+
+// \s -> [s|s, b] ([html|error, ok])
+downloadHistoric = \code -> {
+  ix = str.index(code, "?");
+  tail = ix == -1
+    ? ""
+    : code[ix:]
+  ;
+  code = ix == -1
+    ? code
+    : code[:ix]
+  ;
+  url = str.fmt(
+    "https://es.investing.com/equities/%v-historical-data%v",
+    [code, tail]
+  );
+  return sys.cmd(
+    "timeout", ["-s", "KILL", "15", "wget", "-q", "--no-cache", "-O", "-", url]
+  );
+};
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+    id, name, withDiary, downloadDiary, readDiary,
+    withHistoric, downloadHistoric, readHistoric
+  );;
+

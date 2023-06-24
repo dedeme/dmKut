@@ -1,0 +1,80 @@
+// Copyright 19-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Nicks page
+
+import "KtWeb/rp";
+import "libmkt/qs";
+import "libdm/log";
+import "db/quotesDb";
+import "db/cosTb";
+import "data/cosT";
+import "data/co";
+import "data/cts";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Cost = cosTb.read();
+      // {f...}
+      Volumes = {};
+      for (C = Cost.cos) {
+        qss = quotesDb.read(C.nick);
+        dic.put(Volumes, C.nick, qs.volumeAvg(qss, cts.quotesVolume));
+      }
+      sys.print(rp.mk({
+        main: Cost.main,
+        cos: arr.map(Cost.cos, co.toJs),
+        vol: Volumes
+      }));
+    }
+    "setMain": {
+      cosTb.setMain(Rq.nick);
+      sys.print(rp.mkEmpty());
+    }
+    "select": {
+      cosTb.select(Rq.nick, Rq.value);
+      sys.print(rp.mkEmpty());
+    }
+    "test": {
+      nk = Rq.nick;
+      WithErrors = [false];
+      WithWarnings = [false];
+      // [<qs>|s, b]
+      Qs = quotesDb.readQs(nk);
+      if (Qs[1]) {
+        QQs = [Qs!];
+        // [<qs>, [s...]]
+        Tp = qs.correct(QQs!);
+        QQs! = Tp[0];
+        // [s...]
+        Errs = Tp[1];
+        Mqs = quotesDb.readQs(cosTb.read().main);
+        if (Mqs[1]) {
+          // [<qs>, [s...]]
+          Tp2 = qs.correctDates(Mqs!, QQs!);
+          for (err = Tp2[1]) arr.push(Errs, err);
+        }
+        if (Errs){
+          WithWarnings! = true;
+          log.error(str.fmt(
+            "Warnings testing %v (%v and %v more)",
+            [nk, Errs[0], arr.size(Errs) - 1]
+          ));
+        }
+      } else {
+        WithErrors! = true;
+        log.error(str.fmt("Error testing %v (%v)", [nk, Qs!]));
+      }
+
+      sys.print(rp.mk({
+        withErrors: WithErrors!,
+        withWarnings: WithWarnings!
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+

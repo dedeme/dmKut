@@ -68,7 +68,7 @@ readStays = \ -> {
       if (i == 0) continue;
       Fields = annJs;
       Am = year == 2022
-        ? dic.get(Fields[2], cts.staysAcc22)
+        ? Fields[0] == "20220916" ? [] : dic.get(Fields[2], cts.staysAcc22)
         : dic.get(Fields[2], cts.staysAcc)
       ;
       if (Am) {

@@ -1,0 +1,281 @@
+// Copyright 22-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data YAHOO ("Yahoo").
+
+import "data/qsv";
+import "libmkt/qs";
+
+// \s -> s
+getDate = \date -> {
+  // \s -> s
+  getMonth = \m -> {
+    m = m + "  ";
+    switch (m[0]) {
+      "d": return "12";
+      "n": return "11";
+      "o": return "10";
+      "s": return "09";
+      "f": return "02";
+      "a": return m[1] == "u" ? "08" : "04";
+      "m": return m[3] == "y" ? "05" : "03";
+      default: return m[2] == "a" ? "01" : m[3] == "l" ? "07" : "06";
+    }
+  };
+
+  Ps = str.splitTrim(date, " ");
+
+  return Ps[2] + getMonth(Ps[1]) + Ps[0];
+};
+
+// DIARY -----------------------------------------------------------------------
+
+// \s -> [[[s, f]...], [s...]]
+readDiary = \html -> {
+  sys.throw("Not implemented");
+};
+
+// HISTORIC --------------------------------------------------------------------
+
+// \s -> [<qs>|[], [s...]]
+readHistoric = \html -> {
+  // [s...] (quotes type file 'NICK.tb')
+  Qs = [];
+  // [s...]
+  Errs = [];
+  Ix = [0];
+  Ix2 = [0];
+
+  // \-> [<qs>]|[]
+  mkQs = \-> {
+    QsR = qs.fromStr(arr.size(Qs), arr.join(Qs, "\n"));
+    if (QsR[1]) return [QsR!];
+    arr.push(Errs, QsR!);
+    return [];
+  };
+
+  // \s -> [<qs>|[], [s...]]
+  retError = \err -> {
+    arr.push(Errs, err);
+    return [mkQs(), Errs];
+  };
+
+  Ix! = str.index(html, "<tbody>");
+  if (Ix! == -1) return retError("Beginning of table not found");
+  Ix! += 7;
+
+  endTable = str.indexFrom(html, "</tbody>", Ix!);
+  if (endTable == -1) return retError("End of table not found");
+
+  while () {
+    Ix! = str.indexFrom(html, "<tr", Ix!);
+    if (Ix! == -1 | Ix! > endTable) break;
+    Ix! += 3;
+
+    endRow = str.indexFrom(html, "</tr>", Ix!);
+    if (endRow == -1) return retError("End of row not found");
+
+    // DATE
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'date' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'date' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Date = [""];
+    try {
+      Date! = time.toStr(time.fromStr(
+        getDate(str.trim(html[Ix!:Ix2!]))
+      ));
+    } catch(e) {
+      arr.push(Errs, "Bad date: " + html[Ix!:Ix2!]);
+    }
+    if (!Date) continue;
+
+    // OPEN
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'open' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+
+    if (html[Ix!] < "0" | html[Ix!] > "9") {
+      Ix! = endRow;
+      continue;
+    }
+
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'open' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Open = [""];
+    try {
+      Open! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad open: " + html[Ix!:Ix2!]);
+    }
+    if (!Open) continue;
+
+    // MAX
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'max' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'max' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Max = [""];
+    try {
+      Max! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad max: " + html[Ix!:Ix2!]);
+    }
+    if (!Max) continue;
+
+    // MIN
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'min' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'min' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Min = [""];
+    try {
+      Min! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad min: " + html[Ix!:Ix2!]);
+    }
+    if (!Min) continue;
+
+    // CLOSE
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'close' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'close' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Close = [""];
+    try {
+      Close! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
+    } catch(e) {
+      arr.push(Errs, "Bad close: " + html[Ix!:Ix2!]);
+    }
+    if (!Close) continue;
+
+    // VOL
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'vol' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+
+    Ix! = str.indexFrom(html, "<span>", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'vol' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 6;
+
+    Vol = [""];
+    // Note: When volume is 0, yahoo writes '-' instead '<span>0</span>'.
+    if (Ix! < endRow) {
+      Ix2! = str.indexFrom(html, "<", Ix!);
+      if (Ix2! == -1) {
+        arr.push(Errs, "End of field 'vol' not found");
+        Ix! = endRow;
+        continue;
+      }
+      try {
+        Vol! = math.itos(math.ftoi(math.fromIso(str.trim(html[Ix!:Ix2!]))!));
+      } catch(e) {
+        arr.push(Errs, "Bad vol: " + html[Ix!:Ix2!]);
+      }
+      if (!Vol) continue;
+    } else {
+      Vol! = "0";
+    }
+
+    // END
+    arr.push(Qs, str.fmt(
+      "%v:%v:%v:%v:%v:%v:false",
+      [Date!, Close!, Open!, Max!, Min!, Vol!]
+    ));
+    Ix! = endRow;
+  }
+
+  return [mkQs(), Errs];
+};
+
+// OTHER -----------------------------------------------------------------------
+
+// \-> s
+id = \ -> return "YAHOO";;
+
+// \-> s
+name = \ -> return "Yahoo";;
+
+// \-> b
+withDiary = \ -> return false;;
+
+// \-> [s|s, b] ([html|error, ok])
+downloadDiary = \ -> {
+  sys.throw("Not implemented");
+};
+
+// \-> b
+withHistoric = \ -> return true;;
+
+// \s -> [s|s, b] ([html|error, ok])
+downloadHistoric = \code -> {
+  url = str.fmt(
+    "https://es.finance.yahoo.com/quote/%s/history?p=%s", [code, code]
+  );
+  return sys.cmd("timeout", [
+    "-s", "KILL", "15",
+    "wget", "--user-agent", "Mozilla",
+    "--load-cookies=/home/deme/.mozilla/firefox/bfrqeymk.default/cookies.sqlite",
+    "-q", "--no-cache", "-O", "-", url
+  ]);
+};
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+    id, name, withDiary, downloadDiary, readDiary,
+    withHistoric, downloadHistoric, readHistoric
+  );;
+

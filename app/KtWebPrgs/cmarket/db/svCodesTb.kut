@@ -1,0 +1,90 @@
+// Copyright 21-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Server codes table.
+
+import "libdm/log";
+import "db";
+import "db/quotesDb";
+import "data/qsvs";
+import "data/qsv";
+
+fpath = "svCodes.tb";
+
+/// Initialize table.
+/// \-> ()
+init = \ -> if (!db.exists(fpath)) db.write(fpath, js.w({}));;
+
+/// Returns a {nick, code} with company codes of 'serverId'.
+/// If such map does not exist, it is created.
+/// \s -> {s...}
+read = \serverId -> {
+  // {{s...}}
+  SvCodes = js.r(db.read(fpath));
+
+  // [<qsv>...]
+  Svs = qsvs.list();
+  for (id = dic.keys(SvCodes)) {
+    if (!arr.any(Svs, \s -> return qsv.id(s) == id;))
+      log.error(str.fmt(
+        "Found codes of not existent server '%v'\n" +
+        "Codes can be deleted with 'svCodesTb_purge'",
+        [id]
+      ));
+  }
+
+  Nicks = quotesDb.nicks();
+  // {s...}
+  NickCodes = {};
+  Changed = [false];
+  // [[[s,s]...]]]
+  Codes = dic.get(SvCodes, serverId);
+  if (Codes) {
+    for (c, n = Codes!) dic.put(NickCodes, n, c);
+
+    for (nk = Nicks) {
+      if (!dic.get(NickCodes, nk)) {
+        dic.put(NickCodes, nk, "");
+        Changed! = true;
+      }
+    }
+
+    for (nk = dic.keys(NickCodes)) {
+      if (!arr.any(Nicks, \n -> return n == nk;)) {
+        dic.remove(NickCodes, nk);
+        Changed! = true;
+      }
+    }
+  } else {
+    for (nk = Nicks) dic.put(NickCodes, nk, "");
+    Changed! = true;
+  }
+
+  if (Changed!) write(serverId, NickCodes);
+
+  return NickCodes;
+};
+
+/// Write a {nick, code} in 'serverId'
+/// \s, {s...} -> ()
+write = \serverId, NkCodes -> {
+  // {[[s, s]...]}
+  SvCodes = js.r(db.read(fpath));
+  dic.put(SvCodes, serverId, NkCodes);
+  db.write(fpath, js.w(SvCodes));
+};
+
+/// Remove Nick-Codes of not existing servers.
+/// \-> ()
+purge = \ -> {
+  // {[[s, s]...]}
+  SvCodes = js.r(db.read(fpath));
+
+  SvIds = arr.map(qsvs.list(), \sv -> return qsv.id(sv););
+  for (s = dic.keys(SvCodes))
+    if (!arr.any(SvIds, \id -> return id == s;))
+      dic.remove(SvCodes, s);
+
+  db.write(fpath, js.w(SvCodes));
+};
+

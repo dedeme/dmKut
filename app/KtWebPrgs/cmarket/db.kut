@@ -4,11 +4,19 @@
 /// Data base management.
 
 import "data/cts";
+import "db/calendarTb";
+import "db/quotesDb";
+import "db/cosTb";
+import "db/svCodesTb";
 
 /// Initialize data base.
 /// \->()
 init = \ -> {
   if (!file.exists(cts.dataPath)) file.mkdir(cts.dataPath);
+  calendarTb.init();
+  quotesDb.init();
+  cosTb.init();
+  svCodesTb.init();
 };
 
 /// Lock data base.
@@ -27,7 +35,6 @@ lock = \ -> {
   }
   file.write(p, "");
   return true;
-
 };
 
 /// Unlock data base.

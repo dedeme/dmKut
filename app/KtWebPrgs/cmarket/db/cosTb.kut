@@ -1,0 +1,70 @@
+// Copyright 19-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Companies table
+
+import "db";
+import "data/cosT";
+import "data/co";
+import "db/quotesDb";
+
+fpath = "cos.tb";
+
+/// Initialize table.
+/// \ -> ()
+init = \ -> if (!db.exists(fpath))
+  db.write(fpath, js.w(cosT.toJs(cosT.new("", []))));;
+
+/// Returns companies in quotes data base.
+/// \ -> <cosT>
+read = \ -> {
+  // [s...]
+  Nicks = quotesDb.nicks();
+
+  Changed = [false];
+  Cost = cosT.fromJs(js.r(db.read(fpath)));
+  // [<co>...]
+  NewCos = [];
+  for (OldC = Cost.cos) {
+    if (arr.any(Nicks, \n -> return n == OldC.nick;))
+      arr.push(NewCos, OldC);
+    else
+      Changed! = true;
+  }
+  for (n = Nicks) {
+    if (!arr.any(NewCos, \C -> return C.nick == n;)) {
+      arr.push(NewCos, co.new(n, false));
+      Changed! = true;
+    }
+  }
+
+  main = arr.any(Nicks, \n -> return n == Cost.main;)
+    ? Cost.main
+    : Nicks ? Nicks[0] : Cost.main
+  ;
+  if (main != Cost.main) Changed! = true;
+
+  R = cosT.new(main, NewCos);
+  if (Changed!) db.write(fpath, js.w(cosT.toJs(R)));
+  return R;
+};
+
+/// Select - Deselect a company.
+///   nick: Company nick.
+///   value: If it is 'TRUE' 'nick' is selected. Oterwise it is deselected.
+/// \s, b -> ()
+select = \nick, value -> {
+  Cost = read();
+  NewCost = arr.map(
+    Cost.cos,
+    \C -> return C.nick == nick ? co.new(nick, value): C;
+  );
+  db.write(fpath, js.w(cosT.toJs(cosT.new(Cost.main, NewCost))));
+};
+
+/// Make 'nick' the main company.
+/// \s -> ()
+setMain = \nick -> {
+  Cost = cosT.fromJs(js.r(db.read(fpath)));
+  db.write(fpath, js.w(cosT.toJs(cosT.new(nick, Cost.cos))));
+};

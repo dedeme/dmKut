@@ -4,8 +4,8 @@
 /// Companies table
 
 import "db";
-import "data/cosT";
-import "data/co";
+import "data/co/cosT";
+import "data/co/co";
 import "db/quotesDb";
 
 fpath = "cos.tb";

@@ -1,4 +1,4 @@
-// Copyright 01-Dic-2022 ºDeme
+// Copyright 22-Jul-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Progam constants
@@ -8,15 +8,58 @@ import "KtWeb/global";
 /// s
 appName = "FMarket";
 
+/// Application version.
+/// s
+version = "202207";
+
 /// Data base path
 /// s
 dbPath = path.cat([global.cgiRoot, appName]);
+
+/// cmarket data directory.
+cmarketDataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
 
 /// Log path
 /// s
 logPath = path.cat([dbPath, "log.txt"]);
 
-/// Go command to make calculations.
+/// Command to make calculations.
 /// s
-goCmd = "fmarket";
+calcCmd = "fmarket";
 
+/// Main model.
+mainModel = "APRX";
+
+/// Number of quotes in historic tables
+historicQuotes = 610;
+
+/// Number of fleas per model
+fleasPerModel = 1000;
+
+/// Investors initial capital for each cycle
+initialCapital = 250000.0;
+
+/// Number of steps for evaluation (equals to CMMarket)
+/// f
+evalSteps = 20.0;
+
+/// Assets ratio for evaluation.
+assetsRatio = 0.7;
+
+/// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
+maxAssets = initialCapital * maxProfitsAvgRatio;
+
+/// Profits ratio for evaluation.
+profitsAvgRatio = 1.0 - assetsRatio;
+
+/// Maximum ratio for profits evaluation. (1€ generates 3€)
+maxProfitsAvgRatio = 3.0;
+
+/// Number of fleas in fleas ranking
+fleasInRanking = 40;
+
+/// Delay days after a sale with profits (in 5 days per week).
+daysWin = 25;
+
+/// Delay days after a sale with losses (in 5 days per week).
+daysLoss = 90;

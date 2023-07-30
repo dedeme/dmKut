@@ -1,4 +1,4 @@
-// Copyright 01-Dic-2022 ºDeme
+// Copyright 22-Jul-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main script.
@@ -8,22 +8,47 @@ import "libdm/log";
 import "db";
 import "data/cts";
 import "pgs/home";
-import "pgs/rankingsPg";
-import "pgs/modelsPg";
+import "pgs/fleasPg";
+import "pgs/rksPg";
+import "pgs/summaryPg";
+import "update";
+
+help = "Usage: fmarket [update | test | version | help | <request>]";
+
+// \ -> ()
+test = \ -> {
+  sys.println("No tests was done.");
+};
 
 Args = sys.args();
-ck = Args[0];
+if (arr.size(Args) == 0 | arr.size(Args) > 2) {
+  sys.println(help);
+  return;
+}
 
 db.init();
 log.init(cts.logPath);
 
+if (arr.size(Args) == 1) {
+  switch (Args[0]) {
+    "update": update.run();
+    "version": sys.println(cts.version);
+    "test": test();
+
+    default: sys.println(help);
+  }
+  return;
+}
+
+ck = Args[0];
 Rq = js.r(Args[1]);
 rp.init(ck);
 
 switch(Rq.source) {
   "Home": home.process(Rq);
-  "RankingsPg": rankingsPg.process(Rq);
-  "ModelsPg": modelsPg.process(Rq);
+  "FleasPg": fleasPg.process(Rq);
+  "RksPg": rksPg.process(Rq);
+  "SummaryPg": summaryPg.process(Rq);
   default: sys.throw("Value of source (" + Rq.source + ") is not valid");
 }
 

@@ -1,0 +1,72 @@
+// Copyright 25-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "db";
+import "update";
+import "pgs/mainPg";
+import "pgs/listPg";
+import "pgs/rankingsPg";
+import "pgs/chartsPg";
+import "pgs/cosPg";
+import "pgs/historicPg";
+import "pgs/operationsPg";
+
+help = "Usage: deepMarket [update | test | version | help | <request>]";
+
+// \ -> ()
+test = \ -> {
+  sys.println("No test done");
+};
+
+Args = sys.args();
+
+if (!Args) {
+  sys.println(help);
+  return;
+}
+
+if (arr.size(Args) == 1 & Args[0] == "update") {
+  update.run();
+  return;
+}
+
+db.init();
+
+if (arr.size(Args) == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    "test": test();
+
+    default: sys.println(help);
+  }
+  return;
+}
+
+if (arr.size(Args) > 2) {
+  sys.println(help);
+  return;
+}
+
+log.init(path.cat([cts.dataPath, "log.tb"]));
+
+ck = Args[0];
+
+Rq = js.r(Args[1]);
+rp.init(ck);
+
+switch(Rq.source) {
+  "Main": mainPg.process(Rq);
+  "ListPg": listPg.process(Rq);
+  "RankingsPg": rankingsPg.process(Rq);
+  "ChartsPg": chartsPg.process(Rq);
+  "CosPg": cosPg.process(Rq);
+  "HistoricPg": historicPg.process(Rq);
+  "OperationsPg": operationsPg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+}
+

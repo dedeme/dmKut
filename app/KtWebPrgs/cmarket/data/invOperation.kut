@@ -1,0 +1,26 @@
+// Copyright 14-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investor operation.
+
+/// Constructor
+///   stocks  : If stocks > 0 is a sell operation.
+///             If stocks == 0 is a buy operation.
+///   investor: Operation investor.
+///   nick    : Operation nick.
+/// \i, i, s -> d<invOperation>
+new = \stocks, investor, nick -> return {stocks, investor, nick};;
+
+/// \<invOperation> -> JS
+toJs = \O -> return [
+    math.itof(O.stocks),
+    math.itof(O.investor),
+    O.nick
+  ];;
+
+/// \JS -> <invOperation>
+fromJs = \A -> return new(
+    math.ftoi(A[0]),
+    math.ftoi(A[1]),
+    A[2]
+  );;

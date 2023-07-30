@@ -1,0 +1,57 @@
+// Copyright 28-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Order data.
+
+/// Type of order
+/// i
+buy = 0;
+
+/// Type of order
+/// i
+sell = 1;
+
+/// Constructor.
+///   date  : Order date.
+///   nick  : Company nick.
+///   type  : order.buy or order.sell.
+///   stocks: Stocks number.
+///   price : Price of each stock.
+///   s, s, i, i, f -> d<order>
+new = \date, nick, type, stocks, price ->
+  return {date, nick, type, stocks, price};;
+
+/// \<order> -> [JS...]
+toJs = \O -> return [
+    O.date,
+    O.nick,
+    math.itof(O.type),
+    math.itof(O.stocks),
+    O.price
+  ];;
+
+/// \[JS...] -> <order>
+fromJs = \A -> return new(
+    A[0],
+    A[1],
+    math.ftoi(A[2]),
+    math.ftoi(A[3]),
+    A[4]
+  );;
+
+/// Returns the number of orders type order.buy of 'Os'.
+/// \[<order>...] -> i
+buys = \Os -> {
+  Sum = [0];
+  for (O = Os) if (O.type == buy) Sum! += 1;
+  return Sum!;
+};
+
+/// Returns the number of orders type order.sell of 'Os'.
+/// \[<order>...] -> i
+sales = \Os -> {
+  Sum = [0];
+  for (O = Os) if (O.type == sell) Sum! += 1;
+  return Sum!;
+};
+

@@ -1,0 +1,21 @@
+// Copyright 25-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Configuration data
+
+/// Constructor
+///   tm      : Time of record this data.
+///   activity: One of cts.actXXX
+/// \i, s -> d<activity>
+new = \tm, activity -> return {tm, activity};;
+
+/// Constructor with time.now as 'tm'.
+///   activity: One of cts.actXXX
+/// \s -> d<activity>
+newNow = \activity -> return {tm: time.now(), activity};;
+
+/// \<activity> -> JS
+toJs = \A -> return [math.itof(A.tm), A.activity];;
+
+/// \JS -> <activity>
+fromJs = \A -> return new(math.ftoi(A[0]), A[1]);;

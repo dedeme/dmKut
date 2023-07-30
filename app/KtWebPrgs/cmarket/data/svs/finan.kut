@@ -3,7 +3,7 @@
 
 /// Quotes server data FINAN ("Finanzas").
 
-import "data/qsv";
+import "data/qs/qsv";
 
 // DIARY -----------------------------------------------------------------------
 // \s -> [[[s, f]...], [s...]]

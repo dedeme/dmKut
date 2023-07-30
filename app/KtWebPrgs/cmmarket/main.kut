@@ -1,0 +1,66 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "pgs/mainPg";
+import "pgs/descriptionPg";
+import "pgs/resultsPg";
+import "pgs/charts/cosPg";
+import "pgs/charts/historicPg";
+import "pgs/charts/operationsPg";
+import "db";
+import "update";
+
+help = "Usage: cmmarket [update | test | version | help | <request>]";
+
+// \ -> ()
+test = \ -> {
+  sys.println("No test done");
+};
+
+Args = sys.args();
+
+if (!Args) {
+  sys.println(help);
+  return;
+}
+
+db.init();
+
+if (arr.size(Args) == 1) {
+  switch (Args[0]) {
+    "update": update.run();
+    "version": sys.println(cts.version);
+    "test": test();
+
+    default: sys.println(help);
+  }
+  return;
+}
+
+if (arr.size(Args) > 2) {
+  sys.println(help);
+  return;
+}
+
+log.init(path.cat([cts.dataPath, "log.tb"]));
+
+ck = Args[0];
+
+Rq = js.r(Args[1]);
+rp.init(ck);
+
+switch(Rq.source) {
+  "Main": mainPg.process(Rq);
+  "Description": descriptionPg.process(Rq);
+  "ResultsPg": resultsPg.process(Rq);
+  "CosPg": cosPg.process(Rq);
+  "HistoricPg": historicPg.process(Rq);
+  "OperationsPg": operationsPg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+}
+

@@ -5,7 +5,7 @@
 
 import "data/acc/diary";
 
-dir = "/home/deme/.dmGoApp/KtMarket/data/acc";
+dir = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket/acc";
 
 /// Reads profits of an investor.
 /// If there are no data from the current year, it returns [].

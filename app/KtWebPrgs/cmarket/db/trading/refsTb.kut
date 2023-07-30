@@ -1,0 +1,28 @@
+// Copyright 13-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Last references table.
+
+import "data/cts";
+import "db";
+
+tradingPath = "trading";
+refsPath = path.cat([tradingPath, "refs.tb"]);
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  file.mkdir(db.pathOf(tradingPath));
+  if (!db.exists(refsPath))
+    write(arr.fromIter(iter.map([0:cts.investors], \i -> return {};)));
+};
+
+/// Reads table. Returns a dictionary {nick-[[prevRef, currentRef]...]}, with a tuple for
+/// each investor.
+/// \ -> {[[f, f]...]}
+read = \ -> return js.r(db.read(refsPath));;
+
+/// Writes table.
+///   data: Dictionary {nick-[[prevRef, currentRef]...]}.
+/// \{[[f, f]...]} -> ()
+write = \Rfs -> db.write(refsPath, js.w(Rfs));;

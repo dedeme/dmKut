@@ -8,15 +8,34 @@ import "db/calendarTb";
 import "db/quotesDb";
 import "db/cosTb";
 import "db/svCodesTb";
+import "db/activityTb";
+import "db/investorsTb";
+import "db/acc/diariesDb";
+import "db/acc/profitsDb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/invOperationsTb";
+import "db/daily/dailyChartsTb";
+import "db/daily/cosSelTb";
 
 /// Initialize data base.
 /// \->()
 init = \ -> {
-  if (!file.exists(cts.dataPath)) file.mkdir(cts.dataPath);
+  file.mkdir(cts.dataPath);
+  unlock();
   calendarTb.init();
   quotesDb.init();
   cosTb.init();
   svCodesTb.init();
+  activityTb.init();
+  investorsTb.init();
+  diariesDb.init();
+  profitsDb.init();
+  closesTb.init();
+  refsTb.init();
+  invOperationsTb.init();
+  dailyChartsTb.init();
+  cosSelTb.init();
 };
 
 /// Lock data base.

@@ -1,0 +1,25 @@
+// Copyright 27-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Result of a model maket test
+
+import "cts";
+
+/// \f, f, f -> d<result>
+new = \assets, profits, sales -> return {assets, profits, sales};;
+
+/// Calculate summary value. This value is between 0 and 3000, meaning 1000
+/// no losses nor profits.
+/// \<result> -> f
+evaluate = \R -> {
+  a = R.assets > cts.maxAssets ? cts.maxAssets : R.assets;
+  p = R.profits > cts.maxProfitsAvgRatio ? cts.maxProfitsAvgRatio : R.profits;
+  return
+    ( a * cts.assetsRatio / cts.maxAssets +
+      (1.0 + p) * cts.profitsAvgRatio / cts.maxProfitsAvgRatio
+    ) * 3000.0
+  ;
+};
+
+/// \<result> -> \[JS...]
+toJs = \R -> return [R.assets, R.profits, R.sales];;

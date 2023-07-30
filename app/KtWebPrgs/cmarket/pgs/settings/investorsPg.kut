@@ -1,0 +1,56 @@
+// Copyright 21-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investors page
+
+import "KtWeb/rp";
+import "libdm/log";
+import "libmkt/models";
+import "libmkt/model/model";
+import "data/cts";
+import "data/investor/investor";
+import "data/investor/istrategy";
+import "db/investorsTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      investorIx = math.ftoi(Rq.investorIx);
+      Investor = investorIx <= cts.investors
+        ? [investorsTb.read()[investorIx]]
+        : []
+      ;
+
+      sys.print(rp.mk({
+        ok: Investor & true,
+        models: arr.map(models.list(), \md -> return model.toJs(md);),
+        investor: investor.toJs(Investor!),
+        investors: math.itof(cts.investors)
+      }));
+    }
+    "updateAll": {
+      err = investorsTb.update();
+      if (err) log.error(err);
+      sys.print(rp.mk({
+        ok: !err & true
+      }));
+    }
+    "update": {
+      investorIx = math.ftoi(Rq.investorIx);
+      nickName = Rq.nickName;
+      modelId = Rq.modelId;
+      Params = Rq.params;
+
+      Investors = investorsTb.read();
+      if (nickName)
+        Investors[investorIx].nicks[nickName] = istrategy.new(modelId, Params);
+      else
+        Investors[investorIx].base = istrategy.new(modelId, Params);
+      investorsTb.write(Investors);
+
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

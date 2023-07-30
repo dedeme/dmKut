@@ -1,0 +1,57 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting balance page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/acc/ann";
+import "data/acc/pf";
+import "db/acc/diariesDb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/invOperationsTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Ok = [true];
+      Oprs = invOperationsTb.read();
+      Ledgers = []; // [<ldg>...]
+      PfsJs = []; // [{[f, f]...}] :: [{nick -> [stocks, price]}...]
+      Jails = []; // [[s...]...]
+      for (inv = 0:cts.investors) {
+        Ys = diariesDb.investorYears(inv);
+        Anns = Ys ? diariesDb.investorAnns(inv, Ys[0]) : [];
+        Set = ann.mkSettlement(Anns);
+        if (Set.errors) {
+          Ok! = false;
+          for (e = Set.errors) log.error(e);
+        }
+        arr.push(Ledgers, Set.ledger);
+        arr.push(PfsJs, pf.toJs(Set.portfolio));
+        arr.push(
+          Jails,
+          arr.map(
+            arr.filter(Oprs, \O -> return O.stocks > 0 & O.investor == inv;),
+            \O -> return O.nick;
+          )
+        );
+      }
+      Refs = refsTb.read();
+      for (V, k = Refs)
+        Refs[k] = arr.fromIter(iter.map([0:cts.investors], \i -> return V[i][1];));
+      sys.print(rp.mk({
+        ok: Ok!,
+        ledgers: Ledgers,
+        portfolios: PfsJs,
+        jails: Jails,
+        closes: closesTb.readOnlyCloses(), // {f...} :: {nick -> close}
+        refs: Refs // {[f...]...} :: (nick -> [ref...]) a ref for each investor.
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

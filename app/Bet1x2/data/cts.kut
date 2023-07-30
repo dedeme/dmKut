@@ -28,7 +28,7 @@ r2 =2;
 
 /// Current league year.
 /// s
-year = "2022";
+year = "2023";
 
 /// Team index.
 /// d[s]
@@ -46,6 +46,7 @@ Teams = {
   getafe: "Getafe CF",
   girona: "Girona FC",
   granada: "Granada CF",
+  lasPalmas: "UD Las Palmas",
   levante: "Levante UD",
   mallorca: "RCD Mallorca",
   osasuna: "CA Osasuna",
@@ -61,6 +62,7 @@ Teams = {
 /// Current teams.
 /// [s...]
 CurrentTeams = [
+  "alaves",
   "almeria",
   "athletic",
   "atletico",
@@ -68,10 +70,10 @@ CurrentTeams = [
   "betis",
   "cadiz",
   "celta",
-  "elche",
-  "espanyol",
   "getafe",
   "girona",
+  "granada",
+  "lasPalmas",
   "mallorca",
   "osasuna",
   "rayo",
@@ -79,7 +81,6 @@ CurrentTeams = [
   "realSociedad",
   "sevilla",
   "valencia",
-  "valladolid",
   "villarreal"
 ];
 
@@ -87,6 +88,7 @@ CurrentTeams = [
 /// They have the same order as 'currentTeams'.
 /// [s...]
 MarcaTeams = [
+  "173", // alaves
   "1564", // almeria
   "174", // athletic
   "175", // atletico
@@ -94,10 +96,10 @@ MarcaTeams = [
   "185", // betis
   "1737", // cadiz
   "176", // celta
-  "954", // elche
-  "177", // espanyol
   "1450", // getafe
   "2893", // girona
+  "5683", // granada
+  "407", // lasPalmas
   "181", // mallorca
   "450", // osasuna
   "184", // rayo
@@ -105,7 +107,6 @@ MarcaTeams = [
   "188", // realSociedad
   "179", // sevilla
   "191", // valencia
-  "192", // valladolid
   "449" // villarreal
 ];
 
@@ -113,6 +114,7 @@ MarcaTeams = [
 /// They have the same order as 'currentTeams'.
 /// [s...]
 AsTeams = [
+  "4", // alaves
   "85", // almeria
   "5", // athletic
   "42", // atletico
@@ -120,10 +122,10 @@ AsTeams = [
   "171", // betis
   "91", // cadiz
   "6", // celta
-  "121", // elche
-  "8", // espanyol
   "172", // getafe
   "648", // girona
+  "347", // granada
+  "9", // lasPalmas
   "11", // mallorca
   "13", // osasuna
   "2", // rayo
@@ -131,7 +133,6 @@ AsTeams = [
   "16", // realSociedad
   "53", // sevilla
   "17", // valencia
-  "18", // valladolid
   "19" // villarreal
 ];
 
@@ -139,6 +140,7 @@ AsTeams = [
 /// They have the same order as 'currentTeams'.
 /// [s...]
 SportiumTeams = [
+  "Deportivo Alavés", // alaves
   "UD Almeria", // almeria
   "Athletic Club", // athletic
   "Atlético de Madrid", // atletico
@@ -146,10 +148,10 @@ SportiumTeams = [
   "Real Betis", // betis
   "Cádiz CF", // cadiz
   "Celta de Vigo", // celta
-  "Elche", // elche
-  "RCD Espanyol", // espanyol
   "Getafe CF", // getafe
   "Girona FC", // girona
+  "Granada CF", // granada
+  "UD Las Palmas", // lasPalmas
   "RCD Mallorca", // mallorca
   "Osasuna", // osasuna
   "Rayo Vallecano", // rayo
@@ -157,6 +159,5 @@ SportiumTeams = [
   "Real Sociedad", // realSociedad
   "FC Sevilla", // sevilla
   "Valencia CF", // valencia
-  "Real Valladolid", // valladolid
   "Villarreal CF" // villarreal
 ];

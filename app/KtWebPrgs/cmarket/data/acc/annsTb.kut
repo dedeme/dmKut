@@ -1,0 +1,40 @@
+// Copyright 10-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Annotations table data.
+
+import "ann";
+
+/// Constructor.
+/// \-> x<annsTb>
+new = \ -> return {nextId: 0, anns: []};;
+
+/// Returns table annotations.
+/// \<annsTb> -> [<ann>...]
+anns = \T -> return T.anns;;
+
+/// Adds a n annotation. 'A.id' will be overwritten.
+/// \<annsTb>, <ann> -> ()
+add = \Tb, A -> {
+  A.id = Tb.nextId;
+  arr.push(Tb.anns, A);
+  Tb.nextId += 1;
+  return A;
+};
+
+/// Deletes la annotation with identifier 'id' if exists.
+/// \Tb, i -> ()
+del = \Tb, i -> {
+  ix = arr.index(Tb.anns, \A -> return A.id == i;);
+  if (ix != -1) arr.remove(Tb.anns, ix);
+};
+
+/// \<annsTb> -> JS
+toJs = \T -> return [math.itof(T.nextId), arr.map(T.anns, ann.toJs)];;
+
+/// \JS -> <annsTb>
+fromJs = \A -> return {
+    nextId: math.ftoi(A[0]),
+    anns: arr.map(A[1], ann.fromJs)
+  };;
+

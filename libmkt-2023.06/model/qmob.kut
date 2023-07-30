@@ -1,0 +1,26 @@
+// Copyright 05-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Model Mobil Quantum.
+
+import "model";
+import "doc/qmobDoc";
+
+/// Returns a new 'appr2' model.
+new = \ -> return model.new(
+    "QMOV",
+    "Quantum móvil",
+		qmobDoc.text,
+		["Intervalo"],
+    [model.percParam, model.percParam],
+    [0.01],
+    [0.005],
+    [0.001],
+		calc
+  );;
+
+// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+calc = \Closes, Params, fn -> {
+  Env = {Closes, Params};
+  for (Row = Closes) fn(Row, sys.c("calcQmob", Env));
+};

@@ -1,34 +1,75 @@
 // Copyright 29-Mar-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Model evaluation data of MMarket
+/// Model evaluation data.
 
-/// Field 0 of <MModelEval>
-params = 0;
-/// Field 1 of <MModelEval>
-weeks = 1;
-/// Field 2 of <MModelEval>
-hvalue = 2;
-/// Field 3 of <MModelEval>
-hsales = 3;
-/// Field 4 of <MModelEval>
-value = 4;
-/// Field 5 of <MModelEval>
-sales = 5;
+import "fns";
 
-/// \[f...], i, f, f, f, f -> a<MModelEval>
-new = \params, weeks, hvalue, hsales, value, sales ->
-  return [params, weeks, hvalue, hsales, value, sales];;
+/// Investors initial capital for each cycle
+initialCapital = 250000.0;
 
-/// s -> <MModelEval>
-fromJs = \j -> {
-  A = js.ra(j);
-  return [
-    arr.map(js.ra(A[0]), \e -> return js.rf(e);),
-    js.ri(A[1]),
-    js.rf(A[2]),
-    js.rf(A[3]),
-    js.rf(A[4]),
-    js.rf(A[5])
-  ];
-};
+// Assets ratio for evaluation.
+assetsRatio = 0.7;
+
+// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
+maxAssets = initialCapital * maxProfitsAvgRatio;
+
+// Profits ratio for evaluation.
+profitsAvgRatio = 1.0 - assetsRatio;
+
+// Maximum ratio for profits evaluation. (1€ generates 3€)
+maxProfitsAvgRatio = 3.0;
+
+/// Constructor
+///   params  : Calculus parameters.
+///   times   : Historic evaluarions number.
+///   hassets : Historic assets. (Money -- e.g. 104012.53)
+///   hprofits: Historic profits. (Ratio -- e.g. 0.0321 [that is 3.21%]).
+///   hsales  : Historic number of sales.
+///   assets  : Last simulation assets. (Money -- e.g. 104012.53)
+///   profits : Last simultarion profits. (Ratio -- e.g. 0.0321 [that is 3.21%]).
+///   sales   : Number of sales.
+/// \[n...], i, f, f, f, f, f, f -> d<mModelEval>
+new = \params, times, hassets, hprofits, hsales, assets, profits, sales ->
+  return {params, times, hassets, hprofits, hsales, assets, profits, sales};;
+
+/// Evaluate historic results.
+/// \<mModelEval> -> f
+heval = \M -> return math.round(
+    ( M.hassets * assetsRatio / maxAssets +
+        (1.0 + M.hprofits) * profitsAvgRatio / maxProfitsAvgRatio
+    ) * 3000.0,
+    0
+  );;
+
+/// Evaluate last results.
+/// \<mModelEval> -> f
+eval = \M -> return math.round(
+    ( M.assets * assetsRatio / maxAssets +
+        (1.0 + M.profits) * profitsAvgRatio / maxProfitsAvgRatio
+    ) * 3000.0, 0
+  );;
+
+/// \<mModelEval> -> \[JS...]
+toJs = \M -> return [
+    M.params,
+    math.itof(M.times),
+    math.round(M.hassets, 2),
+    math.round(M.hprofits, 4),
+    math.round(M.hsales, 0),
+    math.round(M.assets, 2),
+    math.round(M.profits, 4),
+    math.round(M.sales, 0)
+  ];;
+
+/// \[JS...] -> <mModelEval>
+fromJs = \A -> return new(
+    A[0],
+    math.ftoi(A[1]),
+    A[2],
+    A[3],
+    A[4],
+    A[5],
+    A[6],
+    A[7]
+  );;

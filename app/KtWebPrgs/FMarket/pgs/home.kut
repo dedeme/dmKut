@@ -1,4 +1,4 @@
-// Copyright 01-Dic-2022 ºDeme
+// Copyright 22-Jul-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Home page.
@@ -12,8 +12,8 @@ import "db";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata":
-      sys.print(rp.mkJs({
-        activity: db.activityTb().readJs()
+      sys.print(rp.mk({
+        activity: db.readActivity()
       }));
     "getLog":
       sys.print(rp.mkJs({
@@ -24,8 +24,12 @@ process = \Rq -> {
       sys.print(rp.mkEmpty());
     }
     "activate": {
-      thread.run(\-> sys.cmd2(cts.goCmd, ["start"]););
+      thread.run(\-> sys.cmd("fmarket", ["update"]););
       sys.sleep(500);
+      sys.print(rp.mkEmpty());
+    }
+    "deactivate": {
+      db.writeActivity("stopped");
       sys.print(rp.mkEmpty());
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

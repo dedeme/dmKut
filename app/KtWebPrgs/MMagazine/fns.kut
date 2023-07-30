@@ -17,3 +17,41 @@ lastSunday = \-> {
   d = time.now();
   return time.toStr(time.addDays(d, -time.weekday(d)));
 };
+
+/// Returns dates spare for historic data base.
+///   Dates: Unsorted list of dates
+/// \[s...] -> [s...]
+datesSpare = \Dates -> {
+  // [s...]
+  R = [];
+
+  // \s, s -> b
+  eqYear = \d1, d2 -> return d1[0:4] == d2[0:4];;
+  // \s, s -> b
+  eqMonth = \d1, d2 -> return d1[0:6] == d2[0:6];;
+
+  today = time.now();
+  lastSunday = time.addDays(today, -time.weekday(today));
+  topMonthly = time.addDays(lastSunday, -56);
+  tMonthly = time.toStr(topMonthly);
+  tYearly = time.toStr(
+    time.newDate(1, time.month(topMonthly), time.year(topMonthly) - 1)
+  );
+
+  SortDates = arr.copy(Dates);
+  // Sorted from after to before.
+  arr.sort(SortDates, \d1, d2 -> return d1 > d2;);
+  Last = [""];
+  for (d = SortDates) {
+    if (d <= tMonthly) {
+      if (d < tYearly) {
+        if (eqYear(d, Last!)) arr.push(R, d);
+      } else {
+        if (eqMonth(d, Last!)) arr.push(R, d);
+      }
+    }
+    Last! = d;
+  }
+
+  return R;
+};

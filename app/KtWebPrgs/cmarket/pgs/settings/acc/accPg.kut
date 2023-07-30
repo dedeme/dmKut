@@ -1,0 +1,22 @@
+// Copyright 10-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting main page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/acc/ann";
+import "db/acc/diariesDb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      sys.print(rp.mk({
+        investors: math.itof(cts.investors)
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

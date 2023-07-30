@@ -1,0 +1,26 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Exponential mobil average.
+
+import "model";
+import "doc/eaDoc";
+
+/// Returns a new 'appr' model.
+new = \ -> return model.new(
+    "ME",
+    "Media móvil exponencial",
+		eaDoc.text,
+		["Días", "Banda"],
+    [model.dayParam, model.percParam],
+    [5.0, 0.01],
+    [2.0, 0.005],
+    [1.0, 0.001],
+		calc
+  );;
+
+// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+calc = \Closes, Params, fn -> {
+  Env = {Closes, Params};
+  for (Row = Closes) fn(Row, sys.c("calcEa", Env));
+};

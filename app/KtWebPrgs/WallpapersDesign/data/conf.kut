@@ -12,7 +12,7 @@ new = \width, height -> return { width, height };;
 mk = \-> return new(1920, 1080);;
 
 /// \<conf> -> [*(JS)...]
-toJs = \C -> return [C.width, C.height];;
+toJs = \C -> return [math.itof(C.width), math.itof(C.height)];;
 
 /// \[*(JS)...] -> <conf>
 fromJs = \A -> return new(math.ftoi(A[0]), math.ftoi(A[1]));;

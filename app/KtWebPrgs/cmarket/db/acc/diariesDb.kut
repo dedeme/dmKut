@@ -1,0 +1,90 @@
+// Copyright 10-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting diaries data base management.
+
+import "data/cts";
+import "data/acc/annsTb";
+import "db";
+
+accPath = "acc";
+
+// \i -> s
+invPath = \inv -> return path.cat([accPath, str.fmt("Investor-%v", [inv])]);;
+
+// \i -> s
+diariesPath = \inv -> return path.cat([invPath(inv), "diaries"]);;
+
+// \i, i -> s
+fpath = \inv, year ->
+  return path.cat([invPath(inv), "diaries", str.fmt("%v.tb", [year])]);;
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  file.mkdir(db.pathOf(accPath));
+  for (inv = 0:cts.investors) {
+    file.mkdir(db.pathOf(invPath(inv)));
+    if (!db.exists(diariesPath(inv))){
+      file.mkdir(db.pathOf(diariesPath(inv)));
+      year = math.itos(time.year(time.now()));
+      write(inv, year, annsTb.new());
+    }
+  }
+};
+
+/// Read an annotation table. If the annotations table does not exist, it
+/// returns an empty <annsTb>
+///   inv: Investor.
+///   year: Year.
+/// \i, s -> <annsTb>
+read = \inv, year -> {
+  p = fpath(inv, year);
+  return file.exists(db.pathOf(p))
+    ? annsTb.fromJs(js.r(db.read(p)))
+    : annsTb.new()
+  ;
+};
+
+/// Writes an annotation table.
+///   inv: Investor.
+///   year: Year.
+///   table: Annotations table.
+/// \i, s, <annsTb> -> ()
+write = \inv, year, table ->
+  db.write(fpath(inv, year), js.w(annsTb.toJs(table)));;
+
+/// Returns a sorted array from after to before of years with activity of
+/// one investor.
+/// \i -> [s...]
+investorYears = \inv -> {
+  Years = arr.map(file.dir(db.pathOf(diariesPath(inv))), \f -> return f[:-3];);
+  arr.sort(Years, \y1, y2 -> return y1 > y2;);
+  return Years;
+};
+
+/// Returns a sorted array from after to before of years with activity of
+/// all the investor.
+/// \i -> [s...]
+allInvestorsYears = \ -> {
+  All = iter.reduce(
+    [0:cts.investors], [],
+    \r, i -> {arr.cat(r, investorYears(i)); return r;}
+  );
+  return arr.duplicates(All, \y1, y2 -> return y1 == y2;)[0];
+};
+
+/// Returns an unsorted array with annotations of one investor.
+/// \i, s -> [<ann>...]
+investorAnns = \inv, year -> return annsTb.anns(read(inv, year));;
+
+/// Returns an unsorted array with annotations of all the investors.
+/// \s -> [<ann>...]
+allInvestorsAnns = \year -> {
+  Anns = []; // [<ann>...]
+  for (i = 0:cts.investors) arr.cat(Anns, investorAnns(i, year));
+  return Anns;
+};
+
+
+

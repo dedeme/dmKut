@@ -1,0 +1,96 @@
+// Copyright 09-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investors table.
+
+import "libmkt/models";
+import "libmkt/strategy";
+import "data/cts";
+import "data/investor/investor";
+import "data/investor/istrategy";
+import "db/cosTb";
+import "db/quotesDb";
+import "db";
+
+fpath = "investors.tb";
+
+/// Initialize table.
+/// \ -> ()
+init = \ -> if (!db.exists(fpath))
+  db.write(fpath, js.w(
+    arr.fromIter(iter.map(
+      [0:cts.investors],
+      \i -> return investor.toJs(investor.mk(
+          arr.map(cosTb.read().cos, \C -> return C.nick;)
+        ));
+    ))
+  ));;
+
+/// Read investor table.
+/// \ -> [<investor>...]
+read = \ -> return arr.map(js.r(db.read(fpath)), investor.fromJs);;
+
+/// Write investor table.
+write = \investors -> db.write(fpath, js.w(arr.map(investors, investor.toJs)));;
+
+/// Synchronizes each investor strategy with its base, returning "" or
+/// an error if the function fails.
+/// \ -> s
+update = \ -> {
+  CosT = cosTb.read();
+  mainNick = CosT.main;
+  Nicks = arr.map(CosT.cos, \C -> return C.nick;);
+  Err = [""];
+  NewInvs = []; // [<investor>...]
+  for (inv = read()) {
+    Base = inv.base;
+    BaseMd = models.get(Base.modelId);
+    if (!BaseMd) {
+      Err! = "Model " + Base.modelId + " not found";
+      break;
+    }
+    baseMd = BaseMd!;
+
+    NickStr = inv.nicks;
+    NewNickStr = {}; // {<strategy>...}
+    for (nk = Nicks) {
+      NkStrategy = dic.get(NickStr, nk);
+      if (NkStrategy & !istrategy.eq(Base, NkStrategy!)) {
+        QuotesRs = quotesDb.readQuotes(mainNick, nk);
+        if (!QuotesRs[1]) {
+          Err! = QuotesRs!;
+          break;
+        }
+        Quotes = QuotesRs!;
+
+        NkMd = models.get(NkStrategy!.modelId);
+        if (NkMd) {
+          nkMd = NkMd!;
+          cl = arr.peek(Quotes.closes)[0];
+          baseRf = arr.peek(
+            strategy.run(
+              baseMd, Quotes, Base.params,
+              cts.strategyDaysWin, cts.strategyDaysLoss
+            ).refs
+          )[0];
+          nkRf = arr.peek(
+            strategy.run(
+              nkMd, Quotes, NkStrategy!.params,
+              cts.strategyDaysWin, cts.strategyDaysLoss
+            ).refs
+          )[0];
+          if ((baseRf < cl & nkRf > cl) | (baseRf > cl & nkRf < cl)){
+            dic.put(NewNickStr, nk, NkStrategy!);
+            continue;
+          }
+        }
+      }
+      dic.put(NewNickStr, nk, Base);
+    }
+    if (Err!) break;
+    arr.push(NewInvs, investor.new(Base, NewNickStr));
+  }
+  if (Err!) return Err;
+  write(NewInvs);
+  return "";
+};

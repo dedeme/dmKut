@@ -1,0 +1,54 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// 'qfix' documentation.
+
+/// \s
+text = """
+  <h3>Símbolos</h3>
+  <pre>
+  <i> j</i>: Salto de las referencias
+  <i>lj</i>: ln(j)
+  <i> q</i>: Última cotización
+  <i>q0</i>: Previa cotización
+  <i> r</i>: Referencia
+  <i> d</i>: (Función) Baja el intervalo cuando la posición cambia a Comprado.
+             <i>d = pow(j, round(log(q) / lj) - 1)</i>
+  <i> u</i>: (Función) Sube el intervalo cuando la posición cambia a Vendido.
+             <i>d = pow(j, round(log(q) / lj) + 1)</i>
+  <i>d2</i>: (Función) Sube el intervalo cuando la posición continua Comprada.
+             while ()
+               r2 = r * j
+               if (r2 * sqrt(j) >= q) return r
+               r = r2
+  <i>u2</i>: (Función) Baja el intervalo cuando la posición continua Vendida.
+             while ()
+               r2 = r / j
+               if (r2 / sqrt(j) <= q) return r
+               r = r2
+  </pre>
+  <h3>Resumen</h3>
+  <p>Se dividen las posibles cotizaciones en intervalos.</p>
+  <dl>
+  <dt>Compra</dt>
+    <dd>Cuando <i>q</i> pasa a un intervalo superior.</dd>
+  <dt>Venta</dt>
+    <dd>Cuando <i>q</i> pasa a intervalo inferior.</dd>
+  </dl>
+  <h3>Proceso</h3>
+  <h4>Inicialización</h4>
+  <p>Se inicializa <i>r = d(q) / j</i>.</p>
+  <h4>Cada día</h4>
+  <ul>
+  <li>Si <i>q0 >= r</i> &rArr;
+         <ul>
+         <li>Si <i>q > q0</i> &rArr; se recalcula <i>r = u2(q, r)</i>.</li>
+         <li>O si <i>q < r</i> &rArr; se recalcula <i>r = d(q) * j</i> (Se vende).</li>
+         </ul></li>
+  <li>Si <i>q0 < r</i> &rArr;</br>
+         <ul>
+         <li>Si <i>q < q0</i> &rArr; se recalcula <i>r = d2(q, r)</i>.</li>
+         <li>O si <i>q > r</i> &rArr; se recalcula <i>r = u(q) / j</i> (Se compra).</li>
+         </ul></li>
+  </ul>
+""";

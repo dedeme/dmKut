@@ -1,0 +1,62 @@
+// Copyright 29-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Company charts page.
+
+import "KtWeb/rp";
+import "libmkt/model/model";
+import "libmkt/models";
+import "libmkt/quotes";
+import "libmkt/order";
+import "libmkt/strategy";
+import "data/result";
+import "data/modelEval";
+import "data/cts";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      mdId = Rq.modelId;
+      PParams = Rq.params; // [[f...]]|[]
+      MMd = models.get(mdId);
+      if (!MMd) {
+        sys.print(rp.mk({ok: false}));
+        return;
+      }
+      md = MMd!;
+
+      Evals = db.readEvals(mdId).evals;
+      EEval = PParams
+        ? modelEval.get(Evals, PParams!)
+        : [modelEval.best(Evals)]
+      ;
+      if (!EEval) {
+        sys.print(rp.mk({ok: false}));
+        return;
+      }
+      Eval = EEval!;
+      AllQs = db.readQuotes();
+      StrRs = strategy.run(
+        md, AllQs, Eval.params, cts.daysWin, cts.daysLoss
+      );
+
+      sys.print(rp.mk({
+        ok: true,
+        model: model.toJs(models.get(mdId)!),
+        result: result.toJs(result.new(
+            StrRs.hassets[arr.size(StrRs.hassets)-1],
+            arr.reduce(StrRs.profits, 0.0, \r, e -> return r + e;) /
+              math.itof(arr.size(StrRs.profits)),
+            math.itof(order.sales(StrRs.orders))
+          )),
+        eval: modelEval.toJs(Eval),
+        nicks: AllQs.cos,
+        lastCloses: AllQs.closes[arr.size(AllQs.closes) - 1],
+        orders: arr.map(StrRs.orders, \O -> return order.toJs(O);)
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

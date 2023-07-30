@@ -1,0 +1,191 @@
+// Copyright 01-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Tester for models.
+
+import "libmkt/model/model";
+import "libmkt/strategy";
+import "libmkt/order";
+import "data/result";
+import "data/modelEval";
+import "data/cts";
+
+
+// i
+envSteps2 = cts.envSteps / 2;
+
+// Test a parameter environment
+// \<model>, <quotes>, f -> <result>
+runB1 = \md, Qs, param -> {
+  inc = model.paramEnvIncs(md)[0];
+  RResult = [result.new(0.0, 0.0, 0.0)];
+  V = [param];
+  for (i = 0:envSteps2) V! -= inc;
+  for (i = 0:cts.envSteps) {
+    v = V!;
+    V! += inc;
+    StrRs = strategy.run(md, Qs, [v], cts.daysWin, cts.daysLoss);
+    Hassets = StrRs.hassets;
+    Profits = StrRs.profits;
+    R = RResult!;
+    RResult! = result.new(
+      R.assets + Hassets[arr.size(Hassets)-1],
+      R.profits +
+        arr.reduce(Profits, 0.0, \r, e -> return r + e;) /
+            math.itof(arr.size(Profits)),
+      R.sales + math.itof(order.sales(StrRs.orders))
+    );
+  }
+  n = math.itof(cts.envSteps);
+  R = RResult!;
+  return result.new(R.assets / n, R.profits / n, R.sales / n);
+};
+
+// Tests a model with only one parameter.
+// \<model>, <quotes>, [<modelEval>...] -> [<modelEval>...]
+run1 = \md, Qs, pEvals -> {
+  Evals = []; // [<modelEval>...]
+  inc = model.paramBaseIncs(md)[0];
+  V = [model.paramBases(md)[0]];
+  for (i = 0:cts.evalSteps) {
+    v = V!;
+    V! += inc;
+    R = runB1(md, Qs, v);
+    Ev = modelEval.get(pEvals, [v]);
+    if (Ev) {
+      E = Ev!;
+      n = E.times >=
+        cts.evalTimes
+        ? cts.evalTimes
+        : E.times + 1
+      ;
+      div = math.itof(n);
+      arr.push(
+        Evals,
+        modelEval.new(
+          [v], n,
+          E.assets + (R.assets - E.assets) / div,
+          E.profits + (R.profits - E.profits) / div,
+          E.sales + (R.sales - E.sales) / div,
+          R.assets, R.profits, R.sales
+        )
+      );
+    } else {
+      arr.push(
+        Evals,
+        modelEval.new(
+          [v], 1,
+          R.assets, R.profits, R.sales,
+          R.assets, R.profits, R.sales
+        )
+      );
+    }
+  }
+  return Evals;
+};
+
+
+// Test a parameter environment
+// \<model>, <quotes>, [f, f] -> <result>
+runB2 = \md, Qs, Ps -> {
+  inc0 = model.paramEnvIncs(md)[0];
+  inc1 = model.paramEnvIncs(md)[1];
+  RResult = [result.new(0.0, 0.0, 0.0)];
+  V0 = [Ps[0]];
+  for (i = 0:envSteps2) V0! -= inc0;
+  V1 = [Ps[1]];
+  for (i = 0:envSteps2) V1! -= inc1;
+  v1Start = V1!;
+  for (i = 0:cts.envSteps) {
+    v0 = V0!;
+    V0! += inc0;
+
+    V1 = [v1Start];
+    for (j = 0:cts.envSteps) {
+      v1 = V1!;
+      V1! += inc1;
+
+      StrRs = strategy.run(md, Qs, [v0, v1], cts.daysWin, cts.daysLoss);
+      Hassets = StrRs.hassets;
+      Profits = StrRs.profits;
+      R = RResult!;
+      RResult! = result.new(
+        R.assets + Hassets[arr.size(Hassets)-1],
+        R.profits +
+          arr.reduce(Profits, 0.0, \r, e -> return r + e;) /
+              math.itof(arr.size(Profits)),
+        R.sales + math.itof(order.sales(StrRs.orders))
+      );
+    }
+  }
+
+  n = math.itof(cts.envSteps * cts.envSteps);
+  R = RResult!;
+
+  return result.new(R.assets / n, R.profits / n, R.sales / n);
+};
+
+// Tests a model with two parameters.
+// \<model>, <quotes>, [<modelEval>...] -> [<modelEval>...]
+run2 = \md, Qs, pEvals -> {
+  Evals = []; // [<modelEval>...]
+  inc0 = model.paramBaseIncs(md)[0];
+  inc1 = model.paramBaseIncs(md)[1];
+  V0 = [model.paramBases(md)[0]];
+  v1Start = model.paramBases(md)[1];
+  for (i = 0:cts.evalSteps) {
+    v0 = V0!;
+    V0! += inc0;
+    V1 = [v1Start];
+    for (j = 0:cts.evalSteps) {
+      v1 = V1!;
+      V1! += inc1;
+
+      Ps = [v0, v1];
+      R = runB2(md, Qs, Ps);
+      Ev = modelEval.get(pEvals, Ps);
+      if (Ev) {
+        E = Ev!;
+        n = E.times >=
+          cts.evalTimes
+          ? cts.evalTimes
+          : E.times + 1
+        ;
+        div = math.itof(n);
+        arr.push(
+          Evals,
+          modelEval.new(
+            Ps, n,
+            E.assets + (R.assets - E.assets) / div,
+            E.profits + (R.profits - E.profits) / div,
+            E.sales + (R.sales - E.sales) / div,
+            R.assets, R.profits, R.sales
+          )
+        );
+      } else {
+        arr.push(
+          Evals,
+          modelEval.new(
+            Ps, 1,
+            R.assets, R.profits, R.sales,
+            R.assets, R.profits, R.sales
+          )
+        );
+      }
+    }
+  }
+  return Evals;
+};
+
+/// Returns evaluations for a model, generating parameters using data of
+/// Md.paramBases, Md.paramBaseIncs and Md.paramEnvIncs.
+///   md          : Model to test.
+///   quotes      : Market quotes.
+///   prevousEvals: Current modelEvals.
+/// \<model>, <quotes>, [<modelEval>...] -> [<modelEval>...]
+run = \md, Qs, previousEvals -> {
+  return arr.size(model.paramBases(md)) == 1
+    ? run1(md, Qs, previousEvals)
+    : run2(md, Qs, previousEvals)
+  ;
+};

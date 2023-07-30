@@ -4,29 +4,234 @@
 /// Data base of jstb's.
 
 import "libdm/jstb";
+import "libmkt/qs";
+import "libmkt/quotes";
+import "libmkt/model/model";
+import "libmkt/models";
 import "data/cts";
+import "data/flea";
+import "data/summaryRs";
 
-DbPath = [""];
+activityPath = path.cat([cts.dbPath, "activity.tb"]);
 
-/// Initializes data base.
-/// \-> ()
-init = \ -> {
-  dbPath = cts.dbPath;
-  DbPath! = dbPath;
-  if (!file.exists(dbPath)) file.mkdir(dbPath);
-};
+modelsPath = path.cat([cts.dbPath, "models"]);
 
-/// Returns the table of 's' in 'activity.tb'
-/// \-> s<jstb>
-activityTb = \-> return jstb.new(
-  path.cat([DbPath!, "activity.tb"]),
-  \-> return "stopped";,
-  sys.id,
-  sys.id
+// \s -> s
+modelPath = \mdId -> return path.cat([modelsPath, mdId]);;
+
+// \s -> s
+fleasPath = \mdId -> return path.cat([modelPath(mdId), "fleas.tb"]);;
+
+// \s -> s
+historicPath = \mdId -> return path.cat([modelPath(mdId), "historic"]);;
+
+// \s, s -> s
+rkPath = \mdId, date -> return path.cat(
+  [historicPath(mdId), date, "rk.tb"]
 );;
 
-/// Returns the JSON table 'rankings.tb'
-rankingsJs = \-> return file.read(path.cat([DbPath!, "rankings.tb"]));;
+// \s, s -> s
+bwaPath = \mdId, date -> return path.cat(
+  [historicPath(mdId), date, "bestWorstAvg.tb"]
+);;
 
-/// Returns the JSON table 'mdStats.tb'
-mdStatsJs = \-> return file.read(path.cat([DbPath!, "mdStats.tb"]));;
+/// Read CMarket quotes.
+/// \ -> <quotes>
+readQuotes = \ -> {
+  dataPath = cts.cmarketDataPath;
+
+  // \s -> s
+  readSqs = \nick ->
+    return file.read(path.cat([dataPath, "quotes", nick + ".tb"]));;
+
+  cosT = js.r(file.read(path.cat([dataPath, "cos.tb"])));
+  main = cosT[0];
+  Cos = arr.map(arr.filter(cosT[1], \C -> return C[1];), \C -> return C[0];);
+  arr.sort(Cos, \c1, c2 -> return c1 < c2;);
+
+  MainQs = qs.fromStr(cts.historicQuotes, readSqs(main));
+  if (!MainQs[1]) sys.throw(MainQs!);
+  Dates = qs.dates(MainQs!);
+
+  cols = arr.size(Cos);
+  rows = arr.size(Dates);
+  Opens = arr.new(rows, 0);
+  for (i = 0:rows) Opens[i] = arr.new(cols, 0.0);
+  Closes = arr.new(rows, 0);
+  for (i = 0:rows) Closes[i] = arr.new(cols, 0.0);
+  Maxs = arr.new(rows, 0);
+  for (i = 0:rows) Maxs[i] = arr.new(cols, 0.0);
+
+  for (c, i = Cos) {
+    QsRs = qs.fromStr(cts.historicQuotes, readSqs(c));
+    if (!QsRs[1]) sys.throw(QsRs!);
+    qts = QsRs!;
+
+    Ops = qs.opens(qts);
+    Cls = qs.closes(qts);
+    Mxs = qs.maxs(qts);
+    for (r = 0:rows) {
+      Opens[r][i] = Ops[r];
+      Closes[r][i] = Cls[r];
+      Maxs[r][i] = Mxs[r];
+    }
+  }
+
+  return quotes.new(arr.peek(Dates), Cos, Dates, Opens, Closes);
+};
+
+/// Returns the model list. Modesl with only one parameter are removed!!!.
+modelsList = \ -> return models.list();; /*return arr.filter(
+    models.list(),
+    \m -> return arr.size(model.paramBases(m)) > 1;
+  );;*/
+
+/// Reinitializes database.
+init = \ -> {
+  QsOp = [];
+
+  file.mkdir(cts.dbPath);
+  if (!file.exists(activityPath)) writeActivity("stopped");
+
+  file.mkdir(modelsPath);
+  for (mdId = arr.map(modelsList(), model.id)) {
+    mdPath = modelPath(mdId);
+    file.mkdir(mdPath);
+    file.mkdir(path.cat([mdPath, "historic"]));
+    fsPath = fleasPath(mdId);
+    if (!file.exists(fsPath)) {
+      newFs = arr.new(cts.fleasPerModel, 0);
+      for (i = 0:cts.fleasPerModel)
+        newFs[i] = flea.generate(i, 0, mdId);
+      if (!QsOp) arr.push(QsOp, readQuotes());
+      Qs = QsOp!;
+      writeFleas(mdId, flea.cycle(newFs, Qs));
+    }
+  }
+};
+
+/// Reads "activity.tb" and returns "active" or "stopped".
+/// \ -> s
+readActivity = \ -> return js.r(file.read(activityPath));;
+
+/// Writes "activity.tb".
+///   act: Value to write. Can be: "stopped" or "active".
+/// \s -> ()
+writeActivity = \act ->
+  file.write(activityPath, js.w(act == "stopped" ? act : "active"));;
+
+/// Reads 'fleas.tb' in model 'mdId'.
+/// Returns a fleas array sorted by evaluation points (descending).
+///   mdId: Model identifier.
+/// \s -> [<flea>...]
+readFleas = \mdId -> {
+  return arr.map(js.r(file.read(fleasPath(mdId))), flea.fromJs);
+};
+
+/// Writes 'fleas.tb' in model 'mdId'.
+///   mdId : Model identifier.
+///   fleas: Fleas array sorted by evaluation points (descending).
+/// \s, [<flea>...] -> ()
+writeFleas = \mdId, Fleas -> {
+  now = time.now();
+  today = time.toStr(now);
+
+  file.write(fleasPath(mdId), js.w(arr.map(Fleas, flea.toJs)));
+
+  file.mkdir(historicPath(mdId));
+  rkPath = rkPath(mdId, today);
+  file.mkdir(path.parent(rkPath));
+  file.write(rkPath, js.w(arr.map(Fleas[:40], flea.toJs)));
+
+  F = Fleas[0];
+  BWA = [
+    summaryRs.new(F.assets, F.profits, F.points),
+    summaryRs.new(F.assets, F.profits, F.points),
+    summaryRs.new(0.0, 0.0, 0)
+  ];
+
+  for (F = Fleas) {
+    B = BWA[0];
+    B2 = summaryRs.new(
+      F.assets > B.assets ? F.assets : B.assets,
+      F.profits > B.profits ? F.profits : B.profits,
+      F.points > B.points ? F.points : B.points
+    );
+    W = BWA[1];
+    W2 = summaryRs.new(
+      F.assets < W.assets ? F.assets : W.assets,
+      F.profits < W.profits ? F.profits : W.profits,
+      F.points < W.points ? F.points : W.points
+    );
+    A = BWA[2];
+    A2 = summaryRs.new(
+      A.assets + F.assets,
+      A.profits + F.profits,
+      A.points + F.points
+    );
+    BWA[0] = B2;
+    BWA[1] = W2;
+    BWA[2] = A2;
+  }
+  size = arr.size(Fleas);
+  sizef = math.itof(size);
+  A = BWA[2];
+  A2 = summaryRs.new(A.assets / sizef, A.profits / sizef, A.points / size);
+  BWA[2] = A2;
+
+  file.write(bwaPath(mdId, today), js.w(arr.map(BWA, summaryRs.toJs)));
+
+  Dates = file.dir(historicPath(mdId));
+  arr.sort(Dates, \d1, d2 -> return d1 > d2;);
+  minusYear = time.toStr(time.addDays(now, -365));
+
+  dateV = ["11111111"];
+  for (d, i = Dates) {
+    if (i < 5) {
+      dateV! = d;
+      continue;
+    }
+    if (d > minusYear) {
+      if (d[:6] == dateV![:6])
+        file.del(path.cat([historicPath(mdId), d]));
+    } else {
+      if (d[:4] == dateV![:4])
+        file.del(path.cat([historicPath(mdId), d]));
+    }
+    dateV! = d;
+  }
+
+};
+
+/// Returns an dictionary {date -> [flea...]} with rankings of a model.
+/// \s -> {[<flea>...]...}
+readRankings = \mdId -> {
+  Dates = file.dir(historicPath(mdId));
+  Rk = {}; // {[<flea>...]...} :: {date -> [flea...]}
+  for (d = Dates) {
+    dic.put(
+      Rk,
+      d,
+      arr.map(js.r(file.read(rkPath(mdId, d))), flea.fromJs)
+    );
+  }
+  return Rk;
+};
+
+/// Returns an dictionary {date -> {model -> [best, worst, medium]}}, where
+/// best, worst and medium are arrays [assets, profits, points].
+/// \ -> {{[[f,f,f], [f,f,f], [f,f,f]]...}...}
+readSummary = \ -> {
+  R = {}; // {{[[f, f, f],[f, f, f],[f, f, f]] ...}...}
+  Models = file.dir(modelsPath);
+  for (mdId = Models) {
+    Dates = file.dir(historicPath(mdId));
+    for (d = Dates) {
+      ModelDicOp = dic.get(R, d);
+      ModelDic = ModelDicOp ? ModelDicOp! : {};
+      dic.put(ModelDic, mdId, js.r(file.read(bwaPath(mdId, d))));
+      dic.put(R, d, ModelDic);
+    }
+  }
+  return R;
+};

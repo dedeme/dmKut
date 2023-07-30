@@ -9,7 +9,7 @@
 new = \ratio -> return {ratio};;
 
 /// \<imgBlur> -> *(JS)
-toJs = \IB -> return IB.ratio;;
+toJs = \IB -> return math.itof(IB.ratio);;
 
 /// \*(JS) -> <imgBlur>
 fromJs = \j -> return new (math.ftoi(j));;

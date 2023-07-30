@@ -22,28 +22,10 @@ isInit = \-> return !File;;
 date = \-> return time.fmt("%D/%M/%Y(%t)", time.now());;
 
 // [[b,s,s]...] -> ()
-write = \L -> file.write(
-  File!,
-  js.wa(
-    arr.map(
-      L,
-      \e -> return js.wa([
-        js.wb(e[0]),
-        js.ws(e[1]),
-        js.ws(e[2])
-      ]);
-    )
-  )
-);;
+write = \L -> file.write(File!, js.w(L));;
 
 // \-> [[b,s,s]...]
-read = \-> return arr.map(
-  js.ra(file.read(File!)),
-  \e -> {
-    a = js.ra(e);
-    return [js.rb(a[0]), js.rs(a[1]), js.rs(a[2])];
-  }
-);;
+read = \-> return js.r(file.read(File!));;
 
 /// Returns the log serialized.
 /// \-> s

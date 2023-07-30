@@ -1,0 +1,214 @@
+// Copyright 25-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Update data.
+
+import "libmkt/models";
+import "libmkt/strategy";
+import "libmkt/order";
+import "data/cts";
+import "db";
+
+/// Updates all data.
+/// \ -> ()
+run = \ -> {
+  Qs = db.readQuotes();
+  file.mkdir(cts.dataPath);
+  file.mkdir(path.cat([cts.dataPath, "results"]));
+  for (wdays = cts.DaysWin) for(ldays = cts.DaysLoss) for (zoom = [false, true])
+    updateGroup(Qs, wdays, ldays, zoom);
+
+  updateRankings();
+};
+
+/// Update a group of results
+/// \<quotes>, i, i, b -> ()
+updateGroup = \Qs, wdays, ldays, zoom -> {
+  dpath = path.cat([
+    cts.dataPath,
+    "results",
+    "[" + math.itos(wdays) + "-" + math.itos(ldays) + "]"
+  ]);
+  file.mkdir(dpath);
+  if (zoom) {
+    f0path = path.cat([dpath, "nearParams.tb"]);
+    if (!file.exists(f0path)) {
+      start = cts.simFarStart + cts.simFarStep * math.itof(cts.simSteps / 4);
+      file.write(f0path, js.w([start, start]));
+    }
+    fpath = path.cat([dpath, "near.tb"]);
+    file.write(
+      fpath,
+      js.w(results(
+        Qs, wdays, ldays, js.r(file.read(f0path)), cts.simNearStep
+      ))
+    );
+  } else {
+    fpath = path.cat([dpath, "far.tb"]);
+    file.write(
+      fpath,
+      js.w(results(
+        Qs, wdays, ldays, [cts.simFarStart, cts.simFarStart], cts.simFarStep
+      ))
+    );
+  }
+};
+
+// Returns a matrix 20x20 [start-approximation] of [assets, profits, points, sales]
+//  Qs   : Companies quotes.
+//  wdays: Quarantine days for win operations.
+//  ldays: Quarantine days for loss operations.
+//  Start: First simulation point. [start-approximation].
+//  step : Length of step in simulation for both parameters.
+// \<quotes>, i, i, [f, f], f -> [[[f,f,f,f]...]...] (20x20)
+results = \Qs, wdays, ldays, Start, step -> {
+  R0 = []; // [[[f,f,f,f]...]...]
+  S = [Start[0] - step];
+  for (i = 0:22) {
+    A = [Start[1] - step];
+    Row = []; // [f,f,f]...]
+    for (j = 0:22) {
+      Rs = strategy.run(
+        models.get("APRX")!,
+        Qs,
+        [S!, A!],
+        wdays,
+        ldays
+      );
+      assets = arr.peek(Rs.hassets);
+      profits = arr.reduce(Rs.profits, 0.0, \r, p -> return r + p;) /
+        math.itof(arr.size(Rs.profits))
+      ;
+      points = ( assets * cts.assetsRatio / cts.maxAssets +
+        (1.0 + profits) * cts.profitsAvgRatio / cts.maxProfitsAvgRatio
+      ) * 3000.0;
+      sales = arr.reduce(Rs.orders, 0,
+        \r, O -> return O.type == order.sell ? r + 1 : r;
+      );
+
+      arr.push(Row, [assets, profits, points, math.itof(sales)]);
+      A! += step;
+    }
+    arr.push(R0, Row);
+    S! += step;
+  }
+
+  R = []; // [[[f,f,f,f]...]...]
+  for (i = 0:20) {
+    Row = []; // [f,f,f,f]...]
+    for (j = 0:20) {
+      Sum = [0.0, 0.0, 0.0, 0.0];
+      for (i2 = 0:3) for (j2 = 0:3) {
+        V = R0[i + i2][j + j2];
+        Sum[0] += V[0];
+        Sum[1] += V[1];
+        Sum[2] += V[2];
+        Sum[3] += V[3];
+      }
+      arr.push(
+        Row,
+        [ math.round(Sum[0] / 9.0, 2),
+          math.round(Sum[1] / 9.0, 4),
+          math.round(Sum[2] / 9.0, 0),
+          math.round(Sum[3] / 9.0, 0)
+        ]
+      );
+    }
+
+    arr.push(R, Row);
+  }
+
+  return R;
+};
+
+/// Calculates and saves today rankings.
+/// \ -> ()
+updateRankings = \ -> {
+  // Decending order.
+  // \[s, f, f, f, f], [s, f, f, f, f] -> b
+  fsort = \R1, R2 -> return
+    R1[3] == R2[3]
+      ? R1[1] > R2[1]
+      : R1[3] > R2[3]
+  ;;
+
+  file.mkdir(path.cat([cts.dataPath, "rankings"]));
+  nearPath = path.cat([cts.dataPath, "rankings", "near"]);
+  farPath = path.cat([cts.dataPath, "rankings", "far"]);
+  file.mkdir(nearPath);
+  file.mkdir(farPath);
+
+  now = time.now();
+  today = time.toStr(now);
+
+  // \b -> ()
+  updateNearFar = \isNear -> {
+    B = []; // [[s, f, f, f, f]...] :: [days, assets, profits, points, sales]
+    A = []; // [[s, f, f, f, f]...] :: [days, assets, profits, points, sales]
+    W = []; // [[s, f, f, f, f]...] :: [days, assets, profits, points, sales]
+
+    for (wdays = cts.DaysWin) for(ldays = cts.DaysLoss) {
+      days = "[" + math.itos(wdays) + "-" + math.itos(ldays) + "]";
+      Rs = isNear ? db.getNearResults(days) : db.getFarResults(days);
+      size = math.itof(arr.size(Rs) * arr.size(Rs[0]));
+      BV = [Rs[0][0]];
+      AV = [[0.0, 0.0, 0.0, 0.0]];
+      WV = [Rs[0][0]];
+      for (Row = Rs) for (R = Row) {
+        as = R[0];
+        po = R[2];
+        if (po > BV![2] | (po == BV![2] & as > BV![0])) BV! = R;
+        if (po < WV![2] | (po == WV![2] & as < WV![0])) WV! = R;
+        AV! = [AV![0] + as, AV![1] + R[1], AV![2] + po, AV![3] + R[3]];
+      }
+
+      arr.unshift(BV!, days);
+      arr.unshift(WV!, days);
+      arr.unshift(AV!, days);
+
+      arr.push(B, BV!);
+      arr.push(W, WV!);
+      arr.push(A, [
+        AV![0],
+        math.round(AV![1] / size, 2),
+        math.round(AV![2] / size, 4),
+        math.round(AV![3] / size, 0),
+        math.round(AV![4] / size, 0)
+      ]);
+    }
+    arr.sort(B, fsort);
+    arr.sort(A, fsort);
+    arr.sort(W, fsort);
+
+    // PURGE DATES
+
+    dpath = isNear ? nearPath : farPath;
+    file.write(
+      path.cat([dpath, today]),
+      js.w([B[:10], A[:10], W[:10]])
+    );
+
+    Dates = file.dir(dpath);
+    arr.sort(Dates, \d1, d2 -> return d1 > d2;);
+    minusYear = time.toStr(time.addDays(now, -365));
+
+    dateV = ["11111111"];
+    for (d, i = Dates) {
+      if (i < 5) {
+        dateV! = d;
+        continue;
+      }
+      if (d > minusYear) {
+        if (d[:6] == dateV![:6])
+          file.del(path.cat([dpath, d]));
+      } else {
+        if (d[:4] == dateV![:4])
+          file.del(path.cat([dpath, d]));
+      }
+      dateV! = d;
+    }
+  };
+
+  updateNearFar(true);
+  updateNearFar(false);
+};

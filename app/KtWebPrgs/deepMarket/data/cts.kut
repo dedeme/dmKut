@@ -1,0 +1,66 @@
+// Copyright 25-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+
+/// Constants.
+
+//Application ----------------------------------------------------------------
+
+/// Application name
+appName = "deepMarket";
+
+/// Data version
+version = "202307";
+
+/// Data directory.
+dataPath = "/dm/dmWeb/app/KtWeb/dmcgi/DeepMarket";
+
+/// cmarket data directory.
+cmarketDataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
+
+/// Number of quotes in historic tables
+historicQuotes = 610;
+
+// market ----------------------------------------------------------------------
+
+/// Investors initial capital for each cycle
+initialCapital = 250000.0;
+
+/// Assets ratio for evaluation.
+assetsRatio = 0.7;
+
+/// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
+maxAssets = initialCapital * maxProfitsAvgRatio;
+
+/// Profits ratio for evaluation.
+profitsAvgRatio = 1.0 - assetsRatio;
+
+/// Maximum ratio for profits evaluation. (1€ generates 3€)
+maxProfitsAvgRatio = 3.0;
+
+/// First far simulation point for both parameters.
+simFarStart = 0.02;
+
+/// Length of step in far simulation for both parameters.
+simFarStep = 0.01;
+
+/// Length of step in deep simulation for both parameters.
+simNearStep = 0.005;
+
+/// Steps number for both parameters.
+simSteps = 20;
+
+/// Days of wait for win operations.
+DaysWin = [0, 15, 25, 40, 50];
+
+/// Days of wait for loss operation.
+DaysLoss = [45, 55, 65, 80, 90, 105, 115, 130, 140, 155];
+
+/// Default days win
+daysWinDefault = 25;
+
+/// Default days loss
+daysLossDefault = 90;
+
+
+

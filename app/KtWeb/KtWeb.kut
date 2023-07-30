@@ -19,7 +19,7 @@ try {
   switch (Args[0]) {
     "help": return help();
     "start": server();
-    default: trace(Args);
+    default: sys.println(str.fmt("Argument '%v' is not valid", Args));
   }
 } catch (e) {
   log.error(e);
@@ -33,7 +33,7 @@ help = \ -> {
     Use:
       KtWeb argument
     Where argument can be:
-      start: Launch server in %s if it is not lanched yet.
+      start: Launch server in %v if it is not lanched yet.
       help : Show this message.
       other: Program call.
     """,
@@ -139,12 +139,15 @@ rqProcess = \rq -> {
 // s, s -> s
 processHub = \ck, rq -> {
   prg = js.r(rq).prg;
+
   return switch(prg) {
     "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ck, rq])[0];
     "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ck, rq])[0];
-    "CMarket": sys.cmd("cmarket", [ck, rq])[0];
+    "CMarket": sys.cmd("kutmkt", ["prgs/CMarket/kut/main", ck, rq])[0];
+    "CMMarket": sys.cmd("kutmkt", ["prgs/CMMarket/kut/main", ck, rq])[0];
+    "DeepMarket": sys.cmd("kutmkt", ["prgs/DeepMarket/kut/main", ck, rq])[0];
     "Fluxwp": sys.cmd("kut", ["prgs/Fluxwp/kut/main", ck, rq])[0];
-    "FMarket": sys.cmd("kut", ["prgs/FMarket/kut/main", ck, rq])[0];
+    "FMarket": sys.cmd("kutmkt", ["prgs/FMarket/kut/main", ck, rq])[0];
     "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, rq])[0];
     "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ck, rq])[0];
     "JstbEditor": sys.cmd("kut", ["prgs/JstbEditor/kut/main", ck, rq])[0];

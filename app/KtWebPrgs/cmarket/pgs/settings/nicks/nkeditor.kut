@@ -9,8 +9,8 @@ import "libmkt/qs";
 import "libmkt/quote";
 import "db/quotesDb";
 import "db/svCodesTb";
-import "data/qsvs";
-import "data/qsv";
+import "data/qs/qsvs";
+import "data/qs/qsv";
 import "qspr";
 
 /// \m -> ()
@@ -23,7 +23,7 @@ process = \Rq -> {
       Rp = {
         ok: true,
         quotes: [], // [JS<<quote>>...]
-        manuals: 0,
+        manuals: 0.0,
         mquotes: [], // [JS<<quote>>...]
         sIdCodes: [] // [JS<[s,b,s]>...]
       };
@@ -35,7 +35,9 @@ process = \Rq -> {
         if (Qs[1]) {
           Qs2 = qs.quotes(Qs!);
           Rp.quotes = arr.map(Qs2, quote.toJs);
-          Rp.manuals = arr.reduce(Qs2, 0, \r, e -> return e.force ? r + 1 : r;);
+          Rp.manuals = math.itof(
+            arr.reduce(Qs2, 0, \r, e -> return e.force ? r + 1 : r;)
+          );
           for (sv = qsvs.list()) {
             id = qsv.id(sv);
             Codes = svCodesTb.read(id);
@@ -74,8 +76,10 @@ process = \Rq -> {
       mainNick = Rq.mainNick;
       nick = Rq.nick;
       Rs = qspr.updateHistoric("Updating " + nick, mainNick, nick);
+      Err = qspr.updateClosesAndRefs(nick);
+      qspr.updateOperations();
       sys.print(rp.mk({
-        result: Rs.withError
+        result: Rs.withError | Err
           ? "error"
           : Rs.withWarnings
             ? "warnings"

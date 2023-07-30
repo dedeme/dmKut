@@ -4,38 +4,19 @@
 /// Models page.
 
 import "KtWeb/rp";
-import "db";
-import "data/modelFloats";
-import "data/modelFloat";
+import "db/ranksDb";
 
 /// \m -> s
 process = \Rq -> {
   switch (Rq.rq) {
-    "idata": {
-      Rp = {type: js.w(Rq.type), dataGroups: []};
-      switch (Rq.type) {
-        "total": Rp.dataGroups = db.totalsModelSimProfitsDb().readJs();
-        "cash": Rp.dataGroups = db.cashesModelSimProfitsDb().readJs();
-        "ref": Rp.dataGroups = db.refsModelSimProfitsDb().readJs();
-        default: {
-          Rp.type = js.ws("points");
-          Rp.dataGroups = js.w(arr.map(
-            db.modelEvalsTb().read(),
-            \e -> return modelFloats.toJs(
-              modelFloats.new(
-                e.date,
-                arr.map(
-                  e.evals,
-                  \ev -> return modelFloat.new(
-                    ev.model, math.itof(ev.eval) / 100.0
-                  );
-                )
-              )
-            );
-          ));
-        }
-      }
-      return rp.mkJs(Rp);
+    "idata": return rp.mk({
+      dateGroups: ranksDb.dates()
+    });
+    "rank": {
+      Rank = ranksDb.rank(Rq.date)!;
+      return rp.mk({
+        modelValues: Rank[Rq.type]
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

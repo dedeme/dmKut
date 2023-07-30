@@ -129,7 +129,7 @@ executeId = \As, id -> {
 
 
 /// \<Ann> -> [*(JS)...]
-toJs = \A -> return [A[0], A[1], js.r(A[2]), A[3]];;
+toJs = \A -> return [math.itof(A[0]), math.itof(A[1]), js.r(A[2]), A[3]];;
 
 /// [*(JS)...] -> <Ann>
 fromJs = \A -> {

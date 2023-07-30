@@ -3,7 +3,7 @@
 
 /// Quotes server data BMANIA ("Bolsamania").
 
-import "data/qsv";
+import "data/qs/qsv";
 
 // DIARY -----------------------------------------------------------------------
 // \s -> [[[s, f]...], [s...]]
@@ -44,7 +44,7 @@ readDiary = \html -> {
       continue;
     }
     Ix! += 8;
-    Ix2! = str.indexFrom(html, "\"", Ix!);
+    Ix2! = str.indexFrom(html, "'", Ix!);
     if (Ix2! == -1) {
       arr.push(Errs, "End of field 'code' not found");
       Ix! = endRow;
@@ -53,7 +53,7 @@ readDiary = \html -> {
     code = html[Ix!:Ix2!];
 
     // VALUE
-    Ix! = str.indexFrom(html, "n\">", Ix2! + 1);
+    Ix! = str.indexFrom(html, "n'>", Ix2! + 1);
     if (Ix! == -1) {
       arr.push(Errs, "Beginning of field 'value' not found");
       Ix! = endRow;
@@ -99,9 +99,9 @@ withDiary = \ -> return true;;
 
 // \-> [s|s, b] ([html|error, ok])
 downloadDiary = \ -> {
-  url = "https://www.bolsamania.com/mercado/Mercado-continuo";
+  url = "https://www.bolsamania.com/mercado/MERCADO-CONTINUO";
   return sys.cmd(
-    "timeout", ["-s", "KILL", "10", "wget", "-q", "--no-cache", "-O", "-", url]
+    "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
   );
 };
 

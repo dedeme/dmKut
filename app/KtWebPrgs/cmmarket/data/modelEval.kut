@@ -1,0 +1,84 @@
+// Copyright 27-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Model evaluation data.
+
+import "fns";
+
+/// Constructor
+///   params  : Calculus parameters.
+///   times   : Historic evaluations number.
+///   hassets : Historic assets. (Money -- e.g. 104012.53)
+///   hprofits: Historic profits. (Ratio -- e.g. 0.0321 [that is 3.21%]).
+///   hsales  : Historic number of sales.
+///   assets  : Last simulation assets. (Money -- e.g. 104012.53)
+///   profits : Last simultarion profits. (Ratio -- e.g. 0.0321 [that is 3.21%]).
+///   sales   : Number of sales.
+/// \[n...], i, f, f, f, f, f, f -> d<modelEval>
+new = \params, times, hassets, hprofits, hsales, assets, profits, sales ->
+  return {params, times, hassets, hprofits, hsales, assets, profits, sales};;
+
+/// \<modelEval> -> \[JS...]
+toJs = \M -> return [
+    M.params,
+    math.itof(M.times),
+    math.round(M.hassets, 2),
+    math.round(M.hprofits, 4),
+    math.round(M.hsales, 0),
+    math.round(M.assets, 2),
+    math.round(M.profits, 4),
+    math.round(M.sales, 0)
+  ];;
+
+/// \[JS...] -> <modelEval>
+fromJs = \A -> return new(
+    A[0],
+    math.ftoi(A[1]),
+    A[2],
+    A[3],
+    A[4],
+    A[5],
+    A[6],
+    A[7]
+  );;
+
+/// Returns the best of an array of model evaluations.
+/// 'Ms' must not be empty.
+/// \[<modelEval>...] -> [f...]
+best = \Ms -> {
+  initialBest = fns.evaluate(Ms[0].assets, Ms[0].profits);
+  return arr.reduce(
+    Ms,
+    [Ms[0], initialBest],
+    \R, E -> {
+      ev = fns.evaluate(E.assets, E.profits);
+      return ev > R[1] ? [E, ev] : R;
+    }
+  )[0];
+};
+
+/// Returns the evalation with parameters 'params' of an array of model
+/// evaluations, or [] if such evaluation is not found.
+/// \[<modelEval>...], [f...] -> [<modelEval>]|[]
+get = \Ms, Params -> return arr.find(
+    Ms,
+    \M -> return M.params == Params;
+  );;
+
+/// Table 'eval' content data.
+///   date: Date on which data was calculate in format YYYYMMDD.
+///   evals: Array of parameter evaluations. One entry for each parameter set.
+/// \s, [<modelEval>...] -> d<modelEvalTb>
+newTb = \date, evals -> return {date, evals};;
+
+/// \<modelEvalTb> -> [JS...]
+tbToJs = \T -> return [
+    T.date,
+    arr.map(T.evals, toJs)
+  ];;
+
+/// [JS...] -> <modelEvalTb>
+tbFromJs = \A -> return newTb(
+    A[0],
+    arr.map(A[1], fromJs)
+  );;

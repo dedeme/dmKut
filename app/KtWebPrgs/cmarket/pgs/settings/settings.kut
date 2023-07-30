@@ -7,6 +7,10 @@ import "calendarPg/calendarPg";
 import "nicks/nicks";
 import "nicks/nkeditor";
 import "serversPg";
+import "acc/accPg";
+import "acc/allWg";
+import "acc/invWg";
+import "investorsPg";
 
 /// \m -> ()
 process = \Rq -> {
@@ -15,6 +19,10 @@ process = \Rq -> {
     "Nicks": nicks.process(Rq);
     "Nicks/Editor": nkeditor.process(Rq);
     "Servers": serversPg.process(Rq);
+    "acc/AccPg": accPg.process(Rq);
+    "acc/AllWg": allWg.process(Rq);
+    "acc/InvWg": invWg.process(Rq);
+    "InvestorsPg": investorsPg.process(Rq);
     default: sys.throw("Value of source (" + Rq.source + ") is not valid");
   }
 };

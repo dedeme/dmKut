@@ -1,0 +1,49 @@
+// Copyright 26-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "KtWeb/rp";
+import "data/cts";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Days = Rq.days;
+      winV = [math.itos(cts.daysWinDefault)];
+      lossV = [math.itos(cts.daysLossDefault)];
+      if (arr.size(Days) == 2) {
+        dir = "[" + Days[0] + "-" + Days[1] + "]";
+        if (db.exists(dir)) {
+          winV! = Days[0];
+          lossV! = Days[1];
+        }
+      }
+      sys.print(rp.mk({
+        daysWin: winV!,
+        daysLoss: lossV!
+      }));
+    }
+    "results": {
+      days = Rq.days; // s -> type [25-90]
+      isNear = Rq.isNear; // b
+      parNearStart = db.getNearStart(days);
+      Results = isNear
+        ? db.getNearResults(days)
+        : db.getFarResults(days)
+      ;
+      sys.print(rp.mk({
+        parNearStart,
+        parFarStart: [cts.simFarStart, cts.simFarStart],
+        parStep: isNear
+            ? [cts.simNearStep, cts.simNearStep]
+            : [cts.simFarStep, cts.simFarStep]
+          ,
+        results: Results
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

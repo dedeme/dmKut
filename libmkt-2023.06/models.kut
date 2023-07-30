@@ -1,0 +1,31 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Model list
+
+import "model/model";
+import "model/appr";
+import "model/appr2";
+import "model/ea";
+import "model/ea2";
+import "model/ma";
+import "model/mm";
+import "model/qfix";
+import "model/qmob";
+
+/// Returns all the market models.
+/// \ -> [<model>...]
+list = \ -> return [
+    appr.new(),
+    appr2.new(),
+    ea.new(),
+    ea2.new(),
+    ma.new(),
+    mm.new(),
+    qfix.new(),
+    qmob.new()
+  ];;
+
+/// Returns the model with identifier 'id'.
+/// \s -> [<model>]|[]
+get = \id -> return arr.find(list(), \md -> return model.id(md) == id;);;

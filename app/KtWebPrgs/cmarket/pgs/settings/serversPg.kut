@@ -5,8 +5,8 @@
 
 import "KtWeb/rp";
 import "libdm/log";
-import "data/qsvs";
-import "data/qsv";
+import "data/qs/qsvs";
+import "data/qs/qsv";
 import "db/svCodesTb";
 
 /// \m -> ()

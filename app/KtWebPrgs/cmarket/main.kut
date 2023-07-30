@@ -6,12 +6,14 @@
 import "KtWeb/rp";
 import "libdm/log";
 import "db";
-import "server";
+import "sch";
 import "data/cts";
 import "pgs/home/home";
+import "pgs/acc/acc";
 import "pgs/settings/settings";
+import "pgs/daily/dailyPg";
 
-import "data/qsvs";
+import "qspr";
 
 help = """
   Usage:
@@ -38,8 +40,15 @@ if (!Args) {
 if (arr.size(Args) == 1) {
   switch (Args[0]) {
     "version": sys.println(cts.version);
-    "stop": server.stop();
-    "start": server.start();
+    "stop": sch.stop();
+    "start": {
+      log.init(path.cat([cts.dataPath, "log.tb"]));
+      try {
+        sch.start();
+      } catch (e) {
+        log.error("Server shutdown:\n" + e);
+      }
+    }
     "init": db.init();
     default: sys.println(help);
   }
@@ -60,6 +69,8 @@ rp.init(ck);
 
 switch(Rq.module) {
   "Home": home.process(Rq);
+  "Acc": acc.process(Rq);
+  "DailyPg": dailyPg.process(Rq);
   "Settings": settings.process(Rq);
   default: sys.throw("Value of module (" + Rq.module + ") is not valid");
 }

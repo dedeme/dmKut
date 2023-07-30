@@ -1,0 +1,50 @@
+// Copyright 15-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting trading page.
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/chart/profitsEntry";
+import "db/acc/profitsDb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      All = []; // [<profitsEntry>...]
+      Invs = []; // [[<profitsEntry>...]...]
+      for (inv = 0:cts.investors) arr.push(Invs, []);
+
+      for (y = arr.reverse(profitsDb.allInvestorsYears())) {
+        All0 = {}; // {<profitsEntry>...} :: {date->entry}
+        for (inv = 0:cts.investors) {
+          Es = profitsDb.read(inv, y);
+          arr.cat(Invs[inv], Es);
+          for (E = Es) {
+            E0 = dic.get(All0, E.date);
+            if (E0) {
+              newE = E0!;
+              All0[E.date] = profitsEntry.new(
+                E.date,
+                E.total + newE.total,
+                E.acc + newE.acc,
+                E.risk + newE.risk
+              );
+            } else {
+              dic.put(All0, E.date, E);
+            }
+          }
+        }
+        VAll0 = dic.values(All0);
+        arr.sort(VAll0, \E1, E2 -> return E1.date < E2.date;);
+        arr.cat(All, VAll0);
+      }
+      sys.print(rp.mk({
+        allEntries: arr.map(All, profitsEntry.toJs),
+        invEntries: arr.map(Invs, \Es -> return arr.map(Es, profitsEntry.toJs);)
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

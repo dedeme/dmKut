@@ -1,0 +1,15 @@
+// Copyright 11-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Settlement data.
+
+import "ldg";
+import "pf";
+
+/// Constructor.
+///   ledger   : Settlement ledger.
+///   portfolio: Settlement portfolio. It is a dictionary {nick -> [stocks, price]},
+///              where price is the unitary average price of each stock.
+///   errors   : Errors when calculating ledger and portfolio.
+/// \<ledger>, {[i, f]...}, [s...] -> d<settlement>
+new = \ledger, portfolio, errors -> return {ledger, portfolio, errors};;

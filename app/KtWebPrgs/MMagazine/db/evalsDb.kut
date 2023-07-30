@@ -1,0 +1,75 @@
+// Copyright 05-Jul-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base of model evaluations.
+
+import "libdm/log";
+import "data/cts";
+import "fns";
+
+//
+dpath = path.cat([cts.dbPath, "evals"]);
+
+//
+mpath = \model -> return path.cat([dpath, model]);;
+
+//
+tpath = \model, date -> return path.cat([mpath(model), date]);;
+
+/// Returns all the registered models.
+/// \ -> [s...]
+models = \ -> return file.dir(dpath);;
+
+/// Returns the registered dates with data of a model. (Unsorted)
+/// \s -> [s...]
+dates = \model ->
+  return file.exists(mpath(model))
+    ? file.dir(mpath(model))
+    : []
+  ;;
+
+/// Returns table data. (Tuples [parameters, value], ordered by parameters.)
+/// \s, s -> [[[f...], f]...]
+paramsEvals = \model, date ->
+  return file.exists(tpath(model, date))
+    ? js.r(file.read(tpath(model, date)))
+    : []
+  ;;
+
+/// Returns table data of the last date. (Tuples [parameters, value], ordered
+/// by parameters.)
+/// \s -> [[[f...], f]...]
+lastParamsEvals = \model -> {
+  dts = dates(model);
+  if (dts) {
+    maxDate = arr.reduce(dts, dts[0], \r, d -> return d > r ? d : r;);
+    return paramsEvals(model, maxDate);
+  }
+  return [];
+};
+
+/// Remove tables of any model that is no found in 'Models'
+/// \[s...] -> ()
+purge = \Models -> {
+  RegisteredModels = models();
+  for (m = RegisteredModels) {
+    if (!arr.any(Models, \m2 -> return m2 == m;)) {
+      log.warning("Delected " + mpath(m));
+      file.del(mpath(m));
+    }
+  }
+};
+
+/// Writes or overwrites a 'param-eval's table
+///   \model: Model identifier.
+///   \date : Date of data in MMarket.
+///   \data : Tuples [parameters, value], ordered by parameters.
+/// \s, s, [[[f...], f]...] -> ()
+update = \model, date, data -> {
+  file.mkdir(mpath(model));
+  file.write(tpath(model, date), js.w(data));
+  for (d = fns.datesSpare(dates(model))) {
+    log.warning("Deleted "  + tpath(model, d));
+    file.del(tpath(model, d));
+  }
+};

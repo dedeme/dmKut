@@ -6,7 +6,7 @@
 /// Creates new 'adjustment' parameters.
 ///   type: Adjustment type. One of "cut", "background" or "stretch".
 ///   Params: Paramentes wich meaning depenends on type.
-/// \s, [i, ...] -> d<imgAdjustment>
+/// \s, [i ...] -> d<imgAdjustment>
 new = \type, Params -> return {type, Params};;
 
 /// Creates a 'imgAdjstment' of type "cut".
@@ -28,7 +28,7 @@ newBackground = \color, blur, light ->
 newStretch = \pixels -> return new("stretch", [pixels]);;
 
 /// \<imgAdjustment> -> [*(JS)...]
-toJs = \IA -> return [IA.type, IA.Params];;
+toJs = \IA -> return [IA.type, arr.map(IA.Params, math.itof)];;
 
 /// \[*(JS)...] -> <imgAdjustment>
 fromJs = \A -> return new (A[0], arr.map(A[1], math.ftoi));;

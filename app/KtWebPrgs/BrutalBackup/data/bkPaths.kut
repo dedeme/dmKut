@@ -1,1 +1,53 @@
-/dm/dmWeb/app/KtWeb/prgs/BrutalBackup/jkut/data/bkPaths.jkut
+// Copyright 10-Feb-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Backup paths data.
+
+/// Constructor:
+///   id: Backup paths identifier.
+///   source: Absolute path of backup source.
+///   sourceError: Error reading 'source' or "".
+///   backup: Absolute path of backup target.
+///   backupError: Error reading 'backup' or "".
+///   msgs: Error messages from backup process.
+///   tm: Time for read files list.
+///   state: It can be:
+///     []    : Backup stoped.
+///     [0]   : Backup starting.
+///     [x, y]: Backup processing operation 'x' of 'y'.
+/// \s, s, s, s, s, [s], i, [i] -> d<backPaths>
+mk = \id, source, sourceError, backup, backupError, msgs, tm, state ->
+  return { id, source, sourceError, backup, backupError, msgs, tm, state };;
+
+/// \<bkPaths> -> b
+isRunning = \BkP -> return arr.size(BkP.state) == 1 | (
+    arr.size(BkP.state) == 2 &
+    BkP.state[1] != 0 &
+    BkP.state[1] - BkP.state[0] > 0
+  );;
+
+/// \<bkPaths> -> [*(JS)...]
+toJs = \BkP -> return [
+    BkP.id,
+    BkP.source,
+    BkP.sourceError,
+    BkP.backup,
+    BkP.backupError,
+    BkP.msgs,
+    math.itof(BkP.tm),
+    arr.map(BkP.state, math.itof)
+  ];;
+
+/// \[*(JS)...] -> <bkPaths>
+fromJs = \A -> {
+  return mk(
+    A[0],
+    A[1],
+    A[2],
+    A[3],
+    A[4],
+    A[5],
+    math.ftoi(A[6]),
+    arr.map(A[7], math.ftoi)
+  );
+};

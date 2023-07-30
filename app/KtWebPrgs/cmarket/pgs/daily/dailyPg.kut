@@ -1,0 +1,71 @@
+// Copyright 18-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting balance page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/acc/ann";
+import "data/qs/qsvs";
+import "data/qs/qsv";
+import "data/chart/dailyChart";
+import "db/acc/diariesDb";
+import "db/daily/dailyChartsTb";
+import "db/daily/cosSelTb";
+import "db/activityTb";
+import "sch";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      CosData = []; // [<dailyChart>...]
+      IxsData = []; // [<dailyChart>...]
+      for (Ch = dailyChartsTb.read())
+        if (arr.any([cts.meNick] + cts.IxNicks, \n -> return Ch.nick == n;))
+          arr.push(IxsData, Ch);
+        else arr.push(CosData, Ch);
+      arr.sort(IxsData, \D1, D2 -> return
+        D1.nick == cts.meNick
+          ? true
+          : D1.nick == cts.ibexNick
+              ? D2.nick != cts.meNick
+              : D1.nick == cts.euroNick
+                ? D2.nick == cts.usaNick
+                : false
+      ;);
+      DicRebuys = {}; // [s...] {nick -> date}
+      for (inv = 0:cts.investors) {
+        Ys = diariesDb.investorYears(inv);
+        for (y = Ys[:2]) ann.rebuys(DicRebuys, diariesDb.investorAnns(inv, y));
+      }
+      serverName = qsv.name(qsvs.currentDiary());
+      activity = activityTb.read().activity;
+
+      sys.print(rp.mk({
+        CosData: arr.map(CosData, dailyChart.toJs),
+        IxsData: arr.map(IxsData, dailyChart.toJs),
+        CosSel: cosSelTb.read(),
+        Rebuys: dic.keys(DicRebuys),
+        serverName,
+        activity
+      }));
+    }
+    "reactivate": {
+      sch.dailyActivate();
+      sys.print(rp.mkEmpty());
+    }
+    "setSelected": {
+      nick = Rq.nick;
+      isSel = Rq.isSel;
+      CosSel = cosSelTb.read();
+      if (isSel) arr.push(CosSel, nick);
+      else arr.filterIn(CosSel, \n -> return n != nick;);
+
+      cosSelTb.write(CosSel);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -5,6 +5,7 @@
 
 import "timetable";
 import "marketDay";
+import "data/cts";
 
 /// Constructor.
 ///   general     : Default timetable of a market day.
@@ -47,3 +48,61 @@ fromJs = \A -> return new(
     A[1],
     arr.map(A[2], marketDay.fromJs)
   );;
+
+/// Returns true if date is a market day.
+///
+/// For example: calendar.isMarkeDay(cal, time.Now())
+///   calendar: Calendar.
+///   tm      : Date to test.
+/// \<calendar>, i -> b
+isMarketDay = \Cal, tm -> {
+  wd = time.weekday(tm);
+  d = time.toStr(tm);
+  return wd > 0 & wd < 6 & !arr.any(Cal.holidays, \h -> return h == d;);
+};
+
+/// Returns true if is time to Watch market.
+///
+/// For example: calendar.isTimetoWatch(cal, time.Now())
+///   calendar: Calendar.
+///   tm      : Time to test.
+/// \<calendar>, i -> b
+isTimeToWatch = \Cal, tm -> {
+  tm = tm - cts.serverDelay * 1000;
+  d = time.toStr(tm);
+  if (isMarketDay(Cal, tm)) {
+    SpecialDay = arr.find(Cal.specialDays, \D -> return D.date == d;);
+    o = SpecialDay ? SpecialDay!.hopen - 1 : Cal.general.hopen - 1;
+    c = SpecialDay ? SpecialDay!.hclose + 1 : Cal.general.hclose + 1;
+
+    h = time.hour(tm);
+    return h >= o & h <= c;
+  }
+  return false;
+};
+
+/// Returns 'true' if market is open.
+//
+/// For example: calendar.IsOpen(cal, time.Now())
+///   calendar: Calendar.
+///   tm      : Time to test.
+/// \<calendar>, i -> b
+isOpen =  \Cal, tm -> {
+  tm = tm - cts.serverDelay * 1000;
+  d = time.toStr(tm);
+  if (isMarketDay(Cal, tm)) {
+    h = time.hour(tm);
+    m = time.minute(tm);
+    // \<timetable>|<marketDay> -> bool
+    inLimits = \tt -> return (h > tt.hopen | (h == tt.hopen & m >= tt.mopen)) &
+			(h < tt.hclose | (h == tt.hclose & m <= tt.mclose))
+    ;;
+
+    SpecialDay = arr.find(Cal.specialDays, \D -> return D.date == d;);
+    return SpecialDay
+      ? inLimits(SpecialDay!)
+      : inLimits(Cal.general)
+    ;
+  }
+  return false;
+};

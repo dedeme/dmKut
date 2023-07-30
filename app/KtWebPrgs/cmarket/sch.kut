@@ -1,0 +1,245 @@
+// Copyright 12-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Scheduler
+
+import "libdm/log";
+import "db";
+import "db/calendarTb";
+import "db/activityTb";
+import "db/cosTb";
+import "db/investorsTb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/acc/diariesDb";
+import "db/acc/profitsDb";
+import "db/daily/cosSelTb";
+import "data/calendar/calendar";
+import "data/cts";
+import "data/activity";
+import "data/acc/opr";
+import "data/acc/ann";
+import "data/acc/annsTb";
+import "data/chart/profitsEntry";
+import "qspr";
+
+// If it fails, returns "". The found PID must be different to pid.
+// \s -> s
+getPid = \pid -> {
+  R = sys.cmd("ps", ["-x"]);
+  if (!R[1]) return "";
+
+  cmd = "/home/deme/bin/kutmkt /dm/dmWeb/app/KtWeb/prgs/CMarket/kut/main start";
+  for (prg = str.splitTrim(R!, "\n")) {
+    if (str.index(prg, cmd) != -1) {
+      ix = str.index(prg, " ");
+      if (ix != -1) {
+        r = prg[:ix];
+        if (r != pid) return r;
+      }
+    }
+  }
+  return "";
+};
+
+/// \ -> ()
+historicUpdate = \ -> {
+  log.warning("Historic update");
+
+  Cos = cosTb.read();
+  SelCos = arr.filter(Cos.cos, \C -> return C.isSelected;);
+
+  // Update historic.
+  R0 = qspr.updateHistoric(
+    "Updating historic of main company " + Cos.main, Cos.main, Cos.main
+  );
+  if (R0.withError)
+    log.error("Fail reading main company " + Cos.main);
+  else
+    for (C = Cos.cos)
+      qspr.updateHistoric(
+        "Updating historic of " + C.nick, Cos.main, C.nick)
+      ;
+
+  // Update investors.
+  investorsTb.update();
+
+  // Clean Closes
+  Closes = closesTb.read();
+  for (nk = dic.keys(Closes))
+    if (!arr.any(SelCos, \C -> return C.nick == nk;)) dic.remove(Closes, nk);
+  closesTb.write(Closes);
+
+  // Clean Refs
+  Refs = refsTb.read();
+  for (nk = dic.keys(Refs))
+    if (!arr.any(SelCos, \C -> return C.nick == nk;)) dic.remove(Refs, nk);
+  refsTb.write(Refs);
+
+  // Clean daily charts selected companies
+  cosSelTb.write(arr.filter(
+    cosSelTb.read(),
+    \nk -> return arr.any(SelCos, \C -> return C.nick == nk;);
+  ));
+
+  // Update Closes and Refs
+  for (C = SelCos) {
+    err = qspr.updateClosesAndRefs(C.nick);
+    if (err) log.error(err);
+  }
+  // Update indexes
+  for (nk = cts.IxNicks) {
+    err = qspr.updateClosesAndRefs(nk);
+    if (err) log.error(err);
+  }
+
+  qspr.updateOperations();
+};
+
+// \ -> ()
+dailyUpdate = \ -> {
+  err = qspr.updateDailyCloses();
+  if (err) log.error(err);
+
+  qspr.updateDailyCharts();
+
+  Errs = qspr.updateHistoricProfits();
+  for (E = Errs) log.error(E);
+};
+
+/// \ -> ()
+dailyActivate = \ -> { // Include dailyUpdate
+  log.warning("Daily activate");
+
+  investorsTb.update();
+  // Update Closes and Refs
+  SelCos = arr.filter(cosTb.read().cos, \C -> return C.isSelected;);
+  for (C = SelCos) {
+    err = qspr.updateClosesAndRefs(C.nick);
+    if (err) log.error(err);
+  }
+  qspr.createDailyCharts();
+  dailyUpdate();
+};
+
+// \ -> ()
+dailyDeactivate = \ -> {
+  log.warning("Daily deactivate");
+
+  investorsTb.update();
+  qspr.updateOperations();
+};
+
+// \ -> ()
+closeAccountingYear = \ -> {
+  currentYear = math.itos(time.year(time.now()));
+  for (inv = 0:cts.investors) {
+    dataYear = diariesDb.investorYears(inv)[0];
+    if (dataYear != currentYear) {
+      Anns = diariesDb.investorAnns(inv, dataYear);
+      Set = ann.mkSettlement(Anns);
+      if (Set.errors) {
+        for (E = Set.errors) log.error(E);
+        log.error("Can not change accounting year");
+        return;
+      }
+
+      date = currentYear + "0101";
+      NewTable = annsTb.new();
+      annsTb.add(NewTable, ann.new(
+        -1, date, opr.newIn(Set.ledger.cash)
+      ));
+      for (StPf, nick = Set.portfolio)
+        annsTb.add(NewTable, ann.new(
+          -1, date, opr.newSt(nick, StPf[0], StPf[1])
+        ));
+      diariesDb.write(inv, currentYear, NewTable);
+    }
+
+    dataYear2 = profitsDb.investorYears(inv)[0];
+    if (dataYear2 != currentYear) {
+      E = arr.peek(profitsDb.read(inv, dataYear2));
+      profitsDb.write(
+        inv,
+        currentYear,
+        [profitsEntry.new(currentYear + "0101", E.total, E.acc, E.risk)]
+      );
+    }
+  }
+};
+
+/// Starts server.
+/// \ -> ()
+start = \ -> {
+  pid1 = getPid("*");
+  pid = getPid(pid1);
+  if (pid) {
+    sys.println("Server is already running");
+    return;
+  }
+
+  closeAccountingYear();
+
+  while () {
+    Cal = calendarTb.read();
+    now = time.now();
+    tmSleep = calendar.isTimeToWatch(Cal, now)
+      ? cts.schedulerWatchingTime
+      : cts.schedulerSleepTime
+    ;
+
+    Act = activityTb.read();
+    if (
+      ( time.toStr(Act.tm) != time.toStr(now) |
+        time.hour(Act.tm) <= cts.actHistoricStart
+      ) & time.hour(now) > cts.actHistoricStart
+    ) {
+      historicUpdate();
+      activityTb.write(activity.newNow(cts.actSleeping));
+      continue;
+    }
+
+    if (calendar.isMarketDay(Cal, now)) {
+      if (Act.activity == cts.actSleeping) {
+        if (calendar.isOpen(Cal, now)) {
+          dailyActivate();
+          activityTb.write(activity.newNow(cts.actActive));
+        } else if (time.hour(Act.tm) < 12 & time.hour(now) > 12) {
+          dailyActivate();
+          dailyDeactivate();
+          activityTb.write(activity.newNow(cts.actSleeping));
+        }
+      } else {
+        dailyUpdate();
+        if (!calendar.isOpen(Cal, now)) {
+          dailyDeactivate();
+          activityTb.write(activity.newNow(cts.actSleeping));
+        }
+      }
+    }
+
+    sys.sleep(tmSleep);
+  }
+};
+
+/// Stops server
+/// \ -> ()
+stop = \ -> {
+  pid = getPid("*");
+  if (!pid) {
+    sys.println("Proccess 'cmarket' not found");
+    return;
+  }
+
+  if (!db.lock()) {
+    sys.println("Date base locked when stopping");
+    return;
+  }
+
+  ok = sys.cmd("kill", [pid])[1];
+
+  db.unlock();
+
+  if (ok) sys.println("cmarket stoped");
+  else sys.println("cmarket could not be stopped");
+};

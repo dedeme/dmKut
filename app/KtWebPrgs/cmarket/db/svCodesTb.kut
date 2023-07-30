@@ -6,8 +6,8 @@
 import "libdm/log";
 import "db";
 import "db/quotesDb";
-import "data/qsvs";
-import "data/qsv";
+import "data/qs/qsvs";
+import "data/qs/qsv";
 
 fpath = "svCodes.tb";
 

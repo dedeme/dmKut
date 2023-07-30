@@ -1,0 +1,118 @@
+// Copyright 15-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting trading page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "libmkt/quotes";
+import "libmkt/models";
+import "libmkt/strategy";
+import "data/cts";
+import "data/acc/ann";
+import "data/acc/pf";
+import "db/svCodesTb";
+import "db/acc/diariesDb";
+import "db/cosTb";
+import "db/quotesDb";
+import "db/investorsTb";
+import "db/trading/closesTb";
+
+mkUrl = \nick -> {
+  Codes = svCodesTb.read("INFOB");
+  Code = dic.get(Codes, nick);
+  if (Code)
+    return str.fmt("https://www.infobolsa.es/cotizacion/historico-%v", [Code!]);
+  return "";
+};
+
+rpErr = \error -> {sys.print(rp.mk({error}));};
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Anns = diariesDb.allInvestorsAnns(diariesDb.allInvestorsYears()[0]);
+      Pf = ann.mkSettlement(Anns).portfolio;
+      Nicks = arr.map(
+        arr.filter(cosTb.read().cos, \C -> return C.isSelected;),
+        \C -> return C.nick;
+      );
+      R = []; // [[s, b, s]...]
+      for (nk = Nicks)
+        arr.push(R, [nk, true & dic.get(Pf, nk), mkUrl(nk)]);
+      sys.print(rp.mk({
+        list: R
+      }));
+    }
+    "nickData": {
+      nk = Rq.nick;
+      Error = [""];
+      ClOp = dic.get(closesTb.read(), nk);
+      if (!ClOp) {rpErr("Close of " + nk + " not found"); return;}
+      isHistoric = ClOp![0];
+      cl = ClOp![1];
+      mainNick = cosTb.read().main;
+      QsRs = quotesDb.readQuotes(mainNick, nk);
+      if (!QsRs[1]) {rpErr(QsRs!); return;}
+      QsV = [QsRs!];
+      if (!isHistoric) {
+        Qs = QsV!;
+        Dates = Qs.dates;
+        arr.shift(Dates);
+        arr.push(Dates, time.toStr(time.now()));
+        Opens = Qs.opens;
+        arr.shift(Opens);
+        arr.push(Opens, [cl]);
+        Closes = Qs.closes;
+        arr.shift(Closes);
+        arr.push(Closes, [cl]);
+        QsV! = quotes.new(Qs.date, Qs.cos, Dates, Opens, Closes);
+      }
+      Qs = QsV!;
+
+      Refs = []; //[[f...]...]
+      Invs = []; // [i...]
+      StSum = [0];
+      Pr = [-1.0];
+      for (i = 0:cts.investors) {
+        Anns = diariesDb.investorAnns(i, diariesDb.investorYears(i)[0]);
+        Pf = ann.mkSettlement(Anns).portfolio;
+        E = dic.get(Pf, nk);
+        if (E) {
+          stocks = StSum! + E![0];
+          price = (math.itof(StSum!) * Pr! + math.itof(E![0]) * E![1]) /
+            math.itof(stocks);
+          StSum! = stocks;
+          Pr! = price;
+          arr.push(Invs, i);
+        }
+
+        Str = dic.get(investorsTb.read()[i].nicks, nk);
+        if (!Str) {
+          rpErr(str.fmt("Strategy of Inv-%v:%v not found", [i, nk]));
+          return;
+        }
+        Md = models.get(Str!.modelId);
+        if (!Md) {rpErr("Model " + Str!.modelId + " not found"); return;}
+        Params = Str!.params;
+        Rs = strategy.run(
+          Md!, Qs, Params, cts.strategyDaysWin, cts.strategyDaysLoss
+        );
+        arr.push(Refs, arr.map(Rs.refs, \R -> return math.round(R!, 4);));
+      }
+
+      sys.print(rp.mk({
+        error: Error!,
+        investorsN: math.itof(cts.investors),
+        price: Pr!,
+        investors: arr.map(Invs, math.itof),
+        profits: math.itof(StSum!) * (cl - Pr!),
+        dates: Qs.dates,
+        closes: arr.map(Qs.closes, \C -> return C!;),
+        refs: Refs
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

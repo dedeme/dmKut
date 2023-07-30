@@ -5,22 +5,23 @@
 
 import "KtWeb/rp";
 import "db";
-import "ex/ktmmarket/evals";
+import "db/evalsDb";
 
 /// \m -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      rqModel =Rq.model;
-      Mds = evals.list();
-      model = arr.any(Mds, \md -> return md == rqModel;) ? rqModel : Mds[0];
-
+      Mds = evalsDb.models();
+      model = arr.any(Mds, \m -> return m == Rq.model;) ? Rq.model : Mds[0];
       return rp.mk({
-        "models": Mds,
-        "model": model,
-        "mapsGroup": js.r(db.hotMapsDb(model).readJs())
+        model,
+        models: Mds,
+        datesGroup: evalsDb.dates(model)
       });
     }
+    "evals": return rp.mk({
+      paramsEvals: evalsDb.paramsEvals(Rq.modelSel, Rq.date)
+    });
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

@@ -76,7 +76,7 @@ read = \-> {
     if (ix2 == -1)
       sys.throw(str.fmt("Out team is missing in\n%s", t[ix : ix+80]));
 
-    ixr = str.indexFrom(t, "resultado-partido", ix + 10);
+    ixr = str.indexFrom(t[:ix2], "resultado-partido", ix + 10);
     if (ixr != -1) {
       outTeam = getTeam(t, ix2);
       Rs = [getResult(t, ixr)];

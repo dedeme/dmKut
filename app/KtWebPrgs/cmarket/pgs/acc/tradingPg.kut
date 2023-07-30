@@ -1,0 +1,51 @@
+// Copyright 15-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting trading page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/acc/ann";
+import "data/acc/pf";
+import "data/invOperation";
+import "db/acc/diariesDb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/invOperationsTb";
+import "qspr";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Ok = [true];
+      Oprs = invOperationsTb.read();
+      PfsJs = []; // [{[f, f]...}] :: [{nick -> [stocks, price]}...]
+      Rebuys = {}; // {s...} :: {nick -> date}
+      for (inv = 0:cts.investors) {
+        Ys = diariesDb.investorYears(inv);
+        for (y = Ys[:2]) ann.rebuys(Rebuys, diariesDb.investorAnns(inv, y));
+        Anns = Ys ? diariesDb.investorAnns(inv, Ys[0]) : [];
+        Set = ann.mkSettlement(Anns);
+        if (Set.errors) {
+          Ok! = false;
+          for (e = Set.errors) log.error(e);
+        }
+        arr.push(PfsJs, pf.toJs(Set.portfolio));
+      }
+      sys.print(rp.mk({
+        ok: Ok!,
+        portfolios: PfsJs,
+        invOperations: arr.map(Oprs, invOperation.toJs),
+        closes: closesTb.readOnlyCloses(), // {f...} :: {nick -> close}
+        rebuys: Rebuys
+      }));
+    }
+    "update": {
+      qspr.updateOperations();
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

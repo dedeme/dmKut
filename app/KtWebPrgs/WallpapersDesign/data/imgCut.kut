@@ -12,7 +12,12 @@
 new = \left, top, right, bottom -> return {left, top, right, bottom};;
 
 /// \<imgCut> -> [*(JS)...]
-toJs = \IC -> return [IC.left, IC.top, IC.right, IC.bottom];;
+toJs = \IC -> return [
+    math.itof(IC.left),
+    math.itof(IC.top),
+    math.itof(IC.right),
+    math.itof(IC.bottom)
+  ];;
 
 /// \[*(JS)...] -> <imgCut>
 fromJs = \A -> return new(

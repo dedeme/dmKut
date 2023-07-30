@@ -22,7 +22,7 @@ mkArray = \ix -> return newEntry(false, ix, "");;
 mkDic = \key -> return newEntry(true, -1, key);;
 
 /// \<fieldEntry> -> [*(JS)...]
-entryToJs = \E -> return [E.isDic, E.ix, E.key];;
+entryToJs = \E -> return [E.isDic, math.itof(E.ix), E.key];;
 
 /// \[*(JS)...] -> <fieldEntry>
 entryFromJs = \A -> return newEntry(A[0], math.ftoi(A[1]), A[2]);;

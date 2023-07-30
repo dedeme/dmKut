@@ -1,0 +1,21 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Description page
+
+import "KtWeb/rp";
+import "libmkt/models";
+import "libmkt/model/model";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      mdId = Rq.modelId;
+      sys.print(rp.mk({
+        model: model.toJs(models.get(mdId)!)
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

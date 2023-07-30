@@ -1,0 +1,16 @@
+// Copyright 11-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Ledger data.
+
+/// Constructor.
+///   stocks     : + (assets)
+///   cash       : + (assets)
+///   equity     : - (liabilities)
+///   sales      : - (liabilities) sales profits is -, sales losses is +
+///   fees       : - (liabilities)
+///   profits    : - (liabilities)
+///   differences: - (liabilities)
+/// \f, f, f, f, f, f, f -> d<ledger>
+new = \stocks, cash, equity, sales, fees, profits, differences ->
+  return {stocks, cash, equity, sales, fees, profits, differences};;

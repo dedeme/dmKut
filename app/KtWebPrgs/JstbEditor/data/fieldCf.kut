@@ -27,7 +27,11 @@ newIndexKeyFilter = \startRange, endRange, searchType, isUpper, text ->
 
 /// \<indexKeyFilter> -> [*(JS)...]
 indexKeyFilterToJs = \F -> return [
-    F.startRange, F.endRange, F.searchType, F.isUpper, F.text
+    math.itof(F.startRange),
+    math.itof(F.endRange),
+    math.itof(F.searchType),
+    F.isUpper,
+    F.text
   ];;
 
 /// \[*(JS)...] -> <indexKeyFilter>

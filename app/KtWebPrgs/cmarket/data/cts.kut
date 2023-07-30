@@ -23,13 +23,28 @@ quotesVolume = 60;
 historicMinimumEntries = 4;
 
 /// Server configuration stopped
-serverStope = 0;
+serverStopped = 0;
 
 /// Server configuration active
 serverActive = 1;
 
 /// Server configuration selected
 serverSelected = 2;
+
+/// me nick.
+meNick = "<ME>";
+
+/// Ibex nick
+ibexNick = "<IBEX>";
+
+/// Euro index nick.
+euroNick = "<EURO>";
+
+/// Usa index nick.
+usaNick = "<USA>";
+
+/// All index nicks;
+IxNicks = [ibexNick, euroNick, usaNick];
 
 // Scheduler -----------------------------------------------------------------
 
@@ -72,7 +87,16 @@ bet = 10000.0;
 minToBet = 11000.0;
 
 /// No lost multiplicator
-noLostMultiplicator = 1.05;
+noLostMultiplicator = 1.02;
 
-/// Rebuy limit
-rebuyLimit = 300.0;
+/// Delay days after a sale with profits (in 5 days per week).
+strategyDaysWin = 25;
+
+/// Delay days after a sale with profits.
+daysWin = 35;
+
+/// Delay days after a sale with losses (in 5 days per week).
+strategyDaysLoss = 90;
+
+/// Delay days after a sale with losses.
+daysLost = 126;

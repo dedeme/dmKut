@@ -3,7 +3,7 @@
 
 /// Quotes server data YAHOO ("Yahoo").
 
-import "data/qsv";
+import "data/qs/qsv";
 import "libmkt/qs";
 
 // \s -> s
@@ -232,7 +232,7 @@ readHistoric = \html -> {
     // END
     arr.push(Qs, str.fmt(
       "%v:%v:%v:%v:%v:%v:false",
-      [Date!, Close!, Open!, Max!, Min!, Vol!]
+      [Date!, Open!, Close!, Max!, Min!, Vol!]
     ));
     Ix! = endRow;
   }
@@ -265,7 +265,7 @@ downloadHistoric = \code -> {
     "https://es.finance.yahoo.com/quote/%s/history?p=%s", [code, code]
   );
   return sys.cmd("timeout", [
-    "-s", "KILL", "15",
+    "-s", "KILL", "30",
     "wget", "--user-agent", "Mozilla",
     "--load-cookies=/home/deme/.mozilla/firefox/bfrqeymk.default/cookies.sqlite",
     "-q", "--no-cache", "-O", "-", url

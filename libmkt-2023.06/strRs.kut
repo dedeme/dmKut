@@ -1,0 +1,21 @@
+// Copyright 28-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data returned by 'strategy.run'
+
+/// Constructor:
+/// NOTE: orders, hassets, hwithdrawals, and cash came from global simulation,
+///       buys, sales and profits came from single simualation.
+///   orders: Every market order ordered by date.
+///   hassets: Assets historic. One value for each date.
+///   hwithdrawals: Withdrawals historic. One value for each date.
+///   cash: Final cash + withdrawals.
+///   refs: Referencies. Matrix dates - company (one for each close).
+///   buys: Buy dates. One array for each company (from before to after).
+///   sales: Sales dates. One array for each company (from before to after).
+///   profits: Profits ratios. One for each 'qs.Cos'
+/// \[<order>...], [f...], [f...], f, [[f...]...],
+///  [[s...]...], [[s...]...], [f...] -> d<strRs>
+new = \orders, hassets, hwithdrawals, cash, refs, buys, sales, profits ->
+  return {orders, hassets, hwithdrawals, cash, refs, buys, sales, profits};;
+

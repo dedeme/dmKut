@@ -6,8 +6,8 @@
 import "libdm/log";
 import "KtWeb/rp";
 import "db";
+import "db/evalsDb";
 import "ex/ktmarket/investors";
-import "data/paramsEval";
 
 /// \m -> s
 process = \Rq -> {
@@ -15,20 +15,23 @@ process = \Rq -> {
     "idata": {
       Ips = arr.map(
         investors.read(),
-        \Ps -> return arr.map(Ps, \p -> return js.rf(p););
+        \Ps -> return arr.map(Ps, \p -> return js.r(p););
       );
-      Mds = ["QFIJO", "QMOV", "APRX"]; // ordered by investor!
+      Mds = ["APRX", "APRX", "APRX"]; // ordered by investor!
       IParEvals = [];
       ParEvals = [];
-      for (m, i = Mds) {
-        Pevs = db.hotMapsDb(m).read()[0].entries;
-        arr.push(ParEvals, arr.reduce(Pevs, Pevs[0], \Rs, E -> {
-          if (paramsEval.eqParams(E[0], Ips[i])) arr.push(IParEvals, E);
-          return E[paramsEval.eval] > Rs[paramsEval.eval] ? E : Rs;
-        }));
-        // Value not found
-        if (arr.size(IParEvals) == i)
-          arr.push(IParEvals, paramsEval.new(Ips[i], 0));
+      for (md, i = Mds) {
+        LastPevs = evalsDb.lastParamsEvals(md);
+        if (!LastPevs) sys.throw("Parameters of " + md + " not found");
+
+        IPev = [];
+        MaxPev = [LastPevs[0]];
+        for (Pev = LastPevs) {
+          if (Pev[0] == Ips[i]) arr.push(IPev, Pev);
+          if (Pev[1] > MaxPev![1]) MaxPev! = Pev;
+        }
+        arr.push(IParEvals, IPev ? IPev! : [Ips[i], 0.0]);
+        arr.push(ParEvals, MaxPev!);
       }
       return rp.mk({
         "iparamsEvals": IParEvals,

@@ -80,7 +80,7 @@ points = \year -> return jstb.newArr(
       }
       return R;
     },
-  sys.id,
+  rs.rowToJs,
   rs.rowFromJs
 );;
 

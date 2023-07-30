@@ -3,58 +3,43 @@
 
 /// Model evalutations from MMakert update.
 
-import "fns";
-import "db";
-import "data/dated";
-import "data/modelEvals";
-import "data/modelFloats";
-import "data/hotMap";
-import "ex/ktmmarket/evals";
-import "ex/ktmmarket/results";
+import "ex/cmmarket/exEvals";
+import "db/evalsDb";
+import "db/ranksDb";
+import "data/mmarket/mModelEval";
+import "data/mmarket/rank";
 
 /// \-> ()
 run = \-> {
-  lastSunday = fns.lastSunday();
+  RealModels = exEvals.list();
+  evalsDb.purge(RealModels);
 
-  modelEvalsTb = db.modelEvalsTb();
-  MdEvs = modelEvalsTb.read();
-  dated.add(
-    MdEvs,
-    modelEvals.new(lastSunday, evals.ranking())
-  );
-  modelEvalsTb.write(MdEvs);
+  LastDate = ["11111111"];
+  BestPoints = [];
+  BestAssets = [];
+  BestProfits = [];
+  for (md = RealModels) {
+    ExTb = exEvals.modelEvals(md);
+    date = ExTb[0];
+    if (date > LastDate!) LastDate! = date;
 
-  for (m = evals.list()) {
-    hotMapsDb = db.hotMapsDb(m);
-    Maps = hotMapsDb.read();
-    dated.add(
-      Maps,
-      hotMap.new(lastSunday, evals.paramsEvals(m))
-    );
-    hotMapsDb.write(Maps);
+    ParamEvals = []; // [[f...], f]
+    BestPoint = [-1.0 ];
+    BestAsset = [-1.0 ];
+    BestProfit = [-1.0 ];
+    for (MeJs = ExTb[1]) {
+      Me = mModelEval.fromJs(MeJs);
+      arr.push(ParamEvals, [Me.params, mModelEval.heval(Me)]);
+      BestPoint! = math.max(BestPoint!, mModelEval.heval(Me));
+      BestAsset! = math.max(BestAsset!, Me.hassets);
+      BestProfit! = math.max(BestProfit!, Me.hprofits);
+    }
+
+    evalsDb.update(md, date, ParamEvals);
+    arr.push(BestPoints, [md, BestPoint!]);
+    arr.push(BestAssets, [md, BestAsset!]);
+    arr.push(BestProfits, [md, BestProfit!]);
   }
 
-  totalsDb = db.totalsModelSimProfitsDb();
-  MdTotals = totalsDb.read();
-  dated.add(
-    MdTotals,
-    modelFloats.new(lastSunday, results.totalsRanking())
-  );
-  totalsDb.write(MdTotals);
-
-  cashesDb = db.cashesModelSimProfitsDb();
-  MdCashes = cashesDb.read();
-  dated.add(
-    MdCashes,
-    modelFloats.new(lastSunday, results.cashesRanking())
-  );
-  cashesDb.write(MdCashes);
-
-  refsDb = db.refsModelSimProfitsDb();
-  MdRefs = refsDb.read();
-  dated.add(
-    MdRefs,
-    modelFloats.new(lastSunday, results.refsRanking())
-  );
-  refsDb.write(MdRefs);
+  ranksDb.update(LastDate!, rank.new(BestPoints, BestAssets, BestProfits));
 };

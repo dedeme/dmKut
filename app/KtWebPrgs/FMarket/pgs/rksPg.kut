@@ -1,0 +1,36 @@
+// Copyright 22-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Rankings page.
+
+import "KtWeb/rp";
+import "libmkt/model/model";
+import "libdm/log";
+import "data/cts";
+import "data/flea";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      modelId = Rq.modelId;
+      Models = arr.map(db.modelsList(), model.id);
+      mdId = arr.any(Models, \m -> return m == modelId;)
+        ? modelId
+        : cts.mainModel
+      ;
+      Rks = db.readRankings(mdId);
+      sys.print(rp.mk({
+        mdId,
+        models: Models,
+        rks: arr.map(
+            dic.toArr(Rks),
+            \Kv -> return [Kv[0], arr.map(Kv[1], flea.toJs)];
+          )
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

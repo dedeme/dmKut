@@ -1,0 +1,26 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Fix model.
+
+import "model";
+import "doc/qfixDoc";
+
+/// Returns a new 'qfix' model.
+new = \ -> return model.new(
+    "QFIJO",
+    "Quantum fijo",
+		qfixDoc.text,
+		["Intervalo"],
+    [model.percParam],
+    [0.01],
+    [0.005],
+    [0.001],
+		calc
+  );;
+
+// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+calc = \Closes, Params, fn -> {
+  Env = {Closes, Params};
+  for (Row = Closes) fn(Row, sys.c("calcQfix", Env));
+};

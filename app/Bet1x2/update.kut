@@ -17,6 +17,7 @@ updateResults = \-> {
 
   // [[([<Rs>]|[])...]...]
   AsResults = as.read();
+
   // [[([<Rs>]|[])...]...]
   MarcaResults = marca.read();
   if (arr.size(AsResults) != arr.size(MarcaResults))

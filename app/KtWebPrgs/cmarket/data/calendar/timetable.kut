@@ -13,7 +13,12 @@ new = \hopen, mopen, hclose, mclose ->
   return {hopen, mopen, hclose, mclose};;
 
 /// \<timetable> -> [JS...]
-toJs = \T -> return [T.hopen, T.mopen, T.hclose, T.mclose];;
+toJs = \T -> return [
+    math.itof(T.hopen),
+    math.itof(T.mopen),
+    math.itof(T.hclose),
+    math.itof(T.mclose)
+  ];;
 
 /// \[JS...] -> <timetable>
 fromJs = \A -> return new(

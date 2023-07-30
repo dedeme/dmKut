@@ -1,0 +1,105 @@
+// Copyright 10-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting operatiom data.
+
+/// Sell operation type
+seT = "se";
+/// Buy operation type
+buT = "bu";
+/// Stock operation type
+stT = "st";
+/// Income operation type
+inT = "in";
+/// Withdrawal operation type
+wiT = "wi";
+/// Profits operation type
+prT = "pr";
+/// Fees operation type
+feT = "fe";
+/// Positive differences operation type
+pdT = "pd";
+/// Negative differences operation type
+ndT = "nd";
+
+// \i, i, f, s -> x<opr>
+new = \tp, i, f, s -> return {tp, i, f, s};;
+
+/// Makes a sell operation
+/// \s, i, f -> <opr>
+newSe = \nick, stocks, price -> return new(seT, stocks, price, nick);;
+
+/// Makes a buy operation
+/// \s, i, f -> <opr>
+newBu = \nick, stocks, price -> return new(buT, stocks, price, nick);;
+
+/// Makes a stock operation
+/// \s, i, f -> <opr>
+newSt = \nick, stocks, price -> return new(stT, stocks, price, nick);;
+
+/// Makes an income operation
+/// \f -> <opr>
+newIn = \amount -> return new(inT, 0, amount, "");;
+
+/// Makes a withdrawal operation
+/// \f -> <opr>
+newWi = \amount -> return new(wiT, 0, amount, "");;
+
+/// Makes a profits operation
+/// \f, s -> <opr>
+newPr = \amount, cause -> return new(prT, 0, amount, cause);;
+
+/// Makes a fees operation
+/// \f, s -> <opr>
+newFe = \amount, cause -> return new(feT, 0, amount, cause);;
+
+/// Makes a 'positive differences' operation
+/// \f, s -> <opr>
+newPd = \amount, cause -> return new(pdT, 0, amount, cause);;
+
+/// \f, s -> <opr>
+newNd = \amount, cause -> return new(ndT, 0, amount, cause);;
+
+/// Returns operation type. Can be seT, buT, stT, inT, wiT, prT, feT, pdT or ndT.
+/// \<opr> -> s
+type = \op -> return op.tp;;
+
+/// Returns nick if type of 'op' is se, bu or st.
+/// \<opr> -> s
+nick = \op -> return op.s;;
+
+/// Returns stocks if type of 'op' is se, bu or st.
+/// \<opr> -> i
+stocks = \op -> return op.i;;
+
+/// Returns price if type of 'op' is se, bu or st.
+/// \<opr> -> s
+price = \op -> return op.f;;
+
+/// Returns amount if type of 'op' is in, wi, pr, fe, pd or md.
+/// \<opr> -> f
+amount = \op -> return op.f;;
+
+/// Returns cause if type of 'op' is pr, fe, pd or md.
+/// \<opr> -> s
+cause = \op -> return op.s;;
+
+/// \<opr> -> JS
+toJs = \op -> return switch(op.tp) {
+    seT, buT, stT: [op.tp, op.s, math.itof(op.i), op.f];
+    prT, feT, pdT, ndT: [op.tp, op.f, op.s];
+    inT, wiT: [op.tp, op.f];
+    default: sys.throw("Unknown operation of type " + op.tp);
+  };;
+
+/// \JS -> <opr>
+fromJs = \A -> {
+  tp = A[0];
+  return switch(tp) {
+    seT, buT, stT: new(tp, math.ftoi(A[2]), A[3], A[1]);
+    prT, feT, pdT, ndT: new(tp, 0, A[1], A[2]);
+    inT, wiT: new(tp, 0, A[1], "");
+    default: sys.throw("Unknown operation of type " + tp);
+  };
+};
+

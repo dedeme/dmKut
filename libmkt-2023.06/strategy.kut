@@ -1,0 +1,83 @@
+// Copyright 28-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Trading strategy
+
+import "model/model";
+import "quotes";
+import "broker";
+import "order";
+import "strRs";
+
+/// f
+initialCapital = 250000.0;
+
+/// f
+bet = 10000.0;
+
+/// Returns the result of a simulation.
+///   md      : Market model.
+///   Qs      : Quotes to perform the simulation.
+///   Params  : Model params to perform the simulation.
+///   daysWin : Quarantine for win operations.
+///   daysLoss: Quarantine fot loss operations.
+/// \<model>, <quotes>, [f...], i, i -> <strRs>
+run = \md, Qs, Params, daysWin, daysLoss -> {
+  // [s...]
+  Dates = Qs.dates;
+  nDates = arr.size(Dates);
+  // [s...]
+  Nks = Qs.cos;
+  nCos = arr.size(Nks);
+  // [<vec>...]
+  Opens = Qs.vopens;
+  // [<vec>...]
+  Closes = Qs.vcloses;
+
+  CashIn = [initialCapital];
+  Withdrawals = [0.0];
+
+  // [[f...]]
+  Refs = arr.new(nDates, 0);
+  for (i = 0:nDates) Refs[i] = arr.new(nCos, 0.0); // Fake value
+
+  // [<order>...]
+  Orders = [];
+  Hassets = arr.new(nDates, 0.0);
+  Hwithdrawals = arr.new(nDates, 0.0);
+  // [[s...]...] (dates)
+  Buys = arr.new(nCos, 0);
+  for (i = 0:nCos) Buys[i] = [];
+  // [[s...]...] (dates)
+  Sales = arr.new(nCos, 0);
+  for (i = 0:nCos) Sales[i] = [];
+
+  PrfCashs = arr.new(nCos, bet);
+  PrfStocks = arr.new(nCos, 0);
+
+  Env = {
+    daysWin, daysLoss, Dates, Nks, Opens, CashIn, Withdrawals, Refs,
+    Orders, Hassets, Hwithdrawals, Buys, Sales, PrfCashs, PrfStocks
+  };
+
+  model.calc(
+    md, Closes, Params,
+    \Cls, Rfs -> sys.c("strategyRun", [Env, Cls, Rfs]);
+  );
+
+  cash = CashIn! + Withdrawals!;
+  LastCloses = Qs.closes[nDates - 1];
+  Profits = arr.new(nCos, 0.0);
+  for (i = 0:nCos) {
+    stocks = PrfStocks[i];
+    if (stocks == 0) {
+      Profits[i] = (PrfCashs[i] - bet) / bet;
+    } else {
+      Profits[i] = (PrfCashs[i] - bet + broker.sell(stocks, LastCloses[i])) / bet;
+    }
+  }
+
+  return strRs.new(
+    Orders, Hassets, Hwithdrawals, cash, Refs, Buys, Sales, Profits
+  );
+};

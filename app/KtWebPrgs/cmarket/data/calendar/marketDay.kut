@@ -14,7 +14,13 @@ new = \date, hopen, mopen, hclose, mclose ->
   return {date, hopen, mopen, hclose, mclose};;
 
 /// \<marketDay> -> [JS...]
-toJs = \M -> return [M.date, M.hopen, M.mopen, M.hclose, M.mclose];;
+toJs = \M -> return [
+    M.date,
+    math.itof(M.hopen),
+    math.itof(M.mopen),
+    math.itof(M.hclose),
+    math.itof(M.mclose)
+  ];;
 
 /// \[JS...] -> <marketDay>
 fromJs = \A -> return new(

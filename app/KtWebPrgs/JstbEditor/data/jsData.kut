@@ -23,6 +23,6 @@ new = \control, tooBig, type, data -> return { control, tooBig, type, data };;
 toJs = \JD -> return [
     JD.control,
     JD.tooBig,
-    JD.type,
+    math.itof(JD.type),
     js.r(JD.data)
   ];;

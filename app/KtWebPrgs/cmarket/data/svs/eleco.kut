@@ -3,7 +3,7 @@
 
 /// Quotes server data ELECO ("El Economista").
 
-import "data/qsv";
+import "data/qs/qsv";
 
 // DIARY -----------------------------------------------------------------------
 // \s -> [[[s, f]...], [s...]]
@@ -106,7 +106,7 @@ withDiary = \ -> return true;;
 downloadDiary = \ -> {
   url = "https://www.eleconomista.es/mercados/mercado-continuo";
   return sys.cmd(
-    "timeout", ["-s", "KILL", "10", "wget", "-q", "--no-cache", "-O", "-", url]
+    "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
   );
 };
 

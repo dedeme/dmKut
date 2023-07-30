@@ -43,9 +43,9 @@ pictEq = \P1, P2 -> return P1[0] == P2[0] & P1[1] == P2[1];;
 //  Serialization
 //  \pict> -> s
 pictToJs = \P -> return [
-    js.wi(P[0]),
-    js.ws(P[1]),
-    js.wi(P[2])
+    math.itof(P[0]),
+    P[1],
+    math.itof(P[2])
   ];;
 //  s -> <pict>
 pictFromJs = \A -> return newPict(math.ftoi(A[0]), A[1], math.ftoi(A[2]));;
@@ -66,7 +66,7 @@ initDb = \-> {
 currentTb = \-> return jstb.new(
   path.cat([home, "current.tb"]),
   \-> return [];,
-  sys.id,
+  pictToJs,
   pictFromJs
 );;
 
@@ -75,7 +75,7 @@ currentTb = \-> return jstb.new(
 pictsTb = \-> return jstb.newArr(
   path.cat([home, "picts.tb"]),
   \-> return [];,
-  sys.id,
+  pictToJs,
   pictFromJs
 );;
 

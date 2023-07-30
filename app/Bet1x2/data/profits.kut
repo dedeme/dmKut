@@ -33,7 +33,12 @@ sum = \Ps, description -> {
 };
 
 /// \<Profits> -> [*(JS)...]
-toJs = \P -> return [P.description, P.hits, P.fails, P.amount];;
+toJs = \P -> return [
+    P.description,
+    math.itof(P.hits),
+    math.itof(P.fails),
+    P.amount
+  ];;
 
 /// \[*(JS)...] -> <Profits>
 fromJs = \A -> return new(

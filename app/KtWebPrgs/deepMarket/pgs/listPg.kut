@@ -1,0 +1,27 @@
+// Copyright 27-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Result list page.
+
+import "KtWeb/rp";
+import "db";
+import "update";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "center": {
+      days = Rq.days; // s type [25-90]
+      start = Rq.start;
+      appr = Rq.appr;
+      db.setNearStart(days, start, appr);
+      Ds = str.split(days[1:-1], "-");
+      Qs = db.readQuotes();
+      update.updateGroup(Qs, math.stoi(Ds[0])!, math.stoi(Ds[1])!, true);
+      update.updateRankings();
+
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

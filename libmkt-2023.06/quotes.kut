@@ -1,0 +1,56 @@
+// Copyright 27-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes table data
+
+/// Constructor
+///   date  : Date in which data was read in format YYYYMMDD.
+///   cos   : Company nicks.
+///   dates : Quotes dates in format YYYYMMDD, from before to after.
+///   opens : Array of normalized opens quotes (without -1).
+///           Its rows match 'dates' and is columns 'cos'.
+///   closes: Array of normalized closes quotes (without -1).
+///           Its rows match 'dates' and is columns 'cos'.
+///   ----
+///   also <quotes> has the following fields:
+///   vopens [<vec>...] :  Matrix of normalized opens quotes (without -1).
+///                       Its rows match 'dates' and is columns 'cos'.
+///   vcloses [<vec>...]: Matrix of normalized closes quotes (without -1).
+///           Its rows match 'dates' and is columns 'cos'.
+/// \s, [s...], [s...],
+///  [[f...]...], [[f...]...] -> d<quotes>
+new = \date, cos, dates, opens, closes ->
+  return {
+      date, cos, dates, opens, closes,
+      vopens: arr.map(opens, \row -> return sys.c("mkVec", row);),
+      vcloses: arr.map(closes, \row -> return sys.c("mkVec", row);)
+    };;
+
+/// Returns the index of one company from its nick, or -1 if nick is not found.
+/// \<quotes> -> i
+companyIndex = \Qs, nick ->
+  return arr.index(Qs.cos, \c -> return c == nick;);;
+
+/// Returns data of the company with index 'coIx' in format '<quotes>'.
+/// \<quotes> -> <quotes>
+getSingle = \Qs, coIx -> {
+  Dates = Qs.dates;
+  rows = arr.size(Dates);
+  AllOpens = Qs.opens;
+  AllCloses = Qs.closes;
+
+  opens = arr.new(rows, 0);
+  closes = arr.new(rows, 0);
+  for (r = 0:rows) {
+    opens[r] = [AllOpens[r][coIx]];
+    closes[r] = [AllCloses[r][coIx]];
+  }
+  return new(Qs.date, [Qs.cos[coIx]], Dates, opens, closes);
+};
+
+/// \<quotes> -> [JS...]
+toJs = \Q -> return [Q.date, Q.cos, Q.dates, Q.opens, Q.closes];;
+
+/// \[JS...] -> <quotes>
+fromJs = \A -> return new(A[0], A[1], A[2], A[3], A[4]);;
+

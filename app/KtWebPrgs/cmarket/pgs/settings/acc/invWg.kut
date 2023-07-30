@@ -1,0 +1,60 @@
+// Copyright 10-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accouning investor page
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/acc/ann";
+import "data/acc/annsTb";
+import "db/acc/diariesDb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      inv = math.ftoi(Rq.inv);
+      year0 = Rq.year; // Can be ""
+
+      Years = diariesDb.investorYears(inv);
+      year = arr.any(Years, \y -> return y == year0;) ? year0 : Years[0];
+      Anns = diariesDb.investorAnns(inv, year);
+      St = ann.mkSettlement(Anns);
+      Ok = [true];
+      if (St.errors) {
+        for (e = St.errors) log.error(e);
+        Ok! = false;
+      }
+      sys.print(rp.mk({
+        ok: Ok!,
+        years: Years,
+        year,
+        anns: arr.map(Anns, ann.toJs),
+        cash: St.ledger.cash
+      }));
+    }
+    "new": {
+      inv = math.ftoi(Rq.inv);
+      Ann = ann.fromJs(Rq.annotation);
+      Years = diariesDb.investorYears(inv);
+      Anns = diariesDb.read(inv, Years[0]);
+      annsTb.add(Anns, Ann);
+      diariesDb.write(inv, Years[0], Anns);
+
+      sys.print(rp.mkEmpty());
+    }
+    "del": {
+      inv = math.ftoi(Rq.inv);
+      id = math.ftoi(Rq.annId);
+
+      Years = diariesDb.investorYears(inv);
+      Anns = diariesDb.read(inv, Years[0]);
+      annsTb.del(Anns, id);
+      diariesDb.write(inv, Years[0], Anns);
+
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -1,7 +1,7 @@
 // Copyright 14-Jun-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Array of quotes management.
+/// Array of company quotes management.
 
 import "quote";
 
@@ -10,31 +10,26 @@ import "quote";
 /// If the final number of quotes is different to 'size', or
 /// some quote can not be read, the first error found is returned.
 ///   size: Number of quotes to return.
-///   s   : Text from a 'NICK.tb' file.
+///   s   : Text from a 'NICK.tb' file. It is trimized.
 /// \i, s -> [<qs>|s, b]
 fromStr = \size, s -> {
-  s = str.trim(s);
-  if (!s) return [false, "Quotes string is empty"];
-
-  // [<quote>...]
-  Qs = [];
-  Err = [""];
-  try {
-    for (l = str.split(s, "\n")) arr.push(Qs, quote.fromStr(l));
-  } catch (e) {
-    Err! = e;
-  }
-
-  if (Err!) return [Err!, false];
-
-  if (arr.size(Qs) != size) {
+  Qs = sys.c("qsFromStr", s);
+  if (!Qs[1]) return Qs;
+  Qts = Qs!;
+  if (arr.size(Qts) != size) {
     return [
-      str.fmt("Wrong quotes number. Expected %d. Found %d", [size, arr.size(Qs)]),
+      str.fmt("Wrong quotes number. Expected %d. Found %d", [size, arr.size(Qts)]),
       false
     ];
   }
 
-  return [Qs, true];
+  return [
+      arr.map(
+        Qts,
+        \Q -> return quote.new(Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6]);
+      ),
+      true
+    ];
 };
 
 /// Returns text to write in a 'NICK.tb' file.
@@ -75,7 +70,7 @@ correct = \qts -> {
     appendErrs(Rs0[0], Rs0[1]);
 
     // [<quote>, [s...]]
-    Rs1 = quote.correct2(Rs0[0], Q2!);
+    Rs1 = quote.correct3(Rs0[0], Q2!);
     appendErrs(Rs1[0], Rs1[1]);
 
     arr.push(NewQs, Rs1[0]);
@@ -173,7 +168,6 @@ merge = \mqts, newQts, qts -> {
   NqtsI = [0];
   nqtsSz = arr.size(newQts);
   QtsI = [0];
-
   while () {
     i = I!;
     nqtsI = NqtsI!;
@@ -206,14 +200,9 @@ merge = \mqts, newQts, qts -> {
       }
     }
 
-    if (qtsI >= sz) {
-      Qs[i] = qts[qtsI];
-      I! += 1;
-      QtsI! += 1;
-      continue;
-    }
-
-    break;
+    Qs[i] = qts[qtsI];
+    I! += 1;
+    QtsI! += 1;
   }
 
   QsR = [Qs];
@@ -250,19 +239,19 @@ dates = \qts -> return arr.map(arr.reverse(qts), \Q -> return Q.date;);;
 normalize = \Vs -> {
   Start = [-1.0];
   for (n, i = Vs)
-    if (n >= 0) {
+    if (n >= 0.0) {
       Start! = n;
       break;
     }
 
-  if (Start! < 0) sys.throw("Every quote is < 0");
+  if (Start! < 0.0) sys.throw("Every quote is < 0");
 
   Vs[0] = Start!;
   for (i = 1:arr.size(Vs))
-    if (Vs[i] < 0) Vs[i] = Vs[i - 1];
+    if (Vs[i] < 0.0) Vs[i] = Vs[i - 1];
 };
 
-/// Returns a array of opens with 'size = qs_size(this)', normalized and
+/// Returns a array of opens with 'size = <qs>.size', normalized and
 /// ordered from before to after
 ///   qts: Historic quotes.
 /// \<qs> -> [f...]
@@ -306,56 +295,4 @@ mins = \qts -> {
 ///   qts    : Historic quotes. (From after to before).
 ///   samples: Number of quotes to take in account.
 /// \s, i -> f
-volumeAvg = \qts, samples -> {
-  Entries = str.split(qts, "\n");
-
-  Maxs = [0.0, 0.0, 0.0];
-  Mins = [0.0, 0.0, 0.0];
-  Count0 = [0];
-  Count = [0];
-  Sum = [0.0];
-  for (Entry = Entries) {
-    Ps = str.splitTrim(Entry, ":");
-    if (arr.size(Ps) != 7) continue;
-    Max = math.stof(Ps[3]);
-    Min = math.stof(Ps[4]);
-    Vol = math.stoi(Ps[5]);
-
-    if (!Max | !Min | !Vol | Vol! < 0) continue;
-
-    v = (Max! + Min!) * math.itof(Vol!);
-    if (Count0! < 3) {
-      i = Count0!;
-      Maxs[i] = v;
-      Mins[i] = v;
-      Count0! += 1;
-      continue;
-    }
-
-    V = [v];
-    More = [true];
-    for (i = 0:3)
-      if (V! > Maxs[i]) {
-        tmp = V!;
-        V! = Maxs[i];
-        Maxs[i] = tmp;
-        More! = false;
-      }
-    if (More!)
-      for (i = 0:3)
-        if (V! < Mins[i]) {
-          tmp = V!;
-          V! = Mins[i];
-          Mins[i] = tmp;
-        }
-
-    Sum! += V!;
-    Count! += 1;
-    if (Count! == samples) break;
-  }
-  if (Count! < samples)
-    sys.throw(str.fmt("Not enough samples: (%v / %v)", [Count!, samples]));
-
-  return Sum! / math.itof(samples * 2);
-};
-
+volumeAvg = \qts, samples -> return sys.c("qsVol", [qts, samples]);;

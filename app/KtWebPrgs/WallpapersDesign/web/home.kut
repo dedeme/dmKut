@@ -51,8 +51,8 @@ process = \Rq -> {
       }));
     }
     "dim": sys.print(rp.mk({
-        width: db.confTb().read().width,
-        height: db.confTb().read().height
+        width: math.itof(db.confTb().read().width),
+        height: math.itof(db.confTb().read().height)
       }));
     "save": {
       group = Rq.group;
@@ -63,8 +63,8 @@ process = \Rq -> {
     "changeDim": {
       confTb = db.confTb();
       conf = confTb.read();
-      conf.width = Rq.width;
-      conf.height = Rq.height;
+      conf.width = math.ftoi(Rq.width);
+      conf.height = math.ftoi(Rq.height);
       confTb.write(conf);
       sys.print(rp.mkEmpty());
     }

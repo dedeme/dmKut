@@ -1,0 +1,26 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Approximations model.
+
+import "model";
+import "doc/apprDoc";
+
+/// Returns a new 'appr' model.
+new = \ -> return model.new(
+    "APRX",
+    "Aproximaciones sucesivas",
+		apprDoc.text,
+		["Inicio", "Aproximación"],
+    [model.percParam, model.percParam],
+    [0.08, 0.07],
+    [0.005, 0.005],
+    [0.001, 0.001],
+		calc
+  );;
+
+// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+calc = \Closes, Params, fn -> {
+  Env = {Closes, Params};
+  for (Row = Closes) fn(Row, sys.c("calcAppr", Env));
+};

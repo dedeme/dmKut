@@ -1,0 +1,21 @@
+// Copyright 27-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Rankings page.
+
+import "KtWeb/rp";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      isNear = Rq.isNear;
+
+      sys.print(rp.mk({
+        summary: db.getRankings(isNear)
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -8,9 +8,10 @@ import "libmkt/qs";
 import "libdm/log";
 import "db/quotesDb";
 import "db/cosTb";
-import "data/cosT";
-import "data/co";
+import "data/co/cosT";
+import "data/co/co";
 import "data/cts";
+import "qspr";
 
 /// \m -> ()
 process = \Rq -> {
@@ -35,6 +36,7 @@ process = \Rq -> {
     }
     "select": {
       cosTb.select(Rq.nick, Rq.value);
+      if (Rq.value) qspr.updateClosesAndRefs(Rq.nick);
       sys.print(rp.mkEmpty());
     }
     "test": {

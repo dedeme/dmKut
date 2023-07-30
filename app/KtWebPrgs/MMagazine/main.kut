@@ -10,10 +10,16 @@ import "data/cts";
 import "db";
 import "update";
 import "pgs/main";
-import "pgs/ktmarket";
+import "pgs/cmarket";
 import "pgs/mmarket";
 
-help = "Usage: MMagazine [update | test | help | <request>]";
+import "db/evalsDb"; // TO REMOVE
+
+help = "Usage: MMagazine [update | test | version | help | <request>]";
+
+test = \ -> {
+  sys.println("No test done");
+};
 
 db.init();
 log.init(cts.logPath);
@@ -28,7 +34,8 @@ if (arr.size(Args) == 1) {
           sys.throw(e);
         }
       }
-    "test": sys.println("No test done");
+    "version": sys.println(cts.version);
+    "test": test();
     default: sys.println(help);
   }
   return;
@@ -46,7 +53,7 @@ rp.init(ck);
 sys.print(
   switch (Rq.module) {
     "Main": main.process(Rq);
-    "KtMarket": ktmarket.process(Rq);
+    "CMarket": cmarket.process(Rq);
     "MMarket": mmarket.process(Rq);
     default: sys.throw("Value of module (" + Rq.module + ") is not valid");
   }

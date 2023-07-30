@@ -25,10 +25,22 @@ eq = \R1, R2 -> return R1[0] == R2[0] & R1[1] == R2[1];;
 /// \<Rs> -> i
 value = \R -> return R[0] > R[1] ? cts.r1 : R[1] > R[0] ? cts.r2 : cts.rx;;
 
+/// \<Rs> -> JS
+toJs = \R -> return [
+    math.itof(R[0]),
+    math.itof(R[1])
+  ];;
+
 /// \[*(JS)...] -> <Rs>
 fromJs = \A -> return new(
     math.ftoi(A[0]),
     math.ftoi(A[1])
+  );;
+
+/// [([<Rs>]|[])...] -> [JS]
+rowToJs = \A -> return arr.map(
+    A,
+    \Cell -> return Cell ? [toJs(Cell!)] : [];
   );;
 
 /// \[*(JS)...] -> [([<Rs>]|[])...]

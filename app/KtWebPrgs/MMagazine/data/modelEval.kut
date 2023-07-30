@@ -13,7 +13,7 @@ new = \model, eval ->  return {
 };;
 
 /// \<ModelEval> -> [*(JS)...]
-toJs = \Me -> return [Me.model, Me.eval];;
+toJs = \Me -> return [Me.model, math.itof(Me.eval)];;
 
 /// \[*(JS)...] -> <ModelEval>
 fromJs = \A -> return new(

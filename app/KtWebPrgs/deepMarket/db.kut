@@ -1,0 +1,152 @@
+// Copyright 25-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base.
+
+import "libmkt/qs";
+import "libmkt/quotes";
+import "data/cts";
+
+/// Initializes data base.
+///   force: If data base is not intialized and 'force' is true, it is
+///          initialized. Otherwise a exception is thrown.
+/// \b -> ()
+init = \ -> {
+  if (file.exists(cts.dataPath)) return;
+  sys.throw ("Data base not intialized. Run 'deepMarket update'.");
+};
+
+/// Read CMarket quotes.
+/// \b -> <quotes>
+readQuotes = \ -> {
+  dataPath = cts.cmarketDataPath;
+  cosT = js.r(file.read(path.cat([dataPath, "cos.tb"])));
+  main = cosT[0];
+  Cos = arr.map(arr.filter(cosT[1], \C -> return C[1];), \C -> return C[0];);
+  arr.sort(Cos, \c1, c2 -> return c1 < c2;);
+
+  // \s -> s
+  readSqs = \nick ->
+    return file.read(path.cat([dataPath, "quotes", nick + ".tb"]));;
+
+  MainQs = qs.fromStr(cts.historicQuotes, readSqs(main));
+  if (!MainQs[1]) sys.throw(MainQs!);
+  Dates = qs.dates(MainQs!);
+
+  cols = arr.size(Cos);
+  rows = arr.size(Dates);
+  Opens = arr.new(rows, 0);
+  for (i = 0:rows) Opens[i] = arr.new(cols, 0.0);
+  Closes = arr.new(rows, 0);
+  for (i = 0:rows) Closes[i] = arr.new(cols, 0.0);
+  Maxs = arr.new(rows, 0);
+  for (i = 0:rows) Maxs[i] = arr.new(cols, 0.0);
+
+  for (c, i = Cos) {
+    QsRs = qs.fromStr(cts.historicQuotes, readSqs(c));
+    if (!QsRs[1]) sys.throw(QsRs!);
+    qts = QsRs!;
+
+    Ops = qs.opens(qts);
+    Cls = qs.closes(qts);
+    Mxs = qs.maxs(qts);
+    for (r = 0:rows) {
+      Opens[r][i] = Ops[r];
+      Closes[r][i] = Cls[r];
+      Maxs[r][i] = Mxs[r];
+    }
+  }
+
+  return quotes.new(arr.peek(Dates), Cos, Dates, Opens, Closes);
+};
+
+/// Returns true if 'directory' exists.
+/// \s -> b
+exists = \directory -> return file.exists(path.cat([
+    cts.dataPath, "results", directory
+  ]));;
+
+/// Returns a pair with the parameter start for near simulations.
+///   directory: Directory in format "[25-90]"
+/// \s -> [f, f]
+getNearStart = \directory -> return js.r(file.read(path.cat([
+    cts.dataPath, "results", directory, "nearParams.tb"
+  ])));;
+
+/// Sets parameters start for near simulations.
+///   directory: Directory in format "[25-90]"
+///   pStart: Start parameter.
+///   pAppr : Approximation parameter
+/// \s -> [f, f]
+setNearStart = \directory, pStart, pAppr ->
+  file.write(
+    path.cat([
+      cts.dataPath, "results", directory, "nearParams.tb"
+    ]),
+    js.w([pStart, pAppr])
+  );;
+
+/// Returns results of near parameters.
+/// Matrix cts.simSteps x cts.simSteps of [assets, profits, points, sales]
+///   directory: Directory in format "[25-90]"
+/// \s -> [[[f, f, f, f]...]...]
+getNearResults = \directory -> return js.r(file.read(path.cat([
+    cts.dataPath, "results", directory, "near.tb"
+  ])));;
+
+/// Returns results of far parameters.
+/// Matrix cts.simSteps x cts.simSteps of [assets, profits, points, sales]
+///   directory: Directory in format "[25-90]"
+/// \s -> [[[f, f, f, f]...]...]
+getFarResults = \directory -> return js.r(file.read(path.cat([
+    cts.dataPath, "results", directory, "far.tb"
+  ])));;
+
+/// Returns rankings. {date -> [best, average, worst]}, where
+/// best, average and worst are arrays [days, assets, profits, points, sales].
+///   isNear: If it is 'true' returns near rankings. Oherwise returns far rankings.
+/// \b -> {[[s,f,f,f,f]...], [[s,f,f,f,f]...], [[s,f,f,f,f]...]}
+getRankings = \isNear -> {
+  nearPath = path.cat([cts.dataPath, "rankings", "near"]);
+  farPath = path.cat([cts.dataPath, "rankings", "far"]);
+
+  dpath = isNear ? nearPath : farPath;
+
+  R = {}; // {[[s,f,f,f,f]...], [[s,f,f,f,f]...], [[s,f,f,f,f]...]}
+  for (d = file.dir(dpath)) {
+    dic.put(R, d, js.r(file.read(path.cat([dpath, d]))));
+  }
+  return R;
+};
+
+/// Returns the best parameters of 'directory'.
+///   directory: Directory in format "[25-90]"
+/// \s -> [f,f]
+bestParams = \directory -> {
+  SV = [cts.simFarStart];
+  inc = cts.simFarStep;
+  bestV = [0.0];
+  ParamsV = [[cts.simFarStart, cts.simFarStart]];
+  for (Row = getFarResults(directory)) {
+    AV = [cts.simFarStart];
+    for (R = Row) {
+      if (R[2] > bestV!) {
+        ParamsV! = [SV!, AV!];
+        bestV! = R[2];
+      }
+      AV! += inc;
+    }
+    SV! += inc;
+  }
+  return ParamsV!;
+};
+
+/// Writes temporary file of quotes.
+/// \<quotes> -> ()
+writeTemporaryQuotes = \Qs ->
+  file.write(path.cat([cts.dataPath, "tmpQs.tb"]), js.w(quotes.toJs(Qs)));;
+
+/// Read temporary file of quotes.
+/// \ -> <quotes>
+readTemporaryQuotes = \ ->
+  return quotes.fromJs(js.r(file.read(path.cat([cts.dataPath, "tmpQs.tb"]))));;

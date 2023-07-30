@@ -1,0 +1,55 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "libmkt/strategy";
+
+//Application ----------------------------------------------------------------
+
+/// Application name
+appName = "cmmarket";
+
+/// Data version
+version = "202306";
+
+/// Data directory.
+dataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMMarket";
+
+/// cmarket data directory.
+cmarketDataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
+
+/// Number of quotes in historic tables
+historicQuotes = 610;
+
+// market ----------------------------------------------------------------------
+
+/// Investors initial capital for each cycle
+initialCapital = strategy.initialCapital;
+
+/// Assets ratio for evaluation.
+assetsRatio = 0.7;
+
+/// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
+maxAssets = initialCapital * maxProfitsAvgRatio;
+
+/// Profits ratio for evaluation.
+profitsAvgRatio = 1.0 - assetsRatio;
+
+/// Maximum ratio for profits evaluation. (1€ generates 3€)
+maxProfitsAvgRatio = 3.0;
+
+/// Weeks for geometrical results average
+evalTimes = 50;
+
+/// Number of steps for evaluation
+evalSteps = 20;
+
+/// Number for step environmet.
+envSteps = 5;
+
+/// Delay days after a sale with profits (in 5 days per week).
+daysWin = 25;
+
+/// Delay days after a sale with losses (in 5 days per week).
+daysLoss = 90;

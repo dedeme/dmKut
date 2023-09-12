@@ -188,7 +188,7 @@ putUser = \id, pass, level -> {
   Users = readUsers();
   NewUser = userNew(id, pass, level);
   Add = [true];
-  for (U, i = Users) {
+  for (i, U = Users) {
     if (U.id == id) {
       Add! = false;
       Users[i] = NewUser;
@@ -322,7 +322,7 @@ getComKey = \ssId, conKey -> {
 changePass = \user, oldPass, newPass -> {
   Ok = [false];
   Us = readUsers();
-  for (U, i = Us) {
+  for (i, U = Us) {
     if (U.id == user) {
       if (cryp.key(oldPass, klen) == U.pass) {
         Us[i] = userNew(U.id, cryp.key(newPass, klen), U.level);

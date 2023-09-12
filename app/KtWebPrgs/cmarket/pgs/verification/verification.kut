@@ -1,0 +1,162 @@
+// Copyright 18-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting balance page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/cts";
+import "data/acc/ann";
+import "db/acc/diariesDb";
+
+// \s -> {b, [[s, f, f].], f} :: {ok, entries, cash}
+cMarketData = \lastDate -> {
+  okV = [true];
+  year = lastDate[:4];
+  Pfs = {}; // {[f, f]...} :: Nick -> [stock, price]
+  cashV = [0.0];
+  for (inv = 0:cts.investors) {
+    Anns = arr.filter(
+      diariesDb.investorAnns(inv, year),
+      \A -> return A.date <= lastDate;
+    );
+    Set = ann.mkSettlement(Anns);
+    if (Set.errors) {
+      okV! = false;
+      for (e = Set.errors) log.error(e);
+    }
+    cashV! += Set.ledger.cash;
+    Pf = Set.portfolio;
+    for (nk = dic.keys(Pf)) {
+      V = Pf[nk];
+      vStocks = math.itof(V[0]);
+      EOp = dic.get(Pfs, nk);
+      if (EOp) {
+        E = EOp!;
+        stocks = E[0] + vStocks;
+        E[1] = (E[0] * E[1] + vStocks * V[1]) / stocks;
+        E[0] = stocks;
+      } else {
+        dic.put(Pfs, nk, [vStocks, V[1]]);
+      }
+    }
+  }
+  Entries = arr.map(
+    dic.toArr(Pfs),
+    \Kv -> return [Kv[0], Kv[1][0], Kv[1][1]];
+  );
+  return {
+    ok: okV!,
+    entries: Entries,
+    cash: cashV!
+  };
+};
+
+// \ -> {[[s, f, f, f].], f} :: {entries, cash}
+stocksData = \ -> {
+  All = js.r(file.read("/dm/KtWeb/dmcgi/Stocks/all.tb"));
+  y = time.fmt("%Y", time.now());
+  Year = arr.find(All, \E -> return E[0] == y;)!;
+  Anns = Year[1][1];
+  Pf = {}; //{[[f, f].].} :: {nick -> [[stocks, price].]}
+  for (A = Anns) {
+    inv = math.ftoi(A[3]);
+    nick = A[4];
+    stocks = A[5];
+    price = A[6];
+    if (A[1]) { // isSell
+      E = Pf[nick];
+      if (E[inv][0] < stocks)
+        sys.throw(str.fmt(
+          "Selling %v stocks of %v (Investor-%v) when only there are %v",
+          [stocks, nick, inv, E[0]]
+        ));
+      else E[inv][0] -= stocks;
+    } else {
+      EOp = dic.get(Pf, nick);
+      if (EOp) {
+        E = EOp!;
+        sum = E[inv][0] + stocks;
+        E[inv][1] = (E[inv][0] * E[inv][1] + stocks * price) / sum;
+        E[inv][0] = sum;
+      } else {
+        E = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]];
+        E[inv][0] = stocks;
+        E[inv][1] = price;
+        dic.put(Pf, nick, E);
+      }
+    }
+  }
+  Entries = arr.map(
+    arr.filter(
+      dic.toArr(Pf),
+      \Kv -> return arr.reduce(Kv[1], 0.0, \r, E -> return r + E[0];) > 0.0;
+    ),
+    \Kv -> {
+      stocks = arr.reduce(Kv[1], 0.0, \r, E -> return r + E[0];);
+      ttCost = arr.reduce(Kv[1], 0.0, \r, E -> return r + E[0] * E[1];);
+      return [Kv[0], stocks, ttCost / stocks, ttCost];
+    }
+  );
+  return {
+    entries: Entries,
+    cash: arr.reduce(Entries, 0.0, \r, E -> return r + E[3];)
+  };
+};
+
+// \ -> {f, f} :: {cash, stocks}
+hcontaData = \ -> {
+  accCash = "57202";
+  accStocks = "54000";
+  cashV = [0.0];
+  stocksV = [0.0];
+  y = time.fmt("%Y", time.now());
+  Data = js.r(file.read("/dm/KtWeb/dmcgi/Hconta/" + y + ".db"));
+  Anns = Data[3];
+  for (A = Anns) {
+    Ds = A[2];
+    Cs = A[3];
+
+    amCashDOp = dic.get(Ds, accCash);
+    if (amCashDOp) cashV! += amCashDOp!;
+    else {
+      amCashCOp = dic.get(Cs, accCash);
+      if (amCashCOp) cashV! -= amCashCOp!;
+    }
+
+    amStocksDOp = dic.get(Ds, accStocks);
+    if (amStocksDOp) stocksV! += amStocksDOp!;
+    else {
+      amStocksCOp = dic.get(Cs, accStocks);
+      if (amStocksCOp) stocksV! -= amStocksCOp!;
+    }
+  }
+  return {cash: cashV!, stocks: stocksV!};
+};
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      lastDate = Rq.lastDate;
+
+      cMarketD = cMarketData(lastDate);
+      ok = cMarketD.ok;
+
+      stocksD = stocksData();
+
+      hcontaD = hcontaData();
+
+      sys.print(rp.mk({
+        ok,
+        cMarketCash: cMarketD.cash,
+        cMarketStocks: cMarketD.entries,
+        stocksSum: stocksD.cash,
+        stocksStocks: stocksD.entries,
+        hcontaCash: hcontaD.cash,
+        hcontaSum: hcontaD.stocks
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

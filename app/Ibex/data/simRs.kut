@@ -12,6 +12,9 @@ import "data/order";
 /// \[<dayRs>...], [<order>...]  -> <simRs>
 new = \Results, Orders -> return [Results, Orders];;
 
+/// \<simRs> -> JS
+toJs = \R -> return [R[0], arr.map(R[1], order.toJs)];;
+
 /// \[*(JS)...] -> <simRs>
 fromJs = \A -> return new(A[0], arr.map(A[1], order.fromJs));;
 

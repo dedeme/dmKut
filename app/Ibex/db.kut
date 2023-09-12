@@ -66,6 +66,6 @@ qco = \nk -> {
 rsTb = \-> return jstb.newArr(
     path.cat([cts.dbHome, "rs.tb"]),
     \-> return [];,
-    sys.id,
+    rs.toJs,
     rs.fromJs
   );;

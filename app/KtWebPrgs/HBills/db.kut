@@ -64,7 +64,7 @@ readStays = \ -> {
     y = math.itos(year) + ".db";
     pth = path.cat([cts.accPath, y]);
     A = js.r(file.read(pth));
-    for (annJs, i = A[3]) {
+    for (i, annJs = A[3]) {
       if (i == 0) continue;
       Fields = annJs;
       Am = year == 2022

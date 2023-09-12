@@ -6,16 +6,25 @@
 import "data/qs/qsv";
 import "libmkt/qs";
 
-// \s -> s
+// \s -> [s] | []
 readVol = \tx -> {
-  if (!tx) return "0";
-  f = str.ends(tx, "K")
-    ? math.fromIso(tx[:-1])! * 1000.0
-    : str.ends(tx, "M")
-      ? math.fromIso(tx[:-1])! * 1000000.0
-      : math.fromIso(tx)!
-  ;
-  return math.itos(math.ftoi(f));
+  mkRet = \n -> return [math.itos(math.ftoi(n))];;
+
+  if (!tx) return ["0"];
+  if (str.ends(tx, "K")) {
+    vOp = math.fromIso(tx[:-1]);
+    if (vOp) return mkRet(vOp! * 1000.0);
+    return [];
+  }
+  if (str.ends(tx, "M")) {
+    vOp = math.fromIso(tx[:-1]);
+    if (vOp) return mkRet(vOp! * 1000000.0);
+    return [];
+  }
+
+  vOp = math.fromIso(tx)!;
+  if (vOp) return mkRet(vOp!);
+  return [];
 };
 
 // DIARY -----------------------------------------------------------------------
@@ -79,13 +88,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Date = [""];
-    try {
-      Date! = time.toStr(time.fromIso(str.trim(html[Ix!:Ix2!]), "."));
-    } catch(e) {
+    dateOp = time.fromIso(str.trim(html[Ix!:Ix2!]), ".");
+    if (!dateOp) {
       arr.push(Errs, "Bad date: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Date) continue;
+    date = time.toStr(dateOp!);
 
     // CLOSE
     Ix! = str.indexFrom(html, "ltr\">", Ix!);
@@ -101,13 +109,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Close = [""];
-    try {
-      Close! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    closeOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!closeOp) {
       arr.push(Errs, "Bad close: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Close) continue;
+    close = math.ftos(closeOp!);
 
     // OPEN
     Ix! = str.indexFrom(html, "\">", Ix!);
@@ -123,13 +130,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Open = [""];
-    try {
-      Open! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    openOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!openOp) {
       arr.push(Errs, "Bad open: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Open) continue;
+    open = math.ftos(openOp!);
 
     // MAX
     Ix! = str.indexFrom(html, "\">", Ix!);
@@ -145,13 +151,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Max = [""];
-    try {
-      Max! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    maxOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!maxOp) {
       arr.push(Errs, "Bad max: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Max) continue;
+    max = math.ftos(maxOp!);
 
     // MIN
     Ix! = str.indexFrom(html, "\">", Ix!);
@@ -167,13 +172,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Min = [""];
-    try {
-      Min! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    minOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!minOp) {
       arr.push(Errs, "Bad min: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Min) continue;
+    min = math.ftos(minOp!);
 
     // VOL
     Ix! = str.indexFrom(html, "\">", Ix!);
@@ -189,18 +193,17 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Vol = [""];
-    try {
-      Vol! = readVol(str.trim(html[Ix!:Ix2!]));
-    } catch(e) {
+    volOp = readVol(str.trim(html[Ix!:Ix2!]));
+    if (!volOp) {
       arr.push(Errs, "Bad vol: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Vol) continue;
+    vol = volOp!;
 
     // END
     arr.push(Qs, str.fmt(
       "%v:%v:%v:%v:%v:%v:false",
-      [Date!, Open!, Close!, Max!, Min!, Vol!]
+      [date, open, close, max, min, vol]
     ));
     Ix! = endRow;
   }

@@ -13,10 +13,10 @@ appName = "WallpapersDesign";
 dbPath = path.cat([global.cgiRoot, appName]);
 
 /// Images source path.
-sourcePath = "/dm/dmWeb/app/KtWeb/prgs/WallpapersDesign/www/source";
+sourcePath = "/dm/KtWeb/prgs/WallpapersDesign/www/source";
 
 /// Images target path.
-targetPath = "/dm/dmWeb/app/KtWeb/prgs/WallpapersDesign/www/target";
+targetPath = "/dm/KtWeb/prgs/WallpapersDesign/www/target";
 
 /// Path of achived original images
 originalAchivePath = "/home/deme/dm/fondosEscritorio/originales";

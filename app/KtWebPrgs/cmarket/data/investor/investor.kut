@@ -4,7 +4,7 @@
 /// Investor data
 
 import "libmkt/models";
-import "libmkt/model/model";
+import "libmkt/model";
 import "istrategy";
 
 /// Constructor

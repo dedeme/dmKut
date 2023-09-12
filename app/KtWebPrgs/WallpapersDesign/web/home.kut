@@ -17,7 +17,7 @@ process = \Rq -> {
         file.del(path.cat([cts.targetPath, f]));
       ImgsData = db.imagesTb().read();
       ImgsSource = file.dir(cts.sourcePath);
-      for (im, i = ImgsSource) {
+      for (i, im = ImgsSource) {
         pt = path.cat([cts.sourcePath, im]);
         im2 = arr.join(arr.map(
           str.split(im, ""),

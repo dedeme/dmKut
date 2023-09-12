@@ -7,6 +7,7 @@ import "balance";
 import "tradingPg";
 import "profitsPg";
 import "companiesPg";
+import "ibexPg";
 import "speedometers";
 
 /// \m -> ()
@@ -16,6 +17,7 @@ process = \Rq -> {
     "TradingPg": tradingPg.process(Rq);
     "ProfitsPg": profitsPg.process(Rq);
     "CompaniesPg": companiesPg.process(Rq);
+    "ibexPg": ibexPg.process(Rq);
     "Speedometers": speedometers.process(Rq);
     default: sys.throw("Value of source (" + Rq.source + ") is not valid");
   }

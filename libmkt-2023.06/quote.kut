@@ -3,6 +3,8 @@
 
 /// Market quote.
 
+import "ffi";
+
 /// Create a new quote.
 ///   date : Date of quote in format "YYYYMMDD".
 ///   open : Open value.
@@ -35,13 +37,13 @@ isMissing = \Q -> return Q.vol < 0;;
 ///   Returns [Quote, Errors]:
 ///     A[0] : Corrected quote.
 ///     A[1] : Array of corrections (e.g. Close > Max).
-/// \<quote> -> [<quote>, [s...]]
+/// \<quote> -> [<quote>, [s.]]
 correct1 = \Q -> {
   if (Q.force) return [Q, []];
 
   if (isMissing(Q)) return [Q, ["Missing"]];
 
-  // [s...]
+  // [s.]
   Errs = [];
   Max = [Q.max];
   Min = [Q.min];
@@ -78,14 +80,14 @@ correct1 = \Q -> {
 ///    ----
 ///     A[0] : Corrected quote.
 ///     A[1] : Array of corrections (e.g. Close > Max).
-/// \<quote>, <quote> -> [<quote>, [s...]]
+/// \<quote>, <quote> -> [<quote>, [s.]]
 correct2 = \Qcurrent, Qprevious -> {
 
   if (Qcurrent.force) return [Qcurrent, []];
 
   if (isMissing(Qcurrent)) return [Qcurrent, []];
 
-  // [s...]
+  // [s.]
   Errs = [];
   Open = [Qcurrent.open];
   Close = [Qcurrent.close];
@@ -139,12 +141,12 @@ correct2 = \Qcurrent, Qprevious -> {
 ///    ----
 ///     A[0] : Corrected quote.
 ///     A[1] : Array of corrections (e.g. Close > Max).
-/// \<quote>, <quote> -> [<quote>, [s...]]
+/// \<quote>, <quote> -> [<quote>, [s.]]
 correct3 = \Qcurrent, Qprevious -> {
   if (Qcurrent.force) return [Qcurrent, []];
   if (isMissing(Qcurrent) | isMissing(Qprevious)) return [Qcurrent, []];
 
-  // [s...]
+  // [s.]
   Errs = [];
 
   if (Qcurrent.open > Qprevious.open * 1.2) arr.push(Errs, "Open +20%");
@@ -184,7 +186,7 @@ toStr = \Q -> return str.fmt(
 /// THROWS exception if it fails.
 fromStr = \s -> {
   // [[d, f, f, f, f, i, b]|s, b]
-  Q = sys.c("quoteFromStr", s);
+  Q = ffi.quoteFromStr(s);
   if (Q[1]) {
     A = Q!;
     return new(A[0], A[1], A[2], A[3], A[4], A[5], A[6]);
@@ -192,9 +194,9 @@ fromStr = \s -> {
   sys.throw(Q!);
 };
 
-/// \<quote> -> [JS...]
+/// \<quote> -> [JS.]
 toJs = \Q ->
   return [Q.date, Q.open, Q.close, Q.max, Q.min, math.itof(Q.vol), Q.force];;
 
-/// \[JS...] -> <quote>
+/// \[JS.] -> <quote>
 fromJs = \A -> return new(A[0], A[1], A[2], A[3], A[4], math.ftoi(A[5]), A[6]);;

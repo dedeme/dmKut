@@ -3,17 +3,18 @@
 
 /// Trading strategy
 
-import "model/model";
+import "model";
+import "ffi";
 import "quotes";
 import "broker";
 import "order";
 import "strRs";
 
 /// f
-initialCapital = 250000.0;
+initialCapital = ffi.initialCapital();
 
 /// f
-bet = 10000.0;
+bet = ffi.bet();
 
 /// Returns the result of a simulation.
 ///   md      : Market model.
@@ -21,34 +22,34 @@ bet = 10000.0;
 ///   Params  : Model params to perform the simulation.
 ///   daysWin : Quarantine for win operations.
 ///   daysLoss: Quarantine fot loss operations.
-/// \<model>, <quotes>, [f...], i, i -> <strRs>
+/// \<model>, <quotes>, [f.], i, i -> <strRs>
 run = \md, Qs, Params, daysWin, daysLoss -> {
-  // [s...]
+  // [s.]
   Dates = Qs.dates;
   nDates = arr.size(Dates);
-  // [s...]
+  // [s.]
   Nks = Qs.cos;
   nCos = arr.size(Nks);
-  // [<vec>...]
+  // [<vec>.]
   Opens = Qs.vopens;
-  // [<vec>...]
+  // [<vec>.]
   Closes = Qs.vcloses;
 
   CashIn = [initialCapital];
   Withdrawals = [0.0];
 
-  // [[f...]]
+  // [[f.].]
   Refs = arr.new(nDates, 0);
   for (i = 0:nDates) Refs[i] = arr.new(nCos, 0.0); // Fake value
 
-  // [<order>...]
+  // [<order>.]
   Orders = [];
   Hassets = arr.new(nDates, 0.0);
   Hwithdrawals = arr.new(nDates, 0.0);
-  // [[s...]...] (dates)
+  // [[s.].] (dates)
   Buys = arr.new(nCos, 0);
   for (i = 0:nCos) Buys[i] = [];
-  // [[s...]...] (dates)
+  // [[s.].] (dates)
   Sales = arr.new(nCos, 0);
   for (i = 0:nCos) Sales[i] = [];
 
@@ -62,7 +63,7 @@ run = \md, Qs, Params, daysWin, daysLoss -> {
 
   model.calc(
     md, Closes, Params,
-    \Cls, Rfs -> sys.c("strategyRun", [Env, Cls, Rfs]);
+    \Cls, Rfs -> ffi.strategyRun(Env, Cls, Rfs);
   );
 
   cash = CashIn! + Withdrawals!;

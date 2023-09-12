@@ -1,0 +1,29 @@
+// Copyright 29-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Year data base
+
+import "planTb";
+import "balanceTb";
+import "budgetTb";
+import "diaryTb";
+
+/// Create year data base.
+/// \s -> ()
+mk = \ypath -> {
+	file.mkdir(ypath);
+	planTb.mk(ypath);
+	balanceTb.mk(ypath);
+	diaryTb.mk(ypath);
+	budgetTb.mk(ypath);
+};
+
+/// Copy the year data base in 'ysource' to 'ytarget'.
+/// \s, s -> ()
+mkFrom = \ysource, ytarget -> {
+	file.mkdir(ytarget);
+	planTb.writeJs(ytarget, planTb.readJs(ysource));
+	balanceTb.mk(ytarget);
+	diaryTb.mk(ytarget);
+	budgetTb.writeJs(ytarget, budgetTb.readJs(ysource));
+};

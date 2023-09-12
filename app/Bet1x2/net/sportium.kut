@@ -4,104 +4,149 @@
 /// Sportium reader.
 
 import "libdm/ext";
+import "libdm/log";
 import "data/cts";
 import "data/bet";
 import "data/tBet";
 
-// \s -> [<TBets>...]
-readBets = \t -> {
-  // [<TBets>...]
+// \s -> [<TBets>.]
+readBets = \tx -> {
+  day = time.day(time.now());
+  // [<TBets>.]
   R = [];
-  Pos = [str.index(t, "<h4 class=\"expander-button\">")];
+  ixV = [0];
   while () {
-    if (Pos! == -1) break;
+    homeV = [-1];
+    outV =[-1];
+    r1V = [-1];
+    rxV = [-1];
+    r2V = [-1];
 
-    ix = str.index(t[Pos! : Pos!+100], "La Liga");
-    if (ix != -1) {
-      Pos! += ix;
-      break;
-    }
+    ixV! = str.indexFrom(
+      tx,
+      'La Liga</div></div><div class="ta-Button EventDetailsRow"',
+      ixV!
+      );
 
-    Pos! = str.indexFrom(t, "<h4 class=\"expander-button\">", Pos! + 10);
-  }
-  if (Pos! == -1) return R;
+    if (ixV! == -1) break;
 
-  ix = str.indexFrom(t, "<h4 class=\"expander-button\">", Pos!);
-  t2 = t[Pos! : ix == -1 ? str.len(t) : ix];
+    //hoy
+    ixV! = str.indexFrom(tx, 'Hoy,', ixV!);
+    if (ixV! == -1) continue;
 
-  Pos! = 0;
-  while () {
-    Pos! = str.indexFrom(t2, "time coupon-scoreboard", Pos!);
-    if (Pos! == -1) break;
+    // E1
+    ixV! = str.indexFrom(tx, 'overflow: hidden;">', ixV!);
+    if (ixV! != -1) {
+      ix = ixV! + 19;
+      ix2 = str.indexFrom(tx, "<", ix);
+      if (ix2 != -1) {
+        team = tx[ix:ix2];
+        iteam = arr.index(cts.SportiumTeams, \t -> return t == team;);
+        if (iteam != -1) homeV! = iteam;
+        else {
+          sys.println("Team " + team + " not found in Sportium");
+          log.warning("Team " + team + " not found in Sportium");
+          continue;
+        }
+      } else continue;
+    } else continue;
 
-    dix1 = str.indexFrom(t2, "date", Pos!);
-    if (dix1 == -1)
-      sys.throw(str.fmt("'date' not found in\n%s", [t2[Pos! : 80]]));
-    dix2 = str.indexFrom(t2, ">", dix1 + 1);
-    if (dix2 == -1)
-      sys.throw(str.fmt("'>' not found in\n%s", [t2[dix1+1 : dix1+80]]));
-    dix3 = str.indexFrom(t2, " ", dix2 + 1);
-    if (dix3 == -1)
-      sys.throw(str.fmt("' ' not found in\n%s", [t2[dix2+1 : dix2+80]]));
-    day = math.stoi(str.trim(t2[dix2+1:dix3]))!;
+    // E2
+    ixV! = str.indexFrom(tx, 'overflow: hidden;">', ixV! + 19);
+    if (ixV! != -1) {
+      ix = ixV! + 19;
+      ix2 = str.indexFrom(tx, "<", ix);
+      if (ix2 != -1) {
+        team = tx[ix:ix2];
+        iteam = arr.index(cts.SportiumTeams, \t -> return t == team;);
+        if (iteam != -1) outV! = iteam;
+        else {
+          sys.println("Team " + team + " not found in Sportium");
+          log.warning("Team " + team + " not found in Sportium");
+          continue;
+        }
+      } else continue;
+    } else continue;
 
-    hix1 = str.indexFrom(t2, "\"seln-name\"", dix3 + 1);
-    if (hix1 == -1)
-      sys.throw(str.fmt("'seln-name' not found in\n%s", [t2[dix3+1: dix3+80]]));
-    hix2 = str.indexFrom(t2, ">", hix1 + 1);
-    if (hix2 == -1)
-      sys.throw(str.fmt("'>' not found in\n%s", [t2[hix1+1 : hix1+80]]));
-    hix3 = str.indexFrom(t2, "<", hix2 + 1);
-    if (hix3 == -1)
-      sys.throw(str.fmt("'<' not found in\n%s", [t2[hix2+1 : hix2+80]]));
-    home = str.trim(t2[hix2+1:hix3]);
+    // Separator
+    ixV! = str.indexFrom(tx, 'overflow: hidden;">', ixV! + 19);
+    if (ixV! != -1) {
+      ix = ixV! + 19;
+      ix2 = str.indexFrom(tx, "<", ix);
+      if (ix2 != -1) {
+        sep = tx[ix:ix2];
+        if (sep != "Ganador (1X2)") continue;
+      } else continue;
+    } else continue;
 
-    r1ix1 = str.indexFrom(t2, "\"price dec\"", hix3 + 1);
-    if (r1ix1 == -1)
-      sys.throw(str.fmt("'price dec' not found in\n%s", [t2[hix3+1: hix3+80]]));
-    r1ix2 = str.indexFrom(t2, ">", r1ix1 + 1);
-    if (r1ix2 == -1)
-      sys.throw(str.fmt("'>' not found in\n%s", [t2[r1ix1+1 : r1ix1+80]]));
-    r1ix3 = str.indexFrom(t2, "<", r1ix2 + 1);
-    if (r1ix3 == -1)
-      sys.throw(str.fmt("'<' not found in\n%s", [t2[r1ix2+1 : r1ix2+80]]));
-    r1 = math.stof(t2[r1ix2+1:r1ix3])!;
+    // 1
+    ixV! = str.indexFrom(tx, 'overflow: hidden;">', ixV! + 19);
+    if (ixV! != -1) {
+      ix = ixV! + 19;
+      ix2 = str.indexFrom(tx, "<", ix);
+      if (ix2 != -1) {
+        nOp = math.stof(tx[ix:ix2]);
+        if (nOp) r1V! = nOp!;
+        else {
+          sys.println(str.fmt(
+            "Bad number in %v - %v (Sportium, Bet 1)",
+            [cts.SportiumTeams[homeV!], cts.SportiumTeams[outV!]]
+          ));
+          log.warning(str.fmt(
+            "Bad number in %v - %v (Sportium, Bet 1)",
+            [cts.SportiumTeams[homeV!], cts.SportiumTeams[outV!]]
+          ));
+          continue;
+        }
+      } else continue;
+    } else continue;
 
-    rxix1 = str.indexFrom(t2, "\"price dec\"", r1ix3 + 1);
-    if (rxix1 == -1)
-      sys.throw(str.fmt("'price dec' not found in\n%s", [t2[r1ix3+1: r1ix3+80]]));
-    rxix2 = str.indexFrom(t2, ">", rxix1 + 1);
-    if (rxix2 == -1)
-      sys.throw(str.fmt("'>' not found in\n%s", [t2[rxix1+1 : rxix1+80]]));
-    rxix3 = str.indexFrom(t2, "<", rxix2 + 1);
-    if (rxix3 == -1)
-      sys.throw(str.fmt("'<' not found in\n%s", [t2[rxix2+1 : rxix2+80]]));
-    rx = math.stof(t2[rxix2+1:rxix3])!;
+    // x
+    ixV! = str.indexFrom(tx, 'overflow: hidden;">', ixV! + 19);
+    if (ixV! != -1) {
+      ix = ixV! + 19;
+      ix2 = str.indexFrom(tx, "<", ix);
+      if (ix2 != -1) {
+        nOp = math.stof(tx[ix:ix2]);
+        if (nOp) rxV! = nOp!;
+        else {
+          sys.println(str.fmt(
+            "Bad number in %v - %v (Sportium, Bet x)",
+            [cts.SportiumTeams[homeV!], cts.SportiumTeams[outV!]]
+          ));
+          log.warning(str.fmt(
+            "Bad number in %v - %v (Sportium, Bet x)",
+            [cts.SportiumTeams[homeV!], cts.SportiumTeams[outV!]]
+          ));
+          continue;
+        }
+      } else continue;
+    } else continue;
 
-    oix1 = str.indexFrom(t2, "\"seln-name\"", rxix3 + 1);
-    if (oix1 == -1)
-      sys.throw(str.fmt("'seln-name' not found in\n%s", [t2[rxix3+1: rxix3+80]]));
-    oix2 = str.indexFrom(t2, ">", oix1 + 1);
-    if (oix2 == -1)
-      sys.throw(str.fmt("'>' not found in\n%s", [t2[oix1+1 : oix1+80]]));
-    oix3 = str.indexFrom(t2, "<", oix2 + 1);
-    if (oix3 == -1)
-      sys.throw(str.fmt("'<' not found in\n%s", [t2[oix2+1 : oix2+80]]));
-    out = str.trim(t2[oix2+1:oix3]);
+    // 2
+    ixV! = str.indexFrom(tx, 'overflow: hidden;">', ixV! + 19);
+    if (ixV! != -1) {
+      ix = ixV! + 19;
+      ix2 = str.indexFrom(tx, "<", ix);
+      if (ix2 != -1) {
+        nOp = math.stof(tx[ix:ix2]);
+        if (nOp) r2V! = nOp!;
+        else {
+          sys.println(str.fmt(
+            "Bad number in %v - %v (Sportium, Bet 2)",
+            [cts.SportiumTeams[homeV!], cts.SportiumTeams[outV!]]
+          ));
+          log.warning(str.fmt(
+            "Bad number in %v - %v (Sportium, Bet 2)",
+            [cts.SportiumTeams[homeV!], cts.SportiumTeams[outV!]]
+          ));
+          continue;
+        }
+      } else continue;
+    } else continue;
 
-    r2ix1 = str.indexFrom(t2, "\"price dec\"", oix3 + 1);
-    if (r2ix1 == -1)
-      sys.throw(str.fmt("'price dec' not found in\n%s", [t2[oix3+1: oix3+80]]));
-    r2ix2 = str.indexFrom(t2, ">", r2ix1 + 1);
-    if (r2ix2 == -1)
-      sys.throw(str.fmt("'>' not found in\n%s", [t2[r2ix1+1 : r2ix1+80]]));
-    r2ix3 = str.indexFrom(t2, "<", r2ix2 + 1);
-    if (r2ix3 == -1)
-      sys.throw(str.fmt("'<' not found in\n%s", [t2[r2ix2+1 : r2ix2+80]]));
-    r2 = math.stof(t2[r2ix2+1:r2ix3])!;
-
-    arr.push(R, tBet.new(day, home, out, bet.new(r1, rx, r2)));
-    Pos! = r2ix3 + 1;
+    arr.push(R, tBet.new(day, homeV!, outV!, bet.new(r1V!, rxV!, r2V!)));
+    ixV! += 19;
   }
 
   return R;
@@ -110,16 +155,21 @@ readBets = \t -> {
 /// Read Sportium data.
 /// It returns an array where rows are teams which play at home and columns
 /// teams which play out. Order of teams is the same as 'cts.CurrentTeams".
-/// \-> [[([<Bet>]|[])...]...]
+/// \-> [[([<Bet>]|[]).].]
 read = \-> {
-  t = ext.wget(
-    "https://sports.sportium.es/es" +
-      "?utm_campaign=territorio-liga-home&utm_medium=display&utm_source=laliga",
-    false
-  )!;
+  tRs = ext.puppeteer(
+    "https://www.sportium.es/apuestas/sports/soccer/competitions",
+    30000
+  );
+  if (!tRs[1]) {
+    sys.println(tRs!);
+    log.error(tRs!);
+    return;
+  }
+  t = tRs!;
 
   size = arr.size(cts.CurrentTeams);
-  // [[([<Result>]|[])...]...]
+  // [[([<Result>.]|[]).].]
   R = [];
   for (i = 0:size) {
     // [([<Result>]|[])...]
@@ -130,26 +180,8 @@ read = \-> {
 
   Bets = readBets(t);
 
-  today = time.day(time.now());
-  for (tbet = Bets) {
-    if (tbet[tBet.day] == today) {
-      homeTeam = arr.index(
-        cts.SportiumTeams,
-        \tm -> return tm == tbet[tBet.home];
-      );
-      if (homeTeam == -1)
-        sys.throw(str.fmt("'%s' team not found", [tbet[tBet.home]]));
-
-      outTeam = arr.index(
-        cts.SportiumTeams,
-        \tm -> return tm == tbet[tBet.out];
-      );
-      if (outTeam == -1)
-        sys.throw(str.fmt("'%s' team not found", [tbet[tBet.out]]));
-
-      R[homeTeam][outTeam] = [tbet[tBet.bet]];
-    }
-  }
+  for (B = Bets)
+    R[B[tBet.home]][B[tBet.out]] = [B[tBet.bet]];
 
   return R;
 };

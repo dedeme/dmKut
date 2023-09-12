@@ -19,7 +19,7 @@ bet = 3;
 ///   home: Home team.
 ///   out: Out team.
 ///   bet: Bet for each result.
-/// \i, s, s, <Bet> -> <TBet>
+/// \i, i, i, <Bet> -> <TBet>
 new = \day, home, out, bet -> return [day, home, out, bet];;
 
 /// \[*(JS)...] -> <TBet>

@@ -3,7 +3,8 @@
 
 /// Approximations model.
 
-import "model";
+import "../model";
+import "../ffi";
 import "doc/apprDoc";
 
 /// Returns a new 'appr' model.
@@ -13,14 +14,14 @@ new = \ -> return model.new(
 		apprDoc.text,
 		["Inicio", "Aproximación"],
     [model.percParam, model.percParam],
-    [0.08, 0.07],
-    [0.005, 0.005],
+    [0.15, 0.05],
+    [0.005, 0.0025],
     [0.001, 0.001],
 		calc
   );;
 
-// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+// \[<vec>.], [f.], (\<vec>, <vec> -> ()) -> ()
 calc = \Closes, Params, fn -> {
   Env = {Closes, Params};
-  for (Row = Closes) fn(Row, sys.c("calcAppr", Env));
+  for (Row = Closes) fn(Row, ffi.calcAppr(Env));
 };

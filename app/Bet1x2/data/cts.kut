@@ -136,12 +136,38 @@ AsTeams = [
   "19" // villarreal
 ];
 
+/// As team codes.
+/// They have the same order as 'currentTeams'.
+/// [s...]
+SportTeams = [
+  "Alavés",
+  "Almería",
+  "Athletic",
+  "Atlético",
+  "FC Barcelona",
+  "Betis",
+  "Cádiz",
+  "Celta",
+  "Getafe",
+  "Girona",
+  "Granada",
+  "Las Palmas",
+  "Mallorca",
+  "Osasuna",
+  "Rayo",
+  "Real Madrid",
+  "R. Sociedad",
+  "Sevilla",
+  "Valencia",
+  "Villarreal"
+];
+
 /// Sportium team codes.
 /// They have the same order as 'currentTeams'.
 /// [s...]
 SportiumTeams = [
   "Deportivo Alavés", // alaves
-  "UD Almeria", // almeria
+  "UD Almería", // almeria
   "Athletic Club", // athletic
   "Atlético de Madrid", // atletico
   "FC Barcelona", // barcelona

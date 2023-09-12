@@ -1,0 +1,46 @@
+// Copyright 07-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program start.
+
+import "KtWeb/rp";
+import "db";
+import "data/conf";
+import "data/dpath";
+import "pgs/pathsPg";
+import "pgs/indexPg";
+import "pgs/modulePg";
+import "pgs/codePg";
+
+Args = sys.args();
+ck = Args[0];
+Rq = js.r(Args[1]);
+
+db.init();
+rp.init(ck);
+
+switch(Rq.source) {
+  "Main": process(Rq);
+  "PathsPg": pathsPg.process(Rq);
+  "IndexPg": indexPg.process(Rq);
+  "ModulePg": modulePg.process(Rq);
+  "CodePg": codePg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+}
+
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": sys.print(rp.mk({
+      conf: db.confTb().read(),
+      paths: arr.map(db.pathsTb().read(), dpath.toJs)
+    }));
+    "savePath": {
+      confTb = db.confTb();
+      Cf = confTb.read();
+      confTb.write(conf.mk(Rq.path, Cf.showAll));
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

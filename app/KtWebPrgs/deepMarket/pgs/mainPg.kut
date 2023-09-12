@@ -6,6 +6,7 @@
 import "KtWeb/rp";
 import "data/cts";
 import "db";
+import "update";
 
 /// \m -> ()
 process = \Rq -> {
@@ -36,13 +37,48 @@ process = \Rq -> {
       ;
       sys.print(rp.mk({
         parNearStart,
-        parFarStart: [cts.simFarStart, cts.simFarStart],
+        parFarStart: [cts.simFarStartStart, cts.simFarStartApp],
         parStep: isNear
             ? [cts.simNearStep, cts.simNearStep]
-            : [cts.simFarStep, cts.simFarStep]
+            : [cts.simFarStepStart, cts.simFarStepApp]
           ,
         results: Results
       }));
+    }
+    "center": {
+      Qs = db.readQuotes();
+      for (daysWin = cts.DaysWin) for (daysLoss = cts.DaysLoss) {
+        dir = "[" + math.itos(daysWin) + "-" + math.itos(daysLoss) + "]";
+
+        Pars = db.bestParams(dir);
+        sTop = cts.simFarStartStart +
+          math.itof(cts.simSteps) * (cts.simFarStepStart - cts.simNearStep);
+        start0 = Pars[0] - math.itof(cts.simSteps / 2) * cts.simNearStep;
+        start = math.round(
+          start0 > cts.simFarStartStart
+            ? start0 < sTop
+              ? start0
+              : sTop
+            : cts.simFarStartStart
+          , 4
+        );
+        aTop = cts.simFarStartApp +
+          math.itof(cts.simSteps) * (cts.simFarStepApp - cts.simNearStep);
+        appr0 = Pars[1] - math.itof(cts.simSteps / 2) * cts.simNearStep;
+        appr = math.round(
+          appr0 > cts.simFarStartApp
+            ? appr0 < aTop
+              ? appr0
+              : aTop
+            : cts.simFarStartApp
+          , 4
+        );
+
+        db.setNearStart(dir, start, appr);
+        update.updateGroup(Qs, daysWin, daysLoss, true);
+      }
+      update.updateRankings();
+      sys.print(rp.mkEmpty());
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

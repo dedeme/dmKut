@@ -1,12 +1,12 @@
 ok = \Rs, cr, cc -> {
   for (c = Rs) if (c == cc) return false;
-  for (c, r = Rs) if (c - cc == r - cr | c - cc == cr - r) return false;
+  for (r, c = Rs) if (c - cc == r - cr | c - cc == cr - r) return false;
   return true;
 };
 
 println = \Qs -> {
   Ss = [];
-  for (r, i = Qs) arr.push(Ss, str.fmt("[%d, %d]", [i + 1, r + 1]));
+  for (i, r = Qs) arr.push(Ss, str.fmt("[%d, %d]", [i + 1, r + 1]));
   sys.println(arr.join(Ss, "-"));
 };
 

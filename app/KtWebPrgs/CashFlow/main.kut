@@ -1,0 +1,32 @@
+// Copyright 29-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "KtWeb/rp";
+import "pgs/planPg";
+import "pgs/yearPg";
+import "pgs/budgetPg";
+import "pgs/budget/fixProblem";
+import "pgs/budget/management/budgetView";
+import "pgs/budget/management/budgetEdit";
+import "db";
+
+Args = sys.args();
+ck = Args[0];
+Rq = js.r(Args[1]);
+
+rp.init(ck);
+db.init();
+
+switch(Rq.source) {
+  "PlanPg": planPg.process(Rq);
+  "YearPg": yearPg.process(Rq);
+  "BudgetPg": budgetPg.process(Rq);
+  "BudgetView": budgetView.process(Rq);
+  "BudgetEdit": budgetEdit.process(Rq);
+  "FixProblem": fixProblem.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+}
+
+

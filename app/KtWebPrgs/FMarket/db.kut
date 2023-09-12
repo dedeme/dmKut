@@ -6,7 +6,7 @@
 import "libdm/jstb";
 import "libmkt/qs";
 import "libmkt/quotes";
-import "libmkt/model/model";
+import "libmkt/model";
 import "libmkt/models";
 import "data/cts";
 import "data/flea";
@@ -46,7 +46,14 @@ readQuotes = \ -> {
 
   cosT = js.r(file.read(path.cat([dataPath, "cos.tb"])));
   main = cosT[0];
-  Cos = arr.map(arr.filter(cosT[1], \C -> return C[1];), \C -> return C[0];);
+  Cos = arr.map(
+    arr.filter(
+      cosT[1],
+      \C -> return C[1] &
+        !arr.any(["ALM", "FAE", "GRE"], \nk -> return C[0] == nk;);
+    ),
+    \C -> return C[0];
+  );
   arr.sort(Cos, \c1, c2 -> return c1 < c2;);
 
   MainQs = qs.fromStr(cts.historicQuotes, readSqs(main));
@@ -62,7 +69,7 @@ readQuotes = \ -> {
   Maxs = arr.new(rows, 0);
   for (i = 0:rows) Maxs[i] = arr.new(cols, 0.0);
 
-  for (c, i = Cos) {
+  for (i, c = Cos) {
     QsRs = qs.fromStr(cts.historicQuotes, readSqs(c));
     if (!QsRs[1]) sys.throw(QsRs!);
     qts = QsRs!;
@@ -186,7 +193,7 @@ writeFleas = \mdId, Fleas -> {
   minusYear = time.toStr(time.addDays(now, -365));
 
   dateV = ["11111111"];
-  for (d, i = Dates) {
+  for (i, d = Dates) {
     if (i < 5) {
       dateV! = d;
       continue;

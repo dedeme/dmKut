@@ -2,8 +2,10 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Array of company quotes management.
+/// NOTE: <qs> is a name for [<quote>.], sorted from after to before.
 
 import "quote";
+import "ffi";
 
 /// Returns a [quotes|error, ok] with quotes from the content of a
 /// 'NICK.tb' file. (From after to before)
@@ -13,7 +15,7 @@ import "quote";
 ///   s   : Text from a 'NICK.tb' file. It is trimized.
 /// \i, s -> [<qs>|s, b]
 fromStr = \size, s -> {
-  Qs = sys.c("qsFromStr", s);
+  Qs = ffi.qsFromStr(s);
   if (!Qs[1]) return Qs;
   Qts = Qs!;
   if (arr.size(Qts) != size) {
@@ -46,12 +48,12 @@ size = \qts -> return arr.size(qts);;
 ///   Returns [quotes, errors]:
 ///     A[0] : Quotes, corrected if necessary.
 ///     A[1] : Array with corrections.
-/// \<qs> -> [<qs>, [s...]]
+/// \<qs> -> [<qs>, [s.]]
 correct = \qts -> {
-  // [s...]
+  // [s.]
   Errs = [];
 
-  // \<quote>, [s...] -> ()
+  // \<quote>, [s.] -> ()
   appendErrs = \Q, NewErrs ->
     for (e = NewErrs) arr.push(Errs, str.fmt("%v: %v", [Q.date, e]));;
 
@@ -65,17 +67,17 @@ correct = \qts -> {
     Q1! = Q2!;
     Q2! = qts[i];
 
-    // [<quote>, [s...]]
+    // [<quote>, [s.]]
     Rs0 = quote.correct2(Q1!, Q2!);
     appendErrs(Rs0[0], Rs0[1]);
 
-    // [<quote>, [s...]]
+    // [<quote>, [s.]]
     Rs1 = quote.correct3(Rs0[0], Q2!);
     appendErrs(Rs1[0], Rs1[1]);
 
     arr.push(NewQs, Rs1[0]);
   }
-  // [<quote>, [s...]]
+  // [<quote>, [s.]]
   Rs = quote.correct1(Q2!);
   arr.push(NewQs, Rs[0]);
   appendErrs(Rs[0], Rs[1]);
@@ -91,7 +93,7 @@ correct = \qts -> {
 ///   Returns [quotes, errors]:
 ///     A[0] : Quotes, corrected if necessary.
 ///     A[1] : Array with corrections.
-/// \<qs>, <qs> -> [<qs>, [s...]]
+/// \<qs>, <qs> -> [<qs>, [s.]]
 correctDates = \mqts, qts -> {
   Errs = [];
 
@@ -160,7 +162,7 @@ correctDates = \mqts, qts -> {
 ///           3. The return array is corrected.
 ///     A[1]: Array with Errors returned by 'correct' and 'correctDates' in format
 ///           "date: error".
-/// \<qs>, <qs>, <qs> -> [<qs>, [s...]]
+/// \<qs>, <qs>, <qs> -> [<qs>, [s.]]
 merge = \mqts, newQts, qts -> {
   I = [0];
   sz = arr.size(qts);
@@ -206,17 +208,17 @@ merge = \mqts, newQts, qts -> {
   }
 
   QsR = [Qs];
-  // [s...]
+  // [s.]
   Errs = [];
 
   if (mqts) {
-    // [<qs>, [s...]]
+    // [<qs>, [s.]]
     Rs = correctDates(mqts, QsR!);
     QsR! = Rs[0];
     for (err = Rs[1]) arr.push(Errs, err);
   }
 
-  // [<qs>, [s...]]
+  // [<qs>, [s.]]
   Rs = correct(QsR!);
   QsR! = Rs[0];
   for (err = Rs[1]) arr.push(Errs, err);
@@ -224,21 +226,21 @@ merge = \mqts, newQts, qts -> {
   return [QsR!, Errs];
 };
 
-/// Returns an [<quote...], copy of this, ordered from before to after.
+/// Returns an [<quote.], copy of this, ordered from before to after.
 ///   qts: Historic quotes.
-/// \<qs> -> [<quote>...]
+/// \<qs> -> [<quote>.]
 quotes = \qts -> return arr.reverse(qts);;
 
 /// Returns a array of dates with 'size == qs_size(this)', ordered from
 /// before to after
 ///   qts: Historic quotes.
-/// \<qs> -> [s...]
+/// \<qs> -> [s.]
 dates = \qts -> return arr.map(arr.reverse(qts), \Q -> return Q.date;);;
 
-// \[f...] -> ()
+// \[f.] -> ()
 normalize = \Vs -> {
   Start = [-1.0];
-  for (n, i = Vs)
+  for (i, n = Vs)
     if (n >= 0.0) {
       Start! = n;
       break;
@@ -254,7 +256,7 @@ normalize = \Vs -> {
 /// Returns a array of opens with 'size = <qs>.size', normalized and
 /// ordered from before to after
 ///   qts: Historic quotes.
-/// \<qs> -> [f...]
+/// \<qs> -> [f.]
 opens = \qts -> {
   R = arr.map(arr.reverse(qts), \Q -> return Q.open;);
   normalize(R);
@@ -264,7 +266,7 @@ opens = \qts -> {
 /// Returns a array of closes with 'size = qs_size(this)', normalized and
 /// ordered from before to after
 ///   qts: Historic quotes.
-/// \<qs> -> [f...]
+/// \<qs> -> [f.]
 closes = \qts -> {
   R = arr.map(arr.reverse(qts), \Q -> return Q.close;);
   normalize(R);
@@ -274,7 +276,7 @@ closes = \qts -> {
 /// Returns a array of maxs with 'size = qs_size(this)', normalized and
 /// ordered from before to after
 ///   qts: Historic quotes.
-/// \<qs> -> [f...]
+/// \<qs> -> [f.]
 maxs = \qts -> {
   R = arr.map(arr.reverse(qts), \Q -> return Q.max;);
   normalize(R);
@@ -284,7 +286,7 @@ maxs = \qts -> {
 /// Returns a array of mins with 'size = qs_size(this)', normalized and
 /// ordered from before to after
 ///   this: Historic quotes.
-/// \<qs> -> [f...]
+/// \<qs> -> [f.]
 mins = \qts -> {
   R = arr.map(arr.reverse(qts), \Q -> return Q.min;);
   normalize(R);
@@ -295,4 +297,4 @@ mins = \qts -> {
 ///   qts    : Historic quotes. (From after to before).
 ///   samples: Number of quotes to take in account.
 /// \s, i -> f
-volumeAvg = \qts, samples -> return sys.c("qsVol", [qts, samples]);;
+volumeAvg = ffi.qsVol;

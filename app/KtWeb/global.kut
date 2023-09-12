@@ -5,20 +5,20 @@
 
 // Directories
 
-/// s
+///:s
 appName = "KtWeb";
-/// s
-root = "/dm/dmWeb/app/KtWeb";
-/// s
+///:s
+root = "/dm/KtWeb";
+///:s
 cgiRoot = root + "/dmcgi";
-/// s
+///:s
 logPath = cgiRoot + "/log.txt";
 
 // Comunications
 
-/// i
+///:i
 port = 8008;
-/// i
+///:i
 rpTime = 30; // 1/2 minute
-/// i
+///:i
 texpiration = 900; // seconds = 15'

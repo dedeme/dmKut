@@ -1,0 +1,50 @@
+// Copyright 21-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Ibex server.
+
+import "infob";
+
+/// Read Ibex historic quotes from infobolsa.
+/// Returns tuple [[quotes]|[], [error...]].
+/// \ -> [[<qs>]|[], [s...]]
+readHistoricQuotes = \ -> {
+  url = "https://www.infobolsa.es/indice/historico-ibex_35";
+  htmlRs = sys.cmd(
+    "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
+  );
+  if (htmlRs[1]) return infob.readHistoric(htmlRs!);
+  return [[], [htmlRs!]];
+};
+
+/// Read Ibex components from infobolsa.
+/// \ -> [[[s.]|s],b] :: Result with an infobolsa company codes list.
+readComponents = \ -> {
+  url = "https://www.infobolsa.es/acciones/ibex35";
+  htmlRs = sys.cmd(
+    "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
+  );
+  if (!htmlRs[1]) return [htmlRs!, false];
+  html = htmlRs!;
+
+  Codes = []; // [s.]
+  iV = [0];
+  iV! = str.indexFrom(html, "<tbody>", iV!);
+  if (iV! == -1) return ["Ibex companies table start not found", false];
+  iEnd = str.indexFrom(html, "</tbody>", iV!);
+  if (iEnd == -1) return ["Ibex companies table end not found", false];
+
+  while () {
+    iV! = str.indexFrom(html, 'href="/cotizacion/', iV!);
+    if (iV! == -1 | iV! > iEnd ) break;
+    start = iV! + 18;
+    end = str.indexFrom(html, '"', start);
+    if (end == -1) iV! = start;
+    else {
+      arr.push(Codes, html[start:end]);
+      iV! = end;
+    }
+  }
+
+  return [Codes, true];
+};

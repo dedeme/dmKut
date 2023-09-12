@@ -33,14 +33,19 @@ updateGroup = \Qs, wdays, ldays, zoom -> {
   if (zoom) {
     f0path = path.cat([dpath, "nearParams.tb"]);
     if (!file.exists(f0path)) {
-      start = cts.simFarStart + cts.simFarStep * math.itof(cts.simSteps / 4);
-      file.write(f0path, js.w([start, start]));
+      sstart = cts.simFarStartStart +
+        cts.simFarStepStart * math.itof(cts.simSteps / 4);
+      astart = cts.simFarStartApp +
+        cts.simFarStepApp * math.itof(cts.simSteps / 4);
+      file.write(f0path, js.w([sstart, astart]));
     }
     fpath = path.cat([dpath, "near.tb"]);
     file.write(
       fpath,
       js.w(results(
-        Qs, wdays, ldays, js.r(file.read(f0path)), cts.simNearStep
+        Qs, wdays, ldays,
+        js.r(file.read(f0path)),
+        [cts.simNearStep, cts.simNearStep]
       ))
     );
   } else {
@@ -48,7 +53,9 @@ updateGroup = \Qs, wdays, ldays, zoom -> {
     file.write(
       fpath,
       js.w(results(
-        Qs, wdays, ldays, [cts.simFarStart, cts.simFarStart], cts.simFarStep
+        Qs, wdays, ldays,
+        [cts.simFarStartStart, cts.simFarStartApp],
+        [cts.simFarStepStart, cts.simFarStepApp]
       ))
     );
   }
@@ -59,15 +66,15 @@ updateGroup = \Qs, wdays, ldays, zoom -> {
 //  wdays: Quarantine days for win operations.
 //  ldays: Quarantine days for loss operations.
 //  Start: First simulation point. [start-approximation].
-//  step : Length of step in simulation for both parameters.
+//  Step : Length of step in simulation. [start-approximation].
 // \<quotes>, i, i, [f, f], f -> [[[f,f,f,f]...]...] (20x20)
-results = \Qs, wdays, ldays, Start, step -> {
+results = \Qs, wdays, ldays, Start, Step -> {
   R0 = []; // [[[f,f,f,f]...]...]
-  S = [Start[0] - step];
-  for (i = 0:22) {
-    A = [Start[1] - step];
+  S = [Start[0] - Step[0]];
+  for (i = 0:cts.simSteps) {
+    A = [Start[1] - Step[1]];
     Row = []; // [f,f,f]...]
-    for (j = 0:22) {
+    for (j = 0:cts.simSteps) {
       Rs = strategy.run(
         models.get("APRX")!,
         Qs,
@@ -87,10 +94,10 @@ results = \Qs, wdays, ldays, Start, step -> {
       );
 
       arr.push(Row, [assets, profits, points, math.itof(sales)]);
-      A! += step;
+      A! += Step[1];
     }
     arr.push(R0, Row);
-    S! += step;
+    S! += Step[0];
   }
 
   R = []; // [[[f,f,f,f]...]...]
@@ -193,7 +200,7 @@ updateRankings = \ -> {
     minusYear = time.toStr(time.addDays(now, -365));
 
     dateV = ["11111111"];
-    for (d, i = Dates) {
+    for (i, d = Dates) {
       if (i < 5) {
         dateV! = d;
         continue;

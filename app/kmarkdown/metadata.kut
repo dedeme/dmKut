@@ -45,7 +45,7 @@ getCurrent = \PgMetas, fpage -> {
 ///   fpage  : Page to search.
 /// \[m...], s -> ([m] | [])
 getPrevious = \PgMetas, fpage -> {
-  for (PgMeta, i = PgMetas)
+  for (i, PgMeta = PgMetas)
     if (PgMeta.fpage == fpage) return i > 0 ? [PgMetas[i - 1]] : [];
   return [];
 };
@@ -56,7 +56,7 @@ getPrevious = \PgMetas, fpage -> {
 ///   fpage  : Page to search.
 /// \[m...], s -> ([m] | [])
 getNext = \PgMetas, fpage -> {
-  for (PgMeta, i = PgMetas)
+  for (i, PgMeta = PgMetas)
     if (PgMeta.fpage == fpage)
       return i < arr.size(PgMetas) - 1 ? [PgMetas[i + 1]] : [];
   return [];

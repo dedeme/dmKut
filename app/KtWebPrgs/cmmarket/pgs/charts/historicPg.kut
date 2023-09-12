@@ -4,7 +4,8 @@
 /// Company charts page.
 
 import "KtWeb/rp";
-import "libmkt/model/model";
+import "libmkt/ffi";
+import "libmkt/model";
 import "libmkt/models";
 import "libmkt/quotes";
 import "libmkt/order";
@@ -42,6 +43,41 @@ process = \Rq -> {
         md, AllQs, Eval.params, cts.daysWin, cts.daysLoss
       );
 
+      Dates = AllQs.dates;
+      dSize = arr.size(Dates);
+      noLossM = ffi.noLossMultiplicator();
+      Pf = {}; // {f.} :: {nick -> price}
+      BuyCos = arr.new(dSize, 0);
+      QuarantineCos = arr.new(dSize, 0);
+      Orders = StrRs.orders;
+      oSize = arr.size(Orders);
+      if (Orders) {
+        iOV = [0];
+        OV = [Orders[iOV!]];
+        oDateV = [OV!.date];
+        for (i, d = Dates) {
+          while(oDateV! <= d & iOV! < oSize) {
+            o = OV!;
+            if (o.type == order.buy) {
+              dic.put(Pf, o.nick, o.price);
+            } else {
+              bprice = Pf[o.nick];
+              dic.remove(Pf, o.nick);
+              days = o.price >= bprice * noLossM ? cts.daysWin : cts.daysLoss;
+              end0 = i + days;
+              end = end0 >= dSize ? dSize : end0;
+              for (j = i:end) QuarantineCos[j] += 1;
+            }
+            iOV! += 1;
+            if (iOV! < oSize) {
+              OV! = Orders[iOV!];
+              oDateV! = OV!.date;
+            }
+          }
+          BuyCos[i] = dic.size(Pf);
+        }
+      }
+
       sys.print(rp.mk({
         ok: true,
         model: model.toJs(models.get(mdId)!),
@@ -52,9 +88,11 @@ process = \Rq -> {
             math.itof(order.sales(StrRs.orders))
           )),
         eval: modelEval.toJs(Eval),
-        dates: AllQs.dates,
+        dates: Dates,
         assets: StrRs.hassets,
-        withdrawals: StrRs.hwithdrawals
+        withdrawals: StrRs.hwithdrawals,
+        buyCos: arr.map(BuyCos, math.itof),
+        quarantineCos: arr.map(QuarantineCos, math.itof)
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

@@ -3,7 +3,8 @@
 
 /// Exponential mobil average (2).
 
-import "model";
+import "../model";
+import "../ffi";
 import "doc/ea2Doc";
 
 /// Returns a new 'appr' model.
@@ -19,8 +20,8 @@ new = \ -> return model.new(
 		calc
   );;
 
-// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+// \[<vec>.], [f.], (\<vec>, <vec> -> ()) -> ()
 calc = \Closes, Params, fn -> {
   Env = {Closes, Params};
-  for (Row = Closes) fn(Row, sys.c("calcEa2", Env));
+  for (Row = Closes) fn(Row, ffi.calcEa2(Env));
 };

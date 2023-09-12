@@ -1,0 +1,33 @@
+// Copyright 19-Aug-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "update/net";
+
+///
+run = \ -> {
+  // To initialize qibex
+  // db.qibex().write(net.getIbex());
+
+  Qs = net.getIbex();
+  ValSum = [0.0];
+  DatesOk = [true];
+  PrevDate = ["000000"];
+  for (DtVal = Qs) {
+    d = DtVal[0];
+    if (!time.fromStr(d)) {
+      sys.println("Bad date: " + d);
+      DatesOk! = false;
+    }
+    if (d <= PrevDate!) {
+      sys.println("Unsorted date: " + d);
+      DatesOk! = false;
+    }
+    PrevDate! = d;
+
+    ValSum! += DtVal[1];
+  }
+  sys.assert(DatesOk!);
+  sys.assert(ValSum! > 0.0);
+
+  sys.println("net tests finished");
+};

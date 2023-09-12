@@ -89,15 +89,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Date = [""];
-    try {
-      Date! = time.toStr(time.fromStr(
-        getDate(str.trim(html[Ix!:Ix2!]))
-      ));
-    } catch(e) {
+    dateOp = time.fromStr(getDate(str.trim(html[Ix!:Ix2!])));
+    if (!dateOp) {
       arr.push(Errs, "Bad date: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Date) continue;
+    date = time.toStr(dateOp!);
 
     // OPEN
     Ix! = str.indexFrom(html, "<span>", Ix!);
@@ -119,13 +116,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Open = [""];
-    try {
-      Open! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    openOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!openOp) {
       arr.push(Errs, "Bad open: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Open) continue;
+    open = math.ftos(openOp!);
 
     // MAX
     Ix! = str.indexFrom(html, "<span>", Ix!);
@@ -141,13 +137,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Max = [""];
-    try {
-      Max! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    maxOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!maxOp) {
       arr.push(Errs, "Bad max: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Max) continue;
+    max = math.ftos(maxOp!);
 
     // MIN
     Ix! = str.indexFrom(html, "<span>", Ix!);
@@ -163,13 +158,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Min = [""];
-    try {
-      Min! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    minOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!minOp) {
       arr.push(Errs, "Bad min: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Min) continue;
+    min = math.ftos(minOp!);
 
     // CLOSE
     Ix! = str.indexFrom(html, "<span>", Ix!);
@@ -185,13 +179,12 @@ readHistoric = \html -> {
       Ix! = endRow;
       continue;
     }
-    Close = [""];
-    try {
-      Close! = math.ftos(math.fromIso(str.trim(html[Ix!:Ix2!]))!);
-    } catch(e) {
+    closeOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+    if (!closeOp) {
       arr.push(Errs, "Bad close: " + html[Ix!:Ix2!]);
+      continue;
     }
-    if (!Close) continue;
+    close = math.ftos(closeOp!);
 
     // VOL
     Ix! = str.indexFrom(html, "<span>", Ix!);
@@ -219,12 +212,12 @@ readHistoric = \html -> {
         Ix! = endRow;
         continue;
       }
-      try {
-        Vol! = math.itos(math.ftoi(math.fromIso(str.trim(html[Ix!:Ix2!]))!));
-      } catch(e) {
+      volOp = math.fromIso(str.trim(html[Ix!:Ix2!]));
+      if (!volOp) {
         arr.push(Errs, "Bad vol: " + html[Ix!:Ix2!]);
+        continue;
       }
-      if (!Vol) continue;
+      Vol! = math.itos(math.ftoi(volOp!));
     } else {
       Vol! = "0";
     }
@@ -232,7 +225,7 @@ readHistoric = \html -> {
     // END
     arr.push(Qs, str.fmt(
       "%v:%v:%v:%v:%v:%v:false",
-      [Date!, Open!, Close!, Max!, Min!, Vol!]
+      [date, open, close, max, min, Vol!]
     ));
     Ix! = endRow;
   }

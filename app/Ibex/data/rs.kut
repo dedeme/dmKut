@@ -12,6 +12,9 @@ import "data/nkRs";
 new = \model, NkResults ->
   return [model, NkResults];;
 
+/// \<rs> -> JS
+toJs = \R -> return [R[0], arr.map(R[1], nkRs.toJs)];;
+
 /// \[*(JS)...] -> <rs>
 fromJs = \A -> return new(A[0], arr.map(A[1], nkRs.fromJs));;
 

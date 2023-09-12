@@ -4,7 +4,7 @@
 /// Main page
 
 import "KtWeb/rp";
-import "libmkt/model/model";
+import "libmkt/model";
 import "libmkt/models";
 
 /// \m -> ()

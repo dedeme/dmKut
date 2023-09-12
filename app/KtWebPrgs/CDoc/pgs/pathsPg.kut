@@ -1,0 +1,53 @@
+// Copyright 07-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "KtWeb/rp";
+import "db";
+import "data/conf";
+import "data/dpath";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "changeShowAll": {
+      confTb = db.confTb();
+      Cf = confTb.read();
+      Cf.showAll = Cf.showAll == true ? false : true;
+      confTb.write(Cf);
+      sys.print(rp.mkEmpty());
+    }
+    "new": {
+      pathsTb = db.pathsTb();
+      Ps = pathsTb.read();
+      arr.push(Ps, dpath.new(Rq.id, Rq.path, true, false));
+      pathsTb.write(Ps);
+      sys.print(rp.mkEmpty());
+    }
+    "changeShown": {
+      pathsTb = db.pathsTb();
+      Ps = pathsTb.read();
+      for (P = Ps)
+        if (P.id == Rq.id) P.isShown = P.isShown ? false : true;
+      pathsTb.write(Ps);
+      sys.print(rp.mkEmpty());
+    }
+    "delete": {
+      pathsTb = db.pathsTb();
+      Ps = pathsTb.read();
+      arr.filterIn(Ps, \P -> return P.id != Rq.id;);
+      pathsTb.write(Ps);
+      sys.print(rp.mkEmpty());
+    }
+    "modify": {
+      pathsTb = db.pathsTb();
+      Ps = pathsTb.read();
+      for (P = Ps) if (P.id == Rq.id) {
+        P.id = Rq.newId;
+        P.path = Rq.path;
+      }
+      pathsTb.write(Ps);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

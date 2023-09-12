@@ -40,7 +40,7 @@ read = \serverId -> {
   // [[[s,s]...]]]
   Codes = dic.get(SvCodes, serverId);
   if (Codes) {
-    for (c, n = Codes!) dic.put(NickCodes, n, c);
+    for (n, c = Codes!) dic.put(NickCodes, n, c);
 
     for (nk = Nicks) {
       if (!dic.get(NickCodes, nk)) {

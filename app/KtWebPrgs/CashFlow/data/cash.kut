@@ -1,0 +1,14 @@
+// Copyright 03-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Hconta cash account entries.
+
+/// \[<cashEntry>.] -> JS
+toJs = \Es -> return arr.map(Es, entryToJs);;
+
+/// Entry constructor
+/// \s, s, b, n -> d<cashEntry>
+newEntry = \month, desc, isIncome, am -> return {month, desc, isIncome, am};;
+
+// \<cashEntry> -> JS
+entryToJs = \E -> return [E.month, E.desc, E.isIncome, E.am];;

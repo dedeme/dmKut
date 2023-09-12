@@ -1,0 +1,69 @@
+// Copyright 15-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Database
+
+import "data/cts";
+
+/// Read all data base.
+/// 'data' is a JSON string.
+/// \ -> {s, s, s, s} :: {timeStamp, year, years, data}
+readData = \ -> {
+	dir = cts.dataPath;
+	if (!file.exists(dir)) {
+		file.mkdir(dir);
+		dt = time.now();
+		year = time.fmt("%Y", dt);
+		file.write(
+			path.cat([dir, "control.tb"]),
+      js.w(["", year])
+		);
+		file.write(path.cat([dir, year + ".db"]), js.w([]));
+	}
+
+	A = js.r(file.read(path.cat([dir, "control.tb"])));
+	year0 = A[1];
+	Years = []; // [s.]
+	for (fname = file.dir(dir))
+		if (str.ends(fname, ".db")) arr.push(Years, fname[0:-3]);
+	arr.sort(Years, \y1, y2 -> return y1 < y2;);
+
+  year = arr.any(Years, \y -> return y == year0;) ? year0 : arr.peek(Years);
+
+	return {
+    timeStamp: A[0],
+    year,
+    years: Years,
+    data: file.read(path.cat([dir, year + ".db"]))
+  };
+};
+
+/// Writes all data base and returns a new timeStamp or "" if data is out of date.
+///   timeStamp: Update control.
+///   year: Edited year.
+///   data: JSON string with year annotations.
+/// \s, s, s -> s
+writeData = \timeStamp, year, data -> {
+  controlTb = path.cat([cts.dataPath, "control.tb"]);
+  A = js.r(file.read(controlTb));
+  if (A[0] != timeStamp) return "";
+
+  newTimeStamp = time.fmt("%Y%M%D%T", time.now());
+  file.write(controlTb, js.w([newTimeStamp, year]));
+  file.write(path.cat([cts.dataPath, year + ".db"]), data);
+  return newTimeStamp;
+};
+
+/// Changes the current year.
+///   timeStamp: Update control.
+///   year: Edited year.
+/// \s, s -> s
+changeYear = \timeStamp, year -> {
+  controlTb = path.cat([cts.dataPath, "control.tb"]);
+  A = js.r(file.read(controlTb));
+  if (A[0] != timeStamp) return "";
+
+  newTimeStamp = time.fmt("%Y%M%D%T", time.now());
+  file.write(controlTb, js.w([newTimeStamp, year]));
+  return newTimeStamp;
+};

@@ -3,27 +3,27 @@
 
 /// Cgi response maker.
 
-ComKey = [""];
+comKeyV = [""];
 
 /// Initialize responses.
 ///   comKey: Comunications key.
-/// \s -> ()
-init = \comKey -> ComKey! = comKey;;
+///:\s -> ()
+init = \comKey -> comKeyV! = comKey;;
 
 /// Returns a generic response to send to client.
-///  Rp: Response. It is a normal object.
-///      Example of reponse:
+///   Rp: Response. It is a 'JSONizable' normal object.
+///       Example of reponse:
 ///        {"error": msg}
-/// \m -> s
-mk = \Rp -> return cryp.encode(ComKey!, js.w(Rp));;
+///:\{<JS>} -> s
+mk = \Rp -> return cryp.encode(comKeyV!, js.w(Rp));;
 
 /// Returns a generic response to send to client.
-///  Rp: Response. It is a Json object.
-///      Example of reponse:
+///   Rp: Response. It is a 'JSON' object.
+///       Example of reponse:
 ///        {"error": js.ws(msg)}
-/// \m -> s
-mkJs = \Rp -> return cryp.encode(ComKey!, js.wo(Rp));;
+///:\{s} -> s
+mkJs = \Rp -> return cryp.encode(comKeyV!, js.wo(Rp));;
 
 /// Returns an empty response.
-/// \-> s
+///:\-> s
 mkEmpty = \-> return mkJs({});;

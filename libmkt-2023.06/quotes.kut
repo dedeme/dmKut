@@ -3,6 +3,8 @@
 
 /// Quotes table data
 
+import "ffi";
+
 /// Constructor
 ///   date  : Date in which data was read in format YYYYMMDD.
 ///   cos   : Company nicks.
@@ -13,17 +15,17 @@
 ///           Its rows match 'dates' and is columns 'cos'.
 ///   ----
 ///   also <quotes> has the following fields:
-///   vopens [<vec>...] :  Matrix of normalized opens quotes (without -1).
+///   vopens [<vec>.] :  Matrix of normalized opens quotes (without -1).
 ///                       Its rows match 'dates' and is columns 'cos'.
-///   vcloses [<vec>...]: Matrix of normalized closes quotes (without -1).
+///   vcloses [<vec>.]: Matrix of normalized closes quotes (without -1).
 ///           Its rows match 'dates' and is columns 'cos'.
-/// \s, [s...], [s...],
-///  [[f...]...], [[f...]...] -> d<quotes>
+/// \s, [s.], [s.],
+///  [[f.].], [[f.].] -> d<quotes>
 new = \date, cos, dates, opens, closes ->
   return {
       date, cos, dates, opens, closes,
-      vopens: arr.map(opens, \row -> return sys.c("mkVec", row);),
-      vcloses: arr.map(closes, \row -> return sys.c("mkVec", row);)
+      vopens: arr.map(opens, \row -> return ffi.mkVec(row);),
+      vcloses: arr.map(closes, \row -> return ffi.mkVec(row);)
     };;
 
 /// Returns the index of one company from its nick, or -1 if nick is not found.
@@ -48,9 +50,9 @@ getSingle = \Qs, coIx -> {
   return new(Qs.date, [Qs.cos[coIx]], Dates, opens, closes);
 };
 
-/// \<quotes> -> [JS...]
+/// \<quotes> -> [JS.]
 toJs = \Q -> return [Q.date, Q.cos, Q.dates, Q.opens, Q.closes];;
 
-/// \[JS...] -> <quotes>
+/// \[JS.] -> <quotes>
 fromJs = \A -> return new(A[0], A[1], A[2], A[3], A[4]);;
 

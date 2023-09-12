@@ -44,5 +44,5 @@ toJs = \Is ->
 /// \[*(JS)...] -> <IbexSundays>
 fromJs = \A -> return new(arr.map(
     A,
-    \E -> return [time.fromStr(E[0]), math.stof(E[1])!];
+    \E -> return [time.fromStr(E[0])!, math.stof(E[1])!];
   ));;

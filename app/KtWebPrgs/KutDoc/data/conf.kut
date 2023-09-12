@@ -1,1 +1,10 @@
-/dm/dmWeb/app/KtWeb/prgs/KutDoc/jkut/data/conf.jkut
+// Copyright 06-May-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Configuration data.
+
+/// Constructor. <conf> is directly JSONizable.
+///   path: Default source path.
+///   showAll: 'true' if all libraries should be shown.
+/// \s, b -> <conf>{s, b}
+mk = \path, showAll -> return { path, showAll };;

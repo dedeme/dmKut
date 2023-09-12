@@ -8,7 +8,7 @@ appName = "HBills";
 
 /// HConta data directory path
 /// s
-accPath = "/dm/wwwcgi/dmcgi/Hconta/data";
+accPath = "/dm/KtWeb/dmcgi/Hconta";
 
 /// HConta holidays account number
 /// s

@@ -26,7 +26,7 @@ read = \ -> return js.r(db.read(closesPath));;
 /// \ -> {f...}
 readOnlyCloses = \ -> {
   R = {};
-  for (V, k = read()) {
+  for (k, V = read()) {
     isIndex = arr.any(cts.IxNicks, \n -> return k == n;);
     if (isIndex) dic.put(R, k, V[1][0]);
     else dic.put(R, k, V[1]);

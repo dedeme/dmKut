@@ -5,7 +5,7 @@
 
 import "libdm/log";
 import "libdm/cgi";
-import "test/allTests";
+import "tests/allTests";
 import "data/cts";
 import "update";
 import "web";

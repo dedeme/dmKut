@@ -21,7 +21,7 @@ sell = 1;
 new = \date, nick, type, stocks, price ->
   return {date, nick, type, stocks, price};;
 
-/// \<order> -> [JS...]
+/// \<order> -> [JS.]
 toJs = \O -> return [
     O.date,
     O.nick,
@@ -30,7 +30,7 @@ toJs = \O -> return [
     O.price
   ];;
 
-/// \[JS...] -> <order>
+/// \[JS.] -> <order>
 fromJs = \A -> return new(
     A[0],
     A[1],
@@ -40,7 +40,7 @@ fromJs = \A -> return new(
   );;
 
 /// Returns the number of orders type order.buy of 'Os'.
-/// \[<order>...] -> i
+/// \[<order>.] -> i
 buys = \Os -> {
   Sum = [0];
   for (O = Os) if (O.type == buy) Sum! += 1;
@@ -48,7 +48,7 @@ buys = \Os -> {
 };
 
 /// Returns the number of orders type order.sell of 'Os'.
-/// \[<order>...] -> i
+/// \[<order>.] -> i
 sales = \Os -> {
   Sum = [0];
   for (O = Os) if (O.type == sell) Sum! += 1;

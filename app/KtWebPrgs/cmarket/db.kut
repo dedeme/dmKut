@@ -10,6 +10,7 @@ import "db/cosTb";
 import "db/svCodesTb";
 import "db/activityTb";
 import "db/investorsTb";
+import "db/ibexTb";
 import "db/acc/diariesDb";
 import "db/acc/profitsDb";
 import "db/trading/closesTb";

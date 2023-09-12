@@ -1,1 +1,42 @@
-/dm/dmWeb/app/KtWeb/prgs/KutDoc/jkut/data/doc.jkut
+// Copyright 08-May-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Module documentation data.
+
+/// Documentation entry constructor.
+///   name: Entry name.
+///   doc : Entry documentation.
+///   code: Entry code.
+///   link: Entry code page link.
+/// \s, s, s, s -> <docEntry>
+mkEntry = \name, doc, code, link ->
+  return { name, doc, code, link };;
+
+/// \<docEntry> -> [Js...]
+entryToJs = \D -> return [D.name, D.doc, D.code, D.link];;
+
+/// \[JS...] -> <docEntry>
+entryFromJs = \A -> return mkEntry(A[0], A[1], A[2], A[3]);;
+
+/// Documentation constructor.
+///   doc      : Module documentation.
+///   functions: Functions documentation.
+///   values   : Values documentation.
+/// \s, [<docEntry>...], [<docEntry>...] -> <doc>
+mk = \doc, Functions, Values -> return { doc, Functions, Values };;
+
+/// \<doc> -> [Js...]
+toJs = \D -> return [
+    D.doc,
+    arr.map(D.Functions, entryToJs),
+    arr.map(D.Values, entryToJs)
+  ];;
+
+/// \[JS...] -> <doc>
+fromJs = \A -> return mk(
+    A[0],
+    arr.map(A[1], entryFromJs),
+    arr.map(A[2], entryFromJs)
+  );;
+
+

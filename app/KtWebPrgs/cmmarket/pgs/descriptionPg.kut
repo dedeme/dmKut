@@ -5,7 +5,7 @@
 
 import "KtWeb/rp";
 import "libmkt/models";
-import "libmkt/model/model";
+import "libmkt/model";
 
 /// \m -> ()
 process = \Rq -> {

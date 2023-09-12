@@ -1,0 +1,52 @@
+// Copyright 03-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Hconta data base reader.
+
+import "data/cts";
+import "data/cash";
+
+/// Returns {balance, diary}
+/// \s -> {n, [<cashEntry>.]}
+read = \y -> {
+	p = path.cat([cts.hcontaPath, y+".db"]);
+	if (!file.exists(p)) {
+		return {balance: 0.0, diary: []};
+	}
+
+  balanceV = [0.0];
+  Diary = [];
+	All = js.r(file.read(p));
+	As = All[3];
+	firstV = [true];
+  for (A = As) {
+    EOp = readCash(A);
+    if (EOp) {
+      if (firstV!) {
+        balanceV! = EOp!.am;
+        firstV! = false;
+      } else {
+        arr.push(Diary, EOp!);
+      }
+    }
+  }
+
+  return {balance: balanceV!, diary: Diary};
+};
+
+// \[s, s, {n.}, {n.}] -> [<cashEntry>] | []
+readCash = \A -> {
+  sumV = [0.0];
+  for (k, v = A[2]) if (k == cts.cashAcc) sumV! += v;
+  for (k, v = A[3]) if (k == cts.cashAcc) sumV! -= v;
+
+  if (!math.eq(sumV!, 0.0, 0.00001))
+    return [cash.newEntry(
+      A[0][4:6],
+      A[1],
+      sumV! > 0.0,
+      math.abs(sumV!)
+    )];
+
+  return [];
+};

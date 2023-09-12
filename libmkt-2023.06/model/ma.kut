@@ -3,7 +3,8 @@
 
 /// Mobil average.
 
-import "model";
+import "../model";
+import "../ffi";
 import "doc/maDoc";
 
 /// Returns a new 'appr' model.
@@ -19,8 +20,8 @@ new = \ -> return model.new(
 		calc
   );;
 
-// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+// \[<vec>.], [f.], (\<vec>, <vec> -> ()) -> ()
 calc = \Closes, Params, fn -> {
   Env = {Closes, Params};
-  for (Row = Closes) fn(Row, sys.c("calcMa", Env));
+  for (Row = Closes) fn(Row, ffi.calcMa(Env));
 };

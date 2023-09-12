@@ -3,7 +3,7 @@
 
 /// Investors base parameters reader from KtMarket.
 
-fpath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket/investors.tb";
+fpath = "/dm/KtWeb/dmcgi/CMarket/investors.tb";
 
 /// Returns an array with investors paraméters.
 /// \ -> [[f...]...]

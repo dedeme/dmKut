@@ -3,7 +3,7 @@
 
 import "db";
 import "libdm/log";
-import "libmkt/model/model";
+import "libmkt/model";
 import "libmkt/models";
 import "data/flea";
 

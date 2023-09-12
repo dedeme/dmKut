@@ -1,0 +1,38 @@
+// Copyright 29-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Plan page.
+
+import "KtWeb/rp";
+import "db/yearsDb";
+import "db/planTb";
+import "db/diaryTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      year = Rq.year;
+      ypath = yearsDb.yearPath(year);
+      sys.print(rp.mkJs({
+        "plan": planTb.readJs(ypath),
+        "diary": diaryTb.readJs(ypath)
+      }));
+    }
+    "updatePlan": {
+      year = Rq.year;
+      ypath = yearsDb.yearPath(year);
+      planTb.writeJs(ypath, js.w(Rq.plan));
+      sys.print(rp.mkEmpty());
+    }
+    "updatePlanAndDiary": {
+      year = Rq.year;
+      ypath = yearsDb.yearPath(year);
+      planTb.writeJs(ypath, js.w(Rq.plan));
+      diaryTb.writeJs(ypath, js.w(Rq.diary));
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

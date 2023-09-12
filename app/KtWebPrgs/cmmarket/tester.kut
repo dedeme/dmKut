@@ -3,7 +3,7 @@
 
 /// Tester for models.
 
-import "libmkt/model/model";
+import "libmkt/model";
 import "libmkt/strategy";
 import "libmkt/order";
 import "data/result";

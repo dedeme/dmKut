@@ -4,7 +4,7 @@
 /// Company charts page.
 
 import "KtWeb/rp";
-import "libmkt/model/model";
+import "libmkt/model";
 import "libmkt/models";
 import "libmkt/quotes";
 import "libmkt/order";

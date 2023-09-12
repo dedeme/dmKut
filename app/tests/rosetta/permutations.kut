@@ -3,9 +3,9 @@ perm = \A -> {
   sz = arr.size(A);
   if (sz < 2) return [A];
   R = [];
-  for (e, i = A) {
+  for (i, e = A) {
     Sub = [];
-    for (e2, j = A) if (i != j) arr.push(Sub, e2);
+    for (j, e2 = A) {trace i != j;if (i != j) arr.push(Sub, e2);}
     for (P = perm(Sub)) {
       arr.unshift(P, e);
       arr.push(R, P);

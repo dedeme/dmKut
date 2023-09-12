@@ -1,1 +1,18 @@
-/dm/dmWeb/app/KtWeb/prgs/KutDoc/jkut/data/dpath.jkut
+// Copyright 06-May-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Path data.
+
+/// Constructor.
+///   id     : Path identifier.
+///   path   : Source path.
+///   isShown: 'true' if the path should be shown.
+///   isValid: 'true' if the path is a valid one.
+/// \s, s, b, b -> <dpath>{s, s, b, b}
+mk = \id, path, isShown, isValid -> return {id, path, isShown, isValid};;
+
+/// \<dpath> -> [JS...]
+toJs = \Dp -> return [Dp.id, Dp.path, Dp.isShown, Dp.isValid];;
+
+/// \[JS...] -> dpath
+fromJs = \JS -> return mk (JS[0], JS[1], JS[2], JS[3]);;

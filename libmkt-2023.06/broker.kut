@@ -3,46 +3,27 @@
 
 /// Market broker
 
+import "ffi";
+
 /// Returns total fees of a buy operation.
 ///   amount: Operation amount.
 /// \f -> f
-buyFees = \amount -> return
-    ( amount > 50000.0       // broker
-        ? amount * 0.001
-        : 9.75
-    ) +
-    amount * 0.00003 +       // market
-    0.11 +                   // Execution fee
-    amount * 0.002           // tobin
-  ;;
+buyFees = \amount -> return ffi.brokerBuyFees(amount);;
 
 /// Returns net cost of operation (cost + fees).
 ///   stocks: Stocks number.
 ///   price : Stock price.
 /// \i, f -> f
-buy = \stocks, price -> {
-  amount = math.itof(stocks) * price;
-  return amount + buyFees(amount);
-};
+buy = \stocks, price -> return ffi.brokerBuy(stocks,price);;
 
 /// Returns total fees of a sell operation.
 ///   amount: Operation amount.
 /// \f -> f
-sellFees = \amount -> return
-    ( amount > 50000.0       // broker
-        ? amount * 0.001
-        : 9.75
-    ) +
-    amount * 0.00003 +       // market
-    0.11                    // Execution fee
-  ;;
+sellFees = \amount -> return ffi.brokerSellFees(amount);;
 
 /// Returns net incomes of operation (incomes - fees).
 ///   stocks: Stocks number.
 ///   price : Stock price.
 /// \i, f -> f
-sell = \stocks, price -> {
-  amount = math.itof(stocks) * price;
-  return amount - sellFees(amount);
-};
+sell = \stocks, price -> return ffi.brokerSell(stocks, price);;
 

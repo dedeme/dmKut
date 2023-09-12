@@ -1,0 +1,28 @@
+// Copyright 29-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base initialization.
+
+import "data/cts";
+import "db/yearsDb";
+
+/// \ -> ()
+init = \ -> {
+	p = cts.dbPath;
+	version = path.cat([p, "version.txt"]);
+	if (!file.exists(p)) {
+		file.mkdir(p);
+		file.write(version, cts.dataVersion);
+	}
+	dbVersion = file.read(version);
+	if (dbVersion != cts.dataVersion) {
+		sys.throw("Application can not continue.\n" +
+			"Expected data version:\n" +
+			cts.dataVersion +
+			"\nBut found:\n" +
+			dbVersion
+    );
+	}
+
+	yearsDb.init();
+};

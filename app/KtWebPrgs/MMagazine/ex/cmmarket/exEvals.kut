@@ -6,7 +6,7 @@
 import "data/modelEval";
 import "data/mmarket/mModelEval";
 
-dir = "/dm/dmWeb/app/KtWeb/dmcgi/CMMarket/evals";
+dir = "/dm/KtWeb/dmcgi/CMMarket/evals";
 
 // s -> s
 fpath = \model -> return path.cat([dir, model + ".tb"]);;

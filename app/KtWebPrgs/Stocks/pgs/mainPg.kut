@@ -1,0 +1,29 @@
+// Copyright 08-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "KtWeb/rp";
+import "data/cts";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "read": {
+      fpath = path.cat([cts.dataPath, "all.tb"]);
+      if (file.exists(fpath))
+        sys.print(rp.mk({data: [js.r(file.read(fpath))]}));
+      else {
+        file.mkdir(path.parent(fpath));
+        sys.print(rp.mk({data: []}));
+      }
+    }
+    "write": {
+      fpath = path.cat([cts.dataPath, "all.tb"]);
+      file.write(fpath, js.w(Rq.data));
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

@@ -9,6 +9,8 @@ import "db/calendarTb";
 import "db/activityTb";
 import "db/cosTb";
 import "db/investorsTb";
+import "db/svCodesTb";
+import "db/ibexTb";
 import "db/trading/closesTb";
 import "db/trading/refsTb";
 import "db/acc/diariesDb";
@@ -20,6 +22,8 @@ import "data/activity";
 import "data/acc/opr";
 import "data/acc/ann";
 import "data/acc/annsTb";
+import "data/svs/ibexSv";
+import "data/svs/infob";
 import "data/chart/profitsEntry";
 import "qspr";
 
@@ -42,6 +46,68 @@ getPid = \pid -> {
   return "";
 };
 
+/// \s -> <qsprRs<qs>>
+ibexHistoricUpdate = \mainNick -> {
+  Cos = cosTb.read();
+
+  Rs = qspr.updateIbexHistoric(Cos.main);
+
+  CodesRs = ibexSv.readComponents();
+  if (!CodesRs[1]) {
+    log.error("Reading Ibex components: " + CodesRs!);
+    Rs.withError = true;
+    return Rs;
+  }
+  Codes = CodesRs!;
+
+  InfoCodes = svCodesTb.read(infob.id());
+  Nicks = []; // [s.]
+  for (code = Codes){
+    NkOp = [];
+    for (nk, cd = InfoCodes) {
+      if (cd == code) {
+        arr.push(NkOp, nk);
+        break;
+      }
+    }
+    if (NkOp) arr.push(Nicks, NkOp!);
+    else {
+      log.error("Reading Ibex components: Unknown company code " + code);
+      Rs.withError = true;
+      return Rs;
+    }
+  }
+
+  IbexTb = ibexTb.read();
+  IbexTb.cos = Nicks;
+  ibexTb.write(IbexTb);
+
+  for (nk = Nicks) {
+    CoOp = arr.find(Cos.cos, \C -> return C.nick == nk;);
+    if (!CoOp) {
+      log.error("Reading Ibex components: " + nk +
+        " in server not found in companies data base");
+      Rs.withError = true;
+      return Rs;
+    }
+    Co = CoOp!;
+    if (!Co.isSelected) {
+      log.warning("Reading Ibex components: Ibex company " + nk + " not selected");
+      Rs.withWarnings = true;
+    }
+  }
+
+  for (Co = Cos.cos) {
+    if (Co.isSelected & !arr.any(Nicks, \n -> return n == Co.nick;)) {
+      log.warning("Reading Ibex components: Selectd company " + Co.nick +
+        " not in Ibex");
+      Rs.withWarnings = true;
+    }
+  }
+
+  return Rs;
+};
+
 /// \ -> ()
 historicUpdate = \ -> {
   log.warning("Historic update");
@@ -60,6 +126,9 @@ historicUpdate = \ -> {
       qspr.updateHistoric(
         "Updating historic of " + C.nick, Cos.main, C.nick)
       ;
+
+  // Update ibex (Must be  alled after 'qspr.updateHistoric')
+  ibexHistoricUpdate();
 
   // Update investors.
   investorsTb.update();
@@ -149,7 +218,7 @@ closeAccountingYear = \ -> {
       annsTb.add(NewTable, ann.new(
         -1, date, opr.newIn(Set.ledger.cash)
       ));
-      for (StPf, nick = Set.portfolio)
+      for (nick, StPf = Set.portfolio)
         annsTb.add(NewTable, ann.new(
           -1, date, opr.newSt(nick, StPf[0], StPf[1])
         ));

@@ -1,0 +1,304 @@
+// Copyright 07-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/doc";
+import "data/docEntry";
+import "db";
+
+/// Module reader.
+
+// \<file>, s -> [s, s] | [] :: [doc, line] | []
+readDoc = \f, l -> {
+  // \[s] | s -> s
+  findLine = \lOp -> {
+    if (!lOp) return "";
+    if (str.trim(lOp!)) return lOp!;
+    while () {
+      lOp = file.readLine(f);
+      if (!lOp) return "";
+      if (str.trim(lOp!)) return lOp!;
+    }
+  };
+
+  lV = [l];
+  while () {
+    Bf = []; // [s.]
+    ltrim = str.ltrim(lV!);
+
+    if (str.starts(ltrim, "///")) {
+      lOp = [];
+      ltrimV = [ltrim];
+      while () {
+        if (str.len(ltrimV!) == 3) arr.push(Bf, "");
+        else {
+          ch = ltrim[3];
+          arr.push(Bf, ch <= " " ? ltrimV![4:] : ltrimV![3]);
+        }
+        nlOp = file.readLine(f);
+        arr.clear(lOp);
+        if (nlOp) arr.push(lOp, nlOp!);
+        if (!lOp | !str.starts(str.trim(lOp!), "///")) break;
+        ltrimV! = str.ltrim(lOp!);
+      }
+      lV! = findLine(lOp);
+      if (str.starts(str.ltrim(lV!), "/")) continue;
+      else return [arr.join(Bf, "\n"), lV!];
+    }
+
+    if (str.starts(ltrim, "/**")) {
+      lOp = file.readLine(f);
+      if (!lOp) return [];
+      ltrim = str.ltrim(lOp!);
+      if (str.index(ltrim, "*/") != -1) return [];
+      strip = str.len(lOp!) - str.len(ltrim);
+
+      ltrimV = [ltrim];
+      while () {
+        arr.push(Bf, ltrimV!);
+        nlOp = file.readLine(f);
+        arr.clear(lOp);
+        if (nlOp) arr.push(lOp, nlOp!);
+        if (!lOp | str.index(lOp!, "*/") != - 1) break;
+        l = lOp!;
+        ltrimV! = str.len(l) < strip ? "" : l[strip:];
+      }
+      lV! = findLine(file.readLine(f));
+      if (str.starts(str.ltrim(lV!), "/")) continue;
+      else return [arr.join(Bf, "\n"), lV!];
+    }
+
+    return [];
+  }
+};
+
+// Returns the position of the first character of 'chs' (ch).
+//    tx: Text for searching.
+//    chs: Characters to find.
+// \s, s -> n
+indexes = \tx, chs -> {
+  Ixs = []; // [n]
+  for (i = 0:str.len(chs)) arr.push(Ixs, str.index(tx, chs[i]));
+
+  ixV = [-1];
+  for (ix = Ixs)
+    if (ix > -1 & (ixV! == -1 | ix < ixV!)) ixV! = ix;
+  return ixV!;
+};
+
+// \s -> s
+mkLink = \s -> {
+  ix0 = indexes(s, "\n;=(");
+  ixV = [ix0 == -1 ? str.len(s) : ix0];
+  ch = ix0 == -1 ? "" : s[ix0];
+
+  if (ch == "(" & str.starts(s[ix0:], "(*")) {
+    ix2 = str.index(s[ix0 + 1:], "(");
+    ixV! = ix2 == -1 ? ixV! : ix2 + 2;
+  }
+  r = str.replace(s[:ixV!], "#", "_");
+
+  Bf = []; //[s.];
+  for (i = 0:str.len(r)) if (r[i] > " ") arr.push(Bf, r[i]);
+  return arr.join(Bf, "");
+};
+
+// \s -> b
+isL = \ch ->
+  return (ch >= 'a' & ch <= 'z') |
+    (ch >= 'A' & ch <= 'Z') | ch == '_'
+  ;;
+
+// \s -> b
+isLD = \ch -> return isL(ch) | (ch >= '0' & ch <= '9');;
+
+// \s, n -> s
+readName = \tx, i -> {
+  len = str.len(tx);
+  startV = [i];
+  while (startV! < len & !isL(tx[startV!])) startV! += 1;
+  if (startV! < len) {
+    endV = [startV!];
+    while (endV! < len & isLD(tx[endV!])) endV! += 1;
+    return tx[startV!:endV!];
+  }
+  return "???";
+};
+
+// \s, n -> s
+readNameBk = \tx, i -> {
+  iV = [i - 1];
+  while (iV! >= 0 & !isLD(tx[iV!])) iV! -= 1;
+  if (iV! >= 0) {
+    end = iV! + 1;
+    iV! -= 1;
+    while (iV! >= 0 & isLD(tx[iV!])) iV! -= 1;
+    return tx[iV! + 1:end];
+  }
+  return "???";
+};
+
+// \<file>, s, b -> s
+readCode = \f, line, isFirst -> {
+  l = str.ltrim(line);
+
+  if (isFirst & str.starts(l, "#ifndef ")) return "overview";
+
+  Bf = []; // [s.]
+
+  if (str.starts(l, "#define ")) {
+    lV = [l];
+    while () {
+      l = lV!;
+      arr.push(Bf, l + "\n");
+      if (str.ends(l, "\\")) {
+        lOp = file.readLine(f);
+        if (lOp) {
+          lV! = lOp!;
+          continue;
+        }
+      }
+      return arr.join(Bf, "");
+    }
+  }
+  // else
+
+  if (str.starts(l, "#")) return "";
+
+
+  withBracketsV = [0];
+  lineOp = [line];
+  while (lineOp) {
+    line = lineOp!;
+    if (withBracketsV! == 0) {
+      ix = indexes(line, ";{");
+      if (ix == -1) {
+        arr.push(Bf, line + "\n");
+        newLineOp = file.readLine(f);
+        arr.clear(lineOp);
+        if (newLineOp) arr.push(lineOp, newLineOp!);
+        continue;
+      }
+      // else
+
+      ch = line[ix];
+      ix1 = ix + 1;
+      arr.push(Bf, line[:ix1]);
+      if (ch == ';') return arr.join(Bf, "");
+
+      lineOp! = line[ix1:];
+      withBracketsV! = 1;
+      continue;
+    }
+    // else
+
+    ix = indexes(line, "{}");
+    if (ix == -1) {
+      arr.push(Bf, line + "\n");
+      newLineOp = file.readLine(f);
+      arr.clear(lineOp);
+      if (newLineOp) arr.push(lineOp, newLineOp!);
+      continue;
+    }
+    // else
+
+    ch = line[ix];
+    ix1 = ix + 1;
+    arr.push(Bf, line[:ix1]);
+    withBracketsV! += ch == "{" ? 1 : -1;
+
+    lineOp! = line[ix1:];
+  }
+
+  return "";
+};
+
+/// \s, s -> [<doc>] | []
+read = \pack, pt -> {
+  Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
+  if (arr.size(Ppath) == 0) return [];
+
+  fpath = path.cat([Ppath!.path, "include", pt + ".h"]);
+  if (!file.exists(fpath)) return [];
+
+  Doc = doc.new("", [], [], [], [], [], [], []);
+
+  f = file.ropen(fpath);
+  isFirstV = [true];
+  while () {
+    lOp = file.readLine(f);
+    if (!lOp) break;
+    l = lOp!;
+
+    if (str.starts(str.trim(l), "/")) {
+      docRs = readDoc(f, l);
+      if (docRs & docRs[1]) {
+        cd = readCode(f, docRs[1], isFirstV!);
+        cdTrim = str.trim(cd);
+        d = docRs[0];
+
+        isFirstV! = false;
+
+        if (cd == "overview") {
+          Doc.doc = d;
+        } else if (str.starts(cd, "#define")) {
+          arr.push(Doc.defines, docEntry.new(
+            readName(cdTrim, str.len("#define ")),
+            d, cd, mkLink(cdTrim)
+          ));
+        } else if (str.starts(cd, "typedef ")) {
+          ix0 = str.index(cdTrim, ')');
+          ix = ix0 == -1 ? str.len(cdTrim) : ix0;
+          arr.push(Doc.typedefs, docEntry.new(
+            readNameBk(cdTrim, ix),
+            d, cd, mkLink(cdTrim)
+          ));
+        } else if (str.index(cdTrim, '{') != -1) {
+          if (str.starts(cd, "enum ")) {
+            arr.push(Doc.enums, docEntry.new(
+              readName(cdTrim, str.len("enum ")),
+              d, cd, mkLink(cdTrim)
+            ));
+          }
+          if (str.starts(cd, "struct ")) {
+            arr.push(Doc.structs, docEntry.new(
+              readName(cdTrim, str.len("struct ")),
+              d, cd, mkLink(cdTrim)
+            ));
+          }
+          if (str.starts(cd, "union ")) {
+            arr.push(Doc.unions, docEntry.new(
+              readName(cdTrim, str.len("union ")),
+              d, cd, mkLink(cdTrim)
+            ));
+          }
+        } else {
+          ix = str.index(cdTrim, '=');
+          if (ix != -1) {
+            arr.push(Doc.vars, docEntry.new(
+              readNameBk(cdTrim, ix),
+              d, cd, mkLink(cdTrim)
+            ));
+          } else {
+            ix = str.index(cdTrim, '(');
+            if (ix != -1) {
+              ixV = [ix];
+              if (str.starts(str.trim(cdTrim[ix + 1:]), "*"))
+                ixV! = str.indexFrom(cdTrim, ix, ')');
+              arr.push(Doc.functions, docEntry.new(
+                readNameBk(cdTrim, ixV!),
+                d, cd, mkLink(cdTrim)
+              ));
+            } else if (cdTrim) {
+              arr.push(Doc.vars, docEntry.new(
+                readNameBk(cdTrim, str.len(cdTrim)),
+                d, cd, mkLink(cdTrim)
+              ));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return [Doc];
+};

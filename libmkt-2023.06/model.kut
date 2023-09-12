@@ -1,0 +1,104 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Market model
+
+/// Type of day parameter.
+/// i
+dayParam = 0;
+
+/// Type of percentage parameter.
+/// i
+percParam = 1;
+
+/// Constructor.
+///   id: Model identifier (short name in uppercase).
+///   name         : Model name.
+///   doc          : Model documentation.
+///   ParamNames   : Parameter names.
+///   ParamTypes   : Parameter types. Each parameter can be:
+///                  model.dayParam or model.percParam.
+///   ParamBases   : Minimum parameters to make simulations.
+///   ParamBaseIncs: ParamBase increments.
+///   ParamEnvIncs : Environment increments.
+///   calc         : Function to calculare results. It has the following parameters:
+///     - Closes: Matrix 'dates x companies' with market closes.
+///               This closes must be regularized (without -1.0 values).
+///     - Params: Parameter values.
+///     - action: Function to run for each date, after calculate the day
+///               references. It has the following parameters:
+///                 - closes: Day closes.
+///                 - refs  : Day references.
+///                   At the beginning their values can be '-1' until the
+///                   first reference is generated.
+///                   When closes[i] >= refs[i], position is bought.
+///                   When closes[i] < refs[i], position is sold.
+/// \s, s, s, [s.], [i.],[f.], [f.], [f.],
+/// (\[<vec>.], [f.], (\<vec>, <vec> ->()) -> ())
+/// -> x<model>
+new = \id, name, doc, ParamNames, ParamTypes,
+       ParamBases, ParamBaseIncs, ParamEnvIncs, calc ->
+  return {i:id, n:name, d:doc, N:ParamNames, T:ParamTypes,
+          B:ParamBases, Bi:ParamBaseIncs, Ei:ParamEnvIncs, c:calc};;
+
+/// Returns model identifier.
+/// \<model> -> s
+id = \md -> return md.i;;
+
+/// Returns model name.
+/// \<model> -> s
+name = \md -> return md.n;;
+
+/// Returns model documentation.
+/// \<model> -> s
+doc = \md -> return md.d;;
+
+/// Returns parameter names.
+/// \<model> -> [s.]
+paramNames = \md -> return md.N;;
+
+/// Returns parameter types.
+/// Types can be model.dayParam or model.percParam.
+/// \<model> -> [i.]
+paramTypes = \md -> return md.T;;
+
+/// Returns minimum parameters to make simulations.
+/// \<model> -> [f.]
+paramBases = \md -> return md.B;;
+
+/// Returns increment of parameter bases.
+/// \<model> -> [f.]
+paramBaseIncs = \md -> return md.Bi;;
+
+/// Returns increment of calculus environment.
+/// \<model> -> [f.]
+paramEnvIncs = \md -> return md.Ei;;
+
+/// Executes the function 'calc' of 'md'.
+///   md    : Model.
+///   Closes: Matrix 'dates x companies' with market closes.
+///           This closes must be regularized (without -1.0 values).
+///   Params: Parameter values.
+///   action: Function to run for each date, after calculate the day
+///           references. It has nte following parameters:
+///             - Closes: Day closes.
+///             - Refs: Day references.
+///               At the beginning their values can be '-1' until the
+///               first reference is generated.
+///               When closes[i] >= refs[i], position is bought.
+///               When closes[i] < refs[i], position is sold.
+/// \<model>, \[<vec>.], [f.], (\<vec>, <vec>->()) -> ())
+calc = \md, Closes, Params, action -> md.c(Closes, Params, action);;
+
+/// 'calc' is not serialized
+/// \<model> -> [JS.] ([id, name, doc, ParamNames, ParamTypes])
+toJs = \md -> return [
+    md.i,
+    md.n,
+    md.d,
+    md.N,
+    arr.map(md.T, math.itof),
+    md.B,
+    md.Bi,
+    md.Ei
+  ];;

@@ -52,16 +52,16 @@ server = \ -> {
   );
 };
 
-// <bytes> -> <bytes>
+//:\<bytes> -> <bytes>
 response = \rqBs -> {
   rq = bytes.toStr(rqBs);
 
   // GET
 
-  Html = websv.getRq(rq);
+  htmlOp = websv.getRq(rq);
 
-  if (Html) {
-    return Html!;
+  if (htmlOp) {
+    return htmlOp!;
   }
 
   // POST
@@ -90,17 +90,17 @@ response = \rqBs -> {
       websv.badRequestRp("Unauthorized source '" + cmd + "'")
     );
 
-  Rp = [""];
+  rpV = [""];
   try {
-    Rp! = websv.textRp(rqProcess(par));
+    rpV! = websv.textRp(rqProcess(par));
   } catch (e) {
-    Rp! = websv.textRp(e);
+    rpV! = websv.textRp(e);
   }
-  return bytes.fromStr(Rp!);
+  return bytes.fromStr(rpV!);
 };
 
 // Processes a POST request.
-// s -> s
+//:s -> s
 rqProcess = \rq -> {
   ix0 = str.index(rq, ":");
 
@@ -120,45 +120,46 @@ rqProcess = \rq -> {
   // NORMAL DATA -------------------------------------------------------------
 
   sessionId = rq[:ix0];
-  ConKey = [""];
-  Rest = [rq[ix0+1:]];
-  ix1 = str.index(Rest!, ":");
+  conKeyV = [""];
+  restV = [rq[ix0+1:]];
+  ix1 = str.index(restV!, ":");
   if (ix1 != -1) {
-    ConKey! = Rest![:ix1];
-    Rest! = Rest![ix1+1:];
+    conKeyV! = restV![:ix1];
+    restV! = restV![ix1+1:];
   }
-  ComKey = cgi.getComKey(sessionId, ConKey!);
-  if (arr.size(ComKey) > 0) {
-    return processHub(ComKey!, cryp.decode(ComKey!, Rest!));
+  comKeyOp = cgi.getComKey(sessionId, conKeyV!);
+  if (comKeyOp) {
+    return processHub(comKeyOp!, cryp.decode(comKeyOp!, restV!));
   } else {
     return cgi.rpExpired();
   }
 };
 
 // Processes POST normal data
-// s, s -> s
+//:\s, s -> s
 processHub = \ck, rq -> {
   prg = js.r(rq).prg;
 
   return switch(prg) {
-    "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ck, rq])[0];
-    "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ck, rq])[0];
-    "CMarket": sys.cmd("kutmkt", ["prgs/CMarket/kut/main", ck, rq])[0];
-    "CMMarket": sys.cmd("kutmkt", ["prgs/CMMarket/kut/main", ck, rq])[0];
-    "DeepMarket": sys.cmd("kutmkt", ["prgs/DeepMarket/kut/main", ck, rq])[0];
-    "Fluxwp": sys.cmd("kut", ["prgs/Fluxwp/kut/main", ck, rq])[0];
-    "FMarket": sys.cmd("kutmkt", ["prgs/FMarket/kut/main", ck, rq])[0];
-    "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, rq])[0];
-    "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ck, rq])[0];
-    "JstbEditor": sys.cmd("kut", ["prgs/JstbEditor/kut/main", ck, rq])[0];
-    "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ck, rq])[0];
-    "KutDoc": sys.cmd("kut", ["prgs/KutDoc/kut/main", ck, rq])[0];
-    "Main": sys.cmd("kut", ["prgs/Main/kut/main", ck, rq])[0];
-    "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ck, rq])[0];
-    "SimpleTemplate": sys.cmd("kut", ["prgs/SimpleTemplate/kut/main", ck, rq])[0];
-    "Template": sys.cmd("kut", ["prgs/Template/kut/main", ck, rq])[0];
-    "UpdateKutLibs": sys.cmd("kut", ["prgs/UpdateKutLibs/kut/main", ck, rq])[0];
-    "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ck, rq])[0];
+    "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ck, rq])!;
+    "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ck, rq])!;
+    "CashFlow": sys.cmd("kut", ["prgs/CashFlow/kut/main", ck, rq])!;
+    "CDoc": sys.cmd("kut", ["prgs/CDoc/kut/main", ck, rq])!;
+    "CMarket": sys.cmd("kutmkt", ["prgs/CMarket/kut/main", ck, rq])!;
+    "CMMarket": sys.cmd("kutmkt", ["prgs/CMMarket/kut/main", ck, rq])!;
+    "DeepMarket": sys.cmd("kutmkt", ["prgs/DeepMarket/kut/main", ck, rq])!;
+    "Fluxwp": sys.cmd("kut", ["prgs/Fluxwp/kut/main", ck, rq])!;
+    "FMarket": sys.cmd("kutmkt", ["prgs/FMarket/kut/main", ck, rq])!;
+    "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, rq])!;
+    "Hconta": sys.cmd("kut", ["prgs/Hconta/kut/main", ck, rq])!;
+    "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ck, rq])!;
+    "JstbEditor": sys.cmd("kut", ["prgs/JstbEditor/kut/main", ck, rq])!;
+    "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ck, rq])!;
+    "KutDoc": sys.cmd("kut", ["prgs/KutDoc/kut/main", ck, rq])!;
+    "Main": sys.cmd("kut", ["prgs/Main/kut/main", ck, rq])!;
+    "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ck, rq])!;
+    "Stocks": sys.cmd("kut", ["prgs/Stocks/kut/main", ck, rq])!;
+    "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ck, rq])!;
     default: sys.throw("Value of prg (" + prg + ") is not valid");
   };
 };

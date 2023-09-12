@@ -5,7 +5,7 @@ canMakeWord = \w, Bks -> {
   if (w == "") return true;
   ch = w[0];
   w2 = w[1:];
-  for (b, i = Bks) {
+  for (i, b = Bks) {
     if (str.index(b, ch) != -1) {
       if (canMakeWord(w2, Bks[:i] + Bks[i+1:])) return true;
     }

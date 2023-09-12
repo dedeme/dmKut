@@ -1,0 +1,38 @@
+// Copyright 07-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Module page.
+
+import "KtWeb/rp";
+import "data/doc";
+import "db";
+
+/// Process request.
+/// \m -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "code": {
+      module = Rq.module;
+      mpath = Rq.path;
+      isHeader = Rq.isHeader;
+
+      codeOp = []; // [s]|[]
+      DpathOp = arr.find(db.pathsTb().read(), \P -> return P.id == module;);
+      if (DpathOp) {
+        Dpath = DpathOp!;
+        fpath = isHeader
+          ? path.cat([Dpath.path, "include", mpath + ".h"])
+          : path.cat([Dpath.path, "src", mpath + ".c"])
+        ;
+        if (file.exists(fpath)) arr.push(codeOp, file.read(fpath));
+      }
+
+      sys.println(rp.mk({
+        code: codeOp
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+

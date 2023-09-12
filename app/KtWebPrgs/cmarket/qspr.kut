@@ -13,18 +13,21 @@ import "db/cosTb";
 import "db/svCodesTb";
 import "db/investorsTb";
 import "db/invOperationsTb";
+import "db/ibexTb";
 import "db/trading/closesTb";
 import "db/trading/refsTb";
 import "db/acc/diariesDb";
 import "db/acc/profitsDb";
 import "db/daily/dailyChartsTb";
 import "data/cts";
+import "data/ibex";
 import "data/acc/ann";
 import "data/acc/opr";
 import "data/invOperation";
 import "data/qs/qsv";
 import "data/qs/qsvs";
 import "data/svs/indexesSv";
+import "data/svs/ibexSv";
 import "data/chart/dailyChart";
 import "data/chart/profitsEntry";
 import "data/chart/dailyInvestorData";
@@ -150,6 +153,36 @@ downloadHistoric = \prefix, code -> {
   ;
 };
 
+// \ -> <qsprRs<<qs>>>
+downloadIbexHistoric = \ -> {
+  Tp = ibexSv.readHistoricQuotes();
+
+  qtsOp = Tp[0];
+  Errs = Tp[1];
+
+  errV = [""];
+  if (!qtsOp) errV! = "IBEX: Quotes can not be read";
+  else {
+    qts = qtsOp!;
+    if (qs.size(qts) == 0) errV! = "IBEX: No quotes found";
+    else if (qs.size(qts) < cts.historicMinimumEntries)
+      errV! =str.fmt(
+        "IBEX: Only %v quotes found (Minimum %v)",
+        [qs.size(qts), cts.historicMinimumEntries]
+      );
+  }
+
+  if (errV!) {
+    for (w = Errs) log.warning(w);
+    return error(errV!);
+  }
+
+  return Errs
+    ? warning(Errs, qtsOp!)
+    : ok(qtsOp!)
+  ;
+};
+
 // \s, <qs>, <qs>, <qs> -> <qsprRs<<qs>>>
 merge = \prefix, mqs, nqs, oqs -> {
   // [<qs>, [s...]]
@@ -217,6 +250,28 @@ updateHistoric = \prefix, mainNick, nick ->
         );
       );
     );;
+
+/// Reads quotes of Ibex, merges with current quotes,
+/// corrects and, if it have not errors, writes them in 'ibexTb'.
+///   mainNick: Main company nick.
+/// \s -> <qsprRs<qs>>
+updateIbexHistoric = \mainNick -> {
+  Qs = ibexTb.read();
+  return bind(
+    downloadIbexHistoric(),
+    \newQs -> return bind(
+      ok(Qs.qs),
+      \oldQs -> return bind(
+        getQs(mainNick),
+        \mainQs -> {
+          R = merge("IBEX", mainQs, newQs, oldQs);
+          ibexTb.write(ibex.new(Qs.cos, R.value));
+          return R;
+        }
+      );
+    );
+  );
+};
 
 /// Update last closes and references tables from historic and returns
 /// "" or an error if the update failed.
@@ -377,7 +432,15 @@ updateOperations = \ -> {
   }
 
   for (Old = invOperationsTb.read())
-    if (Old.stocks > 0 & Pfs[Old.investor][Old.nick])
+    if (
+      Old.stocks > 0 &
+      dic.hasKey(Pfs[Old.investor], Old.nick) &
+      Pfs[Old.investor][Old.nick] &
+      !arr.any(
+        InvOps,
+        \IO -> return IO.investor == Old.investor & IO.nick == Old.nick;
+      )
+    )
       arr.push(InvOps, Old);
 
   invOperationsTb.write(InvOps);
@@ -606,7 +669,7 @@ updateHistoricProfits = \ -> {
     PrSum = [0.0];
     AccSum = [0.0];
     RfSum = [0.0];
-    for (E, nk = Pf) {
+    for (nk, E = Pf) {
       stocks = E[0];
       AccSum! += math.itof(stocks) * E[1];
       ClOp = dic.get(Closes, nk);
@@ -614,8 +677,15 @@ updateHistoricProfits = \ -> {
       else arr.push(Errs, "Close of " + nk + " not found");
 
       RfOp = dic.get(Refs, nk);
-      if (RfOp) RfSum! += math.itof(stocks) * RfOp![inv][1];
-      else arr.push(Errs, "References of " + nk + " not found");
+      if (RfOp) {
+        if (ClOp) {
+          rfV = [RfOp![inv][1]];
+          if (rfV! > ClOp![1]) rfV! = ClOp![1];
+          RfSum! += math.itof(stocks) * rfV!;
+        }
+      } else {
+        arr.push(Errs, "References of " + nk + " not found");
+      }
     }
 
     tbYear = profitsDb.investorYears(inv)[0];

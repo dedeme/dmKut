@@ -1,1 +1,8 @@
-/dm/dmWeb/app/KtWeb/prgs/HBills/jkut/data/accAnn.jkut
+// Copyright 16-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting annotation entry
+
+/// Create a new entry.
+/// \s, s, n -> <accAnn>[s, s, n]
+mk = \date, description, amount -> return [date, description, amount];;

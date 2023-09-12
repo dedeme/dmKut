@@ -41,7 +41,7 @@ process = \Rq -> {
         );
       }
       Refs = refsTb.read();
-      for (V, k = Refs)
+      for (k, V = Refs)
         Refs[k] = arr.fromIter(iter.map([0:cts.investors], \i -> return V[i][1];));
       sys.print(rp.mk({
         ok: Ok!,

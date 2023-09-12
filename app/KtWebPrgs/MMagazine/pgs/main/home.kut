@@ -20,7 +20,7 @@ process = \Rq -> {
       Mds = ["APRX", "APRX", "APRX"]; // ordered by investor!
       IParEvals = [];
       ParEvals = [];
-      for (md, i = Mds) {
+      for (i, md = Mds) {
         LastPevs = evalsDb.lastParamsEvals(md);
         if (!LastPevs) sys.throw("Parameters of " + md + " not found");
 

@@ -6,7 +6,7 @@
 import "libmkt/qs";
 import "libmkt/quotes";
 import "libmkt/models";
-import "libmkt/model/model";
+import "libmkt/model";
 import "data/cts";
 import "data/modelEval";
 import "update";
@@ -97,7 +97,14 @@ updateQuotes = \force -> {
   dataPath = cts.cmarketDataPath;
   cosT = js.r(file.read(path.cat([dataPath, "cos.tb"])));
   main = cosT[0];
-  Cos = arr.map(arr.filter(cosT[1], \C -> return C[1];), \C -> return C[0];);
+  Cos = arr.map(
+    arr.filter(
+      cosT[1],
+      \C -> return C[1] &
+        !arr.any(["ALM", "FAE", "GRE"], \nk -> return C[0] == nk;);
+    ),
+    \C -> return C[0];
+  );
   arr.sort(Cos, \c1, c2 -> return c1 < c2;);
 
   // \s -> s
@@ -117,7 +124,7 @@ updateQuotes = \force -> {
   Maxs = arr.new(rows, 0);
   for (i = 0:rows) Maxs[i] = arr.new(cols, 0.0);
 
-  for (c, i = Cos) {
+  for (i, c = Cos) {
     QsRs = qs.fromStr(cts.historicQuotes, readSqs(c));
     if (!QsRs[1]) sys.throw(QsRs!);
     qts = QsRs!;
@@ -144,7 +151,7 @@ lastSourceDate = \ -> {
   main = cosT[0];
   qts = file.read(path.cat([dataPath, "quotes", main + ".tb"]));
   date = qts[0:str.index(qts, ":")];
-  time.fromStr(date); // testing date.
+  if (!time.fromStr(date)) sys.throw("Bad date: " + date); // testing date.
   return date;
 };
 

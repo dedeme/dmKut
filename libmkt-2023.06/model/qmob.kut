@@ -3,7 +3,8 @@
 
 /// Model Mobil Quantum.
 
-import "model";
+import "../model";
+import "../ffi";
 import "doc/qmobDoc";
 
 /// Returns a new 'appr2' model.
@@ -13,14 +14,14 @@ new = \ -> return model.new(
 		qmobDoc.text,
 		["Intervalo"],
     [model.percParam, model.percParam],
+    [0.05],
     [0.01],
-    [0.005],
     [0.001],
 		calc
   );;
 
-// \[[<vec>...]], [f...], (\[<vec>...], [<vec>...] -> ()) -> ()
+// \[<vec>.], [f.], (\<vec>, <vec> -> ()) -> ()
 calc = \Closes, Params, fn -> {
   Env = {Closes, Params};
-  for (Row = Closes) fn(Row, sys.c("calcQmob", Env));
+  for (Row = Closes) fn(Row, ffi.calcQmob(Env));
 };

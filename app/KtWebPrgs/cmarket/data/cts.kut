@@ -3,6 +3,9 @@
 
 /// Constants.
 
+import "libmkt/ffi";
+import "KtWeb/global";
+
 //Application ----------------------------------------------------------------
 
 /// Application name
@@ -12,7 +15,7 @@ appName = "cmarket";
 version = "202306";
 
 /// Data directory.
-dataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
+dataPath = path.cat([global.cgiRoot, "CMarket"]);
 
 /// Number of quotes used to calculate companies volume.
 quotesVolume = 60;
@@ -78,25 +81,25 @@ historicQuotes = 610;
 accountingQuotes = 250;
 
 /// Fleas initial capital for each cycle
-initialCapital = 100000.0;
+initialCapital = ffi.initialCapital();
 
 /// Bet
-bet = 10000.0;
+bet = ffi.bet();
 
 /// Minimun cash to bet
-minToBet = 11000.0;
+minToBet = ffi.minToBet();
 
 /// No lost multiplicator
-noLostMultiplicator = 1.02;
+noLossMultiplicator = ffi.noLossMultiplicator();
 
 /// Delay days after a sale with profits (in 5 days per week).
-strategyDaysWin = 25;
+strategyDaysWin = 0;
 
 /// Delay days after a sale with profits.
-daysWin = 35;
+daysWin = 0;
 
 /// Delay days after a sale with losses (in 5 days per week).
-strategyDaysLoss = 90;
+strategyDaysLoss = 45;
 
 /// Delay days after a sale with losses.
-daysLost = 126;
+daysLost = 63;

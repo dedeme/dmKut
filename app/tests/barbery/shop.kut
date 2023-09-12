@@ -64,7 +64,7 @@ takeAClient = \ -> {
   if (!Clients) sys.throw("Barbery is empty");
 
   cl = arr.shift(Clients);
-  for (c, i = Sits) {
+  for (i, c = Sits) {
     if (c == cl) {
       Sits[i] = "";
       break;

@@ -1,0 +1,201 @@
+// Copyright 05-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// C interface
+
+/// Buy expense.
+/// \ -> f
+bet = \ -> return sys.c("bet", []);;
+
+/// Intial capital.
+/// \ -> f
+initialCapital = \ -> return sys.c("initialCapital", []);;
+
+/// Minimum cash to buy.
+/// \ -> f
+minToBet = \ -> return sys.c("minToBet", []);;
+
+/// Multiplicator to consider a sale as 'win sale'.
+/// 'sell >= buy * no_loss_multiplicator' is ok.
+/// \ -> f
+noLossMultiplicator = \ -> return sys.c("noLossMultiplicator", []);;
+
+/// Minimum assets to withdraw money.
+/// \ -> f
+withdrawalLimit = \ -> return sys.c("withdrawalLimit", []);;
+
+/// Converts array in vector.
+/// \[f.] -> <vec>
+mkVec = \array -> return sys.c("mkVec", array);;
+
+/// Converts vector in array.
+/// \<vec> -> [f.]
+vecToArr = \vector -> return sys.c("vecToArr", vector);;
+
+/// Returns Result with quote from its string representation. Used to read
+/// in company tables. 's' is trimized.
+/// \s -> [[d, f, f, f, f, i, b]|s, b]
+quoteFromStr = \s -> return sys.c("quoteFromStr", s);;
+
+/// Returns a Results with quotes of a company table.
+/// \s -> [[[d, f, f, f, f, i, b].]|s, b]
+qsFromStr = \s -> return sys.c("qsFromStr", s);;
+
+/// Returns the volume average (in €) of a company quotes.
+///   qts    : Historic quotes. (From after to before).
+///   samples: Number of quotes to take in account.
+/// \s, i -> f
+qsVol = \qts, samples -> return sys.c("qsVol", [qts, samples]);;
+
+/// Returns total fees of a buy operation.
+///   amount: Operation amount.
+/// \f -> f
+brokerBuyFees = \amount -> return sys.c("brokerBuyFees", amount);;
+
+/// Returns net cost of operation (cost + fees).
+///   stocks: Stocks number.
+///   price : Stock price.
+/// \i, f -> f
+brokerBuy = \stocks, price -> return sys.c("brokerBuy", [stocks, price]);;
+
+/// Returns total fees of a sell operation.
+///   amount: Operation amount.
+/// \f -> f
+brokerSellFees = \amount -> return sys.c("brokerSellFees", amount);;
+
+/// Returns net incomes of operation (incomes - fees).
+///   stocks: Stocks number.
+///   price : Stock price.
+/// \i, f -> f
+brokerSell = \stocks, price -> return sys.c("brokerSell", [stocks, price]);;
+
+/// Executes a day strategy.
+/// This function is called day after day with successive closes and references.
+/// Results are stored in the 'read-write' parameters passed in 'Env'.
+/// When all the days are passed, 'Env' contains the final results.
+///   Env: Dictionary with the following values:
+///     daysWin (i): Quarantain days for win sale.
+///     daysLoss (i): Quarentan day for loss sale.
+///     Dates ([s.]): Quote dates of main company. Read-only.
+///     Nks ([s.]): Company nicks. Read-only.
+///     Opens ([<vec>.]): Opens retrieved from a <quotes> object (Qs.vopens).
+///                       Each entry is a quotes-company vector, corresponding
+///                       to one date. Read-only.
+///     CashIn ([f]): Simulation cash. Initialized to ffi.initialCapital(). Read-Write.
+///     Withdrawals ([f]): Simulation withdrawals. Initialized to 0.0. Read-Write.
+///     Refs ([[f.].]): dates x nks array. Initialized to 0.0. Read-Write.
+///     Orders ([<order>.]): Executed orders. Initalized to []. Read-Write.
+///     Hassets ([f.]): Historic assets. One value each date. Initialized to 0.0. Read-Write.
+///     Hwithdrawals ([f.]): Historic withdrawals. One value each date.
+///                          Initialized to 0.0. Read-Write.
+///     Buys ([s.]): Buy dates of each company. Initialized to []. Read-Write.
+///     Sales ([s.]): Sales dates of each company. Initialized to []. Read-Write.
+///     PrfCashs ([f.]): Cash of each company in profits simulation.
+///                      Initialized to ffi.bet(). Read-Write
+///     PrfStocks ([i.]): Stocks of each company in profits simulation.
+///                       Initialized to 0. Read-Wite.
+///   cls: Vector with daily closes.
+///   rfs: Vector with daily references.
+/// \{ i, i, [s.] [s.], [<vec>.], [f], [f], [[f.].], [<order>.], [f.], [f.],
+///    [s.], [s.], [f.], [i.] }, <vec>, <vec> -> ()
+strategyRun = \Env, cls, rfs -> sys.c("strategyRun", [Env, cls, rfs]);;
+/*
+  if (!strcmp(fn, "calcAppr")) return calc_appr(data);
+  if (!strcmp(fn, "calcAppr2")) return calc_appr2(data);
+  if (!strcmp(fn, "calcEa")) return calc_ea(data);
+  if (!strcmp(fn, "calcEa2")) return calc_ea2(data);
+  if (!strcmp(fn, "calcMa")) return calc_ma(data);
+  if (!strcmp(fn, "calcMm")) return calc_mm(data);
+  if (!strcmp(fn, "calcQfix")) return calc_qfix(data);
+  if (!strcmp(fn, "calcQmob")) return calc_qmob(data);
+*/
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcAppr = \Env -> return sys.c("calcAppr", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcAppr2 = \Env -> return sys.c("calcAppr2", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcAppr3 = \Env -> return sys.c("calcAppr3", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcEa = \Env -> return sys.c("calcEa", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcEa2 = \Env -> return sys.c("calcEa2", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcLv = \Env -> return sys.c("calcLv", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcMa = \Env -> return sys.c("calcMa", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcMm = \Env -> return sys.c("calcMm", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcQfix = \Env -> return sys.c("calcQfix", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
+calcQmob = \Env -> return sys.c("calcQmob", Env);;

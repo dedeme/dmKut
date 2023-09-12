@@ -1,0 +1,14 @@
+// Copyright 29-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Plan table
+
+/// Create year plan table.
+/// \s -> ()
+mk = \ypath -> writeJs(ypath, js.w([]));;
+
+/// \s -> s
+readJs = \ypath -> return file.read(path.cat([ypath, "plan.tb"]));;
+
+/// \s, s -> ()
+writeJs = \ypath, jsStr -> file.write(path.cat([ypath, "plan.tb"]), jsStr);;

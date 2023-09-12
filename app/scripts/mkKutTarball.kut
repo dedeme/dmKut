@@ -1,0 +1,36 @@
+
+/*
+ln -rs ../../libdm-2023.05 libdm
+
+tar czf tmp.tgz --exclude=.* --exclude-vcs-ignores --exclude=tests /dm/dmJkut
+*/
+
+/*
+Tarball of every application and program of kut and jkut.
+
+It copies /dm/dmKut, /dm/dmJkut and /dm/KtWeb to kutTarball.tgz.
+
+NOTES:
+  * Inside source directories, symbolic links must be relative.
+  * Next excludes are made.
+    --exclude=.* (Hidden files)
+    --exclude-vcs-ignores (Files ignored by vcs control (.ignore))
+    --exclude=tests (Files and directories called 'tests')
+*/
+
+pars = [
+    "czf", "kutTarball.tgz",
+    "--exclude=.*", "--exclude-vcs-ignores", "--exclude=tests",
+    "/dm/dmJkut", "/dm/dmKut", "/dm/KtWeb"
+  ];
+
+Rs = sys.cmd2("tar", pars);
+
+Errs = Rs[1] ? str.splitTrim(Rs[1], "\n") : [];
+arr.filterIn(Errs, \m ->
+  return m & !str.starts(m, "tar: Eliminando la `/' inicial");
+);
+
+if (Errs) arr.each(Errs, \m -> sys.println(m););
+else sys.println("Tarball done");
+

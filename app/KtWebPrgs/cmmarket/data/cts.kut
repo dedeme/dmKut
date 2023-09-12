@@ -11,13 +11,13 @@ import "libmkt/strategy";
 appName = "cmmarket";
 
 /// Data version
-version = "202306";
+version = "202309";
 
 /// Data directory.
-dataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMMarket";
+dataPath = "/dm/KtWeb/dmcgi/CMMarket";
 
 /// cmarket data directory.
-cmarketDataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
+cmarketDataPath = "/dm/KtWeb/dmcgi/CMarket";
 
 /// Number of quotes in historic tables
 historicQuotes = 610;
@@ -28,7 +28,7 @@ historicQuotes = 610;
 initialCapital = strategy.initialCapital;
 
 /// Assets ratio for evaluation.
-assetsRatio = 0.7;
+assetsRatio = 0.6;
 
 /// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
 maxAssets = initialCapital * maxProfitsAvgRatio;
@@ -49,7 +49,7 @@ evalSteps = 20;
 envSteps = 5;
 
 /// Delay days after a sale with profits (in 5 days per week).
-daysWin = 25;
+daysWin = 0;
 
 /// Delay days after a sale with losses (in 5 days per week).
-daysLoss = 90;
+daysLoss = 45;

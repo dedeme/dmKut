@@ -5,7 +5,7 @@
 
 import "data/cts";
 import "net/as";
-import "net/marca";
+import "net/sport";
 import "net/sportium";
 import "data/rs";
 import "db";
@@ -19,11 +19,11 @@ updateResults = \-> {
   AsResults = as.read();
 
   // [[([<Rs>]|[])...]...]
-  MarcaResults = marca.read();
-  if (arr.size(AsResults) != arr.size(MarcaResults))
+  SportResults = sport.read();
+  if (arr.size(AsResults) != arr.size(SportResults))
     sys.throw(str.fmt(
       "Number of results of As (%d) and Marca (%d) does not match",
-      [arr.size(AsResults), arr.size(MarcaResults)]
+      [arr.size(AsResults), arr.size(SportResults)]
     ));
   if (arr.size(AsResults) != teamsSize)
     sys.throw(str.fmt(
@@ -34,19 +34,19 @@ updateResults = \-> {
   for (row = 0:teamsSize) {
     for (col = 0:teamsSize) {
       AsRs = AsResults[row][col];
-      MarcaRs = MarcaResults[row][col];
+      SportRs = SportResults[row][col];
 
       if (
-        (!AsRs & MarcaRs) |
-        (AsRs & !MarcaRs) |
-        (AsRs & MarcaRs & !rs.eq(AsRs!, MarcaRs!))
+        (!AsRs & SportRs) |
+        (AsRs & !SportRs) |
+        (AsRs & SportRs & !rs.eq(AsRs!, SportRs!))
       )
         sys.throw(str.fmt(
           "Results for %s - %s, does not match:\nAs: %s, Marca: %s.",
           [ cts.Teams[Teams[row]],
             cts.Teams[Teams[col]],
-            AsRs ? js.w(AsRs!) : "[]",
-            MarcaRs ? js.w(MarcaRs!) : "[]"
+            AsRs ? sys.toStr(AsRs!) : "[]",
+            SportRs ? sys.toStr(SportRs!) : "[]"
           ]
         ));
     }

@@ -3,9 +3,10 @@
 
 /// Model list
 
-import "model/model";
+import "model";
 import "model/appr";
 import "model/appr2";
+import "model/appr3";
 import "model/ea";
 import "model/ea2";
 import "model/ma";
@@ -14,10 +15,11 @@ import "model/qfix";
 import "model/qmob";
 
 /// Returns all the market models.
-/// \ -> [<model>...]
+/// \ -> [<model>.]
 list = \ -> return [
     appr.new(),
     appr2.new(),
+    appr3.new(),
     ea.new(),
     ea2.new(),
     ma.new(),

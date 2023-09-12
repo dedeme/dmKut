@@ -3,7 +3,7 @@
 
 /// Annotation data.
 
-import "libmkt/broker";
+import "data/broker";
 import "data/cts";
 import "opr";
 import "settlement";
@@ -165,7 +165,7 @@ rebuys = \Prev, Anns -> {
 
   // \s -> s
   addDays = \dt, days ->
-    return time.toStr(time.addDays(time.fromStr(dt), days));;
+    return time.toStr(time.addDays(time.fromStr(dt)!, days));;
 
   // \s, s -> ()
   put = \nk, dt -> {
@@ -193,7 +193,7 @@ rebuys = \Prev, Anns -> {
           dif = StPr[0] - sts;
           if (dif > 0) Pf[nk] = [dif, StPr[1]];
           else dic.remove(Pf, nk);
-          trapDate = pr < StPr[1] * cts.noLostMultiplicator
+          trapDate = pr < StPr[1] * cts.noLossMultiplicator
             ? addDays(dt, cts.daysLost)
             : addDays(dt, cts.daysWin)
           ;

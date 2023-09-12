@@ -14,8 +14,8 @@
 ///   buys: Buy dates. One array for each company (from before to after).
 ///   sales: Sales dates. One array for each company (from before to after).
 ///   profits: Profits ratios. One for each 'qs.Cos'
-/// \[<order>...], [f...], [f...], f, [[f...]...],
-///  [[s...]...], [[s...]...], [f...] -> d<strRs>
+/// \[<order>.], [f.], [f.], f, [[f.].],
+///  [[s.].], [[s.].], [f.] -> d<strRs>
 new = \orders, hassets, hwithdrawals, cash, refs, buys, sales, profits ->
   return {orders, hassets, hwithdrawals, cash, refs, buys, sales, profits};;
 

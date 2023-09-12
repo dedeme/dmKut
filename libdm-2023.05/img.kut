@@ -142,7 +142,7 @@ noise = \blur, light, color, width, height, img -> {
         [color[1:3], color[3:5], color[5:]],
         \hx -> return math.itof(math.fromHex(hx)!);
       );
-      for (c, i = Cs) Cs[i] = c + (255.0 - c) * lg;
+      for (i, c = Cs) Cs[i] = c + (255.0 - c) * lg;
       return "#" + toHex(Cs[0]) + toHex(Cs[1]) + toHex(Cs[2]);
     };
     less = \-> {
@@ -151,7 +151,7 @@ noise = \blur, light, color, width, height, img -> {
         [color[1:3], color[3:5], color[5:]],
         \hx -> return math.itof(math.fromHex(hx)!);
       );
-      for (c, i = Cs) Cs[i] = c * lg;
+      for (i, c = Cs) Cs[i] = c * lg;
       return "#" + toHex(Cs[0]) + toHex(Cs[1]) + toHex(Cs[2]);
     };
 

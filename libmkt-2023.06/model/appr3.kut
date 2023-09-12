@@ -1,0 +1,27 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Approximations (2) model.
+
+import "../model";
+import "../ffi";
+import "doc/appr3Doc";
+
+/// Returns a new 'appr2' model.
+new = \ -> return model.new(
+    "APRX3",
+    "Aproximaciones sucesivas (3)",
+		appr3Doc.text,
+		["Inicio", "Aproximación"],
+    [model.percParam, model.percParam],
+    [0.15, 0.005],
+    [0.01, 0.005],
+    [0.001, 0.001],
+		calc
+  );;
+
+// \[<vec>.], [f.], (\<vec>, <vec> -> ()) -> ()
+calc = \Closes, Params, fn -> {
+  Env = {Closes, Params};
+  for (Row = Closes) fn(Row, ffi.calcAppr3(Env));
+};

@@ -1,0 +1,18 @@
+// Copyright 07-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Documentation entry.
+
+/// Constructor.
+///   name: Entry name.
+///   doc: Entry documentation.
+///   code: Entry code.
+///   link: Entry code page link.
+/// \s, s, s, s -> d<docEntry>
+new = \name, doc, code, link -> return {name, doc, code, link};;
+
+/// \<docEntry> -> JS
+toJs = \E -> return [E.name, E.doc, E.code, E.link];;
+
+/// \JS -> <docEntry>
+fromJs = \A -> return new(A[0], A[1], A[2], A[3]);;

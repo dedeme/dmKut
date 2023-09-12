@@ -4,6 +4,7 @@
 /// Progam constants
 
 import "KtWeb/global";
+import "libmkt/ffi";
 
 /// s
 appName = "FMarket";
@@ -17,7 +18,7 @@ version = "202207";
 dbPath = path.cat([global.cgiRoot, appName]);
 
 /// cmarket data directory.
-cmarketDataPath = "/dm/dmWeb/app/KtWeb/dmcgi/CMarket";
+cmarketDataPath = "/dm/KtWeb/dmcgi/CMarket";
 
 /// Log path
 /// s
@@ -37,14 +38,14 @@ historicQuotes = 610;
 fleasPerModel = 1000;
 
 /// Investors initial capital for each cycle
-initialCapital = 250000.0;
+initialCapital = ffi.initialCapital();
 
 /// Number of steps for evaluation (equals to CMMarket)
 /// f
 evalSteps = 20.0;
 
 /// Assets ratio for evaluation.
-assetsRatio = 0.7;
+assetsRatio = 0.6;
 
 /// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
 maxAssets = initialCapital * maxProfitsAvgRatio;
@@ -59,7 +60,7 @@ maxProfitsAvgRatio = 3.0;
 fleasInRanking = 40;
 
 /// Delay days after a sale with profits (in 5 days per week).
-daysWin = 25;
+daysWin = 0;
 
 /// Delay days after a sale with losses (in 5 days per week).
-daysLoss = 90;
+daysLoss = 45;

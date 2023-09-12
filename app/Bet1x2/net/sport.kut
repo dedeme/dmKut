@@ -1,0 +1,93 @@
+// Copyright 12-Aug-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Sport reader.
+
+import "libdm/ext";
+import "data/cts";
+import "data/rs";
+
+// s -> [<Rs>|s, b] Result
+getResult = \t -> {
+  Ps = str.splitTrim(t, "-");
+  if (arr.size(Ps) != 2) return ["Bad Sport result: " + t, false];
+
+  homeOp = math.stoi(Ps[0]);
+  outOp = math.stoi(Ps[1]);
+  if (!homeOp | !outOp) return ["Bad Sport result: " + t, false];
+
+  return [rs.new(homeOp!, outOp!), true];
+};
+
+/// Reads results.
+/// It returns an array where rows are teams which play at home and columns
+/// teams which play out. Order of teams is the same as 'cts.CurrentTeams".
+/// \-> [[([<Rs>]|[])...]...]
+read = \-> {
+  tx = ext.wget(
+    "https://www.sport.es/es/resultados/la-liga/calendario",
+    false
+  )!;
+
+  size = arr.size(cts.CurrentTeams);
+  // [[([<Result>]|[])...]...]
+  R = [];
+  for (i = 0:size) {
+    // [([<Result>]|[])...]
+    row = [];
+    for (j = 0:size) arr.push(row, []);
+    arr.push(R, row);
+  }
+
+  ixV = [0];
+  while () {
+    ixV! = str.indexFrom(tx, 'class="td1">', ixV!);
+    if (ixV! == -1) break;
+    ixV! += 12;
+    ix = ixV!;
+
+    ix2 = str.indexFrom(tx, '<', ix);
+    if (ix2 == -1)
+      sys.throw("Home team not found in\n" + tx[ix:ix+80]);
+
+    home = tx[ix:ix2];
+    homeIx = arr.index(cts.SportTeams, \t -> return t == home;);
+    if (homeIx == -1)
+      sys.throw("Sportium has not a team called " + home);
+
+    ixV! = str.indexFrom(tx, 'class="td3">', ixV!);
+    if (ixV! == -1)
+      sys.throw("Rival of " + home + " is missing in\n" + tx[ix:ix+80]);
+
+    ixV! += 12;
+    ixOut = ixV!;
+
+    ixRef = str.indexFrom(tx, "<a href=", ix2);
+    if (ixRef == -1 | ixRef > ixOut) continue;
+
+    rsOp = [];
+    ixRs = str.indexFrom(tx, ">", ixRef + 8);
+    if (ixRs != -1) {
+      ixRs2 = str.indexFrom(tx, "<", ixRs);
+      if (ixRs2 != -1) arr.push(rsOp, tx[ixRs+1:ixRs2]);
+    }
+    if (!rsOp)
+      sys.throw("Match result of not found in\n" + tx[ix:ix+80]);
+    RsRs = getResult(rsOp!);
+    if (!RsRs[1]) sys.throw(RsRs! + "\n" + tx[ix:ix+80]);
+    Rs = RsRs!;
+
+    ixOut2 = str.indexFrom(tx, '<', ixOut);
+    if (ixOut2 == -1)
+      sys.throw("Close mark of " + home + " rival not found in\n" + tx[ix:ix+80]);
+
+    out = tx[ixOut:ixOut2];
+    outIx = arr.index(cts.SportTeams, \t -> return t == out;);
+    if (outIx == -1)
+      sys.throw("Sportium has not a team called " + out);
+
+    R[homeIx][outIx] = [Rs];
+  }
+
+  return R;
+};

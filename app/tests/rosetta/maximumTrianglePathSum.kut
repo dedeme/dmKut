@@ -32,7 +32,7 @@ sys.println(solve(0, 0));
 
 Rs = Data[arr.size(Data) - 1];
 for (r = arr.size(Data) - 2:-1) {
-  for (n, i = Data[r]) {
+  for (i, n = Data[r]) {
     l = Rs[i];
     r = Rs[i + 1];
     Rs[i] = n + (l > r ? l : r);

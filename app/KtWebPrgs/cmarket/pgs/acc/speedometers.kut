@@ -33,7 +33,7 @@ process = \Rq -> {
 
         cashV! += L.cash;
         equityV! += L.equity;
-        for (V, nk = Pf) {
+        for (nk, V = Pf) {
           stocks = math.itof(V[0]);
           price = stocks * V[1];
 

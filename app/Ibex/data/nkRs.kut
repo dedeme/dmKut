@@ -15,6 +15,15 @@ import "data/simRs";
 new = \nick, Closes, Refs, PropResults, PondResults ->
   return [nick, Closes, Refs, PropResults, PondResults];;
 
+/// \<nkRs> -> JS
+toJs = \R -> return [
+    R[0],
+    R[1],
+    R[2],
+    simRs.toJs(R[3]),
+    simRs.toJs(R[4])
+  ];;
+
 /// \[*(JS)...] -> <nkRs>
 fromJs = \A -> return new(
     A[0],

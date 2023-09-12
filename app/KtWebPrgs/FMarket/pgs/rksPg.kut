@@ -4,7 +4,7 @@
 /// Rankings page.
 
 import "KtWeb/rp";
-import "libmkt/model/model";
+import "libmkt/model";
 import "libdm/log";
 import "data/cts";
 import "data/flea";

@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Introducción</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href="index.html">Índice</a> · <a href='02-Par.html'>Posterior (Párrafos)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#Simple uso'>Simple uso</a>
+</p>
+<hr>
+<a name="Simple uso"></a>
+<h3>Simple uso</h3>
+<h4>Archivos</h4>
+<p>Directorio:</p>
+
+<pre>
+  ej1
+  |- pg1.kmd
+  |- pg2.kmd
+</pre><p>Archivos:</p>
+<p><code>pg1.kmd</code></p>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta es la _página_ uno.
+
+Ir a la [pg2.html](página 2).
+</div>
+<script>aceConf("aceEditor-0", "markdown");</script>
+<p><code>pg2.kmd</code></p>
+<div id="aceEditor-1" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta es la _página_ dos.
+
+Ir a la [pg1.html](página 1).
+</div>
+<script>aceConf("aceEditor-1", "kmd");</script>
+<h4>Proceso</h4>
+<ol>
+<li>
+<p>Entrar en el directorio raíz (ej1). <br>  <code>cd ej1</code></p>
+</li>
+<li>
+<p> Invocar kmarkdown. <br>  <code>kut kmardown</code></p>
+</li>
+</ol>
+<p><i>kut</i> and <i>markdown</i> deben estar en el PATH.</p>
+<p>Se crearán dos páginas HTML: <code>pg1.html</code> y <code>pg2.html</code>.</p>
+<h4>Resultado</h4>
+<p><a href="ej1/pg1.html">página 1</a>
+</p>
+<hr>
+<p style="text-indent: 0px"><a href="index.html">Índice</a> · <a href='02-Par.html'>Posterior (Párrafos)</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Nicks main page.
+
+import "KtWeb/rp";
+import "libmkt/qs";
+import "libdm/log";
+import "db/quotesDb";
+import "db/cosTb";
+import "data/co/cos";
+import "data/co/co";
+import "qspr";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      :cos cs = cosTb.read();
+      Cos = arr.map(cs.Cos, \:co c -> return c.nick;);
+      // {f.} :: {co:vol}
+      Volumes = {};
+      // [f.]
+      Vols = quotesDb.readVolumes(Cos);
+      for (Tp = arr.zip([Cos, Vols])) Volumes.put(Tp[0], Tp[1]);
+
+      return rp.mk({
+        dbKey: db.readKey(),
+        mainNick: cs.mainNick,
+        Cos: cs.Cos,
+        Volumes
+      });
+    }
+    "setMain": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      cosTb.setMain(Rq.nick);
+      return rp.mk({ dbKey });
+    }
+    "select": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      nick, value : Rq;
+      cosTb.select(nick, value);
+      if (Rq.value) qspr.updateClosesAndRefs(nick);
+      return rp.mk({ dbKey });
+    }
+    "test": {
+      , nick : Rq;
+      withErrorsV = [false];
+      withWarningsV = [false];
+      // [<quote>.] b
+      Qs, ok = quotesDb.readQs(nick);
+      if (ok) {
+        // [<quote>.] [s.]
+        , :arr Errs = qs.correct(Qs);
+        :cos cs = cosTb.read();
+        Mqs, ok2 = quotesDb.readQs(cs.mainNick);
+        if (ok2) {
+          // [<quote>.] [s.]
+          , :arr Err2s = qs.correctDates(Qs, Mqs);
+          for (err = Err2s) Errs.push(err);
+        }
+        if (!!Errs){
+          withWarningsV! = true;
+          log.error(str.fmt(
+            "Warnings testing %v (%v and %v more)",
+            [nick, Errs[0], Errs.size() - 1]
+          ));
+        }
+      } else {
+        withErrorsV! = true;
+        log.error(str.fmt("Error testing %v (%v)", [nick, Qs]));
+      }
+
+      return rp.mk({
+        withErrors: withErrorsV!,
+        withWarnings: withWarningsV!
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

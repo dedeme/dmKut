@@ -1,0 +1,28 @@
+// Copyright 11-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// [<paths>.] table.
+
+import "cts";
+import "data/dpath";
+import "db";
+
+fpath = path.cat([cts.dataPath, "paths.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<paths>.]
+read = \ -> return arr.map(
+    js.r(file.read(fpath)),
+    \:dpath p -> {
+        p.setIsValid(file.isDirectory(p.spath));
+        return p;
+      }
+  );;
+
+/// Writes table.
+/// \[<paths>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;

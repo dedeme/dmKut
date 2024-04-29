@@ -8,19 +8,13 @@
 ///   mopen : Open minute.
 ///   hclose: Close hour.
 ///   mclose: Close minute.
-/// \i, i, i, i -> d<timetable>
-new = \hopen, mopen, hclose, mclose ->
-  return {hopen, mopen, hclose, mclose};;
+/// \i, i, i, i -> <timetable>
+new : hopen, mopen, hclose, mclose;
 
-/// \<timetable> -> [JS...]
-toJs = \T -> return [
-    math.itof(T.hopen),
-    math.itof(T.mopen),
-    math.itof(T.hclose),
-    math.itof(T.mclose)
-  ];;
+/// \<timetable> -> JS
+toJs = \T -> return T;;
 
-/// \[JS...] -> <timetable>
+/// \JS -> <timetable>
 fromJs = \A -> return new(
     math.ftoi(A[0]), math.ftoi(A[1]), math.ftoi(A[2]), math.ftoi(A[3])
   );;

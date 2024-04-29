@@ -1,0 +1,14 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes reader.
+
+import "libmkt/quotes";
+import "cts";
+import "cosTb";
+
+/// \ -> <quotes>
+read = \ -> {
+  Cos = cosTb.read();
+  return quotes.read(cts.quotesPath, Cos);
+};

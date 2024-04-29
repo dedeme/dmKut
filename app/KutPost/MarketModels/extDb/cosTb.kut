@@ -1,0 +1,14 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Company nicks reader.
+
+:file fpath = "/dm/KtWeb/dmcgi/CMarket/ibex.tb";
+
+/// Returns ibex companies sorted by ascendent alphabetic order.
+/// \ -> [s.]
+read = \ -> {
+  :arr Cos = js.r(fpath.read())[0];
+  Cos.sort(\c1, c2 -> return c1 < c2;);
+  return Cos;
+};

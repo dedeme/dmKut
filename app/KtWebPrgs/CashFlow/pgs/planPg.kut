@@ -1,4 +1,4 @@
-// Copyright 29-Aug-2023 ºDeme
+// Copyright 09-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Plan page.
@@ -7,32 +7,39 @@ import "KtWeb/rp";
 import "db/yearsDb";
 import "db/planTb";
 import "db/diaryTb";
+import "db";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       year = Rq.year;
       ypath = yearsDb.yearPath(year);
-      sys.print(rp.mkJs({
-        "plan": planTb.readJs(ypath),
-        "diary": diaryTb.readJs(ypath)
-      }));
+      return rp.mkJs({
+          Plan: planTb.readJs(ypath),
+          CDiary: diaryTb.readJs(ypath),
+          dbKey: js.w(db.readKey())
+        });
     }
     "updatePlan": {
-      year = Rq.year;
-      ypath = yearsDb.yearPath(year);
-      planTb.writeJs(ypath, js.w(Rq.plan));
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey != "") {
+        year = Rq.year;
+        ypath = yearsDb.yearPath(year);
+        planTb.writeJs(ypath, js.w(Rq.plan));
+      }
+      return rp.mk({ dbKey });
     }
     "updatePlanAndDiary": {
-      year = Rq.year;
-      ypath = yearsDb.yearPath(year);
-      planTb.writeJs(ypath, js.w(Rq.plan));
-      diaryTb.writeJs(ypath, js.w(Rq.diary));
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey != "") {
+        year = Rq.year;
+        ypath = yearsDb.yearPath(year);
+        planTb.writeJs(ypath, js.w(Rq.plan));
+        diaryTb.writeJs(ypath, js.w(Rq.diary));
+      }
+      return rp.mk({ dbKey });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
-

@@ -1,0 +1,47 @@
+// Copyright 07-Feb-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants of libmkt
+
+import "libmktHelper";
+
+RRs = libmktHelper.constants();
+if (!RRs[1]) sys.throw(RRs!);
+R = RRs!;
+
+/// Number of quotes in historic tables.
+/// i
+historicQuotes = math.ftoi(R.historicQuotes);
+
+/// Initial capital.
+/// f
+initialCapital = R.initialCapital;
+
+/// Bet
+/// f
+bet = R.bet;
+
+/// Minumum to bet
+/// f
+minToBet = R.minToBet;
+
+/// Delay days after a sale with losses (in 5 days per week).
+/// i
+daysLoss = math.ftoi(R.daysLoss);
+
+/// Multiplicator to calculate if to apply 'daysLoss'.
+/// f
+noLossMultiplicator = R.noLossMultiplicator;
+
+/// Cash limit to do a withdrawal.
+/// f
+withdrawalLimit = R.withdrawalLimit;
+
+/// Type of order.
+/// i
+orderBuy = math.ftoi(R.orderBuy);
+
+/// Type of order.
+/// i
+orderSell = math.ftoi(R.orderSell);
+

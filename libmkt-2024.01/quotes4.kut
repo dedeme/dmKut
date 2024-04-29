@@ -1,0 +1,75 @@
+// Copyright 18-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes table data
+
+import "kmarketSpeed";
+
+/// Constructor
+///   Cos   : Company nicks.
+///   Dates : Quotes dates in format YYYYMMDD, from before to after.
+///   Opens : Array of normalized open quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Closes: Array of normalized close quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Maxs  : Array of normalized maximum quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Mins  : Array of normalized minimum quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+/// [s.], [s.], [[f.].], [[f.].],
+///                 [[f.].], [[f.].] -> d<quotes4>
+new : Cos, Dates, Opens, Closes, Maxs, Mins;;
+
+/// Returns the index of one company from its nick, or -1 if nick is not found.
+/// \<quotes4> -> i
+companyIndex = \qs, nick ->
+  return arr.index(qs.Cos, \c -> return c == nick;);;
+
+/// Returns data of the company with index 'coIx' in format '<quotes>'.
+/// \<quotes4> -> <quotes4>
+getSingle = \qs, coIx -> {
+  Dates = qs.Dates;
+  rows = arr.size(Dates);
+  AllOpens = qs.Opens;
+  AllCloses = qs.Closes;
+  AllMaxs = qs.Maxs;
+  AllMins = qs.Mins;
+
+  Opens = arr.new(rows, 0);
+  Closes = arr.new(rows, 0);
+  Maxs = arr.new(rows, 0);
+  Mins = arr.new(rows, 0);
+  for (r = 0:rows) {
+    Opens[r] = [AllOpens[r][coIx]];
+    Closes[r] = [AllCloses[r][coIx]];
+    Maxs[r] = [AllMaxs[r][coIx]];
+    Mins[r] = [AllMins[r][coIx]];
+  }
+  return new([qs.Cos[coIx]], Dates, Opens, Closes, Maxs, Mins);
+};
+
+/// \<quotes4> -> [JS.]
+toJs = \Q -> return Q;;
+
+/// \[JS.] -> <quotes4>
+fromJs = \A -> return A;;
+
+/// Read quotes4 of serveral companies.
+///
+/// NOTE: This function depends on kmarketSpeed.
+///
+///   dpath : Directory with files 'NICK'.tb.
+///   Cos   : Nicks of companies to read.
+/// \s, [s.] -> <quotes4>
+read = \dpath, Cos -> {
+  rq = {
+    "command": "readQuotes",
+    "path"   : dpath,
+    "nquotes": 4,
+    "Cos"    : Cos
+  };
+
+  rsRs = kmarketSpeed.send(rq);
+  if (!rsRs[1]) sys.throw(rsRs!);
+  return rsRs!;
+};

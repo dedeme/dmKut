@@ -1,0 +1,107 @@
+=
+title = Código
+=
+
+## Creación
+
+Se pueden presentar recuadros con código utilizando la siguiente sintaxis:
+
+``
+<pre>
+&#x0060;&#x0060;lenguage
+<i>código</i>
+&#x0060;&#x0060;
+</pre>
+``
+
+``kmd
+Código en javascript:
+
+&#x0060;&#x0060;javascript
+function sum3(a) {
+  return a + 3;
+}
+&#x0060;&#x0060;``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Código en javascript:
+
+``javascript
+function sum3(a) {
+  return a + 3;
+}``
+
+``</div>``
+
+_NOTA:_
+
+_Escribir texto en la misma línea detrás de las marcas de cierre ``&#x0060;&#x0060;``
+es un error; pero escribirlo en la siguiente línea no._
+
+Esto es un error:
+
+``kmd
+Código en javascript:
+
+&#x0060;&#x0060;javascript
+function sum3(a) {
+  return a + 3;
+}
+&#x0060;&#x0060; Esto es un error``
+
+Esto no es un error:
+
+``kmd
+Código en javascript:
+
+&#x0060;&#x0060;javascript
+function sum3(a) {
+  return a + 3;
+}
+&#x0060;&#x0060;
+Esto no es un error``
+
+Produce:
+
+``<div style="color:#404080">``
+
+``javascript
+function sum3(a) {
+  return a + 3;
+}``
+Esto no es un error
+
+``</div>``
+
+## Requisitos
+
+Para que los cuadros de código funciones es necesario:
+
+1. Tener instalado el editor [https://ace.c9.io](Ace).
+
+2. Que el editor tenga el módulo del lenguage correspondiente.
+
+# Instalación
+
+Es conveniente descargar la versión _src-noconflict_ o _src-min-noconflict_ de
+[https://github.com/ajaxorg/ace-builds].
+
+Por defecto este directorio se debe renombrar como *"ace"* y debe estar en el
+mismo directorio que los archivos *.kmd*. Para ello se pueden usar enlaces
+simbólicos.
+
+Es posible cambiar la ubicación del directorio manipulando el archivo
+generado automáticamente por kmarkdown
+[09-config.html#El archivo <i>000header.html</i>](000header.html).
+
+# Lenguaje
+
+Los lenguajes disponibles se encuentra en el dírectorio *"ace"* con nombres
+tipo ``<code>mode-<i>lenguaje</i>.js</code>``. Por ejemplo *mode-c_cpp.js*
+se corresponde con los lenguajes 'c' y 'c++', *mode-javascript-js* con el
+lenguaje 'javascript', etc.
+
+

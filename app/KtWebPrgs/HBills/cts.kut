@@ -1,0 +1,24 @@
+// Copyright 15-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// s
+appName = "HBills";
+/// Application version.
+version = "202404";
+/// Data version.
+dataVersion = "2024.04";
+/// Data path.
+dataPath = path.cat([global.cgiRoot, appName]);
+
+/// HConta data directory path
+accPath = "/dm/KtWeb/dmcgi/Hconta";
+/// HConta holidays account number
+billsAcc = "60013";
+/// HConta expenses account number
+staysAcc = "62904";
+/// HConta reservations account number of 2022 year
+staysAcc22 = "44001";

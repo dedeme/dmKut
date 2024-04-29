@@ -1,0 +1,7 @@
+import "libdm/ext";
+
+id1 = thread.start(\-> trace : ext.wdriver("http://localhost/index.html", 0););
+id2 = thread.start(\-> trace : ext.wdriver("http://localhost:8008/Main", 0););
+
+thread.join(id1);
+thread.join(id2);

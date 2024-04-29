@@ -4,13 +4,14 @@
 /// Company charts page.
 
 import "KtWeb/rp";
-import "libmkt/model";
 import "libmkt/models";
-import "libmkt/quotes";
+import "libmkt/quotes2";
 import "libmkt/order";
 import "libmkt/strategy";
+import "libmkt/stRs";
 import "data/result";
 import "data/modelEval";
+import "data/jsModel";
 import "data/cts";
 import "db";
 
@@ -25,10 +26,10 @@ process = \Rq -> {
         sys.print(rp.mk({ok: false}));
         return;
       }
-      md = MMd!;
+      :model md = MMd!;
 
       Evals = db.readEvals(mdId).evals;
-      EEval = PParams
+      EEval = !!PParams
         ? modelEval.get(Evals, PParams!)
         : [modelEval.best(Evals)]
       ;
@@ -37,22 +38,20 @@ process = \Rq -> {
         return;
       }
       Eval = EEval!;
-      AllQs = db.readQuotes();
-      StrRs = strategy.run(
-        md, AllQs, Eval.params, cts.daysWin, cts.daysLoss
-      );
+      :quotes2 qts = db.readQuotes();
+      :stRs StrgRs = strategy.open(md, qts, Eval.params);
 
       sys.print(rp.mk({
         ok: true,
-        model: model.toJs(models.get(mdId)!),
+        model: jsModel.toJs(models.get(mdId)!),
         result: result.toJs(result.new(
-            StrRs.hassets[arr.size(StrRs.hassets)-1],
-            arr.reduce(StrRs.profits, 0.0, \r, e -> return r + e;) /
-              math.itof(arr.size(StrRs.profits)),
-            math.itof(order.sales(StrRs.orders))
+            arr.peek(StrgRs.Hassets),
+            arr.reduce(StrgRs.Profits, 0.0, \r, e -> return r + e;) /
+              math.itof(arr.size(StrgRs.Profits)),
+            math.itof(order.sales(StrgRs.Orders))
           )),
         eval: modelEval.toJs(Eval),
-        cos: db.readQuotes().cos
+        cos: qts.Cos
       }));
     }
     "co": {
@@ -61,26 +60,24 @@ process = \Rq -> {
       co = Rq.co;
 
       md = models.get(mdId)!;
-      AllQs = db.readQuotes();
-      coIx = quotes.companyIndex(AllQs, co);
+      fqts = db.readQuotes();
+      coIx = quotes2.companyIndex(fqts, co);
       if (coIx == -1)
         sys.throw("Company " + co + " not found");
 
-      Qs = quotes.getSingle(AllQs, coIx);
-      StrRs = strategy.run(
-        md, Qs, Params, cts.daysWin, cts.daysLoss
-      );
+      :quotes2 qts = quotes2.getSingle(fqts, coIx);
+      :stRs StrgRs = strategy.open(md, qts, Params);
       Result = result.new(
-        StrRs.hassets[arr.size(StrRs.hassets) - 1],
-        arr.reduce(StrRs.profits, 0.0, \r, e -> return r + e;) /
-          math.itof(arr.size(StrRs.profits)),
-        math.itof(order.sales(StrRs.orders))
+        arr.peek(StrgRs.Hassets),
+        arr.reduce(StrgRs.Profits, 0.0, \r, e -> return r + e;) /
+          math.itof(arr.size(StrgRs.Profits)),
+        math.itof(order.sales(StrgRs.Orders))
       );
       sys.print(rp.mk({
         result: result.toJs(Result),
-        dates: Qs.dates,
-        qs: arr.map(Qs.closes, \Row -> return Row[0];),
-        refs: arr.map(StrRs.refs, \Row -> return Row[0];)
+        dates: qts.Dates,
+        qs: arr.map(qts.Closes, \Row -> return Row[0];),
+        refs: arr.map(StrgRs.Refs, \Row -> return Row[0];)
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

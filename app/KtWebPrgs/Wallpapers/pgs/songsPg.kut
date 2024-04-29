@@ -1,0 +1,74 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Songs page
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/pict";
+import "data/song";
+import "db/songs";
+import "db/sels";
+import "pictures";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      GroupPict = pictures.getPicture();
+      GroupSong = getSong();
+      sys.print(rp.mk({
+        group: GroupPict.group,
+        pict: pict.toJs(GroupPict.pict),
+        songGroup: GroupSong.group,
+        song: song.toJs(GroupSong.s)
+      }));
+    }
+    "pictData": {
+      GroupPict = pictures.getPicture();
+      sys.print(rp.mk({
+        group: GroupPict.group,
+        pict: pict.toJs(GroupPict.pict)
+      }));
+    }
+    "setLapse": {
+      songs.setLapse(Rq.group, Rq.song, math.ftoi(Rq.lapse));
+      sys.print(rp.mkEmpty());
+    }
+    "newSong": {
+      currentGroup = sels.getSongGroup();
+      currentSong = sels.getSong();
+      songs.setLapse(currentGroup, currentSong, 0);
+      GroupS = songs.next();
+      sels.setSongGroup(GroupS.group);
+      sels.setSong(GroupS.s.id);
+      sys.print(rp.mk({
+        group: GroupS.group,
+        song: song.toJs(GroupS.s)
+      }));
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+
+// \ -> {s, <song>} :: {group, s}
+getSong = \ -> {
+	group = sels.getSongGroup();
+	songId = sels.getSong();
+
+	SongsOp = group != "" ? [songs.read(group)] : [];
+	SongOp = !!SongsOp & songId != ""
+    ? arr.find(SongsOp!, \S -> return songId == S.id;)
+    : []
+  ;
+
+  if (!SongOp) {
+    GroupS = songs.next();
+    sels.setSongGroup(GroupS.group);
+    sels.setSong(GroupS.s.id);
+    return GroupS;
+  }
+
+  return {group, s: SongOp!};
+};

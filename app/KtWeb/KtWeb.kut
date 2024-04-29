@@ -8,12 +8,13 @@ import "libdm/websv";
 import "libdm/cgi";
 import "global";
 
-Args = sys.args();
+log.setPath(global.logPath);
 
-if (arr.size(Args) != 1) return help();
+:arr Args = sys.args();
+
+if (Args.size() != 1) return help();
 
 cgi.init(global.cgiRoot, global.texpiration);
-log.init(global.logPath);
 
 try {
   switch (Args[0]) {
@@ -52,7 +53,7 @@ server = \ -> {
   );
 };
 
-//:\<bytes> -> <bytes>
+//:\<bytes> -> (\-> <bytes>)
 response = \rqBs -> {
   rq = bytes.toStr(rqBs);
 
@@ -60,7 +61,7 @@ response = \rqBs -> {
 
   htmlOp = websv.getRq(rq);
 
-  if (htmlOp) {
+  if (!!htmlOp) {
     return htmlOp!;
   }
 
@@ -69,25 +70,30 @@ response = \rqBs -> {
   rqUnix = str.replace(rq, "\r", "");
   ix0 = str.index(rq, "\n");
 
-  if (ix0 == -1) return bytes.fromStr(websv.badRequestRp(rq));
+  if (ix0 == -1)
+    return websv.mkRpBytes(bytes.fromStr(websv.badRequestRp(rq)));
 
   rq0 = str.trim(rq[:ix0]);
   if (rq0 != "POST /cgi-bin/ccgi.sh HTTP/1.1")
-    return bytes.fromStr(websv.badRequestRp("Bad POST request\n" + rq));
+    return websv.mkRpBytes(
+      bytes.fromStr(websv.badRequestRp("Bad POST request\n" + rq))
+    );
 
 
-  ix1 = str.index(rqUnix, "\n\n");
-  if (ix1 == -1) return bytes.fromStr(websv.badRequestRp(rq));
+  ix1 = rqUnix.index("\n\n");
+  if (ix1 == -1)
+    return websv.mkRpBytes(bytes.fromStr(websv.badRequestRp(rq)));
 
   rqUnix0 = str.trim(rqUnix[ix1+2:]);
-  ix3 = str.index(rqUnix0, ":");
-  if (ix3 == -1) return bytes.fromStr(websv.badRequestRp(rq));
+  ix3 = rqUnix0.index(":");
+  if (ix3 == -1)
+    return websv.mkRpBytes(bytes.fromStr(websv.badRequestRp(rq)));
 
   cmd = rqUnix0[:ix3];
   par = rqUnix0[ix3+1:];
   if (cmd != global.appName)
-    return bytes.fromStr(
-      websv.badRequestRp("Unauthorized source '" + cmd + "'")
+    return websv.mkRpBytes(
+      bytes.fromStr(websv.badRequestRp("Unauthorized source '" + cmd + "'"))
     );
 
   rpV = [""];
@@ -96,17 +102,17 @@ response = \rqBs -> {
   } catch (e) {
     rpV! = websv.textRp(e);
   }
-  return bytes.fromStr(rpV!);
+  return websv.mkRpBytes(bytes.fromStr(rpV!));
 };
 
 // Processes a POST request.
-//:s -> s
+// \s -> s
 rqProcess = \rq -> {
   ix0 = str.index(rq, ":");
 
   // CONNECTION --------------------------------------------------------------
 
-  if (ix0 == -1) return cgi.connect(rq);
+  if (ix0 == -1) return cryp.encode(rq, js.w(cgi.connect(rq)));
 
   // AUTHENTICATION ----------------------------------------------------------
 
@@ -114,52 +120,55 @@ rqProcess = \rq -> {
     key = cryp.key(global.appName, cgi.klen);
     data = cryp.decode(key, rq[1:]);
     Ps = str.split(data, ":");
-    return cgi.authentication(key, Ps[0], Ps[1], Ps[2] == "1");
+    return cryp.encode(
+      key, js.w(cgi.authentication(Ps[0], Ps[1], Ps[2] == "1"))
+    );
   }
 
   // NORMAL DATA -------------------------------------------------------------
 
   sessionId = rq[:ix0];
-  conKeyV = [""];
   restV = [rq[ix0+1:]];
-  ix1 = str.index(restV!, ":");
-  if (ix1 != -1) {
-    conKeyV! = restV![:ix1];
-    restV! = restV![ix1+1:];
-  }
-  comKeyOp = cgi.getComKey(sessionId, conKeyV!);
-  if (comKeyOp) {
-    return processHub(comKeyOp!, cryp.decode(comKeyOp!, restV!));
+  ssKeyOp = cgi.getSessionKey(sessionId);
+
+  if (!ssKeyOp) {
+    return cryp.encode("nosession", js.w({"expired": true}));
   } else {
-    return cgi.rpExpired();
+    return processHub(ssKeyOp!, cryp.decode(ssKeyOp!, restV!));
   }
 };
 
 // Processes POST normal data
 //:\s, s -> s
-processHub = \ck, rq -> {
+processHub = \ssk, rq -> {
   prg = js.r(rq).prg;
 
   return switch(prg) {
-    "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ck, rq])!;
-    "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ck, rq])!;
-    "CashFlow": sys.cmd("kut", ["prgs/CashFlow/kut/main", ck, rq])!;
-    "CDoc": sys.cmd("kut", ["prgs/CDoc/kut/main", ck, rq])!;
-    "CMarket": sys.cmd("kutmkt", ["prgs/CMarket/kut/main", ck, rq])!;
-    "CMMarket": sys.cmd("kutmkt", ["prgs/CMMarket/kut/main", ck, rq])!;
-    "DeepMarket": sys.cmd("kutmkt", ["prgs/DeepMarket/kut/main", ck, rq])!;
-    "Fluxwp": sys.cmd("kut", ["prgs/Fluxwp/kut/main", ck, rq])!;
-    "FMarket": sys.cmd("kutmkt", ["prgs/FMarket/kut/main", ck, rq])!;
-    "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ck, rq])!;
-    "Hconta": sys.cmd("kut", ["prgs/Hconta/kut/main", ck, rq])!;
-    "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ck, rq])!;
-    "JstbEditor": sys.cmd("kut", ["prgs/JstbEditor/kut/main", ck, rq])!;
-    "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ck, rq])!;
-    "KutDoc": sys.cmd("kut", ["prgs/KutDoc/kut/main", ck, rq])!;
-    "Main": sys.cmd("kut", ["prgs/Main/kut/main", ck, rq])!;
-    "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ck, rq])!;
-    "Stocks": sys.cmd("kut", ["prgs/Stocks/kut/main", ck, rq])!;
-    "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ck, rq])!;
+    "AlarmClock": sys.cmd("kut2", ["prgs/AlarmClock/kut/main", ssk, rq])!;
+    "BrutalBackup": sys.cmd("kut2", ["prgs/BrutalBackup/kut/main", ssk, rq])!;
+    "CashFlow": sys.cmd("kut2", ["prgs/CashFlow/kut/main", ssk, rq])!;
+    "CDoc": sys.cmd("kut2", ["prgs/CDoc/kut/main", ssk, rq])!;
+    "CMarket": sys.cmd("kut", ["prgs/CMarket/kut/main", ssk, rq])!;
+    "CMMarket": sys.cmd("kut", ["prgs/CMMarket/kut/main", ssk, rq])!;
+    "Fluxwp": sys.cmd("kut", ["prgs/Fluxwp/kut/main", ssk, rq])!;
+    "FMarket": sys.cmd("kut2", ["prgs/FMarket/kut/main", ssk, rq])!;
+    "HBills": sys.cmd("kut2", ["prgs/HBills/kut/main", ssk, rq])!;
+    "Hconta": sys.cmd("kut2", ["prgs/Hconta/kut/main", ssk, rq])!;
+    "Ibex": sys.cmd("kut", ["prgs/Ibex/kut/main", ssk, rq])!;
+    "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ssk, rq])!;
+    "JstbEditor": sys.cmd("kut", ["prgs/JstbEditor/kut/main", ssk, rq])!;
+    "Kron": sys.cmd("kut2", ["prgs/Kron/kut/main", ssk, rq])!;
+    "KTemplate": sys.cmd("kut2", ["prgs/Ktemplate/kut/main", ssk, rq])!;
+    "KutDoc": sys.cmd("kut", ["prgs/KutDoc/kut/main", ssk, rq])!;
+    "Main": sys.cmd("kut2", ["prgs/Main/kut/main", ssk, rq])!;
+    "Market": sys.cmd("kut2", ["prgs/Market/kut/main", ssk, rq])!;
+    "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ssk, rq])!;
+    "MMarket": sys.cmd("kut2", ["prgs/MMarket/kut/main", ssk, rq])!;
+    "MrBackup": sys.cmd("kut2", ["prgs/MrBackup/kut/main", ssk, rq])!;
+    "Notes": sys.cmd("kut", ["prgs/Notes/kut/main", ssk, rq])!;
+    "Stocks": sys.cmd("kut2", ["prgs/Stocks/kut/main", ssk, rq])!;
+    "Wallpapers": sys.cmd("kut", ["prgs/Wallpapers/kut/main", ssk, rq])!;
+    "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ssk, rq])!;
     default: sys.throw("Value of prg (" + prg + ") is not valid");
   };
 };

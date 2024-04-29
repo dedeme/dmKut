@@ -1,0 +1,36 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Radio page
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/pict";
+import "db/sels";
+import "pictures";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      GroupPict = pictures.getPicture();
+      radioIx = sels.getRadioIx();
+      radioData = cts.radios[radioIx];
+      sys.print(rp.mk({
+        group: GroupPict.group,
+        pict: pict.toJs(GroupPict.pict),
+        radioName: radioData[0],
+        radioUrl: radioData[1]
+      }));
+    }
+    "pictData": {
+      GroupPict = pictures.getPicture();
+      sys.print(rp.mk({
+        group: GroupPict.group,
+        pict: pict.toJs(GroupPict.pict)
+      }));
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

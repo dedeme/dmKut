@@ -1,0 +1,214 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Market quote.
+
+/// Create a new quote.
+///   date : Date of quote in format "YYYYMMDD".
+///   open : Open value.
+///   close: Close value.
+///   max  : Maximum value.
+///   min  : Minimum value.
+///   vol  : Valume value.
+///   force: 'true' if quote was modified manually.
+/// \s, f, f, f, f, i, b -> <quote>
+new : date, open, close, max, min, vol, force;
+
+/// Create a missing quote (every numeric value is < 0 and force == false)
+/// \s -> <quote>
+newMissing = \date -> return new(date, -1.0, -1.0, -1.0, -1.0, -1, false);;
+
+/// Returns true if 'this' is a missing quote.
+/// \<quote> -> b
+isMissing = \q -> return q[vol] < 0;;
+
+/// Checks maximum and minimum and returns a new quote corrected, if it is
+/// necessary.
+///
+/// If this->force = true, quote will not be corrected.
+///
+/// If quote was corrected, its 'force' field is set to true.
+///
+///   q: Quote to correct.
+///   ----
+///   Returns [quote, Errors]:
+///     A[0] : Corrected quote.
+///     A[1] : Array of corrections (e.g. Close > Max).
+/// \<quote> -> [<quote>, [s.]]
+correct1 = \q -> {
+  if (q[force]) return [q, []];
+
+  if (isMissing(q)) return [q, ["Missing"]];
+
+  // [s.]
+  Errs = [];
+  Max = [q[max]];
+  Min = [q[min]];
+  if (q[open] > q[max]) {
+    Max! = q[open];
+    Errs.push("Open > Max");
+  }
+  if (q[close] > q[max]) {
+    Max! = q[close];
+    Errs.push("Close > Max");
+  }
+  if (q[open] < q[min]) {
+    Min! = q[open];
+    Errs.push("Open < Min");
+  }
+  if (q[close] < q[min]) {
+    Min! = q[close];
+    Errs.push("Close < Min");
+  }
+
+  qr = !Errs ? q : new(q[date], q[open], q[close], Max!, Min!, q[vol], true);
+  return [qr, Errs];
+};
+
+/// Checks maximum and minimum of 'qcurrent', taken account 'qprevious' and
+/// returns a new quote corrected, if it is necessary.
+///
+/// If last->force = true, quote will not be corrected.
+///
+/// If quote was corrected, its 'force' field is set to true.
+///
+///   qcurrent : Quote to correct.
+///   qprevious: Quote previous to "current"
+///    ----
+///     A[0] : Corrected quote.
+///     A[1] : Array of corrections (e.g. Close > Max).
+/// \<quote>, <quote> -> [<quote>, [s.]]
+correct2 = \qcurrent, qprevious -> {
+  if (qcurrent[force]) return [qcurrent, []];
+
+  if (isMissing(qcurrent)) return [qcurrent, []];
+
+  // [s.]
+  Errs = [];
+  Open = [qcurrent[open]];
+  Close = [qcurrent[close]];
+  Max = [qcurrent[max]];
+  Min = [qcurrent[min]];
+
+  if (isMissing(qprevious) | qprevious[max] < qprevious[min])
+    return correct1(qcurrent);
+
+  if (qcurrent[open] > qcurrent[max]) {
+    if (qcurrent[open] == qprevious[open] & qcurrent[max] != qprevious[max])
+      Open! = qcurrent[max];
+    else
+      Max! = qcurrent[open];
+    Errs.push("Open > Max");
+  }
+  if (qcurrent[close] > qcurrent[max]) {
+    if (qcurrent[close] == qprevious[close] & qcurrent[max] != qprevious[max])
+      Close! = qcurrent[max];
+    else
+      Max! = qcurrent[close];
+    Errs.push("Close > Max");
+  }
+  if (qcurrent[open] < qcurrent[min]) {
+    if (qcurrent[open] == qprevious[open] & qcurrent[min] != qprevious[min])
+      Open! = qcurrent[min];
+    else
+      Min! = qcurrent[open];
+    Errs.push("Open < Min");
+  }
+  if (qcurrent[close] < qcurrent[min]) {
+    if (qcurrent[close] == qprevious[close] & qcurrent[min] != qprevious[min])
+      Close! = qcurrent[min];
+    else
+      Min! = qcurrent[close];
+    Errs.push("Close < Min");
+  }
+
+  qr = !Errs
+    ? qcurrent
+    : new(qcurrent[date], Open!, Close!, Max!, Min!, qcurrent[vol], true)
+  ;
+  return [qr, Errs];
+};
+
+/// Checks increment (+-20%) and returns a new quote equals to 'qcurrent', setting
+/// qcurrent[force] to true if such increment has happened.
+///
+///   qcurrent : Quote to correct.
+///   qprevious: Quote previous to "current"
+///    ----
+///     A[0] : Corrected quote.
+///     A[1] : Array of corrections (e.g. Close > Max).
+/// \<quote>, <quote> -> [<quote>, [s.]]
+correct3 = \qcurrent, qprevious -> {
+  if (qcurrent[force]) return [qcurrent, []];
+  if (isMissing(qcurrent) | isMissing(qprevious)) return [qcurrent, []];
+
+  // [s.]
+  Errs = [];
+
+  if (qcurrent[open] > qprevious[open] * 1.2) Errs.push("Open +20%");
+  if (qcurrent[close] > qprevious[close] * 1.2)  Errs.push("Close +20%");
+  if (qcurrent[max] > qprevious[max] * 1.2) Errs.push("Max +20%");
+  if (qcurrent[min] > qprevious[min] * 1.2) Errs.push("Min +20%");
+
+  if (qcurrent[open] < qprevious[open] * 0.8) Errs.push("Open -20%");
+  if (qcurrent[close] < qprevious[close] * 0.8) Errs.push("Close -20%");
+  if (qcurrent[max] < qprevious[max] * 0.8) Errs.push("Max -20%");
+  if (qcurrent[min] < qprevious[min] * 0.8) Errs.push("Min -20%");
+
+  qr = !Errs
+    ? qcurrent
+    : new (
+        qcurrent[date], qcurrent[open], qcurrent[close],
+        qcurrent[max], qcurrent[min], qcurrent[vol], true
+      )
+  ;
+  return [qr, Errs];
+};
+
+/// Returns a string representation of "this". Used to write in company tables
+/// NICK.tb.
+/// \<quote> -> s
+toStr = \q -> return str.fmt(
+    "%v:%v:%v:%v:%v:%v:%v", [
+      q[date],
+      math.ftos(q[open]), math.ftos(q[close]),
+      math.ftos(q[max]), math.ftos(q[min]), math.itos(q[vol]),
+      q[force]
+    ]
+  );;
+
+/// Returns a quote from its string representation. Used to read in company tables.
+/// 's' is trimized.
+/// THROWS exception if it fails.
+/// \s -> <quote>
+fromStr = \s -> {
+  err = \msg -> sys.throw(str.fmt("%v in '%v'", [msg, s]));;
+
+  A = str.split(s, ":");
+  if (arr.size(A) != 7) err("Bad fields number");
+
+  try {
+    if (str.len(A[0]) != 8 | !math.isDigits(A[0]))
+      sys.throw("Bad date value '" + A[0] + "'");
+    for (i = 1:5) {
+      nOp = math.stof(A[i]);
+      if (!nOp) err("Bad quote '" + A[i] + "'");
+      A[i] = nOp!;
+    }
+    nOp = math.stoi(A[5]);
+    if (!nOp) err("Bad volume '" + A[5] + "'");
+    A[5] = nOp!;
+
+    if (A[6] != "true" & A[6] != "false")
+      err("Bad boolean value '" + A[6] + "'");
+
+    return new (
+      A[0], A[1], A[2], A[3], A[4], A[5], A[6] == "true" ? true : false
+    );
+  } catch (e) {
+    err(e + "\n");
+  }
+};
+
+/// \[JS.] -> <quote>
+fromJs = \A -> return new(A[0], A[1], A[2], A[3], A[4], math.ftoi(A[5]), A[6]);;

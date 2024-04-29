@@ -1,0 +1,264 @@
+// Copyright 02-Feb-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+help = """
+  Use:
+  kut kinstaler [u] <prgName> kut:<path> [data:<path>] [www:<path>]
+  where:
+    u          : For unpacking.
+    <prgName>  : Program name.
+    kut:<path> : Root path of kut program directory.
+    data:<path>: Root path of kut program data directory.
+    www:<path> : Root path path of web files.
+  or
+  kut kinstaler help
+  """;
+
+help2 = """
+  Use:
+  kut kinstaler [u] kut:<path> [data:<path>] [www:<path>]
+  where:
+    u          : For unpacking.
+    <prgName>  : Program name.
+    kut:<path> : Root path of kut program directory.
+    data:<path>: Root path of kut program data directory.
+    www:<path> : Root path path of web files.
+  or
+  kut kinstaler help
+
+  Packing examples:
+    kut kinstaller myProgram kut:/home/my/prgs/myPrg
+    kut kinstaller myProgram kut:./ data:/home/my/.data/myPrg
+    kut kinstaller myP kut:./ data:../kdata www:/server/html/myPrg
+
+  Unpacking examples:
+    kut kinstaller u kut:/home/my/prg/myPrg
+    kut kinstaller u kut:myKutProgram data:/home/my/.data/myKutProgram
+    kut kinstaller u kut:myPrg data:../kdata/myPrg www:/server/html/myPrg
+
+  NOTES:
+
+    * Order of kut:xxx, data:xxx and www:xxx is mandatory.
+    * When packing, directories must exist.
+    * When unpacking, directories must not exist, but their parents must do.
+    * When unpacking, if a kut program has code in 'c', its 'Makefile' will be
+      executed. It has to create binary files in a directory called 'bin',
+      placed in the same one that 'Makefile' is. Such binary files will be
+      automatically linked in kut <path><prgName>.
+  """;
+
+Args = sys.args();
+asz = arr.size(Args);
+
+if (asz == 1 & Args[0] == "help") {
+  sys.println(help2);
+  return;
+}
+
+if (asz < 2) {
+  sys.println(help);
+  return;
+}
+
+prgName = arr.shift(Args);
+
+if (str.starts(Args[0], "kut:")) {
+  read(prgName, Args, pack);
+} else if (asz > 1 & prgName == 'u' & str.starts(Args[1], "kut:")) {
+  prgName = arr.shift(Args);
+  read(prgName, Args, unpack);
+} else {
+  sys.println(help);
+}
+
+// -------------------------------------
+
+// \s, [s.], (\s, s, s -> s) -> ()
+read = \prgName, Args, fn -> {
+  asz = arr.size(Args);
+  kpath = Args[0][4:];
+  dpathV = [""];
+  wpathV = [""];
+  okV = [true];
+
+  if (asz == 2) {
+    if (str.starts(Args[1], "data:")) dpathV! = Args[1][5:];
+    else if (str.starts(Args[1], "www:")) wpathV! = Args[1][4:];
+    else okV! = false;
+  } else if (
+    asz == 3 & str.starts(Args[1], "data:") & str.starts(Args[2], "www:")
+  ) {
+    dpathV! = Args[1][5:];
+    wpathV! = Args[2][4:];
+  } else if (asz != 1) {
+    okV! = false;
+  }
+  if (!okV!) {
+    sys.println(help);
+    return;
+  }
+  tmpd = file.tmp("", "kinstaller");
+  file.mkdir(tmpd);
+  err = fn(prgName, kpath, dpathV!, wpathV!, tmpd);
+  file.del(tmpd);
+  if (err != "") sys.println(err);
+};
+
+// \s, s, s, s -> s ------------------------------------------------------- PACK
+pack = \prgName, kpath, dpath, wpath , tmpd -> {
+  pkpath0 = path.parent(kpath);
+  pkpath = pkpath0 == "" ? "./" : pkpath0;
+  pdpath0 = path.parent(dpath);
+  pdpath = pdpath0 == "" ? "./" : pdpath0;
+  pwpath0 = path.parent(wpath);
+  pwpath = pwpath0 == "" ? "./" : pwpath0;
+  wd = file.wd();
+
+  root = path.cat([tmpd, "root"]);
+  file.mkdir(root);
+
+  if (kpath == "") return "kut path is missing.";
+  if (!file.exists(kpath)) return "'" + kpath + "' not found.";
+  file.cd(pkpath);
+  c1Rs = sys.cmd("tar",
+    ["-czhf", path.cat([root, "kut.tgz"]), path.base(kpath)]);
+  if (!c1Rs[1]) return c1Rs!;
+  file.cd(wd);
+
+  if (dpath != "") {
+    file.cd(pdpath);
+    c1Rs = sys.cmd("tar",
+      ["-czhf", path.cat([root, "data.tgz"]), path.base(dpath)]);
+    if (!c1Rs[1]) return c1Rs!;
+    file.cd(wd);
+  }
+
+  if (wpath != "") {
+    file.cd(pwpath);
+    c1Rs = sys.cmd("tar",
+      ["-czhf", path.cat([root, "www.tgz"]), path.base(wpath)]);
+    if (!c1Rs[1]) return c1Rs!;
+    file.cd(wd);
+  }
+
+  file.cd(path.parent(root));
+  c4Rs = sys.cmd("tar", [
+    "-czf", path.cat([wd, prgName + ".tgz"]), path.base(root)]);
+  if (!c4Rs[1]) return c4Rs!;
+  file.cd(wd);
+
+  return "";
+};
+
+// \s, s, s, s -> s ----------------------------------------------------- UNPACK
+unpack = \prgName, kpath, dpath, wpath, tmpd -> {
+  // \s -> s
+  targetCheck = \t -> {
+    parent = path.parent(t);
+    if (parent != "" & !file.exists(parent))
+      return "'" + parent + "' not found.";
+    if (file.exists(t))
+      return "'" + t + "' file or directory already exists.";
+    return "";
+  };
+
+
+  // Targets check. --------------------
+
+  {
+    e = targetCheck(kpath);
+    if (e != "") return e;
+  }
+  if (dpath != "") {
+    e = targetCheck(dpath);
+    if (e != "") return e;
+  }
+  if (wpath != "") {
+    e = targetCheck(wpath);
+    if (e != "") return e;
+  }
+
+
+  wd = file.wd();
+
+  tgz = prgName + ".tgz";
+  if (!file.exists(tgz)) {
+    return "'" + tgz + "' not found";
+  }
+  file.copy(tgz, path.cat([tmpd, tgz]));
+  file.cd(tmpd);
+  c1Rs = sys.cmd("tar", ["-xf", tgz]);
+  if (!c1Rs[1]) return c1Rs!;
+
+  root = path.cat([tmpd, "root"]);
+  if (!file.exists(root)) return "Root directory can not be extracted,";
+
+  // Extracts directories. -------------
+
+  // \s, s, s -> s
+  extract = \type, root, targetPath -> {
+    dtmp = path.cat([root, "tmp"]);
+    file.del(dtmp);
+    file.mkdir(dtmp);
+    file.cd(dtmp);
+    c2Rs = sys.cmd("tar", ["-xf", "../" + type + ".tgz"]);
+    if (!c2Rs[1]) return c2Rs!;
+    files = file.dir(dtmp);
+    if (arr.size(files) != 1)
+      return "(" + type + ") directory can not be extracted,";
+    dtmp2 = path.cat([dtmp, files[0]]);
+    if (!file.isDirectory(dtmp2))
+      return "(" + type  + ") extracted file is not a directory.";
+    file.cd(wd);
+    file.rename(dtmp2, targetPath);
+    return "";
+  };
+
+  {
+    e = extract("kut", root, kpath);
+    if (e != "") return e;
+  }
+  if (dpath != "") {
+    e = extract("data", root, dpath);
+    if (e != "") return e;
+  }
+  if (wpath != "") {
+    e = extract("www", root, wpath);
+    if (e != "") return e;
+  }
+
+
+  // Execute Makefiles. ----------------
+
+  // \[s.], s -> ()
+  makefileDirs = \R, d -> {
+    for (f = file.dir(d)) {
+      pth = path.cat([d, f]);
+      if (file.isDirectory(pth)) makefileDirs(R, pth);
+      if (f == "Makefile") arr.push(R, d);
+    }
+  };
+
+  file.cd(wd);
+
+  // [s.]
+  MakeFileDirs = [];
+  makefileDirs(MakeFileDirs, kpath);
+
+  for (d = MakeFileDirs) {
+    file.cd(d);
+    file.del("bin");
+    file.mkdir("bin");
+    cRs = sys.cmd("make", []);
+    if (!cRs[1]) return cRs!;
+    for (b = file.dir("bin")) {
+      target = path.cat([wd, kpath, b]);
+      file.del(target);
+      file.mklink(path.cat(["bin", b]), target);
+    }
+    file.cd(wd);
+  }
+
+  return "";
+};
+

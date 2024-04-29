@@ -1,43 +1,63 @@
-// Copyright 20-Nov-2022 ºDeme
+// Copyright 27-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Main script.
+/// Main module.
 
 import "libdm/log";
 import "KtWeb/rp";
 import "db";
+import "cts";
 import "server";
-import "pgs/home";
-import "pgs/periodic";
-import "pgs/fix";
-import "pgs/manual";
-import "data/cts";
+import "pgs/homePg";
+import "pgs/manualPg";
+import "pgs/fixPg";
+import "pgs/periodicPg";
 
-db.init();
-log.init(cts.logPath);
+// \ -> s
+help = \ -> return """
+  Use Kron [help | version | init | start | key rq]
+  where
+    help: Shows this message.
+    version: Shows program version.
+    init: Initializes program.
+          Must be called only the first time that the program is run.
+    start: Run server.
+    key rq: Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-Args = sys.args();
-ck = Args[0];
+log.setPath(path.cat([cts.dataPath, "log.tb"]));
 
-if (ck == "start") {
-  try { server.start(); }
-  catch(e) {
-    log.error(e);
-    sys.throw(e);
+:arr Args = sys.args();
+
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    "init": db.init();
+    "start":  try {
+                server.start();
+              } catch(e) {
+                log.error(e);
+                sys.throw(e);
+              }
+    default: sys.println(help());
   }
-
   return;
 }
 
-Rq = js.r(Args[1]);
-
-rp.init(ck);
-switch(Rq.source) {
-  "Home": home.process(Rq);
-  "Periodic": periodic.process(Rq);
-  "Fix": fix.process(Rq);
-  "Manual": manual.process(Rq);
-  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
 }
 
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
+  "HomePg": homePg.process(Rq);
+  "PeriodicPg": periodicPg.process(Rq);
+  "FixPg": fixPg.process(Rq);
+  "ManualPg": manualPg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+});
 

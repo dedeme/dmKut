@@ -1,0 +1,60 @@
+// Copyright 27-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Sighter interface.
+
+/// Returns the next sighter (group and sigther).
+///   getGroups: Function that returns sighter group list.
+///   read: Function thar from group identifier returns a sighter list.
+///   write: Function thar write sighter list of a group identifier.
+/// \(\->[s.]), (\s -> [<sighter>.]), (\s, [<sigter>.]) ->
+///   {s, <sighter>} :: {group, s}
+next = \getGroups, read, write ->
+  return next2(true, getGroups, read, write);;
+
+//  Returns the next sighter (group and sigther).
+//    isFirst: 'true' if it is the first call to function.
+//    getGroups: Function that returns sighter group list.
+//    read: Function thar from group identifier returns a sighter list.
+//    write: Function thar write sighter list of a group identifier.
+//  \b, (\->[s.]), (\s -> [<sighter>.]), (\s, [<sigter>.]) ->
+//    {s, <sighter>} :: {group, s}
+next2 = \isFirst, getGroups, read, write -> {
+	GSs = []; // [[s, s]]
+	for (g = getGroups()) for (S = read(g))
+    for (i = 0:S.level - S.sights) arr.push(GSs, [g, S.id]);
+
+	if (!GSs) {
+		if (isFirst) {
+			for (g = getGroups())
+        write(
+          g,
+          arr.map(
+            read(g),
+            \S -> {
+              S.sights = 0;
+              return S;
+            }
+          )
+        );
+			return next2(false, getGroups, read, write);
+		}
+		sys.throw("No available picture");
+	}
+
+  GS = GSs[math.rndi(arr.size(GSs))];
+
+  group = GS[0];
+  Ss = read(group);
+
+  id = GS[1];
+  SOp = arr.find(Ss, \S -> return S.id == id;);
+
+	if (!SOp) sys.throw("No availabe picture");
+  S = SOp!;
+
+	S.sights += 1;
+	write(group, Ss);
+
+	return {group, s: S};
+};

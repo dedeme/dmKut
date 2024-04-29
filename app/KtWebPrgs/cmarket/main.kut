@@ -5,6 +5,7 @@
 
 import "KtWeb/rp";
 import "libdm/log";
+import "libmkt/libmktHelper";
 import "db";
 import "sch";
 import "data/cts";
@@ -13,8 +14,6 @@ import "pgs/acc/acc";
 import "pgs/verification/verification";
 import "pgs/settings/settings";
 import "pgs/daily/dailyPg";
-
-import "qspr";
 
 help = """
   Usage:
@@ -50,6 +49,9 @@ if (arr.size(Args) == 1) {
         log.error("Server shutdown:\n" + e);
       }
     }
+    "test": {
+      sys.println("TEST");
+    }
     "init": db.init();
     default: sys.println(help);
   }
@@ -76,4 +78,5 @@ switch(Rq.module) {
   "Settings": settings.process(Rq);
   default: sys.throw("Value of module (" + Rq.module + ") is not valid");
 }
+
 

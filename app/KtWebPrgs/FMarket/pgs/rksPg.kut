@@ -1,4 +1,4 @@
-// Copyright 22-Jul-2023 ºDeme
+// Copyright 24-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Rankings page.
@@ -6,7 +6,7 @@
 import "KtWeb/rp";
 import "libmkt/model";
 import "libdm/log";
-import "data/cts";
+import "cts";
 import "data/flea";
 import "db";
 
@@ -14,21 +14,21 @@ import "db";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      modelId = Rq.modelId;
-      Models = arr.map(db.modelsList(), model.id);
+      , modelId : Rq;
+      Models = arr.map(db.modelsList(), \:model md -> return md.id;);
       mdId = arr.any(Models, \m -> return m == modelId;)
         ? modelId
         : cts.mainModel
       ;
-      Rks = db.readRankings(mdId);
-      sys.print(rp.mk({
+      :dic Rks = db.readRankings(mdId);
+      return rp.mk({
         mdId,
-        models: Models,
-        rks: arr.map(
-            dic.toArr(Rks),
+        Models,
+        RksJs: arr.map(
+            Rks.toArr(),
             \Kv -> return [Kv[0], arr.map(Kv[1], flea.toJs)];
           )
-      }));
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

@@ -1,0 +1,21 @@
+// Copyright 26-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// All data table.
+
+import "cts";
+
+fpath = path.cat([cts.dataPath, "all.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) writeJs("[]");;
+
+/// Reads table as JSON string.
+/// \ -> s
+readJs = \ -> return file.read(fpath);;
+
+/// Writes table as JSON string.
+/// \s -> ()
+writeJs = \s -> file.write(fpath, s);;
+

@@ -1,0 +1,11 @@
+// Copyright 13-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+appName = "Main";
+/// Application path.
+dataPath = path.cat([global.cgiRoot, appName]);

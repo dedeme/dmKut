@@ -1,19 +1,19 @@
-// Copyright 22-Jul-2023 ºDeme
+// Copyright 24-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Summary result data.
+/// <summaryRs> data definition.
 
 /// Constructor.
 ///   assets: Assets result (money).
 ///   profits: Profits result (ratio).
 ///   points: Result evaluation (points).
 ///           1000 pts. indicate neither profits nor losses.
-/// \f, f, i -> d<summaryRs>
-new = \assets, profits, points -> return {assets, profits, points};;
-
-/// \<summaryRs> -> JS
-toJs = \S -> return [
-  math.round(S.assets, 2), math.round(S.profits, 4), math.itof(S.points)];;
+/// \f,f,i -> <summaryRs>
+new : assets, profits, points;
 
 /// \JS -> <summaryRs>
-fromJs = \A -> return new(A[0], A[1], math.ftoi(A[2]));;
+fromJs = \A -> return [
+    A[assets],
+    A[profits],
+    math.ftoi(A[points])
+  ];;

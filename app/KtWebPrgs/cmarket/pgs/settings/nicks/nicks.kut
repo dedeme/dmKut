@@ -17,16 +17,17 @@ import "qspr";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      Cost = cosTb.read();
+      :cosT cos = cosTb.read();
+      Cos = arr.map(cos.Cos, \:co c -> return c.nick;);
       // {f...}
       Volumes = {};
-      for (C = Cost.cos) {
-        qss = quotesDb.read(C.nick);
-        dic.put(Volumes, C.nick, qs.volumeAvg(qss, cts.quotesVolume));
-      }
+      Vols = quotesDb.readVolumes(Cos);
+      for (Tp = arr.zip([Cos, Vols]))
+        dic.put(Volumes, Tp[0], Tp[1]);
+
       sys.print(rp.mk({
-        main: Cost.main,
-        cos: arr.map(Cost.cos, co.toJs),
+        main: cos.main,
+        cos: arr.map(cos.Cos, co.toJs),
         vol: Volumes
       }));
     }
@@ -52,13 +53,13 @@ process = \Rq -> {
         QQs! = Tp[0];
         // [s...]
         Errs = Tp[1];
-        Mqs = quotesDb.readQs(cosTb.read().main);
+        Mqs = quotesDb.readQs(cosTb.read()[cosT.main]);
         if (Mqs[1]) {
           // [<qs>, [s...]]
-          Tp2 = qs.correctDates(Mqs!, QQs!);
+          Tp2 = qs.correctDates(QQs!, Mqs!);
           for (err = Tp2[1]) arr.push(Errs, err);
         }
-        if (Errs){
+        if (!!Errs){
           WithWarnings! = true;
           log.error(str.fmt(
             "Warnings testing %v (%v and %v more)",

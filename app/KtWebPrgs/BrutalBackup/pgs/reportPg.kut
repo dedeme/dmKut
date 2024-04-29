@@ -1,0 +1,32 @@
+// Copyright 05-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Report page.
+
+import "KtWeb/rp";
+import "data/fromClient";
+import "db/fromServerTb";
+import "db/fromClientTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+          cl: fromClientTb.read()
+        });
+    }
+    "update": {
+      return rp.mk({
+          sv: fromServerTb.read()
+        });
+    }
+    "stop": {
+      :fromClient cl = fromClientTb.read();
+      cl.setAction(fromClient.stop);
+      fromClientTb.write(cl);
+      return rp.mkEmpty();
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

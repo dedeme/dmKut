@@ -1,0 +1,35 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Array of evaluation results management.
+
+import "upRss";
+import "evE";
+
+/// Read results for firts time.
+/// If model is of one parameter returns an array of 'cts.evalSteps' size.
+/// If model is of two parameter returns a matrix of 'cts.evalSteps' (rows) x
+///   'cts.evalSteps' (cols), where 'rows' are the first parameter values and
+///   'cols' are the second paramenter ones.
+/// \<model>, <quotes> -> [<evE>.]
+first = \md, qts -> return arr.map(upRss.read(md, qts), evE.newFirst);;
+
+/// Update results.
+/// \<model>, <quotes>, [<evE>.] -> [<evE>.]
+update = \md, qts, :arr Previous -> {
+  Evals = upRss.read(md, qts);
+  R = []; // [<evE>.]
+  for (i = 0:Previous.size())
+    R.push(evE.newUpdate(Previous[i], Evals[i]));
+  return R;
+};
+
+/// Replace results.
+/// \<model>, <quotes>, [<evE>.] -> [<evE>.]
+replace = \md, qts, :arr Previous -> {
+  Evals = upRss.read(md, qts);
+  R = []; // [<evE>.]
+  for (i = 0:Previous.size())
+    R.push(evE.newReplace(Previous[i], Evals[i]));
+  return R;
+};

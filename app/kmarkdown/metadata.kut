@@ -1,63 +1,40 @@
-// Copyright 16-Mar-2022 ºDeme
+// Copyright 11-Oct-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Metadata management.
+/// Metadata management (Define d<book> and d<meta>).
 
-import "err";
-
-/// Creates a new book metadata.
-///   book : Title of book or "".
-///   pages: Array with pages metadata.
-/// \s, [m...] -> m
-newBook = \book, Pages -> return {
-    "book": book,
-    "pages": Pages
-  };;
-
-/// Creates a new page metadata.
-///   fpage: File name without extension '.kmd'
-///   title: Page title or "".
-///   numbered: 'true' if headers '**' should be numbered.
-///   withUp: 'true' if an up arrow is shown.
-///   withDown: 'true' if an down arrow is shown.
-/// \s, s, b, b, b -> m
-newPage = \fpage, title, numbered, withUp, withDown -> return {
-    "fpage": fpage,
-    "title": title,
-    "numbered": numbered,
-    "withUp": withUp,
-    "withDown": withDown
-  };;
+import "meta";
+import "book";
 
 /// Returns [page metadata of file 'fpage'] or '[]' if it is not found.
 ///   pgMetas: Array with all the pages metadata.
 ///   fpage  : Page to search.
-/// \[m...], s -> ([m] | [])
+/// \[<meta>.], s -> ([<meta>] | [])
 getCurrent = \PgMetas, fpage -> {
-  for (PgMeta = PgMetas)
-    if (PgMeta.fpage == fpage) return [PgMeta];
+  for (:meta pgMeta = PgMetas)
+    if (pgMeta.fpage == fpage) return [pgMeta];
   return [];
 };
 
 /// Returns [page metadata of the file previous to 'fpage'] or '[]' if it is
 /// not found.
-///   pgMetas: Array with all the pages metadata.
+///   pgMetas: Array with all the pages metadata (sorted).
 ///   fpage  : Page to search.
-/// \[m...], s -> ([m] | [])
+/// \[<meta>.], s -> ([<meta>] | [])
 getPrevious = \PgMetas, fpage -> {
-  for (i, PgMeta = PgMetas)
-    if (PgMeta.fpage == fpage) return i > 0 ? [PgMetas[i - 1]] : [];
+  for (i, :meta pgMeta = PgMetas)
+    if (pgMeta.fpage == fpage) return i > 0 ? [PgMetas[i - 1]] : [];
   return [];
 };
 
 /// Returns [page metadata of the file next to 'fpage'] or '[]' if it is
 /// not found.
-///   pgMetas: Array with all the pages metadata.
+///   pgMetas: Array with all the pages metadata (sorted).
 ///   fpage  : Page to search.
-/// \[m...], s -> ([m] | [])
+/// \[<meta>.], s -> ([<meta>] | [])
 getNext = \PgMetas, fpage -> {
-  for (i, PgMeta = PgMetas)
-    if (PgMeta.fpage == fpage)
+  for (i, :meta pgMeta = PgMetas)
+    if (pgMeta.fpage == fpage)
       return i < arr.size(PgMetas) - 1 ? [PgMetas[i + 1]] : [];
   return [];
 };
@@ -66,15 +43,13 @@ getNext = \PgMetas, fpage -> {
 
 /// Returns a book metadata of a directory.
 ///   Fkmds: .kmd files of a directory.
-/// \[s] -> m
+/// \[s] -> <book>
 read = \Fkmds -> {
-  Book = [""];
-  PgMetas = [];
+  bookNameV = [""];
+  :arr PgMetas = [];
 
   for (fkmd = Fkmds) {
-    err.setFile(fkmd);
-
-    PgMeta = newPage(fkmd[:-4], "", false, false, false);
+    :meta pgMeta = meta.new(fkmd[:-4], "", false, true, false);
 
     // Returns true for ending process.
     process = \line -> {
@@ -83,51 +58,59 @@ read = \Fkmds -> {
       if (l == "=") return true;
 
       if (l == "numbered") {
-        PgMeta.numbered = true;
+        pgMeta.numbered = true;
         return false;
       }
 
-      if (l == "withUp") {
-        PgMeta.withUp = true;
+      if (l == "withoutUp") {
+        pgMeta.withUp = false;
         return false;
       }
 
       if (l == "withDown") {
-        PgMeta.withDown = true;
+        pgMeta.withDown = true;
         return false;
       }
 
       ix = str.index(l, "=");
       if (ix == -1) {
-        err.show("'=' is missing in metadada.", line);
+        sys.println(str.fmt(
+          "%v\n'=' is missing in metadada line:\n%v", [fkmd, line]
+        ));
         return true;
       }
       key = str.rtrim(l[:ix]);
       value = str.ltrim(l[ix + 1:]);
       switch (key) {
-        "book": Book! = value;
-        "title": PgMeta.title = value;
+        "book": bookNameV! = value;
+        "title": pgMeta.title = value;
         default: {
-          err.show("Wrong key in metadada.", line);
+          sys.println(str.fmt(
+            "%v\nWrong key in metadada line:\n%v", [fkmd, line]
+          ));
           return true;
         }
       }
       return false;
     };
 
-    f = file.ropen(fkmd);
-    L = file.readLine(f);
-    if (!L | str.trim(L!) != "=") continue;
-    while () {
-      L = file.readLine(f);
-      if (!L) break;
-      if (process(L!)) break;
+    :file f = file.ropen(fkmd);
+    lOp = f.readLine();
+    if (!!lOp & str.trim(lOp!) == "=") {
+      while () {
+        lOp = f.readLine();
+        if (!lOp) {
+          sys.println("%v\nUnexpected end of file reading metadata.", [fkmd]);
+          break;
+        }
+        if (process(lOp!)) break;
+      }
     }
-    file.close(f);
+    f.close();
 
-    arr.push(PgMetas, PgMeta);
+    PgMetas.push(pgMeta);
   }
 
-  arr.sort(PgMetas, \p1, p2 -> return p1.fpage < p2.fpage;);
-  return newBook(Book!, PgMetas);
+  PgMetas.sort(\:meta p1, :meta p2 -> return p1.fpage < p2.fpage;);
+  return book.new(bookNameV!, PgMetas);
 };

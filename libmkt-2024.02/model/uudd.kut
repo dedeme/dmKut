@@ -1,0 +1,16 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Approximations (2) model.
+
+import "../model";
+import "doc/uuddDoc";
+
+/// Returns a new 'appr2' model.
+new = \ -> return model.new(
+    "SS_BB",
+    "Sube-Sube/Baja-Baja",
+    uuddDoc.text,
+    ["Inicio", "Veloc."],
+    [model.percParam, model.percParam]
+  );;

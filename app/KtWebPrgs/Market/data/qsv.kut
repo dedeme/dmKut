@@ -1,0 +1,36 @@
+// Copyright 10-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server.
+
+/// Constructor.
+///   id           : Server identifier.
+///   name         : Server name.
+///   withDaily    : 'true' if server can read daily quotes.
+///   freadDaily   : Function that reads daily quotes. It returns two elements:
+///                   - Array with pairs [companyServerCode - quote].
+///                     It can be empty.
+///                   - Array with errors, if there is some.
+///   withHistoric : 'true' if server can read historic quotes.
+///   freadHistoric: Function that reads historic quotes of a company from itd
+///                   server code. It returns two elements:
+///                   - Valid array with historic quotes, or empty array.
+///                   - Array with errors, if there is some.
+/// \s,s,b,(\->[[s,f].],[s.]]),b,(\s->[[<quote>.],[s.]]) -> <qsv>
+new : id, name, withDaily, freadDaily, withHistoric, freadHistoric;
+
+/// Reads daily quotes of 'sv'.
+/// It returns two elements:
+///   - Array with pairs [companyServerCode - quote].
+///     It can be empty.
+///   - Array with errors, if there is some.
+/// \<qsv> -> [[s,f].],[s.]]
+readDaily = \sv -> return sv[freadDaily]();;
+
+/// Reads historic quotes of 'sv' of the company with server code 'code'.
+/// It returns two elements:
+///   - Valid array with historic quotes, or empty array.
+///   - Array with errors, if there is some.
+/// \<qsv>,s -> [[<quote>.],[s.]]
+readHistoric = \sv, code -> return sv[freadHistoric](code);;
+

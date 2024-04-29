@@ -1,0 +1,95 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <calendar> data definition.
+
+import "timetable";
+import "mktDay";
+import "cts";
+
+/// Constructor.
+///   general    : Default timetable of a market day.
+///   Holidays   : Holiday dates.
+///   SpecialDays: Days with special timetable.
+/// \<timetable>,[s.],[<mktDay>.] -> <calendar>
+new : general, Holidays, SpecialDays;
+
+/// Default constructor.
+/// \ -> <calendar>
+newDefault = \ -> return new(timetable.new(0, 0, 23, 55), [], []);;
+
+/// \JS -> <calendar>
+fromJs = \A -> return [
+    timetable.fromJs(A[general]),
+    A[Holidays],
+    arr.map(A[SpecialDays], mktDay.fromJs)
+  ];;
+
+/// Returns true if date is a market day.
+///
+/// For example: calendar.isMarkeDay(cal, time.Now())
+///   calendar: Calendar.
+///   tm      : Date to test.
+/// \<calendar>, i -> b
+isMarketDay = \C, tm -> {
+  wd = time.weekday(tm);
+  d = time.toStr(tm);
+  return wd > 0 & wd < 6 & !arr.any(C[Holidays], \h -> return h == d;);
+};
+
+/// Returns true if is time to Watch market.
+///
+/// For example: calendar.isTimetoWatch(cal, time.Now())
+///   calendar: Calendar.
+///   tm      : Time to test.
+/// \<calendar>, i -> b
+isTimeToWatch = \C, tm -> {
+  tm = tm - cts.serverDelay * 1000;
+  d = time.toStr(tm);
+  if (isMarketDay(C, tm)) {
+    specialDayOp = arr.find(
+      C[SpecialDays], \:mktDay D -> return D.date == d;
+    );
+    o = !specialDayOp
+      ? C[general][timetable.hopen] - 1
+      : specialDayOp![mktDay.hopen] - 1
+    ;
+    c = !specialDayOp
+      ? C[general][timetable.hclose] + 1
+      : specialDayOp![mktDay.hclose] + 1
+    ;
+
+    h = time.hour(tm);
+    return h >= o & h <= c;
+  }
+  return false;
+};
+
+/// Returns 'true' if market is open.
+//
+/// For example: calendar.IsOpen(cal, time.Now())
+///   calendar: Calendar.
+///   tm      : Time to test.
+/// \<calendar>, i -> b
+isOpen =  \C, tm -> {
+  tm = tm - cts.serverDelay * 1000;
+  d = time.toStr(tm);
+  if (isMarketDay(C, tm)) {
+    h = time.hour(tm);
+    m = time.minute(tm);
+    // \<timetable> -> bool
+    inLimits = \:timetable tt -> return
+      (h > tt.hopen | (h == tt.hopen & m >= tt.mopen)) &
+			(h < tt.hclose | (h == tt.hclose & m <= tt.mclose))
+    ;;
+
+    specialDayOp = arr.find(
+      C[SpecialDays], \:mktDay D -> return D.date == d;
+    );
+    return !specialDayOp
+      ? inLimits(C[general])
+      : inLimits(mktDay.toTimetable(specialDayOp!))
+    ;
+  }
+  return false;
+};

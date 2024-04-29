@@ -21,7 +21,7 @@ process = \Rq -> {
           ];),
         dailyServer: qsv.id(qsvs.currentDiary()),
         historicServer: qsv.id(qsvs.currentHistoric()),
-        codes: selected ? svCodesTb.read(selected) : {}
+        codes: selected != "" ? svCodesTb.read(selected) : {}
       }));
     }
     "setCodes": {
@@ -36,7 +36,7 @@ process = \Rq -> {
       WithErrors = [false];
       WithWarnings = [false];
       Sv = arr.find(qsvs.list(), \s -> return qsv.id(s) == server;);
-      if (Sv) {
+      if (!!Sv) {
         Html = qsv.downloadDiary(Sv!);
         if (Html[1]) {
           //[[[s, f]...], [s...]]
@@ -45,7 +45,7 @@ process = \Rq -> {
             log.error("No value was read from server " + server);
             WithErrors! = true;
           } else {
-            if (Tp[1]) {
+            if (!!Tp[1]) {
               for (err = Tp[1]) log.error(err);
               WithWarnings! = true;
             }
@@ -78,13 +78,13 @@ process = \Rq -> {
       WithWarnings = [false];
 
       Sv = arr.find(qsvs.list(), \s -> return qsv.id(s) == server;);
-      if (Sv) {
+      if (!!Sv) {
         Html = qsv.downloadHistoric(Sv!, code);
         if (Html[1]) {
           // [[<qsv>]|[], [s...]]
           Tp = qsv.readHistoric(Sv!, Html!);
-          if (Tp[0]) {
-            if (Tp[1]) {
+          if (!!Tp[0]) {
+            if (!!Tp[1]) {
               for (err = Tp[1])
                 log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
               WithWarnings! = true;

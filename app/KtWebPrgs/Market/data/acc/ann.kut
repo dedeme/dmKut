@@ -1,0 +1,239 @@
+// Copyright 13-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Annotation data.
+
+import "data/broker";
+import "libmkt/cts" : mcts;
+import "cts";
+import "opr";
+import "settlement";
+import "ldg";
+import "pf";
+
+/// Constructor
+///   id  : Identifier. Must be set to -1. Its value will be reset when
+///         the annotation is added to its <annsTb>.
+///   date: Annotation date.
+///   op  : Operation annotated.
+/// \i,s,<opr> -> <ann>
+new : id, date, op;
+
+/// \<ann> -> JS
+toJs = \An -> {
+  R = [An[id], An[date]];
+  arr.cat(R, opr.toJs(An[op]));
+  return R;
+};
+
+/// \JS -> <ann>
+fromJs = \A -> return new(math.ftoi(A[0]), A[1], opr.fromJs(A[2:]));;
+
+/// Returns a ledger from 'As'.
+/// \[<ann>.] -> <settlement>
+mkSettlement = \:arr As -> {
+  As.sort(\A1, A2 -> {
+    if (A1[date] == A2[date]) {
+      if (opr.type(A1[op]) == opr.buT) return true;
+      else if (opr.type(A2[op]) == opr.buT) return false;
+      return A1[id] < A2[id];
+    }
+    return A1[date] < A2[date];
+  });
+  :ldg l = ldg.new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  Pf = {}; // {[i, f]...}
+  Errs = []; // [s...]
+  for (A = As) {
+    :opr op = A[op];
+    switch (op.type()) {
+      opr.seT: {
+        nk = op.nick();
+        ss = op.stocks();
+        pr = op.price();
+        if (ss <= 0)
+          Errs.push(str.fmt(
+            "%v%v: Selling %v (<= 0) stocks", [A[date], op.toStr(), ss]
+          ));
+        else if (pr < 0.0)
+          Errs.push(str.fmt(
+            "%v%v: Selling price %v (< 0)", [A[date], op.toStr(), pr]
+          ));
+        else {
+          ssf = math.itof(ss);
+
+          // update portfolio
+          oldPrErr = pf.remove(Pf, nk, ss);
+
+          oldPr = oldPrErr[0];
+          err = oldPrErr[1];
+          if (err != "") Errs.push(A[date] + op.toStr() + ": " + err);
+          oldV = math.round(ssf * oldPr, 2);
+          v = math.round(ssf * pr, 2);
+          incomes = pr == -0.01 ? 0.0 : math.round(broker.sell(ss, pr), 2);
+
+          // update ledger
+          l.stocks -= oldV;
+          l.cash += incomes;
+          l.fees += v - incomes;
+          l.sales += oldV - v;
+        }
+      }
+      opr.buT: {
+        nk = op.nick();
+        ss = op.stocks();
+        pr = op.price();
+        if (ss <= 0)
+          Errs.push(str.fmt(
+            "%v%v:Bbuying %v (<= 0) stocks", [A[date], op.toStr(), ss]
+          ));
+        else if (pr < 0.0)
+          Errs.push(str.fmt(
+            "%v%v: Buying price %v (< 0)", [A[date], op.toStr(), pr]
+          ));
+        else {
+          // update portfolio
+          pf.add(Pf, nk, ss, pr);
+
+          v = math.round(math.itof(ss) * pr, 2);
+          cost = pr == -0.01 ? 0.0 : math.round(broker.buy(ss, pr), 2);
+
+          // update ledger
+          l.stocks += v;
+          l.cash -= cost;
+          l.fees += cost - v;
+        }
+      }
+      opr.stT: {
+        nk = op.nick();
+        ss = op.stocks();
+        pr = op.price();
+        v = math.round(math.itof(ss) * pr, 2);
+
+        // update portfolio
+        pf.add(Pf, nk, ss, pr);
+
+        // update ledger
+        l.stocks += v;
+        l.equity -= v;
+      }
+      opr.inT: {
+        v = op.amount();
+
+        // update ledger
+        l.cash += v;
+        l.equity -= v;
+      }
+      opr.wiT: {
+        v = op.amount();
+
+        // update ledger
+        l.cash -= v;
+        l.equity += v;
+      }
+      opr.prT: {
+        v = op.amount();
+
+        // update ledger
+        l.cash += v;
+        l.profits -= v;
+      }
+      opr.feT: {
+        v = op.amount();
+
+        // update ledger
+        l.cash -= v;
+        l.fees += v;
+      }
+      opr.pdT: {
+        v = op.amount();
+
+        // update ledger
+        l.cash += v;
+        l.differences -= v;
+      }
+      opr.ndT: {
+        v = op.amount();
+
+        // update ledger
+        l.cash -= v;
+        l.differences += v;
+      }
+      default: Errs.push(str.fmt(
+        "Wrong annotation type in %v%v", [A[date], op.toStr()]
+      ));
+    }
+  }
+
+  return settlement.new(l, Pf, Errs);
+};
+
+/// Adds rebuys to previous data. {nick: date}
+///   Prev: Recorded rebuys. {nick: date}
+///   Anns: Only conplete investor-year annotations.
+/// \{s.}, [<ann>.] -> ()
+rebuys = \:dic Prev, :arr Anns -> {
+  today = time.toStr(time.now());
+
+  // \s -> s
+  addDays = \dt, days ->
+    return time.toStr(time.addDays(time.fromStr(dt)!, days));;
+
+  // \s, s -> ()
+  put = \nk, dt -> {
+    if (dt < today) return;
+    oldOp = Prev.get(nk);
+    if (!oldOp) {
+      Prev.put(nk, dt);
+    } else {
+      if (dt > oldOp!) Prev[nk] = dt;
+    }
+  };
+
+  Pf = {}; // {[i, n].} :: {nick: [stocks, price]}
+  for (A = Anns) {
+    :opr op = A[op];
+    switch (op.type()) {
+      opr.seT: {
+        dt = A[date];
+        nk = op.nick();
+        sts = op.stocks();
+        pr = op.price();
+        StPrOp = Pf.get(nk);
+        if (!StPrOp) {
+          put(nk, addDays(dt, cts.daysLoss7));
+        } else {
+          StPr = StPrOp!;
+          dif = StPr[0] - sts;
+          if (dif > 0) Pf[nk] = [dif, StPr[1]];
+          else dic.remove(Pf, nk);
+          trapDate = pr < StPr[1] * mcts.noLossMultiplicator
+            ? addDays(dt, cts.daysLoss7)
+            : dt
+          ;
+          put(nk, trapDate);
+        }
+      }
+      opr.buT: {
+        nk = op.nick();
+        sts = op.stocks();
+        pr = op.price();
+        StPrOp = dic.get(Pf, nk);
+        if (!StPrOp) {
+          dic.put(Pf, nk, [sts, pr]);
+        } else {
+          StPr = StPrOp!;
+          sum = sts + StPr[0];
+          newPr = (math.itof(sts) * pr + math.itof(StPr[0]) * StPr[1]) /
+            math.itof(sum)
+          ;
+          dic.put(Pf, nk, [sum, newPr]);
+        }
+      }
+      opr.stT: {
+        dic.put(Pf, op.nick(), [op.stocks(), op.price()]);
+      }
+      default: {}
+    }
+  }
+};
+

@@ -3,28 +3,32 @@
 
 /// Quote servers data.
 
-import "data/svs/infob";
 import "data/svs/bmania";
+import "data/svs/bsmks";
+import "data/svs/bym";
 import "data/svs/eleco";
-import "data/svs/finan";
 import "data/svs/inves";
+import "data/svs/mwatch";
+import "data/svs/wsj";
 import "data/svs/yahoo";
 
 /// Returns an array with registered quotes servers.
 /// \-> [<qsv>...]
 list = \-> return [
-    infob.new(),
     bmania.new(),
+    bsmks.new(),
+    bym.new(),
     eleco.new(),
-    finan.new(),
     inves.new(),
+    mwatch.new(),
+    wsj.new(),
     yahoo.new()
   ];;
 
 /// Returns the current active diary server
 /// \-> <qsv>
-currentDiary = \-> return infob.new();;
+currentDiary = \-> return bym.new();;
 
 /// Returns the current active historic server
 /// \-> <qsv>
-currentHistoric = \-> return infob.new();;
+currentHistoric = \-> return yahoo.new();;

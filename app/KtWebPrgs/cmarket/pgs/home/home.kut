@@ -11,6 +11,21 @@ import "db";
 /// \m -> ()
 process = \Rq -> {
   switch (Rq.rq) {
+    "idata": {
+      R = sys.cmd2("ps", ["-x"]);
+      isActive = str.index(
+        R!,
+        "kut /dm/dmKut/app/KtWebPrgs/cmarket/main start"
+      ) != -1;
+      sys.print(rp.mk({isActive}));
+    }
+    "activate": {
+      thread.run(\->
+        sys.cmd2("kutmkt", ["/dm/dmKut/app/KtWebPrgs/cmarket/main", "start"]);
+      );
+      sys.sleep(200);
+      sys.print(rp.mkEmpty());
+    }
     "getLog":
       sys.print(rp.mkJs({
         log: log.readJs()

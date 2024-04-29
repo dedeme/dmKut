@@ -1,0 +1,22 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base initializer.
+
+import "data/cts";
+import "db/sels";
+import "db/picts";
+import "db/songs";
+import "db/danceSongs";
+
+/// \ -> ()
+init = \ -> {
+	dbpath = cts.dbPath;
+	file.mkdir(dbpath);
+
+	sels.init(dbpath);
+	picts.init(dbpath);
+	songs.init(dbpath);
+	danceSongs.init(dbpath);
+};
+

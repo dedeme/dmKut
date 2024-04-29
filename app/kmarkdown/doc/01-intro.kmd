@@ -1,0 +1,51 @@
+=
+book = Documentación de Kmarkdown
+title = Introducción
+=
+
+## Simple uso
+
+# Archivos
+
+Directorio:
+
+``
+<pre>
+  ej1
+  |- pg1.kmd
+  |- pg2.kmd
+</pre>``
+
+Archivos:
+
+*pg1.kmd*
+
+``markdown
+Esta es la _página_ uno.
+
+Ir a la [pg2.html](página 2).
+``
+
+*pg2.kmd*
+
+``kmd
+Esta es la _página_ dos.
+
+Ir a la [pg1.html](página 1).
+``
+
+# Proceso
+
+1. Entrar en el directorio raíz (ej1). \
+  *cd ej1*
+
+1. Invocar kmarkdown. \
+  *kut kmardown*
+
+_kut_ and _markdown_ deben estar en el PATH.
+
+Se crearán dos páginas HTML: *pg1.html* y *pg2.html*.
+
+# Resultado
+
+[ej1/pg1.html](página 1)

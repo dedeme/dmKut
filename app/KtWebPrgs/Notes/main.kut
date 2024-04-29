@@ -1,0 +1,22 @@
+// Copyright 13-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main script.
+
+import "KtWeb/rp";
+import "db";
+import "edit";
+
+Args = sys.args();
+ck = Args[0];
+Rq = js.r(Args[1]);
+
+rp.init(ck);
+db.init();
+
+switch(Rq.source) {
+  "Edit": edit.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+}
+
+

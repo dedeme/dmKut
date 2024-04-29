@@ -1,29 +1,49 @@
-// Copyright 04-Nov-2022 ºDeme
+// Copyright 13-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Main script.
+/// Main module.
 
 import "KtWeb/rp";
 import "db";
 import "pgs/mainPg";
 import "pgs/home";
 import "pgs/settings";
-import "pgs/changePass";
+import "pgs/changePassPg";
 
-Args = sys.args();
-ck = Args[0];
+// \ -> s
+help = \ -> return """
+  Use Main [help | init | key rq]
+  where
+    help: Shows this message.
+    init: Initializes program.
+          Must be called only the first time that the program is called.
+    key rq: Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-Rq = js.r(Args[1]);
+:arr Args = sys.args();
 
-rp.init(ck);
-db.init();
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "init": db.init();
+    default: sys.println(help());
+  }
+  return;
+}
 
-switch(Rq.source) {
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
+
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
   "Main": mainPg.process(Rq);
   "Home": home.process(Rq);
   "Settings": settings.process(Rq);
-  "ChangePass": changePass.process(Rq);
+  "ChangePass": changePassPg.process(Rq);
   default: sys.throw("Value of source (" + Rq.source + ") is not valid");
-}
-
+});
 

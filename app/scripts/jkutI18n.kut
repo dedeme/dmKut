@@ -1,9 +1,9 @@
 // Copyright 04-May-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-// Returns a <pos> object
-// \s, i -> <object>{s, i}
-mkPos = \fpath, line -> return {fpath, line};;
+// Returns a postion object
+// \s, i -> {s, i} :: {fpath, line}
+mkPos = \fpath, line -> return { fpath, line };;
 
 // \s -> i
 help = \msg -> {
@@ -19,33 +19,33 @@ help = \msg -> {
   return 0;
 };
 
-// \{[<pos>...]...}, s -> ()
+// \{[({s, i} :: {fpath, line}).].}, s -> ()
 extractFile = \Dict, fpath -> {
   f = file.ropen(fpath);
-  nline = [1];
+  nlineV = [1];
   while () {
-    l0 = file.readLine(f);
-    if (!l0) break;
-    l = l0!;
+    lOp = file.readLine(f);
+    if (!lOp) break;
+    l = lOp!;
 
     start = str.index(l, 'II("');
     if (start != -1) {
       end = str.indexFrom(l, '")', start + 4);
       if (end != -1) {
         tx = str.trim(l[start + 4 : end]);
-        pos = mkPos(fpath, nline!);
-        Poss = dic.get(Dict, tx);
-        if (Poss) arr.push(Poss!, pos);
-        else dic.put(Dict, tx, [pos]);
+        pos = mkPos(fpath, nlineV!);
+        PossOp = dic.get(Dict, tx);
+        if (!PossOp) dic.put(Dict, tx, [pos]);
+        else arr.push(PossOp!, pos);
       }
     }
 
-    nline! += 1;
+    nlineV! += 1;
   }
   file.close(f);
 };
 
-// \{[<pos>...]...}, s -> ()
+// \{[({s, i} :: {fpath, line}).].}, s -> ()
 extract = \Dict, fpath -> {
   sys.println(fpath);
   if (file.isDirectory(fpath)) {
@@ -55,7 +55,7 @@ extract = \Dict, fpath -> {
   }
 };
 
-// \s -> {s...}
+// \s -> {s.}
 readOldDic = \fpath -> {
   if (!file.exists(fpath)) return {};
   return arr.reduce(
@@ -66,7 +66,7 @@ readOldDic = \fpath -> {
         ix = str.index(l, "=");
         if (ix != -1) {
           right = str.ltrim(l[ix+1:]);
-          if (right) dic.put(r, str.rtrim(l[:ix]), right);
+          if (right != "") dic.put(r, str.rtrim(l[:ix]), right);
         }
       }
       return r;
@@ -91,7 +91,7 @@ if (file.exists(i18nDir) & !file.isDirectory(i18nDir))
     return help("'" + i18nDir + "' is not a directory");
 file.mkdir(i18nDir);
 
-// {[<pos>...]...}
+// {[({s, i} :: {fpath, line}).].}
 CurrentKeys = {};
 extract(CurrentKeys, root);
 Ckeys = dic.keys(CurrentKeys);
@@ -103,27 +103,27 @@ for (v = dic.values(CurrentKeys)) {
   });
 }
 
-// {{s...}}
+// {{s.}}
 Translations = {};
 for (lang = Langs) {
   fdic = path.cat([i18nDir, lang + ".txt"]);
-  //{s...}
+  //{s.}
   OldDic = readOldDic(fdic);
 
-  // [s...]
+  // [s.]
   Orphans = [];
-  for (kv = dic.toArr(OldDic))
-    if (!dic.hasKey(CurrentKeys, kv[0]))
+  for (Kv = dic.toArr(OldDic))
+    if (!dic.hasKey(CurrentKeys, Kv[0]))
       arr.push(
         Orphans,
-        str.fmt("# ORPHAN\n%v = %v\n\n", [kv[0], kv[1]])
+        str.fmt("# ORPHAN\n%v = %v\n\n", [Kv[0], Kv[1]])
       );
 
-  // [s...]
+  // [s.]
   ToDos = [];
-  // [s...]
+  // [s.]
   Dones = [];
-  // {s...}
+  // {s.}
   Trans = {};
   for (k = Ckeys) {
     if (dic.hasKey(OldDic, k)) {
@@ -156,8 +156,9 @@ for (lang = Langs) {
   dic.put(Translations, lang, Trans);
 }
 
-code = [];
-arr.push(code, """
+// [s.]
+Code = [];
+arr.push(Code, """
   // Generate by jkutI18n. Don't modify
 
   /// Internationalization management.
@@ -166,32 +167,32 @@ arr.push(code, """
 );
 
 for (lang = Langs) {
-  arr.push(code, str.fmt("%sDic = {\n", [lang]));
-  arr.push(code, arr.join(arr.map(
+  arr.push(Code, str.fmt("%sDic = {\n", [lang]));
+  arr.push(Code, arr.join(arr.map(
     dic.toArr(Translations[lang]),
-    \kv -> return str.fmt('  "%v": "%v"', [kv[0], kv[1]]);
+    \Kv -> return str.fmt('  "%v": "%v"', [Kv[0], Kv[1]]);
   ), ",\n"));
-  arr.push(code, "\n};\n");
-  arr.push(code, str.fmt('/// \\-> ()\n%s = \\-> Lang! = "%v";;\n\n', [lang, lang]));
+  arr.push(Code, "\n};\n");
+  arr.push(Code, str.fmt('/// \\-> ()\n%s = \\-> Lang! = "%v";;\n\n', [lang, lang]));
 }
 
-arr.push(code, "//\\s -> {s...}\ndicByKey = \\s -> return switch (s) {\n");
-arr.push(code, arr.join(arr.map(
+arr.push(Code, "//\\s -> {s...}\ndicByKey = \\s -> return switch (s) {\n");
+arr.push(Code, arr.join(arr.map(
   Langs,
   \l -> return str.fmt('  "%v": %vDic;\n', [l, l]);
 ), ""));
-arr.push(code, '  default: "Unreachable";\n};;\n\n');
+arr.push(Code, '  default: "Unreachable";\n};;\n\n');
 
-arr.push(code, str.fmt('Lang = ["%s"];\n', [Langs[0]]));
+arr.push(Code, str.fmt('Lang = ["%s"];\n', [Langs[0]]));
 
-arr.push(code, """
+arr.push(Code, """
   /// \-> s
   getLang = \-> return Lang!;;
 
   /// \s -> s
   tlt = \s -> {
     T = dic.get(dicByKey(Lang!), s);
-    return T ? T! : s;
+    return !T ? s : T!;
   };
 
   /// \s, [s...] -> s
@@ -204,4 +205,4 @@ arr.push(code, """
 );
 
 
-file.write(path.cat([root, "i18n.jkut"]), arr.join(code, ""));
+file.write(path.cat([root, "i18n.jkut"]), arr.join(Code, ""));

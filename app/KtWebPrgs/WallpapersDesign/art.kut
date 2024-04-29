@@ -3,6 +3,7 @@
 
 /// Image operations.
 
+import "libdm/jstb";
 import "libdm/img";
 import "db";
 
@@ -16,11 +17,11 @@ changeExt = \i -> {
 
 /// Standard width
 /// i
-stdW = db.confTb().read().width;
+stdW = db.confTb()[jstb.read]().width;
 
 /// Standard height
 /// i
-stdH = db.confTb().read().height;
+stdH = db.confTb()[jstb.read]().height;
 
 /// Directory with source images
 /// It must be set with 'setDirectories'

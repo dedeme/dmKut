@@ -1,18 +1,15 @@
-// Copyright 07-Sep-2023 ºDeme
+// Copyright 11-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Path data.
 
 /// Constructor.
 ///   id     : Path identifier.
-///   path   : Source path.
+///   spath  : Source path.
 ///   isShown: 'true' if the path should be shown.
 ///   isValid: 'true' if the path is a valid one.
-/// \s, s, b, b -> d<dpath>
-new = \id, path, isShown, isValid -> return {id, path, isShown, isValid};;
+/// \s, s, b, b -> <dpath>
+new : id, spath, isShown, isValid;
 
-/// \<dpath> -> [JS...]
-toJs = \Dp -> return [Dp.id, Dp.path, Dp.isShown, Dp.isValid];;
-
-/// \[JS...] -> dpath
-fromJs = \JS -> return new (JS[0], JS[1], JS[2], JS[3]);;
+/// \<dpath>, b -> ()
+setIsValid = \O, v -> O[isValid] = v;;

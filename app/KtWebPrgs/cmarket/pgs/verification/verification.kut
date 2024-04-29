@@ -7,42 +7,30 @@ import "KtWeb/rp";
 import "libdm/log";
 import "data/cts";
 import "data/acc/ann";
+import "data/acc/settlement";
+import "data/acc/ldg";
 import "db/acc/diariesDb";
 
 // \s -> {b, [[s, f, f].], f} :: {ok, entries, cash}
 cMarketData = \lastDate -> {
   okV = [true];
   year = lastDate[:4];
-  Pfs = {}; // {[f, f]...} :: Nick -> [stock, price]
   cashV = [0.0];
-  for (inv = 0:cts.investors) {
-    Anns = arr.filter(
-      diariesDb.investorAnns(inv, year),
-      \A -> return A.date <= lastDate;
-    );
-    Set = ann.mkSettlement(Anns);
-    if (Set.errors) {
-      okV! = false;
-      for (e = Set.errors) log.error(e);
-    }
-    cashV! += Set.ledger.cash;
-    Pf = Set.portfolio;
-    for (nk = dic.keys(Pf)) {
-      V = Pf[nk];
-      vStocks = math.itof(V[0]);
-      EOp = dic.get(Pfs, nk);
-      if (EOp) {
-        E = EOp!;
-        stocks = E[0] + vStocks;
-        E[1] = (E[0] * E[1] + vStocks * V[1]) / stocks;
-        E[0] = stocks;
-      } else {
-        dic.put(Pfs, nk, [vStocks, V[1]]);
-      }
-    }
+
+  Anns = arr.filter(
+    diariesDb.investorAnns(year),
+    \:ann a -> return a.date <= lastDate;
+  );
+  :settlement set = ann.mkSettlement(Anns);
+  if (!!set.Errors) {
+    okV! = false;
+    for (e = set.Errors) log.error(e);
   }
+  cashV! += set.ledger[ldg.cash];
+  Pf = set.Portfolio;
+
   Entries = arr.map(
-    dic.toArr(Pfs),
+    dic.toArr(Pf),
     \Kv -> return [Kv[0], Kv[1][0], Kv[1][1]];
   );
   return {
@@ -58,31 +46,30 @@ stocksData = \ -> {
   y = time.fmt("%Y", time.now());
   Year = arr.find(All, \E -> return E[0] == y;)!;
   Anns = Year[1][1];
-  Pf = {}; //{[[f, f].].} :: {nick -> [[stocks, price].]}
+  Pf = {}; //{[f, f].} :: {nick -> [stocks, price]}
   for (A = Anns) {
-    inv = math.ftoi(A[3]);
-    nick = A[4];
-    stocks = A[5];
-    price = A[6];
+    nick = A[3];
+    stocks = A[4];
+    price = A[5];
     if (A[1]) { // isSell
       E = Pf[nick];
-      if (E[inv][0] < stocks)
+      if (E[0] < stocks)
         sys.throw(str.fmt(
-          "Selling %v stocks of %v (Investor-%v) when only there are %v",
-          [stocks, nick, inv, E[0]]
+          "Selling %v stocks of %v when only there are %v",
+          [stocks, nick, E[0]]
         ));
-      else E[inv][0] -= stocks;
+      else E[0] -= stocks;
     } else {
       EOp = dic.get(Pf, nick);
-      if (EOp) {
+      if (!!EOp) {
         E = EOp!;
-        sum = E[inv][0] + stocks;
-        E[inv][1] = (E[inv][0] * E[inv][1] + stocks * price) / sum;
-        E[inv][0] = sum;
+        sum = E[0] + stocks;
+        E[1] = (E[0] * E[1] + stocks * price) / sum;
+        E[0] = sum;
       } else {
-        E = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]];
-        E[inv][0] = stocks;
-        E[inv][1] = price;
+        E = [0.0, 0.0];
+        E[0] = stocks;
+        E[1] = price;
         dic.put(Pf, nick, E);
       }
     }
@@ -90,11 +77,11 @@ stocksData = \ -> {
   Entries = arr.map(
     arr.filter(
       dic.toArr(Pf),
-      \Kv -> return arr.reduce(Kv[1], 0.0, \r, E -> return r + E[0];) > 0.0;
+      \Kv -> return Kv[1][0] > 0.0;
     ),
     \Kv -> {
-      stocks = arr.reduce(Kv[1], 0.0, \r, E -> return r + E[0];);
-      ttCost = arr.reduce(Kv[1], 0.0, \r, E -> return r + E[0] * E[1];);
+      stocks = Kv[1][0];
+      ttCost = stocks * Kv[1][1];
       return [Kv[0], stocks, ttCost / stocks, ttCost];
     }
   );
@@ -118,17 +105,17 @@ hcontaData = \ -> {
     Cs = A[3];
 
     amCashDOp = dic.get(Ds, accCash);
-    if (amCashDOp) cashV! += amCashDOp!;
+    if (!!amCashDOp) cashV! += amCashDOp!;
     else {
       amCashCOp = dic.get(Cs, accCash);
-      if (amCashCOp) cashV! -= amCashCOp!;
+      if (!!amCashCOp) cashV! -= amCashCOp!;
     }
 
     amStocksDOp = dic.get(Ds, accStocks);
-    if (amStocksDOp) stocksV! += amStocksDOp!;
+    if (!!amStocksDOp) stocksV! += amStocksDOp!;
     else {
       amStocksCOp = dic.get(Cs, accStocks);
-      if (amStocksCOp) stocksV! -= amStocksCOp!;
+      if (!!amStocksCOp) stocksV! -= amStocksCOp!;
     }
   }
   return {cash: cashV!, stocks: stocksV!};
@@ -140,21 +127,21 @@ process = \Rq -> {
     "idata": {
       lastDate = Rq.lastDate;
 
-      cMarketD = cMarketData(lastDate);
-      ok = cMarketD.ok;
+      CMarketD = cMarketData(lastDate);
+      ok = CMarketD.ok;
 
-      stocksD = stocksData();
+      StocksD = stocksData();
 
-      hcontaD = hcontaData();
+      HcontaD = hcontaData();
 
       sys.print(rp.mk({
         ok,
-        cMarketCash: cMarketD.cash,
-        cMarketStocks: cMarketD.entries,
-        stocksSum: stocksD.cash,
-        stocksStocks: stocksD.entries,
-        hcontaCash: hcontaD.cash,
-        hcontaSum: hcontaD.stocks
+        cMarketCash: CMarketD.cash,
+        cMarketStocks: CMarketD.entries,
+        stocksSum: StocksD.cash,
+        stocksStocks: StocksD.entries,
+        hcontaCash: HcontaD.cash,
+        hcontaSum: HcontaD.stocks
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

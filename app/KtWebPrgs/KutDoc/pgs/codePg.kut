@@ -3,7 +3,9 @@
 
 /// Code page.
 
+import "libdm/jstb";
 import "KtWeb/rp";
+import "data/dpath";
 import "db";
 
 /// Process request.
@@ -12,9 +14,12 @@ process = \Rq -> {
   switch (Rq.rq) {
     "code": {
       Code = [];
-      Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == Rq.pack;);
-      if (arr.size(Ppath) != 0) {
-        fpath = path.cat([Ppath[0].path, Rq.path + ".kut"]);
+      :jstb pathsTb = db.pathsTb();
+      Ps = pathsTb.read#();
+      PpathOp = arr.find(Ps, \:dpath P -> return P.id == Rq.pack;);
+      if (!!PpathOp) {
+        :dpath Ppath = PpathOp!;
+        fpath = path.cat([Ppath.spath, Rq.path + ".kut"]);
         if (file.exists(fpath)) arr.push(Code, file.read(fpath));
       }
       sys.println(rp.mk({

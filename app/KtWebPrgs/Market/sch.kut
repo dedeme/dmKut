@@ -1,0 +1,299 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "libdm/log";
+import "data/co/cos";
+import "data/co/co";
+import "data/qsprRs";
+import "data/qsv";
+import "data/svs/ibexSv";
+import "data/svs/bmania";
+import "data/ibex";
+import "data/acc/anns";
+import "data/acc/ann";
+import "data/acc/settlement";
+import "data/acc/opr";
+import "data/acc/ldg";
+import "data/chart/profitsEntry";
+import "data/calendar/calendar";
+import "data/activity";
+import "db/cosTb";
+import "db/svCodesTb";
+import "db/ibexTb";
+import "db/investorTb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/daily/cosSelTb";
+import "db/acc/diariesDb";
+import "db/acc/profitsDb";
+import "db/calendarTb";
+import "db/activityTb";
+import "qspr";
+import "cts";
+
+// If it fails, returns "". The found PID must be different to pid.
+// \s -> s
+getPid = \pid -> {
+  r, ok = sys.cmd("ps", ["-x"]);
+  if (!ok) return "";
+
+  cmd = "kut2 /dm/dmKut/app/KtWebPrgs/market/main start";
+  for (prg = str.splitTrim(r, "\n")) {
+    if (str.index(prg, cmd) != -1) {
+      ix = str.index(prg, " ");
+      if (ix != -1) {
+        p = prg[:ix];
+        if (p != pid) return p;
+      }
+    }
+  }
+  return "";
+};
+
+/// \s -> <qsprRs<qs>>
+ibexHistoricUpdate = \mainNick -> {
+  :cos cs = cosTb.read();
+
+  :qsprRs rs = qspr.updateIbexHistoric(cs.mainNick);
+
+  // [s.], b
+  :arr Codes, ok = ibexSv.readComponents();
+  if (!ok) {
+    log.error("Reading Ibex components: " + Codes);
+    rs.withError = true;
+    return rs;
+  }
+
+  :qsv sv = bmania.new();
+  :dic BmaniaCodes = svCodesTb.read(sv.id); // {s.}
+  Nicks = []; // [s.]
+  for (code = Codes){
+    NkOp = [];
+    for (nk, cd = BmaniaCodes) {
+      if (cd == code) {
+        NkOp.push(nk);
+        break;
+      }
+    }
+    if (!NkOp) {
+      log.error("Reading Ibex components: Unknown company code " + code);
+      rs.withError = true;
+      return rs;
+    }
+
+    arr.push(Nicks, NkOp!);
+  }
+
+  :ibex ibexT = ibexTb.read();
+  ibexTb.write(ibex.new(ibexT.Cos, ibexT.Qs));
+
+  for (nk = Nicks) {
+    cOp = arr.find(cs.Cos, \:co c -> return c.nick == nk;);
+    if (!cOp) {
+      log.error("Reading Ibex components: " + nk +
+        " in server not found in companies data base");
+      rs.withError = true;
+      return rs;
+    }
+    :co c = cOp!;
+    if (!c.isSelected) {
+      log.warning("Reading Ibex components: Ibex company " + nk + " not selected");
+      rs.withWarnings = true;
+    }
+  }
+
+  for (:co c = cs.Cos) {
+    if (c.isSelected & !arr.any(Nicks, \n -> return n == c.nick;)) {
+      log.warning("Reading Ibex components: Selectd company " + c.nick +
+        " not in Ibex");
+      rs.withWarnings = true;
+    }
+  }
+
+  return rs;
+};
+
+/// \ -> ()
+historicUpdate = \ -> {
+  log.warning("Historic update");
+
+  :cos cs = cosTb.read();
+  :arr SelCos = arr.filter(cs.Cos, \:co c -> return c.isSelected;);
+
+  // Update historic.
+  :qsprRs r0 = qspr.updateHistoric(
+    "Updating historic of main company " + cs.mainNick, cs.mainNick, cs.mainNick
+  );
+  if (r0.withError)
+    log.error("Fail reading main company " + cs.mainNick);
+  else
+    for (:co c = cs.Cos)
+      qspr.updateHistoric(
+        "Updating historic of " + c.nick, cs.mainNick, c.nick)
+      ;
+
+  // Update ibex (Must be called after 'qspr.updateHistoric')
+  ibexHistoricUpdate(cs.mainNick);
+
+  // Update investors.
+  investorTb.update();
+
+  // Clean Closes
+  :dic Closes = closesTb.read();
+  for (nk = Closes.keys())
+    if (
+      !SelCos.any(\:co c -> return c.nick == nk;) &
+      !arr.any(cts.IxNicks, \i -> return i == nk;)
+    ) Closes.remove(nk);
+  closesTb.write(Closes);
+
+  // Clean Refs
+  :dic Refs = refsTb.read();
+  for (nk = Refs.keys())
+    if (!SelCos.any(\:co c -> return c.nick == nk;)) Refs.remove(nk);
+  refsTb.write(Refs);
+
+  // Clean daily charts selected companies
+  cosSelTb.write(arr.filter(
+    cosSelTb.read(),
+    \nk -> return SelCos.any(\:co c -> return c.nick == nk;);
+  ));
+
+  // Update Closes and Refs
+  for (:co c = SelCos) {
+    err = qspr.updateClosesAndRefs(c.nick);
+    if (err != "") log.error(err);
+  }
+  // Update indexes
+  for (nk = cts.IxNicks) {
+    err = qspr.updateClosesAndRefs(nk);
+    if (err != "") log.error(err);
+  }
+
+  qspr.updateOperations();
+};
+
+// \ -> ()
+dailyUpdate = \ -> {
+  err = qspr.updateDailyCloses();
+  if (err != "") log.error(err);
+
+  qspr.updateDailyCharts();
+
+  Errs = qspr.updateHistoricProfits();
+  for (e = Errs) log.error(e);
+};
+
+/// \ -> ()
+dailyActivate = \ -> { // Include dailyUpdate
+  log.warning("Daily activate");
+
+  investorTb.update();
+  :cos cs = cosTb.read();
+  // Update Closes and Refs
+  SelCos = arr.filter(cs.Cos, \:co c -> return c.isSelected;);
+  for (:co c = SelCos) {
+    err = qspr.updateClosesAndRefs(c.nick);
+    if (err != "") log.error(err);
+  }
+  qspr.createDailyCharts();
+  dailyUpdate();
+};
+
+// \ -> ()
+dailyDeactivate = \ -> {
+  log.warning("Daily deactivate");
+
+  investorTb.update();
+  qspr.updateOperations();
+};
+
+// \ -> ()
+closeAccountingYear = \ -> {
+  currentYear = math.itos(time.year(time.now()));
+  dataYear = diariesDb.investorYears()[0];
+  if (dataYear != currentYear) {
+    Anns = diariesDb.investorAnns(dataYear);
+    :settlement set = ann.mkSettlement(Anns);
+    if (!!set.Errors) {
+      for (e = set.Errors) log.error(e);
+      log.error("Can not change accounting year");
+      return;
+    }
+    :ldg l = set.ledger;
+
+    date = currentYear + "0101";
+    newTable = anns.new();
+    newTable.add(ann.new(
+      -1, date, opr.newIn(l.cash)
+    ));
+    for (nick, StPr = set.Portfolio)
+      newTable.add(ann.new(
+        -1, date, opr.newSt(nick, StPr[0], StPr[1])
+      ));
+    diariesDb.write(currentYear, newTable);
+  }
+
+  dataYear2 = profitsDb.investorYears()[0];
+  if (dataYear2 != currentYear) {
+    :profitsEntry e = arr.peek(profitsDb.read(dataYear2));
+    profitsDb.write(
+      currentYear,
+      [profitsEntry.new(currentYear + "0101", e.total, e.acc, e.risk)]
+    );
+  }
+};
+
+/// Starts server.
+/// \ -> ()
+start = \ -> {
+  pid1 = getPid("*");
+  pid = getPid(pid1);
+  if (pid != "") {
+    sys.println("Server is already running");
+    return;
+  }
+
+  closeAccountingYear();
+
+  while () {
+    :calendar cal = calendarTb.read();
+    now = time.now();
+    tmSleep = cal.isTimeToWatch(now)
+      ? cts.schedulerWatchingTime
+      : cts.schedulerSleepTime
+    ;
+
+    :activity act = activityTb.read();
+    if (
+      ( time.toStr(act.tm) != time.toStr(now) |
+        time.hour(act.tm) <= cts.actHistoricStart
+      ) & time.hour(now) > cts.actHistoricStart
+    ) {
+      historicUpdate();
+      activityTb.write(activity.newNow(cts.sleeping));
+      continue;
+    }
+
+    if (cal.isMarketDay(now)) {
+      if (act.activity == cts.sleeping) {
+        if (cal.isOpen(now)) {
+          dailyActivate();
+          activityTb.write(activity.newNow(cts.active));
+        } else if (time.hour(act.tm) < 12 & time.hour(now) > 12) {
+          dailyActivate();
+          dailyDeactivate();
+          activityTb.write(activity.newNow(cts.sleeping));
+        }
+      } else {
+        dailyUpdate();
+        if (!cal.isOpen(now)) {
+          dailyDeactivate();
+          activityTb.write(activity.newNow(cts.sleeping));
+        }
+      }
+    }
+
+    sys.sleep(tmSleep);
+  }
+};

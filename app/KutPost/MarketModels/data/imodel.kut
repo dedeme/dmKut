@@ -1,0 +1,17 @@
+// Copyright 25-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investor - model data.
+
+/// Paramter types.
+dayParam, percParam =;
+
+/// Constructor.
+///   id    : Model identifier.
+///   name  : Model complete name.
+///   Pnames: Paramter names.
+///   Ptypes: Parameter types. One of dayParam or percParam
+///   Pbases: Parameter bases.
+///   Pincs : Parameter increments.
+/// \s,s,[s.],[i.],[f.],[f.] -> <imodel>
+new : id, name, Pnames, Ptypes, Pbases, Pincs;

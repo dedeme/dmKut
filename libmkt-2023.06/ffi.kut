@@ -180,6 +180,15 @@ calcMa = \Env -> return sys.c("calcMa", Env);;
 ///             Each entry is a quotes-company vector, corresponding to one date.
 ///     Params: Model parameters.
 /// \{[<vec>.], [f.] -> <vec>
+calcMa2 = \Env -> return sys.c("calcMa2", Env);;
+
+/// Returns references of a day for each company. Days go forward with each
+/// function calling.
+///   Env: Dictionary with the following read-only values:
+///     Closes: Closes retrieved from a <quotes> object (Qs.vcloses).
+///             Each entry is a quotes-company vector, corresponding to one date.
+///     Params: Model parameters.
+/// \{[<vec>.], [f.] -> <vec>
 calcMm = \Env -> return sys.c("calcMm", Env);;
 
 /// Returns references of a day for each company. Days go forward with each

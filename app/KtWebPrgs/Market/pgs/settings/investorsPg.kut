@@ -1,0 +1,49 @@
+// Copyright 15-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investors page.
+
+import "KtWeb/rp";
+import "libmkt/models";
+import "libdm/log";
+import "data/investor/investor";
+import "data/investor/istrategy";
+import "db/investorTb";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+        dbKey: db.readKey(),
+        Models: models.list(),
+        inv: investorTb.read()
+      });
+    }
+    "update": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      nickName, modelId, Params : Rq;
+      :investor inv = investorTb.read();
+      if (nickName != "")
+        inv.Nicks[nickName] = istrategy.new(modelId, Params);
+      else
+        inv.base = istrategy.new(modelId, Params);
+      investorTb.write(inv);
+
+      return rp.mk({ dbKey });
+    }
+    "updateAll": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      err = investorTb.update();
+      if (err != "") log.error(err);
+
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

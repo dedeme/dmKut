@@ -11,6 +11,5 @@
 ///   fees       : - (liabilities)
 ///   profits    : - (liabilities)
 ///   differences: - (liabilities)
-/// \f, f, f, f, f, f, f -> d<ledger>
-new = \stocks, cash, equity, sales, fees, profits, differences ->
-  return {stocks, cash, equity, sales, fees, profits, differences};;
+/// \f, f, f, f, f, f, f -> <ledger>
+new : stocks, cash, equity, sales, fees, profits, differences;

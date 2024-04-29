@@ -1,0 +1,37 @@
+// Copyright 28-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Dance song data.
+
+/// Constructor.
+///   level : Song level (0:Unknown, 1:ok or 2:well).
+///   speed: Rhythm speed.
+///   id    : Picture name.
+///   shortPlays: Number of times played in short mode.
+///   longPlays: Number of times played in long mode.
+/// \i, i, s, i, i -> <danceSong>
+new = \level, speed, id, shortPlays, longPlays ->
+  return {level, speed, id, shortPlays, longPlays};;
+
+/// Returns a <song> with 'level=0', 'speed=0', 'shortPlays=0' and
+/// 'longPlays=0'.
+/// \s -> <danceSong>
+mk = \id -> return new(0, 0, id, 0, 0);;
+
+/// \<danceSong> -> JS
+toJs = \S -> return [
+    math.itof(S.level),
+    math.itof(S.speed),
+    S.id,
+    math.itof(S.shortPlays),
+    math.itof(S.longPlays)
+  ];;
+
+/// \JS -> <danceSong>
+fromJs = \A -> return new(
+    math.ftoi(A[0]),
+    math.ftoi(A[1]),
+    A[2],
+    math.ftoi(A[3]),
+    math.ftoi(A[4])
+  );;

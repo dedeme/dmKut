@@ -9,6 +9,7 @@ import "libmkt/qs";
 import "libmkt/quote";
 import "db/quotesDb";
 import "db/svCodesTb";
+import "data/qsprRs";
 import "data/qs/qsvs";
 import "data/qs/qsv";
 import "qspr";
@@ -36,13 +37,13 @@ process = \Rq -> {
           Qs2 = qs.quotes(Qs!);
           Rp.quotes = arr.map(Qs2, quote.toJs);
           Rp.manuals = math.itof(
-            arr.reduce(Qs2, 0, \r, e -> return e.force ? r + 1 : r;)
+            arr.reduce(Qs2, 0, \r, :quote e -> return e.force ? r + 1 : r;)
           );
           for (sv = qsvs.list()) {
             id = qsv.id(sv);
             Codes = svCodesTb.read(id);
             Code = dic.get(Codes, nick);
-            if (Code) {
+            if (!!Code) {
               arr.push(Rp.sIdCodes, [id, qsv.withHistoric(sv), Code!]);
             } else {
               log.error(str.fmt(
@@ -75,13 +76,14 @@ process = \Rq -> {
     "download": {
       mainNick = Rq.mainNick;
       nick = Rq.nick;
-      Rs = qspr.updateHistoric("Updating " + nick, mainNick, nick);
-      Err = qspr.updateClosesAndRefs(nick);
+      :qsprRs rs = qspr.updateHistoric("Updating " + nick, mainNick, nick);
+      err = qspr.updateClosesAndRefs(nick);
+      if (err != "") log.error(err);
       qspr.updateOperations();
       sys.print(rp.mk({
-        result: Rs.withError | Err
+        result: rs.withError | err != ""
           ? "error"
-          : Rs.withWarnings
+          : rs.withWarnings
             ? "warnings"
             : ""
       }));
@@ -94,14 +96,14 @@ process = \Rq -> {
       WithWarnings = [false];
 
       Sv = arr.find(qsvs.list(), \s -> return qsv.id(s) == server;);
-      if (Sv) {
+      if (!!Sv) {
         Html = qsv.downloadHistoric(Sv!, code);
         if (Html[1]) {
           // [[<qsv>]|[], [s...]]
           Tp = qsv.readHistoric(Sv!, Html!);
           Qs = Tp[0];
-          if (Qs) {
-            if (Tp[1]) {
+          if (!!Qs) {
+            if (!!Tp[1]) {
               for (err = Tp[1])
                 log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
               WithWarnings! = true;
@@ -131,14 +133,14 @@ process = \Rq -> {
       qs = Rq.qs;
       prefix = "Fail testing " + nick;
       // <qsprRs<s>>
-      Rs = nick == mainNick
+      :qsprRs rs = nick == mainNick
         ? qspr.correctStr(prefix, qs)
         : qspr.correctStr2(prefix, qs, mainNick)
       ;
       sys.print(rp.mk({
-        result: Rs.withError
+        result: rs.withError
           ? "error"
-          : Rs.withWarnings
+          : rs.withWarnings
             ? "warnings"
             : ""
       }));
@@ -149,11 +151,11 @@ process = \Rq -> {
       qs = Rq.qs;
       prefix = "Fail modifying " + nick;
       // <qsprRs<s>>
-      Rs = nick == mainNick
+      :qsprRs rs = nick == mainNick
         ? qspr.correctStr(prefix, qs)
         : qspr.correctStr2(prefix, qs, mainNick)
       ;
-      ok = !Rs.withError & !Rs.withWarnings;
+      ok = !rs.withError & !rs.withWarnings;
       if (ok) quotesDb.write(nick, qs);
       sys.print(rp.mk({ok}));
     }

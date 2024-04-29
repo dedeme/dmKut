@@ -1,30 +1,35 @@
-// Copyright 15-Mar-2022 ºDeme
+// Copyright 11-Oct-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Program entry.
+/// Program main file.
 
+import "book";
+import "meta";
+import "htmlHeader";
+import "styles";
 import "err";
-import "top";
 import "metadata";
+import "reader";
+import "writer";
 
 /// Write 'index.html' page.
 ///   dir   : Web root directory.
 ///   header: Text of file '000header.html'
-///   Meta  : Page metadata. See 'metadata'.
-/// \s, m -> ()
-writeIndex = \dir, header, Meta -> {
+///   mBook  : Page metadata. See 'metadata'.
+/// \s,s,<book> -> ()
+writeIndex = \dir, header, :book mBook -> {
   fhtml = path.cat([dir, "index.html"]);
   head = str.fmt("""
     <table class="kmd-main"><tr><td style="text-align:left">
       <span class="kmd-title">%s</span>
       </td><td style="text-align:right">
-      <span class="kdm-title">Índice</span>
+      <span class="kmd-title">Índice</span>
     </td></tr></table>
     <hr>
     """,
-    [Meta.book]
+    [mBook.name]
   );
-  index = arr.join(arr.map(Meta.pages, \p ->
+  index = arr.join(arr.map(mBook.Pages, \:meta p ->
     return "<a href='" + path.base(p.fpage) + ".html'>" + p.title + "</a>";
   ), "<br>\n");
 
@@ -41,18 +46,22 @@ writeIndex = \dir, header, Meta -> {
 
 /// Processes a file.
 ///   header: Path of HTML file '000header.html'.
-///   Meta  : Page metadata. See 'metadata'.
+///   mBook : Page metadata. See 'metadata'.
 ///   fkmd  : Path fo '.kmd' file.
-/// \s, m, s -> ()
-processFile = \header, Meta, fkmd -> {
+/// \s, <book>, s -> ()
+processFile = \header, :book mBook, fkmd -> {
   fkmdName = fkmd[:-4];
-  PageMeta = metadata.getCurrent(Meta.pages, fkmdName);
-  PrevMeta = metadata.getPrevious(Meta.pages, fkmdName);
-  NextMeta = metadata.getNext(Meta.pages, fkmdName);
-  numbered = PageMeta ? PageMeta!.numbered : false;
-  withUp = PageMeta ? PageMeta!.withUp : false;
-  withDown = PageMeta ? PageMeta!.withDown : false;
-  head = Meta.book == ""
+  pageMetaOp = metadata.getCurrent(mBook.Pages, fkmdName);
+  if (!pageMetaOp) sys.throw("Meta page not found");
+  :meta pageMeta = pageMetaOp!;
+
+  prevMetaOp = metadata.getPrevious(mBook.Pages, fkmdName);
+  nextMetaOp = metadata.getNext(mBook.Pages, fkmdName);
+  numbered = pageMeta.numbered;
+  withUp = pageMeta.withUp;
+  withDown = pageMeta.withDown;
+
+  head = mBook.name == ""
     ? ""
     : str.fmt("""
         <table class="kmd-main"><tr><td style="text-align:left">
@@ -64,41 +73,68 @@ processFile = \header, Meta, fkmd -> {
         <p style="text-indent: 0px">%s<a href="index.html">Índice</a>%s</p>
         <hr>
         """,
-        [ PageMeta ? PageMeta!.title : "",
-          Meta.book,
-          PrevMeta
-            ? "<a href='" +
-              path.base(PrevMeta!.fpage) +
+        [ pageMeta.title,
+          mBook.name,
+          !prevMetaOp
+            ? ""
+            : "<a href='" +
+              path.base(prevMetaOp![meta.fpage]) +
               ".html'>Anterior (" +
-              PrevMeta!.title +
-              ")</a> · "
-            : "",
-          NextMeta
-            ? " · <a href='" +
-              path.base(NextMeta!.fpage) +
+              prevMetaOp![meta.title] +
+              ")</a> · ",
+          !nextMetaOp
+            ? ""
+            : " · <a href='" +
+              path.base(nextMetaOp![meta.fpage]) +
               ".html'>Posterior (" +
-              NextMeta!.title +
+              nextMetaOp![meta.title] +
               ")</a>"
-            : ""
         ]
       )
   ;
-  Hs = [];
-  body = top.process(numbered, Hs, file.read(fkmd));
-  index = Hs
-    ? str.fmt("""
+
+  footer = mBook.name == ""
+    ? ""
+    : str.fmt("""
+        <hr>
+        <p style="text-indent: 0px">%s<a href="index.html">Índice</a>%s</p>
+        """,
+        [ !prevMetaOp
+            ? ""
+            : "<a href='" +
+              path.base(prevMetaOp![meta.fpage]) +
+              ".html'>Anterior (" +
+              prevMetaOp![meta.title] +
+              ")</a> · ",
+          !nextMetaOp
+            ? ""
+            : " · <a href='" +
+              path.base(nextMetaOp![meta.fpage]) +
+              ".html'>Posterior (" +
+              nextMetaOp![meta.title] +
+              ")</a>"
+        ]
+      )
+  ;
+
+  :arr Hs = [];
+  rd = reader.new(fkmd);
+  err.setReader(rd);
+  body = writer.process(Hs, numbered, rd);
+  index = !Hs
+    ? ""
+    : str.fmt("""
         <p style='text-indent:0px'>
-        %s
-        <p>
+        %v
+        </p>
         <hr>
         """,
-        [ arr.join(arr.map(Hs, \h ->
-            return "<a href='#hp:" + h[:3] + "'>" +
-              h[3:] + "</a>";
+        [ arr.join(Hs.map(\h ->
+            return "<a href='#" + h + "'>" +
+              h + "</a>";
           ), "<br>\n")
         ]
       )
-    : ""
   ;
   fhtml = fkmd[:-3] + "html";
   file.write(fhtml,
@@ -112,6 +148,7 @@ processFile = \header, Meta, fkmd -> {
     head +
     index +
     body +
+    footer +
     (withUp
       ? """
         <div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
@@ -141,38 +178,33 @@ processFile = \header, Meta, fkmd -> {
 };
 
 /// Processes a directory.
-///   dir: Web root directory.
+///   dir: Web directory.
 /// \s -> ()
 processDir = \dir -> {
-  Fkmds = [];
+  :arr Fkmds = [];
   for (f = file.dir(dir)) {
-    fpath = path.cat([dir, f]);
-    if (file.isDirectory(fpath)) {
+    :file fpath = path.cat([dir, f]);
+    if (fpath.isDirectory()) {
       processDir(fpath);
     } else if (str.ends(f, ".kmd")) {
-      arr.push(Fkmds, fpath);
+      Fkmds.push(fpath);
     }
   }
 
   if (!Fkmds) return ;
 
+  fstyles = path.cat([dir, "styles.css"]);
+  if (!file.exists(fstyles)) file.write(fstyles, styles.text);
+
   fheader = path.cat([dir, "000header.html"]);
-  if (!file.exists(fheader)) {
-    err.show("'" + fheader + "' not found", "");
-    return;
-  }
+  if (!file.exists(fheader)) file.write(fheader, htmlHeader.text);
   header = file.read(fheader);
 
-  Meta = metadata.read(Fkmds);
+  :book mBook = metadata.read(Fkmds);
 
-  if (Meta.book != "") writeIndex(dir, header, Meta);
+  if (mBook.name != "") writeIndex(dir, header, mBook);
 
-  for (fkmd = Fkmds) {
-    err.setFile(fkmd);
-    processFile(header, Meta, fkmd);
-  }
+  for (fkmd = Fkmds) processFile(header, mBook, fkmd);
 };
-
-
 
 processDir("./");

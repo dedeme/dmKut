@@ -1,0 +1,24 @@
+// Copyright 15-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "data/session";
+import "db/langTb";
+import "db/sessionsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "lang": return js.w({
+        lang: langTb.read()
+      });
+    "close": {
+      :arr Ss = sessionsTb.read();
+      Ss.filterIn(\:session s -> return s.id != Rq.sessionId;);
+      sessionsTb.write(Ss);
+      return "{}";
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

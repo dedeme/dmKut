@@ -1,0 +1,11 @@
+// Copyright 12-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <qsprRs> data definition.
+
+/// Constructor.
+///   value       : Object returned.
+///   withWarnings: 'true' if there are warnings.
+///   withError   : 'true' if there are errors.
+/// \*,b,b -> <qsprRs>
+new : value, withWarnings, withError;

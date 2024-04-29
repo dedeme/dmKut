@@ -4,7 +4,7 @@ Data = arr.map(
   str.splitTrim(dataStr, "\n"),
   \l -> return arr.map(str.splitTrim(l, " "), \s -> {
     I = math.stoi(s);
-    if (I) return I!;
+    if (!!I) return I!;
     sys.throw(s);
     });
 );

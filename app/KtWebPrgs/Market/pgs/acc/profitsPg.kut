@@ -1,0 +1,26 @@
+// Copyright 15-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting trading page.
+
+import "KtWeb/rp";
+import "cts";
+import "data/chart/profitsEntry";
+import "db/acc/profitsDb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      AllEs = []; // [<profitsEntry>.]
+
+      for (y = arr.reverse(profitsDb.investorYears()))
+        AllEs.cat(profitsDb.read(y));
+
+      return rp.mk({
+        AllEs
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -1,0 +1,30 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      R = sys.cmd2("ps", ["-x"]);
+      isActive = str.index(
+        R!,
+        "kut2 /dm/dmKut/app/KtWebPrgs/Market/main start"
+      ) != -1;
+      return rp.mk({isActive});
+    }
+    "getLog": return rp.mkJs({
+        Log: log.readJs()
+      });
+    "resetLog": {
+        log.reset();
+        return rp.mkEmpty();
+      }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

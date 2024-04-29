@@ -6,6 +6,8 @@
 import "KtWeb/rp";
 import "db/ibexTb";
 import "db/cosTb";
+import "data/qsprRs";
+import "data/co/cosT";
 import "sch";
 
 /// \m -> ()
@@ -17,11 +19,11 @@ process = \Rq -> {
       }));
     }
     "update": {
-      mainNick = cosTb.read().main;
-      Rs = sch.ibexHistoricUpdate(mainNick);
+      mainNick = cosTb.read()[cosT.main];
+      :qsprRs rs = sch.ibexHistoricUpdate(mainNick);
       sys.print(rp.mk({
-        withError: Rs.withError,
-        withWarnings: Rs.withWarnings
+        withError: rs.withError,
+        withWarnings: rs.withWarnings
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

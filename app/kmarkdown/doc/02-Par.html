@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Párrafos</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='01-intro.html'>Anterior (Introducción)</a> · <a href="index.html">Índice</a> · <a href='03-listas.html'>Posterior (Listas)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#Creación'>Creación</a><br>
+<a href='#Corte de línea'>Corte de línea</a><br>
+<a href='#Formato'>Formato</a><br>
+<a href='#Inyección de HTML'>Inyección de HTML</a>
+</p>
+<hr>
+<a name="Creación"></a>
+<h3>Creación</h3>
+<p>Los párrafos tienen que estar separados por dos retornos de carro.</p>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta línea
+y esta están en el mismo párrafo.
+
+Esta otra está en párrafo distinto.</div>
+<script>aceConf("aceEditor-0", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Esta línea
+y esta están en el mismo párrafo.</p>
+<p>Esta otra está en párrafo distinto.</p>
+</div><a name="Corte de línea"></a>
+<h3>Corte de línea</h3>
+<p>Dentro del párrafo se puede forzar que una linea se corte en el punto
+deseado, terminándola con '\'.</p>
+<div id="aceEditor-1" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta línea \
+y esta están en el mismo párrafo; pero en distinta línea.
+
+Esta otra está en párrafo distinto.</div>
+<script>aceConf("aceEditor-1", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Esta línea <br>y esta están en el mismo párrafo; pero en distinta línea.</p>
+<p>Esta otra está en párrafo distinto.</p>
+</div><a name="Formato"></a>
+<h3>Formato</h3>
+<p>Se pueden utilizar '*' y '_' para establecer texto con formato '&lt;code>' y
+'cursiva' respectivamente.</p>
+<p>Estos signos deben aparecer inmediatamente antes y despues del texto a resaltar.</p>
+<p>Para finalizar el formato es preciso que después de '*' o '_' aparezca un fin
+de línea, espacio en blanco o uno de los simbolos <code>".,;:()<a href=""></a>{}!¡¿?"</code>.</p>
+<div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta _cursiva_ está correcta pero ni esta _ cursiva_ ni esta _cursiva _ lo
+están_.
+
+Esta _cur-siva_ también vale. Y _esta_.</div>
+<script>aceConf("aceEditor-2", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Esta <i>cursiva</i> está correcta pero ni esta _ cursiva_ ni esta <i>cursiva _ lo
+están</i>.</p>
+<p>Esta <i>cur-siva</i> también vale. Y <i>esta</i>.</p>
+</div><p><i>NOTA:</i></p>
+<p>'**' y '__' no tienen efecto en el formato.</p>
+<a name="Inyección de HTML"></a>
+<h3>Inyección de HTML</h3>
+<p>Una inyección de HTML se puede realizar en el interior de un párrafo o a
+su comienzo.</p>
+<h4>Interior en un párrafo.</h4>
+<p>Se introduce y se finaliza con &#x0060;&#x0060;.</p>
+<div id="aceEditor-3" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>;
+&#x0060;&#x0060;pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
+</div>
+<script>aceConf("aceEditor-3", "text");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>;
+pero este lo esta en <b>formato <big>de inyección</big></b>.</p>
+</div><h4>Al comienzo del párrafo.</h4>
+<p>En este caso es conveniente colocar los caracteres &#x0060;&#x0060; iniciales
+en una línea aparte, para evitar interferencia con la opción de presentación
+de código.</p>
+<div id="aceEditor-4" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>.
+
+&#x0060;&#x0060;
+Pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
+</div>
+<script>aceConf("aceEditor-4", "text");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>.</p>
+
+Pero este lo esta en <b>formato <big>de inyección</big></b>.</div><hr>
+<p style="text-indent: 0px"><a href='01-intro.html'>Anterior (Introducción)</a> · <a href="index.html">Índice</a> · <a href='03-listas.html'>Posterior (Listas)</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

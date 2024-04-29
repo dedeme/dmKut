@@ -1,0 +1,244 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Configuración</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='08-encabezados.html'>Anterior (Encabezados)</a> · <a href="index.html">Índice</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#Configuración de archivos .kmd'>Configuración de archivos .kmd</a><br>
+<a href='#Generación de un libro'>Generación de un libro</a><br>
+<a href='#El archivo <i>styles.css</i>'>El archivo <i>styles.css</i></a><br>
+<a href='#El archivo <i>000header.html</i>'>El archivo <i>000header.html</i></a>
+</p>
+<hr>
+<a name="Configuración de archivos .kmd"></a>
+<h3>Configuración de archivos .kmd</h3>
+<p>En cada archivo <code>.kmd</code> se puede establecer un encabezado de configuración.
+Para ello:</p>
+<ul>
+<li>
+<p>En la primera línea se escribe '='.</p>
+</li>
+<li>
+<p>En las siguietes se escriben los parámetros, uno por línea.</p>
+</li>
+<li>
+<p>Para terminar se escribe una línea con el único carcter '='.</p>
+</li>
+</ul>
+<p>Los parámetros son los siguientes:</p>
+<ol>
+<dt><span style="color:#008080">book</span> = texto</dt>
+<dd>
+<p>Permite establecer el nombre de un libro. (Ver
+  <a href="#Generación de un libro">Generación de un libro</a>).</p>
+<p><i>texto</i> es HTML.</p>
+</dd>
+<dt><span style="color:#008080">title</span> = texto</dt>
+<dd>
+<p>Permite establecer el nombre con que la página aparecerá en la composición
+  de un libro. (Ver <a href="#Generación de un libro">Generación de un libro</a>).</p>
+<p><i>texto</i> es HTML.</p>
+</dd>
+<dt><span style="color:#008080">withoutUp</span></dt>
+<dd>
+<p>Quita la flecha arriba situada al pie de página. Esta flecha se muestra
+  por defector.</p>
+<p><i>NOTA: Para que la flecha se muestre es preciso que en el directorio del
+  archivo <code>.kmd</code> haya un directorio <code>'img'</code> con un icono llamado <code>'up.png'</code>.</i></p>
+</dd>
+<dt><span style="color:#008080">withDown</span></dt>
+<dd>
+<p>Muestra una flecha abajo en la parte superior de la página.</p>
+<p><i>NOTA: Para que la flecha se muestre es preciso que en el directorio del
+  archivo <code>.kmd</code> haya un directorio <code>'img'</code> con un icono llamado <code>'down.png'</code>.</i></p>
+</dd>
+<dt><span style="color:#008080">numbered</span></dt>
+<dd>
+<p>Hace que los encabezados '##' aparezcan numerados.</p>
+</dd>
+</ol>
+<p>En el apartado <i>Generación de un libro</i> se muestran varios ejemplos de
+configuración.</p>
+<a name="Generación de un libro"></a>
+<h3>Generación de un libro</h3>
+<p>Varias páginas <i>de un mismo directorio</i> pueden agruparse para formar un libro.
+Para ello es necesario que en el apartado de configuración de al menos un
+archivo <code>.kmd</code>, aparezca el parámetro <code>"book"</code>.</p>
+<p>A la hora de generar un libro hay que tener en cuenta que:</p>
+<ul>
+<li>
+<p>Sólo los archivos del directorio superior se integrarán en el mismo.
+  No obstante puden seguir usándose subdirectorios para situar otros archivos
+  <code>.kmd</code> y generar sus páginas HTML.</p>
+</li>
+<li>
+<p>Los archivos se integran alfabéticamente en el índice del libro. Por ello
+  es recomendable usar nombres numerados.</p>
+</li>
+<li>
+<p>Si aparece el parámetro <code>"book"</code> en más de un archivo <code>.kmd</code>, se utilizará
+  como nombre del libro el valor <i>'texto'</i> de cualquiera de ellos.</p>
+</li>
+</ul>
+<p>Un ejemplo de libro se puede ver <a href="ej3/index.html">aquí</a>.</p>
+<p>Se han usado los siguientes archivos:</p>
+<h4>01-ini.kmd</h4>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">=
+book = Libro de ejemplo
+title = Inicio
+numbered
+withDown
+=
+
+## Primera parte
+
+Esta es la primera parte.
+
+## Segunda parte
+
+Esta es la senguda parte.
+</div>
+<script>aceConf("aceEditor-0", "kmd");</script>
+<h4>02-med.kmd</h4>
+<div id="aceEditor-1" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">=
+title = Medio
+numbered
+withoutUp
+=
+
+## Primera parte
+
+Esta es la primera parte.
+
+## Segunda parte
+
+Esta es la senguda parte.
+</div>
+<script>aceConf("aceEditor-1", "kmd");</script>
+<h4>03-fin.kmd</h4>
+<div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">=
+title = Final
+
+withoutUp
+
+withDown
+=
+
+## Primera parte
+
+Esta es la primera parte.
+
+## Segunda parte
+
+Esta es la senguda parte.
+</div>
+<script>aceConf("aceEditor-2", "kmd");</script>
+<a name="El archivo <i>styles.css</i>"></a>
+<h3>El archivo <i>styles.css</i></h3>
+<p>'kmarkdown' utiliza como hoja de estilos por defecto un archivo generado
+automáticamente llamado <code>'styles.css'</code>.</p>
+<p>Si dicho archivo ya existe, no se realiza la generacíón. Ello permite añadir
+estilos personalizados.</p>
+<p>Si posteriormente se quieren restablecer los valores por defecto, basta
+con borrar el actual archivo <code>'styles.css'</code> y valover a llamar a 'kmarkdown'.</p>
+<a name="El archivo <i>000header.html</i>"></a>
+<h3>El archivo <i>000header.html</i></h3>
+<p>Este archivo, al igual que <code>'styles.css'</code> es generado automáticamente por
+'kmarkdown'. Igualmente se puede modificar y restaurar con el mismo
+procedimiento indicado en el apartado anterior.</p>
+<p><code>'000header.html'</code> es usado como encabezado de todas las páginas HTML que se
+generen. Tiene las siguientes partes relevantes:</p>
+<ol>
+<dt>Fijación del título de las páginas HTML.</dt>
+<dd>
+<p>Es el título que aparecerá en las pestañas del navegador. En el caso de un
+  libro puede coincidir o no con el nombre de éste.</p>
+</dd>
+<dt>Determinación de las hojas de estilo.</dt>
+<dd>
+<p>Por defecto se señala el archivo <code>'styles.css'</code> como hoja de estilos. Esto
+  puede cambiarse, aunque no es recomendable. Lo que se se puede hacer sin
+  problemas es añadir nuevas hojas de estilo.</p>
+</dd>
+<dt>Activación de 'MathJax'</dt>
+<dd>
+<p>Es imprescindible si se quiere utilizar la posibilidad de escribir fórmulas.</p>
+<p>Además de la activación, se definen dos funciones <code>'DS'</code> y <code>'EX'</code>. Estas
+  definiciones se pueden eliminar sin peligro, así como puede añadirse
+  cualquiera otra que se considere conveniente.</p>
+<p>También pueden definirse nuevos elementos de configuración de 'MathJax' en
+  este archivo.</p>
+</dd>
+<dt>Activación de 'Ace'</dt>
+<dd>
+<p>Por defecto se utiliza un directorio que cuelga del directorio en el que
+  se encuentran los archivos <code>.kmd</code> llamado <code>'ace'</code>.</p>
+<p>Esto obliga a que en todos los directorios en los que se compilan archivos
+  <code>.kmd</code> tenga que haber un vínculo simbólico al directorio correspondiente.
+  Si no se quiere que suceda así, se puede modificar el path a <code>'acd.js'</code>
+  por un path absoluto o incluso por una URL.</p>
+<p>Para más información sobre la instalación de 'ace' ver
+  <a href="07-codigo.html#Requisitos">07-codigo.html#Requisitos</a> o directamente <a href="https://ace.c9.io">https://ace.c9.io</a>.</p>
+<p>Tambien se crea una función llamada 'aceConf'. Esta función no se debe
+  borrar, aunque se puede modificar respetando la utilización de los
+  parámetros <code>'ed'</code> y <code>'mode'</code>.</p>
+</dd>
+</ol>
+<hr>
+<p style="text-indent: 0px"><a href='08-encabezados.html'>Anterior (Encabezados)</a> · <a href="index.html">Índice</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

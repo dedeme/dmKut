@@ -1,28 +1,55 @@
-// Copyright 25-Nov-2022 ºDeme
+// Copyright 01-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Main script.
+/// Main module.
 
 import "KtWeb/rp";
 import "db";
-import "pgs/home";
+import "cts";
+import "pgs/homePg";
 import "showAlarm";
 
-Args = sys.args();
-ck = Args[0];
+// \ -> s
+help = \ -> return """
+  Use prg [help | version | init | alarm! a | key rq]
+  where
+    help    : Shows this message.
+    version : Shows program version.
+    init    : Initializes program.
+              Must be called only the first time that the program is called.
+    alarm! a: Set the alarm 'a'. (Authomatically called)
+    key rq  : Request 'rq' with 'key'. (Sent by browser)
+  """;;
 
-db.init();
-if (ck == "alarm!") {
+:arr Args = sys.args();
+
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "init": db.init();
+    "version": sys.println(cts.version);
+    default: sys.println(help());
+  }
+  return;
+}
+
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
+
+key = Args[0];
+
+if (key == "alarm!") {
   showAlarm.run(Args[1]);
   return;
 }
 
-Rq = js.r(Args[1]);
-rp.init(ck);
+rp.init(key);
 
-switch(Rq.source) {
-  "Home": home.process(Rq);
-  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
-}
+:: Rq = js.r(Args[1]);
+r = switch(Rq.source) {
+    "Home": homePg.process(Rq);
+    default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+  };
 
-
+sys.print(r);

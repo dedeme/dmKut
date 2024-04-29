@@ -1,0 +1,248 @@
+// Copyright 03-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Cgi management.
+
+import "cgi/cgiUser";
+import "cgi/cgiSession";
+
+/// Standard password length.
+klen = 300;
+
+// Seconds == 30 days
+tNoExpiration = 2592000;
+
+// First key.
+demeKey =
+  "nkXliX8lg2kTuQSS/OoLXCk8eS4Fwmc+N7l6TTNgzM1vdKewO0cjok51vcdl" +
+  "OKVXyPu83xYhX6mDeDyzapxL3dIZuzwyemVw+uCNCZ01WDw82oninzp88Hef" +
+  "bn3pPnSMqEaP2bOdX+8yEe6sGkc3IO3e38+CqSOyDBxHCqfrZT2Sqn6SHWhR" +
+  "KqpJp4K96QqtVjmXwhVcST9l+u1XUPL6K9HQfEEGMGcToMGUrzNQxCzlg2g+" +
+  "Hg55i7iiKbA0ogENhEIFjMG+wmFDNzgjvDnNYOaPTQ7l4C8aaPsEfl3sugiw";
+
+/// Key for responding when session is expired.
+noSessionKey = "nosession";
+
+/// Cgi home directory. Must be initialized with 'cgi.init'.
+homeV = [""];
+
+// File password.
+// s
+fkey = cryp.key(demeKey, str.len(demeKey));
+
+// Expiration in seconds\ Must be initialized with 'cgi.init'.
+// [i]
+tExpirationV = [0];
+
+// USERS
+
+// \[<user.>] -> ()
+writeUsers = \Us ->
+  file.write(path.cat([homeV!, "users.tb"]), cryp.encode(fkey, js.w(Us)));;
+
+// \-> [<user>.]
+readUsers = \->
+  return js.r(cryp.decode(fkey, file.read(path.cat([homeV!, "users.tb"]))));;
+
+// SESSIONS
+
+// If 's' is in time, returns a new session with 's\tm' updated. Otherwise
+// return [].
+// \<session> -> [<session>]|[]
+updateSession = \:cgiSession s -> {
+  now = time.now() / 1000;
+  if (s.tm + s.lapse < now) return [];
+  return [cgiSession.new (s.id, s.key, s.user, s.level, now, s.lapse)];
+};
+
+// \[<session>.] -> ()
+writeSessions = \Ss ->
+  file.write(path.cat([homeV!, "sessions.tb"]), cryp.encode(fkey, js.w(Ss)));;
+
+// \-> [<session>.]
+readSessions = \-> {
+  j = cryp.decode(fkey, file.read(path.cat([homeV!, "sessions.tb"])));
+  return arr.map(js.r(j), cgiSession.fromJs);
+};
+
+// Adds session and purges sessions.
+// \s, s, s, s, s, i -> ()
+addSession = \sessionId, key, user, level, lapse -> {
+  now = time.now() / 1000;
+  NewSessions = arr.filter(
+    readSessions(),
+    \:cgiSession s -> return s.tm + s.lapse >= now;
+  );
+  NewSessions.push(cgiSession.new(sessionId, key, user, level, now, lapse));
+  writeSessions(NewSessions);
+};
+
+// Replace one session
+// \<session> -> ()
+replaceSession = \:cgiSession s -> {
+  NewSessions = arr.filter(
+    readSessions(),
+    \:cgiSession oldS -> return oldS.id != s.id;
+  );
+  NewSessions.push(s);
+  writeSessions(NewSessions);
+};
+
+// PUBLIC FUNCTIONS --------------------------------------------------------
+
+/// Initialize cgi.
+///   homeDir: Absolute path of 'cgi' home directory.
+///   texpiration: Expiration time in seconds\
+/// \s, i-> ()
+init = \:file homeDir, texpiration-> {
+  homeV! = homeDir;
+  tExpirationV! = texpiration;
+
+  if (!homeDir.exists()) {
+    homeDir.mkdir();
+    writeUsers([]);
+    putUser("admin", demeKey, "0");
+    writeSessions([]);
+  }
+};
+
+// USERS
+
+/// Adds or modifies an user.
+/// \s, s, s -> ()
+putUser = \id, pass, level -> {
+  pass = cryp.key(pass, klen);
+  :arr Users = readUsers();
+  :cgiUser newUser = cgiUser.new(id, pass, level);
+  addV = [true];
+  for (i, :cgiUser u = Users) {
+    if (u.id == id) {
+      addV! = false;
+      Users[i] = newUser;
+      break;
+    }
+  }
+  if (addV!) Users.push(newUser);
+  writeUsers(Users);
+};
+
+/// Removes an user.
+/// \s -> ()
+delUser = \id -> {
+  :arr Users = readUsers();
+  writeUsers(Users.filter(\:cgiUser u -> return u.id != id;));
+};
+
+/// Check user password and returns:
+///   - If user exsits and password is correct, the user level.
+///   - Otherwise, an empty string.
+/// \s, s -> s
+checkUser = \id, pass -> {
+  pass = cryp.key(pass, klen);
+  for (:cgiUser u = readUsers()) {
+    if (u.id == id & u.pass == pass) return u.level;
+  }
+  return "";
+};
+
+// MANAGEMENT
+
+/// Sends to client 'sessionKey', 'userId' and 'userLevel'. If
+/// conection fails every one is "".
+/// \s -> {key:s, user:s, level:s}
+connect = \sessionId -> {
+  failRp = {
+    "key": "",
+    "user": "",
+    "level": ""
+  };
+  oldSOp = arr.find(
+    readSessions(),
+    \:cgiSession s -> return s.id == sessionId;
+  );
+  if (!oldSOp) return failRp;
+  :cgiSession oldS = oldSOp!;
+
+  sOp = updateSession(oldS);
+  if (!sOp) return failRp;
+  :cgiSession s = sOp!;
+
+  return {
+    "key": s.key,
+    "user": s.user,
+    "level": s.level
+  };
+};
+
+/// Sends to client 'sessionId', 'sessionKey' and 'userLevel'. If
+/// conection fails every one is "".
+///   key           : Communication key
+///   user          : User id.
+///   pass          : User password.
+///   withExpiration: If is set to false, session will expire after 30 days!
+/// \s, s, s, b -> {sessionId:s, key:s, level:s}
+authentication = \user, pass, withExpiration -> {
+  level = checkUser(user, pass);
+
+  if (level != "") {
+    sessionId = cryp.genK(klen);
+    key = cryp.genK(klen);
+    lapse = withExpiration ? tExpirationV! : tNoExpiration;
+
+    addSession(sessionId, key, user, level, lapse);
+
+    return {
+      "sessionId": sessionId,
+      "key": key,
+      "level": level
+    };
+  }
+  return {
+    "sessionId": "",
+    "key": "",
+    "level": ""
+  };
+};
+
+/// Returns the session key if ssId is a valid session.
+///   ssId  : Session identifier.
+/// \s -> [s]|[]
+getSessionKey = \ssId -> {
+  sOp = arr.find(readSessions(), \:cgiSession s -> return s.id == ssId;);
+  if (!sOp) return [];
+  :cgiSession s = sOp!;
+  return [s.key];
+};
+
+/// Changes user password.
+/// The operation will fail if 'user' authentication fails\
+///    user   : User id to change password.
+///    oldPass: Old password.
+///    newPass: New password.
+///    return : return 'true' if operation succeds
+/// \s, s, s -> b
+changePass = \user, oldPass, newPass -> {
+  okV = [false];
+  Us = readUsers();
+  for (i, :cgiUser u = Us) {
+    if (u.id == user) {
+      if (cryp.key(oldPass, klen) == u.pass) {
+        Us[i] = cgiUser.new(u.id, cryp.key(newPass, klen), u.level);
+        writeUsers(Us);
+        okV! = true;
+      }
+      break;
+    }
+  }
+  return okV!;
+};
+
+/// Deletes 'sessionId' and returns an empty response.
+///   sessionId: Session identifier.
+/// \s -> ()
+delSession = \sessionId ->
+  writeSessions(arr.filter(
+    readSessions(),
+    \:cgiSession s -> return s.id != sessionId;)
+  );;
+

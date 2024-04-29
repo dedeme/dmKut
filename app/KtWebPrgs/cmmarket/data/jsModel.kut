@@ -1,0 +1,21 @@
+// Copyright 01-Feb-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investor model to send to Javascript.
+
+import "libmkt/model";
+import "simParams";
+
+/// Return JSONization of model to send to Javascript, including
+/// ParamBases, ParamBaseIncs and ParamEnvIncs.
+/// \<model> -> <jsModel>
+toJs = \:model md -> return [
+    md.id,
+    md.name,
+    md.doc,
+    md.ParamNames,
+    md.ParamTypes,
+    simParams.paramBases(md.id),
+    simParams.paramBaseIncs(md.id),
+    simParams.paramEnvIncs(md.id)
+  ];;

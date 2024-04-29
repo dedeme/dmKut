@@ -6,44 +6,51 @@
 import "dailyInvestorData";
 
 /// Constructor.
-///   nick  : Company nick.
-///           There are next extra nicks:
-///             cts.meNick, cts.ibexNic, cts.euroNick and cts.usaNick.
-///   close : Previous market day close.
-///           - For each investor, if inv.ref > close, its position is to buy.
-///   hours : Hour of each daily quote. (Updated each 'tic').
-///   quotes: Daily quotes. (Updated each 'tic').
-///   invs  : Data of each investor (0 to cts.investors)
-///           Extra nicks have an empty array.
-/// \s, f, b, [i...], [f...], [<dailyInvestorData>...] -> d<dailyChart>
-new = \nick, close, hours, quotes, invs ->
-  return {nick, close, hours, quotes, invs};;
+///   nick   : Company nick.
+///            There are next extra nicks:
+///              cts.meNick, cts.ibexNic, cts.euroNick and cts.usaNick.
+///   close  : Previous market day close.
+///            - If inv.ref > close, its position is to buy.
+///   hours  : Hour of each daily quote. (Updated each 'tic').
+///   quotes : Daily quotes. (Updated each 'tic').
+///   invData: Data of the investor
+///            Extra nicks have an empty <dailyInvestorData>.
+/// \s, f, [i...], [f...], <dailyInvestorData> -> <dailyChart>
+new : nick, close, Hours, Quotes, invData;
 
 /// \<dailyChart> -> JS
 toJs = \C -> return [
-    C.nick,
-    C.close,
-    arr.map(C.hours, math.itof),
-    C.quotes,
-    arr.map(C.invs, dailyInvestorData.toJs)
+    C[nick],
+    C[close],
+    arr.map(C[Hours], math.itof),
+    C[Quotes],
+    dailyInvestorData.toJs(C[invData])
   ];;
 
 /// \JS -> <dailyChart>
-fromJs = \A ->
-  if (arr.size(A) == 5)
+fromJs = \A -> {
+  if (arr.size(A[4]) == 3)
     return new(
       A[0],
       A[1],
       arr.map(A[2], math.ftoi),
       A[3],
-      arr.map(A[4], dailyInvestorData.fromJs)
+      dailyInvestorData.fromJs(A[4][0])
+    );
+  else if (arr.size(A[4]) == 0)
+    return new(
+      A[0],
+      A[1],
+      arr.map(A[2], math.ftoi),
+      A[3],
+      dailyInvestorData.mkEmpty()
     );
   else
     return new(
       A[0],
       A[1],
-      arr.map(A[3], math.ftoi),
-      A[4],
-      arr.map(A[5], dailyInvestorData.fromJs)
+      arr.map(A[2], math.ftoi),
+      A[3],
+      dailyInvestorData.fromJs(A[4])
     );
-  ;
+  };

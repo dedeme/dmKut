@@ -1,0 +1,92 @@
+// Copyright 27-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global rankings page.
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/cts" : mcts;
+import "data/simParams";
+import "data/imodel";
+import "data/vals";
+import "data/rsVec";
+import "cts";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return js.w({
+        "Models": arr.map(models.list(), \:model md -> {
+            mdId = md.id;
+            bases = simParams.paramBases(mdId);
+            incrs = simParams.paramIncrs(mdId);
+            return imodel.new(
+              mdId, md.name,
+              md.ParamNames, md.ParamTypes, bases, incrs
+            );
+          })
+      });
+    }
+    "rank": {
+      mdId, ix, valType, stats, period : Rq;
+      i = math.ftoi(ix);
+      :vals rss = db.readResults(
+        mdId, period, valType, i, stats == "price" ? 1 : cts.statDates
+      );
+      if (arr.size(rss.Vals) > 0) {
+        return js.w({
+          "rankOp": stats == "price"
+            ? [[rss.date, rss.Vals[0]]]
+            : [[rss.date, rsVec.stat(stats, rss.Vals)]]
+          });
+      } else {
+        return js.w({"rankOp": []});
+      }
+    }
+    "bests": {
+      mdId, valType, stats, period : Rq;
+      :vals rss = db.readResults(
+        mdId, period, valType, 0, stats == "price" ? 1 : cts.statDates
+      );
+      :arr Vals = rss.Vals;
+      if (Vals.size() > 0) {
+        :arr Vs = stats == "price" ? Vals[0] : rsVec.stat(stats, Vals);
+        :arr BestsVs = arr.zip([arr.fromIter([0:Vs.size()]), Vs]);
+        BestsVs.sort(\E1, E2 -> return E1[1] > E2[1];);
+        return js.w({
+          "Bests": arr.map(BestsVs.take(3), \E -> return E[0];)
+        });
+      } else {
+        return js.w({"Bests": []});
+      }
+    }
+    "history": {
+      mdId, ix, valType, stats, period : Rq;
+      iRs = math.ftoi(ix);
+
+      Profits = [];
+      Positions = [];
+      for (i = cts.statDates - 1 : 0 : -1) {
+        :vals rss = db.readResults(
+          mdId, period, valType, i, stats == "price" ? 1 : cts.statDates
+        );
+        :arr Vals = rss.Vals;
+        if (Vals.size() > 0) {
+          Vs = stats == "price" ? Vals[0] : rsVec.stat(stats, Vals);
+          e0 = Vs[iRs];
+          if (e0 < 0) continue;
+          prf = e0 - math.ftoi(mcts.initialCapital);
+          pV = [1];
+          for (e = Vs) if (e > e0) pV! += 1;
+          Profits.push(prf);
+          Positions.push(pV!);
+        }
+      }
+       return js.w({Profits, Positions});
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

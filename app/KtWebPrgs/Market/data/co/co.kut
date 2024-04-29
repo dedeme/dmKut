@@ -1,0 +1,10 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Company data
+
+/// Constructor.
+///   nick      : Identifier of company.
+///   isSelected: 'true' if company is selected to operate.
+/// \s,b -> <co>
+new : nick, isSelected;

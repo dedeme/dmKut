@@ -1,0 +1,10 @@
+// Copyright 13-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Book metadata.
+
+/// Constructor.
+///   name : Title of book or "".
+///   Pages: Array with pages metadata.
+/// \s,[<meta>.] -> <book>
+new : name, Pages;

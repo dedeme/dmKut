@@ -8,7 +8,7 @@ import "db";
 import "db/calendarTb";
 import "db/activityTb";
 import "db/cosTb";
-import "db/investorsTb";
+import "db/investorTb";
 import "db/svCodesTb";
 import "db/ibexTb";
 import "db/trading/closesTb";
@@ -16,14 +16,21 @@ import "db/trading/refsTb";
 import "db/acc/diariesDb";
 import "db/acc/profitsDb";
 import "db/daily/cosSelTb";
-import "data/calendar/calendar";
 import "data/cts";
+import "data/qsprRs";
+import "data/ibex";
+import "data/calendar/calendar";
+import "data/co/cosT";
+import "data/co/co";
 import "data/activity";
 import "data/acc/opr";
 import "data/acc/ann";
+import "data/acc/ldg";
 import "data/acc/annsTb";
+import "data/acc/settlement";
+import "data/qs/qsv";
 import "data/svs/ibexSv";
-import "data/svs/infob";
+import "data/svs/bmania";
 import "data/chart/profitsEntry";
 import "qspr";
 
@@ -33,7 +40,7 @@ getPid = \pid -> {
   R = sys.cmd("ps", ["-x"]);
   if (!R[1]) return "";
 
-  cmd = "/home/deme/bin/kutmkt /dm/dmWeb/app/KtWeb/prgs/CMarket/kut/main start";
+  cmd = "kutmkt /dm/dmKut/app/KtWebPrgs/cmarket/main start";
   for (prg = str.splitTrim(R!, "\n")) {
     if (str.index(prg, cmd) != -1) {
       ix = str.index(prg, " ");
@@ -48,118 +55,122 @@ getPid = \pid -> {
 
 /// \s -> <qsprRs<qs>>
 ibexHistoricUpdate = \mainNick -> {
-  Cos = cosTb.read();
+  :cosT cos = cosTb.read();
 
-  Rs = qspr.updateIbexHistoric(Cos.main);
+  :qsprRs rs = qspr.updateIbexHistoric(cos.main);
 
   CodesRs = ibexSv.readComponents();
   if (!CodesRs[1]) {
     log.error("Reading Ibex components: " + CodesRs!);
-    Rs.withError = true;
-    return Rs;
+    rs.withError = true;
+    return rs;
   }
   Codes = CodesRs!;
 
-  InfoCodes = svCodesTb.read(infob.id());
+  BmaniaCodes = svCodesTb.read(qsv.id(bmania.new()));
   Nicks = []; // [s.]
   for (code = Codes){
     NkOp = [];
-    for (nk, cd = InfoCodes) {
+    for (nk, cd = BmaniaCodes) {
       if (cd == code) {
         arr.push(NkOp, nk);
         break;
       }
     }
-    if (NkOp) arr.push(Nicks, NkOp!);
-    else {
+    if (!NkOp) {
       log.error("Reading Ibex components: Unknown company code " + code);
-      Rs.withError = true;
-      return Rs;
+      rs.withError = true;
+      return rs;
     }
+
+    arr.push(Nicks, NkOp!);
   }
 
-  IbexTb = ibexTb.read();
-  IbexTb.cos = Nicks;
-  ibexTb.write(IbexTb);
+  :ibex ibexT = ibexTb.read();
+  ibexT.Cos = Nicks;
+  ibexTb.write(ibexT);
 
   for (nk = Nicks) {
-    CoOp = arr.find(Cos.cos, \C -> return C.nick == nk;);
-    if (!CoOp) {
+    cOp = arr.find(cos.Cos, \:co c -> return c.nick == nk;);
+    if (!cOp) {
       log.error("Reading Ibex components: " + nk +
         " in server not found in companies data base");
-      Rs.withError = true;
-      return Rs;
+      rs.withError = true;
+      return rs;
     }
-    Co = CoOp!;
-    if (!Co.isSelected) {
+    :co c = cOp!;
+    if (!c.isSelected) {
       log.warning("Reading Ibex components: Ibex company " + nk + " not selected");
-      Rs.withWarnings = true;
+      rs.withWarnings = true;
     }
   }
 
-  for (Co = Cos.cos) {
-    if (Co.isSelected & !arr.any(Nicks, \n -> return n == Co.nick;)) {
-      log.warning("Reading Ibex components: Selectd company " + Co.nick +
+  for (:co c = cos.Cos) {
+    if (c.isSelected & !arr.any(Nicks, \n -> return n == c.nick;)) {
+      log.warning("Reading Ibex components: Selectd company " + c.nick +
         " not in Ibex");
-      Rs.withWarnings = true;
+      rs.withWarnings = true;
     }
   }
 
-  return Rs;
+  return rs;
 };
 
 /// \ -> ()
 historicUpdate = \ -> {
   log.warning("Historic update");
 
-  Cos = cosTb.read();
-  SelCos = arr.filter(Cos.cos, \C -> return C.isSelected;);
+  :cosT cos = cosTb.read();
+  SelCos = arr.filter(cos.Cos, \:co c -> return c.isSelected;);
 
   // Update historic.
-  R0 = qspr.updateHistoric(
-    "Updating historic of main company " + Cos.main, Cos.main, Cos.main
+  :qsprRs r0 = qspr.updateHistoric(
+    "Updating historic of main company " + cos.main, cos.main, cos.main
   );
-  if (R0.withError)
-    log.error("Fail reading main company " + Cos.main);
+  if (r0.withError)
+    log.error("Fail reading main company " + cos.main);
   else
-    for (C = Cos.cos)
+    for (:co c = cos.Cos)
       qspr.updateHistoric(
-        "Updating historic of " + C.nick, Cos.main, C.nick)
+        "Updating historic of " + c.nick, cos.main, c.nick)
       ;
 
-  // Update ibex (Must be  alled after 'qspr.updateHistoric')
-  ibexHistoricUpdate();
+  // Update ibex (Must be called after 'qspr.updateHistoric')
+  ibexHistoricUpdate(cos.main);
 
   // Update investors.
-  investorsTb.update();
+  investorTb.update();
 
   // Clean Closes
   Closes = closesTb.read();
   for (nk = dic.keys(Closes))
-    if (!arr.any(SelCos, \C -> return C.nick == nk;)) dic.remove(Closes, nk);
+    if (
+      !arr.any(SelCos, \:co c -> return c.nick == nk;) &
+      !arr.any(cts.IxNicks, \i -> return i == nk;)
+    ) dic.remove(Closes, nk);
   closesTb.write(Closes);
 
   // Clean Refs
   Refs = refsTb.read();
   for (nk = dic.keys(Refs))
-    if (!arr.any(SelCos, \C -> return C.nick == nk;)) dic.remove(Refs, nk);
+    if (!arr.any(SelCos, \:co c -> return c.nick == nk;)) dic.remove(Refs, nk);
   refsTb.write(Refs);
 
   // Clean daily charts selected companies
   cosSelTb.write(arr.filter(
     cosSelTb.read(),
-    \nk -> return arr.any(SelCos, \C -> return C.nick == nk;);
+    \nk -> return arr.any(SelCos, \:co c -> return c.nick == nk;);
   ));
 
   // Update Closes and Refs
-  for (C = SelCos) {
-    err = qspr.updateClosesAndRefs(C.nick);
-    if (err) log.error(err);
+  for (:co c = SelCos) {
+    err = qspr.updateClosesAndRefs(c.nick);
+    if (err != "") log.error(err);
   }
   // Update indexes
   for (nk = cts.IxNicks) {
     err = qspr.updateClosesAndRefs(nk);
-    if (err) log.error(err);
+    if (err != "") log.error(err);
   }
 
   qspr.updateOperations();
@@ -168,7 +179,7 @@ historicUpdate = \ -> {
 // \ -> ()
 dailyUpdate = \ -> {
   err = qspr.updateDailyCloses();
-  if (err) log.error(err);
+  if (err != "") log.error(err);
 
   qspr.updateDailyCharts();
 
@@ -180,12 +191,13 @@ dailyUpdate = \ -> {
 dailyActivate = \ -> { // Include dailyUpdate
   log.warning("Daily activate");
 
-  investorsTb.update();
+  investorTb.update();
+  :cosT cos = cosTb.read();
   // Update Closes and Refs
-  SelCos = arr.filter(cosTb.read().cos, \C -> return C.isSelected;);
-  for (C = SelCos) {
-    err = qspr.updateClosesAndRefs(C.nick);
-    if (err) log.error(err);
+  SelCos = arr.filter(cos.Cos, \:co c -> return c.isSelected;);
+  for (:co c = SelCos) {
+    err = qspr.updateClosesAndRefs(c.nick);
+    if (err != "") log.error(err);
   }
   qspr.createDailyCharts();
   dailyUpdate();
@@ -195,45 +207,42 @@ dailyActivate = \ -> { // Include dailyUpdate
 dailyDeactivate = \ -> {
   log.warning("Daily deactivate");
 
-  investorsTb.update();
+  investorTb.update();
   qspr.updateOperations();
 };
 
 // \ -> ()
 closeAccountingYear = \ -> {
   currentYear = math.itos(time.year(time.now()));
-  for (inv = 0:cts.investors) {
-    dataYear = diariesDb.investorYears(inv)[0];
-    if (dataYear != currentYear) {
-      Anns = diariesDb.investorAnns(inv, dataYear);
-      Set = ann.mkSettlement(Anns);
-      if (Set.errors) {
-        for (E = Set.errors) log.error(E);
-        log.error("Can not change accounting year");
-        return;
-      }
+  dataYear = diariesDb.investorYears()[0];
+  if (dataYear != currentYear) {
+    Anns = diariesDb.investorAnns(dataYear);
+    :settlement set = ann.mkSettlement(Anns);
+    if (!!set.Errors) {
+      for (e = set.Errors) log.error(e);
+      log.error("Can not change accounting year");
+      return;
+    }
 
-      date = currentYear + "0101";
-      NewTable = annsTb.new();
+    date = currentYear + "0101";
+    NewTable = annsTb.new();
+    annsTb.add(NewTable, ann.new(
+      -1, date, opr.newIn(set.ledger[ldg.cash])
+    ));
+    for (nick, StPf = set.Portfolio)
       annsTb.add(NewTable, ann.new(
-        -1, date, opr.newIn(Set.ledger.cash)
+        -1, date, opr.newSt(nick, StPf[0], StPf[1])
       ));
-      for (nick, StPf = Set.portfolio)
-        annsTb.add(NewTable, ann.new(
-          -1, date, opr.newSt(nick, StPf[0], StPf[1])
-        ));
-      diariesDb.write(inv, currentYear, NewTable);
-    }
+    diariesDb.write(currentYear, NewTable);
+  }
 
-    dataYear2 = profitsDb.investorYears(inv)[0];
-    if (dataYear2 != currentYear) {
-      E = arr.peek(profitsDb.read(inv, dataYear2));
-      profitsDb.write(
-        inv,
-        currentYear,
-        [profitsEntry.new(currentYear + "0101", E.total, E.acc, E.risk)]
-      );
-    }
+  dataYear2 = profitsDb.investorYears()[0];
+  if (dataYear2 != currentYear) {
+    :profitsEntry e = arr.peek(profitsDb.read(dataYear2));
+    profitsDb.write(
+      currentYear,
+      [profitsEntry.new(currentYear + "0101", e.total, e.acc, e.risk)]
+    );
   }
 };
 
@@ -242,7 +251,7 @@ closeAccountingYear = \ -> {
 start = \ -> {
   pid1 = getPid("*");
   pid = getPid(pid1);
-  if (pid) {
+  if (pid != "") {
     sys.println("Server is already running");
     return;
   }
@@ -257,10 +266,10 @@ start = \ -> {
       : cts.schedulerSleepTime
     ;
 
-    Act = activityTb.read();
+    :activity act = activityTb.read();
     if (
-      ( time.toStr(Act.tm) != time.toStr(now) |
-        time.hour(Act.tm) <= cts.actHistoricStart
+      ( time.toStr(act.tm) != time.toStr(now) |
+        time.hour(act.tm) <= cts.actHistoricStart
       ) & time.hour(now) > cts.actHistoricStart
     ) {
       historicUpdate();
@@ -269,11 +278,11 @@ start = \ -> {
     }
 
     if (calendar.isMarketDay(Cal, now)) {
-      if (Act.activity == cts.actSleeping) {
+      if (act.activity == cts.actSleeping) {
         if (calendar.isOpen(Cal, now)) {
           dailyActivate();
           activityTb.write(activity.newNow(cts.actActive));
-        } else if (time.hour(Act.tm) < 12 & time.hour(now) > 12) {
+        } else if (time.hour(act.tm) < 12 & time.hour(now) > 12) {
           dailyActivate();
           dailyDeactivate();
           activityTb.write(activity.newNow(cts.actSleeping));
@@ -295,7 +304,7 @@ start = \ -> {
 /// \ -> ()
 stop = \ -> {
   pid = getPid("*");
-  if (!pid) {
+  if (pid == "") {
     sys.println("Proccess 'cmarket' not found");
     return;
   }

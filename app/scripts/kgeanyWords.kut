@@ -1,0 +1,79 @@
+// Copyright 09-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Generator of secodary words for geany.
+
+// \ -> s
+help = \ -> return """
+  Use kgeanyWords projectRoot
+  """;;
+
+:file kutConfPath = "/home/deme/.config/geany/filedefs/filetypes.Kut.conf";
+:file jkutConfPath = "/home/deme/.config/geany/filedefs/filetypes.JKut.conf";
+
+sys.assert(kutConfPath.exists());
+sys.assert(jkutConfPath.exists());
+
+:arr Args = sys.args();
+if (Args.size() != 1) {
+  sys.println(help());
+  return;
+}
+
+:file pRoot = Args[0];
+if (!pRoot.isDirectory()) {
+  sys.printError(pRoot + " not found");
+  return;
+}
+
+:arr Kuts = str.split(
+  "arr b64 bytes cryp dic file iter js math path regex str sys tcp thread time",
+  " "
+);
+:arr JKuts = str.split(
+  "arr b64 bytes client cryp dic domo iter js math storage str sys time timer ui",
+  " "
+);
+
+// \s -> b
+isValidWord = \f -> {
+  isValidFirst = \ch -> return (ch >= 'a' & ch <= 'z') | (ch >= 'A' & ch <= 'Z');;
+  isValidCont = \ch -> return isValidFirst(ch) | (ch >= '0' & ch <= '9');;
+
+  if (!isValidFirst(f[0])) return false;
+  for (i = 1:str.len(f)) if (!isValidCont(f[i])) return false;
+  return true;
+};
+
+populate = \:file d -> {
+  for (f = d.dir()) {
+    :file fpath = path.cat([d, f]);
+    if (fpath.isDirectory())
+      populate(fpath);
+    else if (str.ends(fpath, ".kut") & isValidWord(f[:-4]))
+      Kuts.push(f[:-4]);
+    else if (str.ends(fpath, ".jkut") & isValidWord(f[:-5]))
+      JKuts.push(f[:-5]);
+  }
+};
+populate(pRoot);
+
+Kuts.sort(\e1, e2 -> return e1 < e2;);
+JKuts.sort(\e1, e2 -> return e1 < e2;);
+
+mkConf = \:file kPath, :arr Kuts ->
+  kPath.write(arr.join(
+    arr.map(
+      str.splitTrim(kPath.read(), "\n"),
+      \:str l -> return l.starts("secondary=")
+          ? "secondary=" + Kuts.join(" ")
+          : l
+        ;
+    ), "\n"
+  ));;
+
+
+mkConf(kutConfPath, Kuts);
+mkConf(jkutConfPath, JKuts);
+
+

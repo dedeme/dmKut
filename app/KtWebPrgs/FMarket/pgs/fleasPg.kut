@@ -1,4 +1,4 @@
-// Copyright 22-Jul-2023 ºDeme
+// Copyright 24-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Fleas page.
@@ -6,7 +6,7 @@
 import "KtWeb/rp";
 import "libmkt/model";
 import "libdm/log";
-import "data/cts";
+import "cts";
 import "data/flea";
 import "db";
 
@@ -14,18 +14,18 @@ import "db";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      modelId = Rq.modelId;
-      Models = arr.map(db.modelsList(), model.id);
-      mdId = arr.any(Models, \m -> return m == modelId;)
+      , modelId : Rq;
+      Models = arr.map(db.modelsList(), \:model md -> return md.id;);
+      mdId = Models.any(\m -> return m == modelId;)
         ? modelId
         : cts.mainModel
       ;
-      Fleas = db.readFleas(mdId);
-      sys.print(rp.mk({
+      :arr Fleas = db.readFleas(mdId);
+      return rp.mk({
         mdId,
-        models: Models,
-        fleas: arr.map(Fleas, flea.toJs)
-      }));
+        Models,
+        FleasJs: Fleas.map(flea.toJs)
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

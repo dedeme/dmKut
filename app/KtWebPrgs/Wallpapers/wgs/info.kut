@@ -1,0 +1,36 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Information widget.
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/pict";
+import "db/picts";
+import "db/songs";
+import "db/sels";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "changePictLevel": {
+      picts.setLevel(Rq.group, Rq.id, math.ftoi(Rq.level));
+      sys.print(rp.mkEmpty());
+    }
+    "changeSongLevel": {
+      songs.setLevel(Rq.group, Rq.id, math.ftoi(Rq.level));
+      sys.print(rp.mkEmpty());
+    }
+    "changeRadio": {
+      sels.nextRadioIx();
+      radioIx = sels.getRadioIx();
+      radioData = cts.radios[radioIx];
+      sys.print(rp.mk({
+        radioName: radioData[0],
+        radioUrl: radioData[1]
+      }));
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

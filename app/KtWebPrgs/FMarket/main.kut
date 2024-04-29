@@ -1,55 +1,62 @@
-// Copyright 22-Jul-2023 ºDeme
+// Copyright 24-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main script.
 
 import "KtWeb/rp";
+import "libmkt/libmktHelper";
 import "libdm/log";
 import "db";
-import "data/cts";
+import "cts";
 import "pgs/home";
 import "pgs/fleasPg";
 import "pgs/rksPg";
 import "pgs/summaryPg";
 import "update";
+import "test/main" : tmain;
 
-help = "Usage: fmarket [update | test | version | help | <request>]";
+// \ -> s
+help = \ -> return """
+  Use myPrg [help | version | init | update | test | key rq]
+  where
+    help: Shows this message.
+    version: Shows program version.
+    init: Initializes program.
+          Must be called the first time that the program is called or
+          when a new model is added.
+    update: Calculate a new fleas cycle.
+    test: Makes some tests.
+    key rq: Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-// \ -> ()
-test = \ -> {
-  sys.println("No tests was done.");
-};
+log.setPath(cts.logPath);
 
-Args = sys.args();
-if (arr.size(Args) == 0 | arr.size(Args) > 2) {
-  sys.println(help);
-  return;
-}
+:arr Args = sys.args();
 
-db.init();
-log.init(cts.logPath);
-
-if (arr.size(Args) == 1) {
+if (Args.size() == 1) {
   switch (Args[0]) {
-    "update": update.run();
     "version": sys.println(cts.version);
-    "test": test();
-
-    default: sys.println(help);
+    "init": db.init();
+    "update": update.run();
+    "test": tmain.run();
+    default: sys.println(help());
   }
   return;
 }
 
-ck = Args[0];
-Rq = js.r(Args[1]);
-rp.init(ck);
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
 
-switch(Rq.source) {
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
   "Home": home.process(Rq);
   "FleasPg": fleasPg.process(Rq);
   "RksPg": rksPg.process(Rq);
   "SummaryPg": summaryPg.process(Rq);
   default: sys.throw("Value of source (" + Rq.source + ") is not valid");
-}
-
-
+});

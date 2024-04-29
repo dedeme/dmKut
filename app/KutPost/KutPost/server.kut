@@ -1,0 +1,158 @@
+// Copyright 17-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Post server
+
+import "libdm/log";
+import "cts";
+import "data/session";
+import "data/user";
+import "db/sessionsTb";
+import "db/usersTb";
+
+/// Start server.
+/// NOTES:
+///   - Sever only allows a single request-response.
+///   - Maximum length of data is 1.000.000 bytes.
+///   - Server waits for a response ilimited time.
+///   - Comunications are expected in UTF-8.
+/// \ -> ()
+run = \ -> {
+  sv = tcp.server(cts.port, 128);
+  sys.println("Server started");
+  while () {
+    // [<tcpConn>, s]
+    :tcp conn, err = tcp.accept(sv);
+    if (err != "") {
+      log.error("Connection failed: " + err);
+      continue;
+    }
+
+    thread.run(\ -> {
+      // [<bytes>, s]
+      :bytes bs, err = conn.read(1_000_000, 30);
+      if (err != "") {
+        log.error(err);
+      } else {
+        try {
+          rp = handle(str.rtrim(bs.toStr())); // Remove 'end line'.
+          err = conn.write(bytes.fromStr(rp));
+          if (err != "") log.error(err);
+        } catch (e) {
+          log.error(e);
+        }
+      }
+      conn.closeConnection();
+    });
+
+  }
+};
+
+// \s -> s
+handle = \rq -> {
+  ix = str.index(rq, ":");
+
+  // CONNECTION ----------------------------------------------------------------
+
+  if (ix == -1) return connect(rq);
+
+  // AUTHENTICATION ------------------------------------------------------------
+
+  if (ix == 0) {
+    key = cryp.key(cts.appName, cts.klen);
+    Parts = str.split(cryp.decode(key, rq[1:]), ":");
+    return authentication(key, Parts[0], Parts[1]);
+  }
+
+  // NORMAL DATA ---------------------------------------------------------------
+
+  sessionId = rq[:ix];
+  keyOp = getKey(sessionId);
+  if (!keyOp) return cryp.encode("nosession", js.w({"expired": true}));
+  key = keyOp!;
+
+  return process(key, cryp.decode(key, rq[ix+1:]));
+};
+
+// \s -> s
+connect = \sessionId -> {
+  ssOp = arr.find(sessionsTb.read(), \:session s -> return s.id == sessionId;);
+  if (!ssOp)
+    return cryp.encode(
+      sessionId,
+      js.w({
+        "key": "",
+        "user": "",
+        "level": ""
+      })
+    );
+
+  :session ss = ssOp!;
+  return cryp.encode(
+    sessionId,
+    js.w({
+      "key": ss.key,
+      "user": ss.userId,
+      "level": ss.level
+    })
+  );
+};
+
+// \s, s, s -> s
+authentication = \key, userId, pass -> {
+  // \ -> s
+  fail = \ -> return cryp.encode(
+    key,
+    js.w({
+      "sessionId": "",
+      "key": "",
+      "level": ""
+    })
+  );;
+
+  uOp = arr.find(usersTb.read(), \:user u -> return u.id == userId;);
+  if (!uOp) return fail();
+  :user u = uOp!;
+
+  if (u.pass != cryp.key(pass, cts.klen)) return fail();
+
+  sessionId = cryp.genK(cts.klen);
+  newKey = cryp.genK(cts.klen);
+
+  :arr Ss = sessionsTb.read();
+  now = time.now() / 1000;
+  Ss.filterIn(\:session s -> return s.tm + s.lapse >= now;);
+  Ss.push(session.new(
+    sessionId, newKey, u.id, u.level, now, cts.expirationTime
+  ));
+  sessionsTb.write(Ss);
+
+  return cryp.encode(
+    key,
+    js.w({
+      "sessionId": sessionId,
+      "key": newKey,
+      "level": u.level
+    })
+  );
+};
+
+// \s -> [s]|[]
+getKey = \sessionId -> {
+  ssOp = arr.find(sessionsTb.read(), \:session s -> return s.id == sessionId;);
+  if (!ssOp) return [];
+  :session ss = ssOp!;
+  return [ss.key];
+};
+
+// \s, s -> s
+process = \key, rq -> {
+  try {
+    c = js.r(rq)["prg"];
+    rp, ok = sys.cmd(c, [rq]);
+    if (!ok) return rp;
+    return cryp.encode(key, rp);
+  } catch (e) {
+    return e;
+  }
+};

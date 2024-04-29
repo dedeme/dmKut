@@ -9,10 +9,10 @@
 ///   isShown: 'true' if the path should be shown.
 ///   isValid: 'true' if the path is a valid one.
 /// \s, s, b, b -> <dpath>{s, s, b, b}
-mk = \id, path, isShown, isValid -> return {id, path, isShown, isValid};;
+mk : id, spath, isShown, isValid;
 
 /// \<dpath> -> [JS...]
-toJs = \Dp -> return [Dp.id, Dp.path, Dp.isShown, Dp.isValid];;
+toJs = \Dp -> return Dp;;
 
 /// \[JS...] -> dpath
-fromJs = \JS -> return mk (JS[0], JS[1], JS[2], JS[3]);;
+fromJs = \JS -> return JS;;

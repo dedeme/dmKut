@@ -1,0 +1,47 @@
+// Copyright 22-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Indexes reader.
+
+import "cts";
+import "libdm/ext";
+
+/// Read two indexes: cts.ibexNick and cts.euroNick,
+/// returning a dictionary {nick -> [currentQuote, yesterdayQuote]}
+/// \ -> [{[f, f].}|s, b] Result
+read = \ -> {
+  html, ok = ext.wget("https://es.finance.yahoo.com/world-indices", true);
+  if (!ok) return ["Fail reading 'https://es.finance.yahoo.com/world-indices'", false];
+  //file.write("tmp.txt", Rs[0]);
+
+  ixV = [str.index(html, '>^IBEX<')];
+  ixV! = str.indexFrom(html, 'value="', ixV!);
+  ix2V = [str.indexFrom(html, '"', ixV!+7)];
+  ibTodayOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!ibTodayOp) return ["Fail reading ^IBEX value", false];
+  ibToday = math.round(ibTodayOp!, 2);
+  ixV! = str.indexFrom(html, 'value="', ix2V!);
+  ix2V! = str.indexFrom(html, '"', ixV!+7);
+  ibIncOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!ibIncOp) return ["Fail reading ^IBEX increment", false];
+  ibInc = math.round(ibIncOp!, 2);
+  ibYesterday = ibToday - ibInc;
+
+  ixV! = str.indexFrom(html, '>^STOXX50E<', ix2V!);
+  ixV! = str.indexFrom(html, 'value="', ixV!);
+  ix2V! = str.indexFrom(html, '"', ixV!+7);
+  euTodayOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!euTodayOp) return ["Fail reading ^STOXX50E value", false];
+  euToday = math.round(euTodayOp!, 2);
+  ixV! = str.indexFrom(html, 'value="', ix2V!);
+  ix2V! = str.indexFrom(html, '"', ixV!+7);
+  euIncOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!euIncOp) return ["Fail reading ^STOXX50E increment", false];
+  euInc = math.round(euIncOp!, 2);
+  euYesterday = euToday - euInc;
+
+  Vs = {};
+  Vs.put(cts.ibexNick, [ibToday, ibYesterday]);
+  Vs.put(cts.euroNick, [euToday, euYesterday]);
+	return [Vs, true];
+};

@@ -1,0 +1,16 @@
+// Copyright 19-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Model Mobil Quantum.
+
+import "../model";
+import "doc/qmobDoc";
+
+/// Returns a new 'appr2' model.
+new = \ -> return model.new(
+    "QMOV",
+    "Quantum móvil",
+    qmobDoc.text,
+    ["Salto"],
+    [model.percParam]
+  );;

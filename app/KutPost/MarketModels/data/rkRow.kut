@@ -1,0 +1,12 @@
+// Copyright 25-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Ranks of one period.
+
+import "rk";
+
+/// Constructor.
+///   period: One of 'cts.Periods' ("daily", "weekly", "monthly").
+///   Ranks : Unsorted array of ranks.
+/// \s,[<rk>.] -> <rkRow>
+new : period, Ranks;

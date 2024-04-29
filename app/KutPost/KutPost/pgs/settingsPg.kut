@@ -1,0 +1,18 @@
+// Copyright 15-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Settings page.
+
+import "db/langTb";
+
+/// \ {*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "getLang": return js.w({"lang": langTb.read()});
+    "setLang": {
+      langTb.write(Rq.lang);
+      return "{}";
+    }
+    default: sys.throw("Value of rq '" + Rq.rq + "' is missing");
+  }
+};

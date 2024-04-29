@@ -1,0 +1,17 @@
+// Copyright 06-Dic-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+if (arr.size(sys.args()) != 1) {
+  sys.println("Use 'kut dims <number>'");
+  return;
+}
+
+nOp = math.stof(sys.args()[0]);
+if (!nOp) {
+  sys.println(str.fmt("'%s' is not a number", [sys.args()[0]]));
+  return;
+}
+
+n = nOp!;
+sys.println(math.itos(math.ftoi(n / 0.5625)) + " [1920]");
+sys.println(math.itos(math.ftoi(n * 0.5625)) + " [1080]");

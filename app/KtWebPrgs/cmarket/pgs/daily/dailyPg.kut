@@ -5,8 +5,12 @@
 
 import "KtWeb/rp";
 import "libdm/log";
+import "libmkt/cts" : mkCts;
 import "data/cts";
+import "data/activity" : actv;
 import "data/acc/ann";
+import "data/acc/ldg";
+import "data/acc/settlement";
 import "data/qs/qsvs";
 import "data/qs/qsv";
 import "data/chart/dailyChart";
@@ -22,26 +26,35 @@ process = \Rq -> {
     "idata": {
       CosData = []; // [<dailyChart>...]
       IxsData = []; // [<dailyChart>...]
-      for (Ch = dailyChartsTb.read())
-        if (arr.any([cts.meNick] + cts.IxNicks, \n -> return Ch.nick == n;))
-          arr.push(IxsData, Ch);
-        else arr.push(CosData, Ch);
-      arr.sort(IxsData, \D1, D2 -> return
-        D1.nick == cts.meNick
-          ? true
-          : D1.nick == cts.ibexNick
-              ? D2.nick != cts.meNick
-              : D1.nick == cts.euroNick
-                ? D2.nick == cts.usaNick
-                : false
-      ;);
-      DicRebuys = {}; // [s...] {nick -> date}
-      for (inv = 0:cts.investors) {
-        Ys = diariesDb.investorYears(inv);
-        for (y = Ys[:2]) ann.rebuys(DicRebuys, diariesDb.investorAnns(inv, y));
+      for (:dailyChart ch = dailyChartsTb.read()) {
+        if (arr.any([cts.meNick] + cts.IxNicks, \n -> return ch.nick == n;))
+          arr.push(IxsData, ch);
+        else arr.push(CosData, ch);
       }
+      arr.sort(IxsData, \:dailyChart d1, :dailyChart d2 -> return
+        d1.nick == cts.meNick
+          ? true
+          : d1.nick == cts.ibexNick
+              ? d2.nick != cts.meNick
+              : false
+      ;);
+
+      DicRebuys = {}; // {s.} ;: {nick -> date}
+      Ys = diariesDb.investorYears();
+      for (y = Ys[:2]) ann.rebuys(DicRebuys, diariesDb.investorAnns(y));
+
       serverName = qsv.name(qsvs.currentDiary());
-      activity = activityTb.read().activity;
+      activity = activityTb.read()[actv.activity];
+
+      Anns = !!Ys ? diariesDb.investorAnns(Ys[0]) : [];
+      :settlement set = ann.mkSettlement(Anns);
+      maxCosV = [20];
+      if (!!set.Errors) {
+        for (e = set.Errors) log.error(e);
+      } else {
+        cash = set.ledger[ldg.cash] - mkCts.minToBet + mkCts.bet;
+        maxCosV! = math.ftoi(cash) / math.ftoi(mkCts.bet);
+      }
 
       sys.print(rp.mk({
         CosData: arr.map(CosData, dailyChart.toJs),
@@ -49,7 +62,8 @@ process = \Rq -> {
         CosSel: cosSelTb.read(),
         Rebuys: dic.keys(DicRebuys),
         serverName,
-        activity
+        activity,
+        maxCos: maxCosV!
       }));
     }
     "reactivate": {

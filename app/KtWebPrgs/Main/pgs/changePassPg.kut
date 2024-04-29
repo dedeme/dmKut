@@ -1,0 +1,25 @@
+// Copyright 13-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Change Password page.
+
+import "libdm/cgi";
+import "KtWeb/rp";
+import "KtWeb/global";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "changePass": {
+      user = Rq.user;
+      old = Rq.old;
+      new = Rq.new;
+      cgi.init(global.cgiRoot, global.texpiration);
+      cgi.authentication(user, old, true);
+      return rp.mk({
+        ok: cgi.changePass(user, old, new)
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

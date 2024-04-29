@@ -3,9 +3,10 @@
 
 /// Ibex quotes update.
 
+import "libdm/jstb";
 import "fns";
 import "db";
-import "ex/net/ibexNet";
+import "ex/cmarket/ibex";
 import "data/ibexSundays";
 
 /// \-> ()
@@ -17,13 +18,14 @@ run = \-> {
   I = [-2];
   while (I! > -7) {
     day = time.addDays(today, I!);
-    V = ibexNet.read(day);
-    if (V) {
-      ibexTb = db.ibexTb();
-      Ibex = ibexTb.read();
-      if (time.fmt("%Y", Ibex.data[0][0]) != lastSunday[:4]) arr.clear(Ibex);
+    V = ibex.read(day);
+    if (!!V) {
+      :jstb ibexTb = db.ibexTb();
+      :ibexSundays Ibex = ibexTb.read#();
+      if (time.fmt("%Y", Ibex.data[0][0]) != lastSunday[:4])
+        arr.clear(Ibex.data);
       ibexSundays.add(Ibex, today, V!);
-      ibexTb.write(Ibex);
+      ibexTb.write#(Ibex);
       break;
     }
 

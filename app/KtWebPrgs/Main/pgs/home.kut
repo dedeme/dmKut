@@ -1,4 +1,4 @@
-// Copyright 04-Nov-2022 ºDeme
+// Copyright 13-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Home page.
@@ -7,19 +7,19 @@ import "libdm/log";
 import "KtWeb/rp";
 import "KtWeb/global";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "getLog": {
-      log.init(global.logPath);
-      sys.print(rp.mkJs({
-        "log": log.readJs()
-      }));
+      log.setPath(global.logPath);
+      return rp.mkJs({
+        Log: log.readJs()
+      });
     }
     "resetLog": {
-      log.init(global.logPath);
+      log.setPath(global.logPath);
       log.reset();
-      sys.print(rp.mkEmpty());
+      return rp.mkEmpty();
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

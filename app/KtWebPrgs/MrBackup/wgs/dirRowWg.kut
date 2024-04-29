@@ -1,0 +1,60 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Summary page
+
+import "KtWeb/rp";
+import "poolDb/poolDb";
+import "fns";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "delete": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.delete(Rq.id);
+      return rp.mk({isBusy});
+    }
+    "changePath": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.changePath(Rq.id, Rq.newPath);
+      return rp.mk({isBusy});
+    }
+    "changeBig": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.changeBig(Rq.id);
+      return rp.mk({isBusy});
+    }
+    "showDirs": {
+      poolDb.showDirs(Rq.id);
+      return rp.mkEmpty();
+    }
+    "changeDir": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.changeDir(Rq.id, Rq.newId);
+      return rp.mk({isBusy});
+    }
+    "update": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.updateDir(Rq.id);
+      return rp.mk({isBusy});
+    }
+    "copyToBase": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.copyToBase(Rq.id);
+      return rp.mk({isBusy});
+    }
+    "copyFromBase": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.copyFromBase(Rq.id);
+      return rp.mk({isBusy});
+    }
+    "createPathTxt": {
+      isBusy = fns.isBusy();
+      if (!isBusy) poolDb.createPathTxt(Rq.id);
+      return rp.mk({isBusy});
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

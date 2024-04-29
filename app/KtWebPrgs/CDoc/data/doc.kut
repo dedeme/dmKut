@@ -1,46 +1,20 @@
-// Copyright 07-Sep-2023 ºDeme
+// Copyright 11-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
-
 /// Module documentation data.
 
 import "docEntry";
 
 /// Constructor.
-///   doc: Module documentation.
-///   defines: 'defines' documentation.
-///   enums: 'enums' documentation.
-///   structs: 'structs' documentation.
-///   typedefs: 'typedefs' documentation.
-///   unions: 'unions' documentation.
+///   docTx    : Module documentation.
+///   defines  : 'defines' documentation.
+///   enums    : 'enums' documentation.
+///   structs  : 'structs' documentation.
+///   typedefs : 'typedefs' documentation.
+///   unions   : 'unions' documentation.
 ///   functions: functions documentation.
-///   vars: variables documentation.
+///   vars     : variables documentation.
 /// \s, [<docEntry>.], [<docEntry>.], [<docEntry>.], [<docEntry>.],
-///   [<docEntry>.], [<docEntry>.], [<docEntry>.] -> d<doc>
-new = \doc, defines, enums, structs, typedefs, unions, functions, vars ->
-  return {doc, defines, enums, structs, typedefs, unions, functions, vars};;
-
-/// \<doc> -> JS
-toJs = \D -> return [
-    D.doc,
-    arr.map(D.defines, docEntry.toJs),
-    arr.map(D.enums, docEntry.toJs),
-    arr.map(D.structs, docEntry.toJs),
-    arr.map(D.typedefs, docEntry.toJs),
-    arr.map(D.unions, docEntry.toJs),
-    arr.map(D.functions, docEntry.toJs),
-    arr.map(D.vars, docEntry.toJs)
-  ];;
-
-/// \JS -> <doc>
-fromJs = \A -> return new(
-    A[0],
-    arr.map(A[1], docEntry.fromJs),
-    arr.map(A[2], docEntry.fromJs),
-    arr.map(A[3], docEntry.fromJs),
-    arr.map(A[4], docEntry.fromJs),
-    arr.map(A[5], docEntry.fromJs),
-    arr.map(A[6], docEntry.fromJs),
-    arr.map(A[7], docEntry.fromJs)
-  );;
+///   [<docEntry>.], [<docEntry>.], [<docEntry>.] -> <doc>
+new : docTx, defines, enums, structs, typedefs, unions, functions, vars;
 
 

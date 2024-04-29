@@ -1,0 +1,59 @@
+// Copyright 28-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Simulation parameters.
+
+/// Returns bases for simulation.
+///   modelId: Model identifier.
+/// \s -> [f.]
+paramBases = \modelId -> return switch (modelId) {
+  "APRX": [0.15, 0.005];
+  "APRX2": [0.15, 0.005];
+  "APRX3": [0.15, 0.005];
+  "ME": [5.0, 0.01];
+  "ME2": [5.0, 0.01];
+  "MM": [5.0, 0.01];
+  "MX_MN": [5.0, 0.01];
+  "QFIJO": [0.05];
+  "QMOV": [0.05];
+  "SS_BB": [0.15, 0.068];
+  "SSBB0": [0.15];
+  default: sys.throw("Model " + modelId + " not found");
+};;
+
+/// Returns base increments for simulation.
+///   modelId: Model identifier.
+/// \s -> [f.]
+paramBaseIncs = \modelId -> return switch (modelId) {
+  "APRX": [0.01, 0.005];
+  "APRX2": [0.01, 0.005];
+  "APRX3": [0.01, 0.005];
+  "ME": [2.0, 0.005];
+  "ME2": [2.0, 0.005];
+  "MM": [2.0, 0.005];
+  "MX_MN": [2.0, 0.005];
+  "QFIJO": [0.01];
+  "QMOV": [0.01];
+  "SS_BB": [0.01, 0.004];
+  "SSBB0": [0.01];
+  default: sys.throw("Model " + modelId + " not found");
+};;
+
+/// Returns environtment increments for simulation.
+///   modelId: Model identifier.
+/// \s -> [f.]
+paramEnvIncs = \modelId -> return switch (modelId) {
+  "APRX": [0.001, 0.001];
+  "APRX2": [0.001, 0.001];
+  "APRX3": [0.001, 0.001];
+  "ME": [1.0, 0.001];
+  "ME2": [1.0, 0.001];
+  "MM": [1.0, 0.001];
+  "MX_MN": [1.0, 0.001];
+  "QFIJO": [0.001];
+  "QMOV": [0.001];
+  "SS_BB": [0.001, 0.0008];
+  "SSBB0": [0.001];
+  default: sys.throw("Model " + modelId + " not found");
+};;
+

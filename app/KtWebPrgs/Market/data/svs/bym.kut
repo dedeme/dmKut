@@ -1,0 +1,228 @@
+// Copyright 07-Nov-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data BYM ("Bolsas y Mercados")[Usa puppeteer].
+
+import "../qsv";
+import "libdm/ext";
+
+// DIARY -----------------------------------------------------------------------
+
+// Companies not in IBEX must be in one of NoIbexCos or NoIbexNoCos
+NoIbexCos = [
+  ];
+NoIbexNoCos = [
+  'Vocento-ES0114820113',
+  'Viscofan-ES0184262212',
+  'Vidrala-ES0183746314',
+  'Tubos-Reunidos-ES0180850416',
+  'Tecnicas-Reunidas-ES0178165017',
+  'Talgo-ES0105065009',
+  'Soltec-Power-ES0105513008',
+  'Reig-Jofre-ES0165359029',
+  'Renta-Corporacion-ES0173365018',
+  'Renta-4-Banco-ES0173358039',
+  'Pescanova-ES0169350016',
+  'Prosegur-Compania-De-Seguridad-ES0175438003',
+  'Promotora-De-Informaciones-ES0171743901',
+  'Prim-ES0170884417',
+  'Pharma-Mar-ES0169501022',
+  'Oryzon-Genomics-ES0167733015',
+  'Obrascon-Huarte-Lain-ES0142090317',
+  'Naturhouse-Health-ES0105043006',
+  'Nh-Hotel-Group-ES0161560018',
+  'Nicolas-Correa-ES0166300212',
+  'Metrovacesa-ES0105122024',
+  'Miquel-Y-Costas-ES0164180012',
+  'Lar-Espana-Real-Estate-ES0105015012',
+  'Lingotes-Especiales-ES0158480311',
+  'Inmobiliaria-Del-Sur-ES0154653911',
+  'Iberpapel-Gestion-ES0147561015',
+  'Neinor-Homes-ES0105251005',
+  'Grupo-Empresarial-San-Jose-ES0180918015',
+  'Grenergy-Renovables-ES0105079000',
+  'Gestamp-Automocion-ES0105223004',
+  'Grupo-Catalana-Occidente-ES0116920333',
+  'General-De-Alquiler-De-Maquinaria-ES0141571192',
+  'Elecnor-ES0129743318',
+  'Fomento-De-Constr-Y-Contratas-ES0122060314',
+  'Faes-Farma-ES0134950F36',
+  'Ence-Energia-Y-Celulosa-ES0130625512',
+  'Edreams-Odigeo-LU1048328220',
+  'Ercros-ES0125140A14',
+  'Ebro-Foods-ES0112501012',
+  'Amrest-Holdings-ES0105375002',
+  'Global-Dominion-Access-ES0105130001',
+  'Dia-Distribuidora-Int-De-Alimentacion-ES0126775032',
+  'Cie-Automotive-ES0105630315',
+  'Coca-Cola-Europacific-Partners-GB00BDCPN049',
+  'Clinica-Baviera-ES0119037010',
+  'Cash-ES0105229001',
+  'Construciones-Y-Aux-Ff-Cc-Caf-ES0121975009',
+  'Berkeley-Energia-Limited-AU000000BKY0',
+  'Azkoyen-ES0112458312',
+  'Applus-Services-ES0105022000',
+  'Aperam-LU0569974404',
+  'Alantra-Partners-ES0126501131',
+  'Almirall-ES0157097017',
+  'Corporacion-Financiera-Alba-ES0117160111',
+  'Airbus-Se-NL0000235190',
+  'Aedas-Homes-ES0105287009',
+  'Adolfo-Dominguez-ES0106000013',
+  'Audax-Renovables-ES0136463017',
+  'Atresmedia-Corp-De-Medios-De-Com-ES0109427734'
+];
+
+addCosDaily = \:arr Values, :arr Errs, :arr Codes -> {
+  read = \code -> {
+    url = "https://www.bolsasymercados.es/bme-exchange/es/" +
+      "Mercados-y-Cotizaciones/Acciones/Mercado-Continuo/Ficha/" +
+      code
+    ;
+    html, ok = ext.wdriver(url, 3);
+    if (!ok) {
+      Errs.push("Page of " + code + " not found");
+      return;
+    }
+
+    ixQ1 = str.index(html, ">Último<");
+    if (ixQ1 == -1) {
+      Errs.push("Quote not found of company " + code);
+      return;
+    }
+    ixQ2 = str.indexFrom(html, '">', ixQ1);
+    if (ixQ1 == -1) {
+      Errs.push("Quote not found of company " + code);
+      return;
+    }
+    ixQEnd = str.indexFrom(html, "<", ixQ2);
+    if (ixQEnd == -1) {
+      Errs.push("Quote end not found of company " + code);
+      return;
+    }
+    qOp = math.fromIso(html[ixQ2 + 2:ixQEnd]);
+    if (!qOp) {
+      Errs.push(
+        "Bad quote of company " + code + " (" + html[ixQ2 + 1:ixQEnd] + ")"
+      );
+      return;
+    }
+    Values.push([code, qOp!]);
+  };
+
+  for (c = Codes) read(c);
+};
+
+// \s -> [[s,f].],[s.]]
+readDaily = \html -> {
+  // [[s, f].]
+  Values = [];
+  // [s.]
+  Errs = [];
+
+  ixBegin = str.index(html, "Efectivo (miles €)");
+  if (ixBegin == -1) {
+    Errs.push("Start data not found reading Bolsamadrid diary");
+    return [Values, Errs];
+  }
+  ixEnd = str.indexFrom(html, "Información", ixBegin);
+  if (ixEnd == -1) {
+    Errs.push("End data not found reading Bolsamadrid diary");
+    return [Values, Errs];
+  }
+
+  ixV = [ixBegin];
+  while () {
+    ixCo = str.indexFrom(html, "/Ficha/", ixV!);
+    if (ixCo > ixEnd | ixCo == -1) break;
+    ixId = ixCo + 7;
+    ixV! = ixId;
+    ixIdEnd = str.indexFrom(html, '"', ixV!);
+    if (ixIdEnd == -1) {
+      ixIdEnd = str.indexFrom(html, '>', ixV!);
+      Errs.push("Code end not found of company " + html[ixId:ixIdEnd]);
+      break;
+    }
+    code = html[ixId:ixIdEnd];
+
+    ixQ1 = str.indexFrom(html, "text-right", ixIdEnd);
+    if (ixQ1 == -1) {
+      Errs.push("Quote not found of company " + code);
+      break;
+    }
+    ixQ2 = str.indexFrom(html, ">", ixQ1);
+    if (ixQ1 == -1) {
+      Errs.push("Quote not found of company " + code);
+      break;
+    }
+    ixQEnd = str.indexFrom(html, "<", ixQ2);
+    if (ixQEnd == -1) {
+      Errs.push("Quote end not found of company " + code);
+      break;
+    }
+    qOp = math.fromIso(html[ixQ2 + 1:ixQEnd]);
+    if (!qOp) {
+      arr.push(
+        Errs, "Bad quote of company " + code + " (" + html[ixQ2 + 1:ixQEnd] + ")"
+      );
+      continue;
+    }
+    Values.push([code, qOp!]);
+  }
+
+  addCosDaily(Values, Errs, NoIbexCos);
+  for (c = NoIbexNoCos) Values.push([c, 0.0]);
+
+  return [Values, Errs];
+};
+
+// \-> [s, b] ([html|error, ok])
+downloadDaily = \ -> {
+  url = "https://www.bolsasymercados.es/bme-exchange/es/Mercados-y-Cotizaciones/Acciones/Mercado-Continuo/Precios/ibex-35-ES0SI0000005";
+  return ext.wdriver(url, 3);
+};
+
+// HISTORIC --------------------------------------------------------------------
+
+// \s -> [[<quote>.],[s.]]
+readHistoric = \html -> {
+  sys.throw("Not implemented");
+};
+
+// \s -> [s, b] ([html|error, ok])
+downloadHistoric = \code -> {
+  sys.throw("Not implemented");
+};
+
+// OTHER -----------------------------------------------------------------------
+
+id = "BYM";
+
+name = "Bolsas y Mercados";
+
+withDiary = true;
+
+// \ -> [[s,f].],[s.]]
+freadDaily = \ -> {
+  html, ok = downloadDaily();
+  if (!ok) return [[], ["Fail reading daily web page of " + id + "\n" + html]];
+  return readDaily(html);
+};
+
+withHistoric = false;
+
+// \s -> [[<quote>.],[s.]]
+freadHistoric = \code -> {
+  html, ok = downloadHistoric(code);
+  if (!ok) return [
+    [],
+    ["Fail reading historic web page of " + id + "-" + code + "\n" + html]
+  ];
+  return readHistoric(html);
+};
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+    id, name, withDiary, freadDaily, withHistoric, freadHistoric
+  );;

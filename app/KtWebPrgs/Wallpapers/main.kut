@@ -1,0 +1,60 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program start.
+
+import "KtWeb/rp";
+import "data/cts";
+import "pgs/pictures";
+import "pgs/songsPg";
+import "pgs/radioPg";
+import "pgs/danceSelector";
+import "pgs/dance";
+import "pgs/pictsManagement";
+import "pgs/songsManagement";
+import "pgs/danceManagement";
+import "pgs/times";
+import "wgs/pictTime";
+import "wgs/info";
+import "db";
+import "db/picts";
+import "db/songs";
+import "db/danceSongs";
+
+Args = sys.args();
+
+ck = Args[0];
+Rq = js.r(Args[1]);
+rp.init(ck);
+db.init();
+
+switch(Rq.source) {
+  "Main": process(Rq);
+  "Pictures": pictures.process(Rq);
+  "Songs": songsPg.process(Rq);
+  "Radio": radioPg.process(Rq);
+  "DanceSelector": danceSelector.process(Rq);
+  "Dance": dance.process(Rq);
+  "PictsManagement": pictsManagement.process(Rq);
+  "SongsManagement": songsManagement.process(Rq);
+  "DanceManagement": danceManagement.process(Rq);
+  "Times": times.process(Rq);
+  "PictTime": pictTime.process(Rq);
+  "Info": info.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+}
+
+// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "update": {
+      for (g = picts.getGroups()) picts.update(g);
+      for (g = songs.getGroups()) songs.update(g);
+      for (g = danceSongs.getGroups()) danceSongs.update(g);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+

@@ -1,4 +1,4 @@
-// Copyright 15-Aug-2023 ºDeme
+// Copyright 25-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main page.
@@ -10,21 +10,23 @@ import "db";
 process = \Rq -> {
   switch (Rq.rq) {
     "read": {
-      DbData = db.readData();
-      sys.print(rp.mk({
+      :: DbData = db.readData();
+      return rp.mk({
         timeStamp: DbData.timeStamp,
         year:      DbData.year,
-        years:     DbData.years,
+        Years:     DbData.Years,
         data:      DbData.data
-      }));
+      });
     }
     "write": {
-      timeStamp = db.writeData(Rq.timeStamp, Rq.year, Rq.data);
-      sys.print(rp.mk({timeStamp})); // If fail timeStamp == ""
+      timeStamp, year, data : Rq;
+      timeStamp2 = db.writeData(timeStamp, year, data);
+      return rp.mk({timeStamp: timeStamp2}); // If fail timeStamp == ""
     }
     "changeYear": {
-      timeStamp = db.changeYear(Rq.timeStamp, Rq.year);
-      sys.print(rp.mk({timeStamp})); // If fail timeStamp == ""
+      timeStamp, year : Rq;
+      timeStamp2 = db.changeYear(timeStamp, year);
+      return rp.mk({timeStamp: timeStamp2}); // If fail timeStamp == ""
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

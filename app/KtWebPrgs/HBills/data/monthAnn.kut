@@ -1,8 +1,11 @@
-// Copyright 16-Nov-2022 ºDeme
+// Copyright 26-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Monthly annotation entry
+/// Month account annotation.
 
-/// Create a new entry.
-/// \s, [s]|[], n -> <monthAnn>[s, [s]|[], n]
-mk = \month, description, amount -> return [month, description, amount];;
+/// Constructor.
+///   month  : Annotation date type YYYYMM.
+///   placeOp: Annotation description.
+///   amount : Annotation amount.
+/// \s,[s]|[],f -> <monthAnn>
+new : month, placeOp, amount;

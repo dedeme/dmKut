@@ -1,26 +1,24 @@
-// Copyright 04-Nov-2022 ºDeme
+// Copyright 13-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Settings page.
 
 import "KtWeb/rp";
-import "db";
+import "data/conf";
+import "db/confTb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "getLang": {
-      ConfTb = db.getConfTb();
-      sys.print(rp.mkJs({
-        "lang": js.ws(ConfTb.read()["lang"])
-      }));
+      :conf cf = confTb.read();
+      return rp.mk({
+        "lang": cf.lang
+      });
     }
     "setLang": {
-      ConfTb = db.getConfTb();
-      Cf = ConfTb.read();
-      Cf.lang = Rq.lang;
-      ConfTb.write(Cf);
-      sys.print(rp.mkEmpty());
+      confTb.write(conf.new(Rq.lang));
+      return rp.mkEmpty();
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

@@ -32,7 +32,7 @@ searchFile = \fpath, msgs -> {
   fcut = fpath[lenP1:];
   NLine = [1];
   L = [file.readLine(f)];
-  while (L!) {
+  while (!!L!) {
     if (str.index(L!!, text) != -1) {
       arr.push(msgs, str.fmt("%v:%v:\n  %v", [
         fcut, NLine!, str.trim(L!!)

@@ -1,37 +1,23 @@
-// Copyright 22-Jul-2023 ºDeme
+// Copyright 24-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Home page.
 
 import "KtWeb/rp";
 import "libdm/log";
-import "data/cts";
+import "cts";
 import "db";
 
 /// \m -> ()
 process = \Rq -> {
   switch (Rq.rq) {
-    "idata":
-      sys.print(rp.mk({
-        activity: db.readActivity()
-      }));
-    "getLog":
-      sys.print(rp.mkJs({
-        log: log.readJs()
-      }));
+    "getLog": return rp.mkJs({
+        Log: log.readJs()
+      });
     "resetLog": {
-      log.reset();
-      sys.print(rp.mkEmpty());
-    }
-    "activate": {
-      thread.run(\-> sys.cmd("fmarket", ["update"]););
-      sys.sleep(500);
-      sys.print(rp.mkEmpty());
-    }
-    "deactivate": {
-      db.writeActivity("stopped");
-      sys.print(rp.mkEmpty());
-    }
+        log.reset();
+        return rp.mkEmpty();
+      }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };

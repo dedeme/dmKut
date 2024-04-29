@@ -5,7 +5,9 @@
 
 import "KtWeb/rp";
 import "data/doc";
+import "data/dpath";
 import "db";
+import "db/pathsTb";
 
 /// Process request.
 /// \m -> s
@@ -17,19 +19,21 @@ process = \Rq -> {
       isHeader = Rq.isHeader;
 
       codeOp = []; // [s]|[]
-      DpathOp = arr.find(db.pathsTb().read(), \P -> return P.id == module;);
-      if (DpathOp) {
-        Dpath = DpathOp!;
+      dpathOp = arr.find(
+        pathsTb.read(), \:dpath p -> return p.id == module;
+      );
+      if (!!dpathOp) {
+        :dpath pt = dpathOp!;
         fpath = isHeader
-          ? path.cat([Dpath.path, "include", mpath + ".h"])
-          : path.cat([Dpath.path, "src", mpath + ".c"])
+          ? path.cat([pt.spath, "include", mpath + ".h"])
+          : path.cat([pt.spath, "src", mpath + ".c"])
         ;
         if (file.exists(fpath)) arr.push(codeOp, file.read(fpath));
       }
 
-      sys.println(rp.mk({
-        code: codeOp
-      }));
+      return rp.mk({
+        codeOp
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

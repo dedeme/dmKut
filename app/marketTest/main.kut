@@ -1,0 +1,8 @@
+// Copyright 12-Dic-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "refTest";
+import "strategyTest";
+
+//refTest.run();
+strategyTest.run();

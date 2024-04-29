@@ -1,0 +1,55 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures page
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/pict";
+import "db/picts";
+import "db/sels";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      GroupPict = getPicture();
+      sys.print(rp.mk({
+        group: GroupPict.group,
+        pict: pict.toJs(GroupPict.pict)
+      }));
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+
+/// \ -> {s, <pict>} :: {group, pict}
+getPicture = \ -> {
+	group = sels.getGroup();
+	pictureId = sels.getPict();
+
+	Pictures = picts.read(group);
+	pictureOp = pictureId != ""
+    ? arr.find(Pictures, \P -> return pictureId == P.id;)
+    : []
+  ;
+
+	now = time.now();
+  dt = str.fmt(
+    "%v",
+    [(time.hour(now) * 60 + time.minute(now)) / sels.getPictTime()]
+  );
+	if (!pictureOp | dt != sels.getPictDate()) {
+		groupPict = picts.next();
+    group = groupPict.group;
+    pict = groupPict.picture;
+		sels.setGroup(group);
+		sels.setPict(pict.id);
+		sels.setPictDate(dt);
+    return {group, pict};
+	}
+
+	return {group, pict: pictureOp!};
+};
+

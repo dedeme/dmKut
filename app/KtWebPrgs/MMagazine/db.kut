@@ -15,6 +15,8 @@ init = \-> {
     file.mkdir(cts.dbPath);
     file.mkdir(path.cat([cts.dbPath, "evals"]));
     file.mkdir(path.cat([cts.dbPath, "ranks"]));
+    file.mkdir(path.cat([cts.dbPath, "yevals"]));
+    file.mkdir(path.cat([cts.dbPath, "yranks"]));
   }
 };
 

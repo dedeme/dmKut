@@ -3,7 +3,9 @@
 
 /// Package index reader.
 
+import "libdm/jstb";
 import "db";
+import "data/dpath";
 import "data/indexTree";
 
 // Read module documentation.
@@ -35,7 +37,7 @@ completeTrees = \Trees, dir -> {
   for (fname = Fnames) {
     fpath = path.cat([dir, fname]);
     if (file.isDirectory(fpath)) {
-      NewTree = indexTree.mk(fname, [], []);
+      :indexTree NewTree = indexTree.mk(fname, [], []);
       arr.push(Trees, NewTree);
       completeTrees(NewTree.Trees, fpath);
     } else {
@@ -48,13 +50,15 @@ completeTrees = \Trees, dir -> {
 /// Reads package index tree.
 /// \s -> [m]
 read = \pack -> {
-  Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
-  if (arr.size(Ppath) == 0) return [];
+  :jstb pathsTb = db.pathsTb();
+  PpathOp = arr.find(pathsTb.read#(), \:dpath P -> return P.id == pack;);
+  if (!PpathOp) return [];
 
-  root = Ppath!.path;
+  :dpath Ppath = PpathOp!;
+  root = Ppath.spath;
   if (!file.exists(root)) return [];
 
-  R = indexTree.mk("", [], []);
+  :indexTree R = indexTree.mk("", [], []);
   completeTrees(R.Trees, root);
   return [R];
 };

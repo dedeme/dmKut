@@ -1,0 +1,15 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test quotes.
+
+import "extDb/quotesDb";
+
+/// Returns
+///   {
+///     q: <quotes>
+///   }
+/// \{*.} -> {*.}
+run = \Rq -> return {
+  q: quotesDb.read()
+};;

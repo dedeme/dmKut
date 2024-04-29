@@ -6,5 +6,5 @@
 /// Constructor. <conf> is directly JSONizable.
 ///   path: Default source path.
 ///   showAll: 'true' if all libraries should be shown.
-/// \s, b -> <conf>{s, b}
-mk = \path, showAll -> return { path, showAll };;
+/// \s, s, b -> <conf>{s, b}
+mk : spath, showAll;

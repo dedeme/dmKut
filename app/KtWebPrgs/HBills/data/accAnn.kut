@@ -1,8 +1,11 @@
-// Copyright 16-Nov-2022 ºDeme
+// Copyright 26-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Accounting annotation entry
+/// Date account annotation.
 
-/// Create a new entry.
-/// \s, s, n -> <accAnn>[s, s, n]
-mk = \date, description, amount -> return [date, description, amount];;
+/// Constructor.
+///   date  : Annotation date type YYYYMMDD.
+///   place : Annotation description.
+///   amount: Annotation amount.
+/// \s,s,f -> <accAnn>
+new : date, place, amount;

@@ -1,0 +1,19 @@
+// Copyright 03-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <bkEntry> data definition.
+
+/// Constructor.
+///   id         : Backup paths identifier.
+///   source     : Absolute path of backup source.
+///   sourceError: Error reading 'source' or "".
+///   backup     : Absolute path of backup target.
+///   backupError: Error reading 'backup' or "".
+/// \s,s,s,s,s -> <bkEntry>
+new : id, source, sourceError, backup, backupError;
+
+/// \<bkEntry>, s -> ()
+setSource = \O, v -> O[source] = v;;
+
+/// \<bkEntry>, s -> ()
+setBackup = \O, v -> O[backup] = v;;

@@ -4,13 +4,10 @@
 /// Pair Model - Float.
 
 /// \s, f -> d<ModelFloat>
-new = \model, value ->  return {
-  model,
-  value
-};;
+new : model, value;
 
 /// \<ModelValue> -> [*(JS)...]
-toJs = \Mf -> return [Mf.model, Mf.value];;
+toJs = \Mf -> return Mf;;
 
 /// \[*(JS)...] -> <ModelValue>
-fromJs = \A -> return new(A[0], A[1]);;
+fromJs = \A -> return A;;

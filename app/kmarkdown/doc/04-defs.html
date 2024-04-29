@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Definiciones y citas</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='03-listas.html'>Anterior (Listas)</a> · <a href="index.html">Índice</a> · <a href='05-links.html'>Posterior (Hipervínculos e imágenes)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#Definiciones'>Definiciones</a><br>
+<a href='#Citas'>Citas</a>
+</p>
+<hr>
+<a name="Definiciones"></a>
+<h3>Definiciones</h3>
+<p>Las definiciones se crean usando '-' y '>'-</p>
+<ol>
+<dt>'-'</dt>
+<dd>
+<p>Introduce el término.</p>
+<p>Éste se extiende hasta el primer retorno de carro seguido por '>'.</p>
+<p><i>NOTA: El texto es un texto HTML</i>.</p>
+</dd>
+<dt>'>'</dt>
+<dd>
+<p>Introduce la definición. Ésta puede tener varios párrafos y listas simples
+(sin anidamiento).</p>
+</dd>
+</ol>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Definiciones:
+
+- La primera
+> Esta es una definición simple.
+
+- La se<b>g</b>unda
+> Esta tiene dos párrafos. Este es el primero
+
+  Y este el segundo.
+
+- La <br> tercera
+> Esta lleva una lista:
+
+  * Item 1, Párrafo 1.
+
+    Item 1, Párrafo 2
+
+  * Item 2
+</div>
+<script>aceConf("aceEditor-0", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Definiciones:</p>
+<ol>
+<dt>La primera</dt>
+<dd>
+<p>Esta es una definición simple.</p>
+</dd>
+<dt>La se<b>g</b>unda</dt>
+<dd>
+<p>Esta tiene dos párrafos. Este es el primero</p>
+<p>Y este el segundo.</p>
+</dd>
+<dt>La <br> tercera</dt>
+<dd>
+<p>Esta lleva una lista:</p>
+<ul>
+<li>
+<p>Item 1, Párrafo 1.</p>
+<p>Item 1, Párrafo 2</p>
+</li>
+<li>
+<p>Item 2</p>
+</li>
+</ul>
+</dd>
+</ol>
+</div><ol>
+<dt>NOTA</dt>
+<dd>
+<p><i>El texto en los niveles de anidamiento se debe escribir con dos espacios
+  iniciales por cada nivel. (Ver lineas 9 y 16 del anterior ejemplo).</i></p>
+</dd>
+</ol>
+<a name="Citas"></a>
+<h3>Citas</h3>
+<p>Se crean identando un párrafo.</p>
+<p>Las citas permiten varios párrafos y listas simples (sin anidamiento).</p>
+<div id="aceEditor-1" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Una cita interesante:
+
+  Tal y cual
+
+  Y pascual
+
+  1. Item Tal.
+
+    Segundo párrafo del item Tal.
+
+  2. Item pascual.
+
+Se acabó la cita.</div>
+<script>aceConf("aceEditor-1", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Una cita interesante:</p>
+<blockquote>
+<p>Tal y cual</p>
+<p>Y pascual</p>
+<ol>
+<li>
+<p>Item Tal.</p>
+<p>Segundo párrafo del item Tal.</p>
+</li>
+<li>
+<p>Item pascual.</p>
+</li>
+</ol>
+</blockquote>
+<p>Se acabó la cita.</p>
+</div><ol>
+<dt>NOTA</dt>
+<dd>
+<p><i>El texto en los niveles de anidamiento se debe escribir con dos espacios
+  iniciales por cada nivel. (Ver lineas 5 y 9 del anterior ejemplo).</i>
+</p>
+</dd>
+</ol>
+<hr>
+<p style="text-indent: 0px"><a href='03-listas.html'>Anterior (Listas)</a> · <a href="index.html">Índice</a> · <a href='05-links.html'>Posterior (Hipervínculos e imágenes)</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

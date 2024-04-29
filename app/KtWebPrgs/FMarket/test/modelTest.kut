@@ -1,0 +1,30 @@
+// Copyright 12-Dic-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test main script.
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/quotes";
+import "db";
+
+/// Run tests
+/// \ -> ()
+run = \ -> {
+  modelId = "QFIJO";
+  params = [0.14];
+  co = "IBE";
+  sys.print(process(modelId, params, co));
+};
+
+// \s, [f] | [f, f], s -> s
+process = \modelId, Params, co -> {
+  md = models.get(modelId)!;
+  :quotes qts = db.readQuotes();
+  coIx = arr.index(qts.Cos, \c -> return c == co;);
+  Dates = qts.Dates;
+  Closes = quotes.getSingle(qts.Closes, coIx);
+  Refs = model.calc(md, Closes, Params);
+
+  return js.w(arr.zip([Dates, Closes, Refs]));
+};

@@ -1,0 +1,25 @@
+// Copyright 09-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// ibex table
+
+import "data/ibex";
+import "cts";
+
+fpath = path.cat([cts.dataPath, "ibex.tb"]);
+
+/// Initialize table.
+/// \ -> ()
+init = \ -> sys.throw("Table 'ibex.tb' must be created manually");;
+
+/// Reads table as JS string.
+/// \ -> s
+readJs = \ -> return file.read(fpath);;
+
+/// Reads table
+/// \ -> <ibex>
+read = \ -> return ibex.fromJs(js.r(file.read(fpath)));;
+
+/// Writes table
+/// \<ibex> -> ()
+write = \ib -> file.write(fpath, js.w(ib));;

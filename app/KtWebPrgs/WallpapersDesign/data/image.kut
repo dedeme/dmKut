@@ -16,18 +16,18 @@ newDefault = \id -> return new(id, [], [], []);;
 /// \<image> -> [*(JS)...]
 toJs = \I -> return [
     I.id,
-    I.cut ? [imgCut.toJs(I.cut!)] : [],
-    I.adjustment ? [imgAdjustment.toJs(I.adjustment!)] : [],
-    I.blur ? [imgBlur.toJs(I.blur!)] : []
+    !!I.cut ? [imgCut.toJs(I.cut!)] : [],
+    !!I.adjustment ? [imgAdjustment.toJs(I.adjustment!)] : [],
+    !!I.blur ? [imgBlur.toJs(I.blur!)] : []
   ];;
 
 /// \[*(JS)...] -> <image>
 fromJs = \A -> {
   return new(
     A[0],
-    A[1] ? [imgCut.fromJs(A[1]!)]: [],
-    A[2] ? [imgAdjustment.fromJs(A[2]!)] : [],
-    A[3] ? [imgBlur.fromJs(A[3]!)] : []
+    !!A[1] ? [imgCut.fromJs(A[1]!)]: [],
+    !!A[2] ? [imgAdjustment.fromJs(A[2]!)] : [],
+    !!A[3] ? [imgBlur.fromJs(A[3]!)] : []
   );
 };
 

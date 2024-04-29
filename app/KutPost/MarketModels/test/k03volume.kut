@@ -1,0 +1,17 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test volumes.
+
+import "libmkt/volumes";
+import "extDb/cosTb";
+import "cts";
+
+/// Returns
+///   {
+///     vol: [f.]
+///   }
+/// \{*.} -> {*.}
+run = \Rq -> return {
+  vol: volumes.read(cts.quotesPath, 60, cosTb.read())
+};;

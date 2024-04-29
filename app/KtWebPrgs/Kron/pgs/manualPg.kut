@@ -1,0 +1,72 @@
+// Copyright 27-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Fix page.
+
+import "KtWeb/rp";
+import "KtWeb/global";
+import "db";
+import "db/annsTb";
+import "data/ann";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      Anns = arr.map(
+        arr.filter(
+          annsTb.read(),
+          \:ann a -> return a.type == ann.typeMANUAL;
+        ),
+        ann.toJs
+      );
+      return rp.mk({
+        dbKey: db.readKey(),
+        Anns
+      });
+    }
+    "new": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      a = ann.fromJs(Rq.annotation);
+      Anns = annsTb.read();
+      ann.add(Anns, a);
+      annsTb.write(Anns);
+
+      return rp.mk({ dbKey });
+    }
+    "delete": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      id = math.ftoi(Rq.id);
+      Anns = annsTb.read();
+      ann.del(Anns, id);
+      annsTb.write(Anns);
+
+      return rp.mk({ dbKey });
+    }
+    "modify": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      a = ann.fromJs(Rq.annotation);
+      Anns = annsTb.read();
+      ann.modify(Anns, a);
+      annsTb.write(Anns);
+
+      return rp.mk({ dbKey });
+    }
+    "run": {
+      id = math.ftoi(Rq.id);
+      R = ann.executeId(annsTb.read(), id);
+      error = !R ? "" : R!;
+      return rp.mk({
+        error
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

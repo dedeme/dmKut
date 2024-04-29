@@ -1,0 +1,104 @@
+// Copyright 30-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Summary page.
+
+import "libmkt/models";
+import "libmkt/model";
+import "KtWeb/rp";
+import "data/sm";
+import "data/smE";
+import "data/smVal";
+import "data/evE";
+import "data/upRs";
+import "db";
+import "cts";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+        summary: mkSummary()
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+// \ -> <sm>
+mkSummary = \ -> {
+  date = arr.peek(db.dates("daily"));
+  Pon = []; // [<smE>.]
+  Real = []; // [<smE>.]
+  Acc = []; // [<smE>.]
+  Prf = []; // [<smE>.]
+
+  for (:model md = models.list()) {
+    mdId = md.id;
+
+    :arr evs = db.read("daily", date, mdId);
+    :evE ev = evs[0];
+    :upRs evEval = ev.eval;
+    maxEvPon = smVal.new(0, evEval.pon);
+    maxEvReal = smVal.new(0, evEval.real);
+    maxEvAcc = smVal.new(0, evEval.acc);
+    maxEvPrf = smVal.new(0, evEval.prof);
+    :upRs evAvg = ev.avg;
+    maxAvPon = smVal.new(0, evAvg.pon);
+    maxAvReal = smVal.new(0, evAvg.real);
+    maxAvAcc = smVal.new(0, evAvg.acc);
+    maxAvPrf = smVal.new(0, evAvg.prof);
+    :upRs evCrr = ev.crr;
+    maxCrPon = smVal.new(0, evCrr.pon);
+    maxCrReal = smVal.new(0, evCrr.real);
+    maxCrAcc = smVal.new(0, evCrr.acc);
+    maxCrPrf = smVal.new(0, evCrr.prof);
+
+    avgDvPon = smVal.new(0, 0.0);
+    avgDvReal = smVal.new(0, 0.0);
+    avgDvAcc = smVal.new(0, 0.0);
+    avgDvPrf = smVal.new(0, 0.0);
+
+    szV = [0];
+    for (i, :evE ev = evs) {
+      :upRs evCrr = ev.crr;
+      if (evCrr.sales < cts.minSales) continue;
+
+      if (evCrr.pon > maxCrPon.val) maxCrPon.up(i, evCrr.pon);
+      if (evCrr.real > maxCrReal.val) maxCrReal.up(i, evCrr.real);
+      if (evCrr.acc > maxCrAcc.val) maxCrAcc.up(i, evCrr.acc);
+      if (evCrr.prof > maxCrPrf.val) maxCrPrf.up(i, evCrr.prof);
+      :upRs evEval = ev.eval;
+      if (evEval.pon > maxEvPon.val) maxEvPon.up(i, evEval.pon);
+      if (evEval.real > maxEvReal.val) maxEvReal.up(i, evEval.real);
+      if (evEval.acc > maxEvAcc.val) maxEvAcc.up(i, evEval.acc);
+      if (evEval.prof > maxEvPrf.val) maxEvPrf.up(i, evEval.prof);
+      :upRs evAvg = ev.avg;
+      if (evAvg.pon > maxAvPon.val) maxAvPon.up(i, evAvg.pon);
+      if (evAvg.real > maxAvReal.val) maxAvReal.up(i, evAvg.real);
+      if (evAvg.acc > maxAvAcc.val) maxAvAcc.up(i, evAvg.acc);
+      if (evAvg.prof > maxAvPrf.val) maxAvPrf.up(i, evAvg.prof);
+      :upRs evDev = ev.dev;
+      avgDvPon.up(0, avgDvPon.val + evDev.pon / evAvg.pon);
+      avgDvReal.up(0, avgDvReal.val + evDev.real / evAvg.real);
+      avgDvAcc.up(0, avgDvAcc.val + evDev.acc / evAvg.acc);
+      avgDvPrf.up(0, avgDvPrf.val + evDev.prof / evAvg.prof);
+
+      szV! += 1;
+    }
+
+    sz = math.itof(szV!);
+    avgDvPon.up(0, avgDvPon.val / sz);
+    avgDvReal.up(0, avgDvReal.val / sz);
+    avgDvAcc.up(0, avgDvAcc.val / sz);
+    avgDvPrf.up(0, avgDvPrf.val / sz);
+
+    Pon.push(smE.new(mdId, maxEvPon, maxAvPon, avgDvPon, maxCrPon));
+    Real.push(smE.new(mdId, maxEvReal, maxAvReal, avgDvReal, maxCrReal));
+    Acc.push(smE.new(mdId, maxEvAcc, maxAvAcc, avgDvAcc, maxCrAcc));
+    Prf.push(smE.new(mdId, maxEvPrf, maxAvPrf, avgDvPrf, maxCrPrf));
+  }
+
+  return sm.new(Pon, Real, Acc, Prf);
+};

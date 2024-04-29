@@ -7,6 +7,8 @@ import "KtWeb/rp";
 import "libdm/log";
 import "data/cts";
 import "data/acc/ann";
+import "data/acc/ldg";
+import "data/acc/settlement";
 import "data/acc/annsTb";
 import "db/acc/diariesDb";
 
@@ -14,16 +16,15 @@ import "db/acc/diariesDb";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      inv = math.ftoi(Rq.inv);
       year0 = Rq.year; // Can be ""
 
-      Years = diariesDb.investorYears(inv);
+      Years = diariesDb.investorYears();
       year = arr.any(Years, \y -> return y == year0;) ? year0 : Years[0];
-      Anns = diariesDb.investorAnns(inv, year);
-      St = ann.mkSettlement(Anns);
+      Anns = diariesDb.investorAnns(year);
+      :settlement set = ann.mkSettlement(Anns);
       Ok = [true];
-      if (St.errors) {
-        for (e = St.errors) log.error(e);
+      if (!!set.Errors) {
+        for (e = set.Errors) log.error(e);
         Ok! = false;
       }
       sys.print(rp.mk({
@@ -31,27 +32,25 @@ process = \Rq -> {
         years: Years,
         year,
         anns: arr.map(Anns, ann.toJs),
-        cash: St.ledger.cash
+        cash: set.ledger[ldg.cash]
       }));
     }
     "new": {
-      inv = math.ftoi(Rq.inv);
-      Ann = ann.fromJs(Rq.annotation);
-      Years = diariesDb.investorYears(inv);
-      Anns = diariesDb.read(inv, Years[0]);
-      annsTb.add(Anns, Ann);
-      diariesDb.write(inv, Years[0], Anns);
+      :ann a = ann.fromJs(Rq.annotation);
+      Years = diariesDb.investorYears();
+      Anns = diariesDb.read(Years[0]);
+      annsTb.add(Anns, a);
+      diariesDb.write(Years[0], Anns);
 
       sys.print(rp.mkEmpty());
     }
     "del": {
-      inv = math.ftoi(Rq.inv);
       id = math.ftoi(Rq.annId);
 
-      Years = diariesDb.investorYears(inv);
-      Anns = diariesDb.read(inv, Years[0]);
+      Years = diariesDb.investorYears();
+      Anns = diariesDb.read(Years[0]);
       annsTb.del(Anns, id);
-      diariesDb.write(inv, Years[0], Anns);
+      diariesDb.write(Years[0], Anns);
 
       sys.print(rp.mkEmpty());
     }

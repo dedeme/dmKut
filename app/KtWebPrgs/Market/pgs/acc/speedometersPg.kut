@@ -1,0 +1,61 @@
+// Copyright 16-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Speedometers page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "cts";
+import "data/acc/ann";
+import "data/acc/ldg";
+import "data/acc/settlement";
+import "data/acc/pf";
+import "db/acc/diariesDb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/invOperationsTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      :dic Closes = closesTb.readOnlyCloses();
+      :dic Refs = refsTb.read();
+
+      Cs = {}; // {[f, f, f]...} :: {nick -> [price, value, ref]}
+      Ys = diariesDb.investorYears();
+      Anns = !Ys ? [] : diariesDb.investorAnns(Ys[0]);
+      :settlement set = ann.mkSettlement(Anns);
+      if (!!set.Errors) for (e = set.Errors) log.error(e);
+      :ldg L = set.ledger;
+      Pf = set.Portfolio;
+
+      cash = L.cash;
+      equity = L.equity;
+      for (nk, V = Pf) {
+        stocks = math.itof(V[0]);
+        price = stocks * V[1];
+
+        clOp = Closes.get(nk);
+        cl = !!clOp ? stocks * clOp! : price;
+
+        rfOp = Refs.get(nk);
+        rf = !rfOp ? price : stocks * rfOp![1];
+
+        CoOp = Cs.get(nk);
+        if (!!CoOp) {
+          Co = CoOp!;
+          Cs[nk] = [Co[0] + price, Co[1] + cl, Co[2] + rf];
+        } else {
+          Cs.put(nk, [price, cl, rf]);
+        }
+      }
+      return rp.mk({
+        Cs,
+        cash,
+        equity
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

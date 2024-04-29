@@ -9,37 +9,30 @@ import "db";
 
 accPath = "acc";
 
-// \i -> s
-invPath = \inv -> return path.cat([accPath, str.fmt("Investor-%v", [inv])]);;
-
-// \i -> s
-diariesPath = \inv -> return path.cat([invPath(inv), "diaries"]);;
+// s
+diariesPath = path.cat([accPath, "diaries"]);
 
 // \i, i -> s
-fpath = \inv, year ->
-  return path.cat([invPath(inv), "diaries", str.fmt("%v.tb", [year])]);;
+fpath = \year ->
+  return path.cat([diariesPath, str.fmt("%v.tb", [year])]);;
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   file.mkdir(db.pathOf(accPath));
-  for (inv = 0:cts.investors) {
-    file.mkdir(db.pathOf(invPath(inv)));
-    if (!db.exists(diariesPath(inv))){
-      file.mkdir(db.pathOf(diariesPath(inv)));
-      year = math.itos(time.year(time.now()));
-      write(inv, year, annsTb.new());
-    }
+  if (!db.exists(diariesPath)){
+    file.mkdir(db.pathOf(diariesPath));
+    year = math.itos(time.year(time.now()));
+    write(year, annsTb.new());
   }
 };
 
 /// Read an annotation table. If the annotations table does not exist, it
 /// returns an empty <annsTb>
-///   inv: Investor.
 ///   year: Year.
-/// \i, s -> <annsTb>
-read = \inv, year -> {
-  p = fpath(inv, year);
+/// \s -> <annsTb>
+read = \year -> {
+  p = fpath(year);
   return file.exists(db.pathOf(p))
     ? annsTb.fromJs(js.r(db.read(p)))
     : annsTb.new()
@@ -47,44 +40,21 @@ read = \inv, year -> {
 };
 
 /// Writes an annotation table.
-///   inv: Investor.
-///   year: Year.
 ///   table: Annotations table.
-/// \i, s, <annsTb> -> ()
-write = \inv, year, table ->
-  db.write(fpath(inv, year), js.w(annsTb.toJs(table)));;
+/// \s, <annsTb> -> ()
+write = \year, table ->
+  db.write(fpath(year), js.w(annsTb.toJs(table)));;
 
-/// Returns a sorted array from after to before of years with activity of
-/// one investor.
-/// \i -> [s...]
-investorYears = \inv -> {
-  Years = arr.map(file.dir(db.pathOf(diariesPath(inv))), \f -> return f[:-3];);
+/// Returns a sorted array from after to before of years with activity of the
+/// investor.
+/// \ -> [s.]
+investorYears = \ -> {
+  Years = arr.map(file.dir(db.pathOf(diariesPath)), \f -> return f[:-3];);
   arr.sort(Years, \y1, y2 -> return y1 > y2;);
   return Years;
 };
 
-/// Returns a sorted array from after to before of years with activity of
-/// all the investor.
-/// \i -> [s...]
-allInvestorsYears = \ -> {
-  All = iter.reduce(
-    [0:cts.investors], [],
-    \r, i -> {arr.cat(r, investorYears(i)); return r;}
-  );
-  return arr.duplicates(All, \y1, y2 -> return y1 == y2;)[0];
-};
-
 /// Returns an unsorted array with annotations of one investor.
-/// \i, s -> [<ann>...]
-investorAnns = \inv, year -> return annsTb.anns(read(inv, year));;
-
-/// Returns an unsorted array with annotations of all the investors.
-/// \s -> [<ann>...]
-allInvestorsAnns = \year -> {
-  Anns = []; // [<ann>...]
-  for (i = 0:cts.investors) arr.cat(Anns, investorAnns(i, year));
-  return Anns;
-};
-
-
+/// \s -> [<ann>.]
+investorAnns = \year -> return annsTb.anns(read(year));;
 

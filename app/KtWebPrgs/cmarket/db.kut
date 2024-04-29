@@ -9,7 +9,7 @@ import "db/quotesDb";
 import "db/cosTb";
 import "db/svCodesTb";
 import "db/activityTb";
-import "db/investorsTb";
+import "db/investorTb";
 import "db/ibexTb";
 import "db/acc/diariesDb";
 import "db/acc/profitsDb";
@@ -22,6 +22,9 @@ import "db/daily/cosSelTb";
 /// Initialize data base.
 /// \->()
 init = \ -> {
+  if (file.exists(cts.dataPath)) {
+    sys.throw("Directory " + cts.dataPath + " already exists.");
+  }
   file.mkdir(cts.dataPath);
   unlock();
   calendarTb.init();
@@ -29,7 +32,7 @@ init = \ -> {
   cosTb.init();
   svCodesTb.init();
   activityTb.init();
-  investorsTb.init();
+  investorTb.init();
   diariesDb.init();
   profitsDb.init();
   closesTb.init();

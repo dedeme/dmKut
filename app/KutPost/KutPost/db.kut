@@ -1,0 +1,26 @@
+// Copyright 17-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base initialization.
+
+import "libdm/log";
+import "cts";
+import "db/usersTb";
+import "db/sessionsTb";
+import "db/langTb";
+
+/// Initializes data base.
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+
+    log.reset();
+    usersTb.init();
+    sessionsTb.init();
+    langTb.init();
+  } else {
+    sys.throw("Database already initialized");
+  }
+};
+

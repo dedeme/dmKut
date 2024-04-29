@@ -6,15 +6,12 @@
 import "data/modelFloat";
 
 /// \s, [<ModelFloat>...] -> d<ModelFloats>
-new = \date, values -> return {
-  date,
-  values
-};;
+new : date, Values;
 
 /// \<ModelFloats> -> [*(JS)...]
 toJs = \Mf -> return [
-  Mf.date,
-  arr.map(Mf.values, \e -> return modelFloat.toJs(e);)
+  Mf[date],
+  arr.map(Mf[Values], \e -> return modelFloat.toJs(e);)
 ];;
 
 /// \[*(JS)...] -> <ModelFloats>

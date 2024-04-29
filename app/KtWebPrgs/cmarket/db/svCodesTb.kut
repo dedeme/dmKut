@@ -39,7 +39,7 @@ read = \serverId -> {
   Changed = [false];
   // [[[s,s]...]]]
   Codes = dic.get(SvCodes, serverId);
-  if (Codes) {
+  if (!!Codes) {
     for (n, c = Codes!) dic.put(NickCodes, n, c);
 
     for (nk = Nicks) {

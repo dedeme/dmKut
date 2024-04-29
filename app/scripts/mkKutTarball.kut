@@ -26,11 +26,11 @@ pars = [
 
 Rs = sys.cmd2("tar", pars);
 
-Errs = Rs[1] ? str.splitTrim(Rs[1], "\n") : [];
+Errs = Rs[1] != "" ? str.splitTrim(Rs[1], "\n") : [];
 arr.filterIn(Errs, \m ->
-  return m & !str.starts(m, "tar: Eliminando la `/' inicial");
+  return m != "" & !str.starts(m, "tar: Eliminando la `/' inicial");
 );
 
-if (Errs) arr.each(Errs, \m -> sys.println(m););
+if (!!Errs) arr.each(Errs, \m -> sys.println(m););
 else sys.println("Tarball done");
 

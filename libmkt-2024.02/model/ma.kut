@@ -1,0 +1,16 @@
+// Copyright 05-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Mobil average.
+
+import "../model";
+import "doc/maDoc";
+
+/// Returns a new 'appr' model.
+new = \ -> return model.new(
+    "MM",
+    "Media móvil",
+    maDoc.text,
+    ["Días", "Banda"],
+    [model.dayParam, model.percParam]
+  );;

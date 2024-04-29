@@ -1,0 +1,21 @@
+// Copyright 17-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <activity> table.
+
+import "cts";
+import "data/activity";
+
+fpath = path.cat([cts.dataPath, "activity.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write(activity.newDefault());;
+
+/// Reads table.
+/// \ -> <activity>
+read = \ -> return activity.fromJs(js.r(file.read(fpath)));;
+
+/// Writes table.
+/// \<activity> -> ()
+write = \o -> file.write(fpath, js.w(o));;

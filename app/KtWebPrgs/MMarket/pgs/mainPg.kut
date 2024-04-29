@@ -1,0 +1,34 @@
+// Copyright 31-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "libmkt/cts" : mcts;
+import "libmkt/models";
+import "KtWeb/rp";
+import "cts";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+        initialCapital: mcts.initialCapital,
+        evalSteps: cts.evalSteps,
+        minSales: cts.minSales,
+        ParamBases: cts.ParamBases,
+        ParamBaseIncs: cts.ParamBaseIncs,
+        ParamEnvIncs: cts.ParamEnvIncs,
+        Models: models.list(),
+        orderBuy: mcts.orderBuy,
+        orderSell: mcts.orderSell,
+        daysLoss: mcts.daysLoss,
+        noLossMultiplicator: mcts.noLossMultiplicator,
+        Periods: cts.Periods,
+        datesInPeriod: cts.datesInPeriod
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -1,0 +1,12 @@
+// Copyright 14-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Entry for profits charts.
+
+/// Constructor
+///   date : Date in base format (YYYYMMDD)
+///   total: Total profits.
+///   acc  : Accounting profits.
+///   risk : Risk profits.
+/// \s, f, f, f -> <profitsEntry>
+new : date, total, acc, risk;

@@ -1,0 +1,24 @@
+// Copyright 17-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Lang table
+
+import "cts";
+import "data/user";
+
+:file fpath = path.cat([cts.dataPath, "lang.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> {
+  if (!fpath.exists())
+    write("es");
+};
+
+/// Read users
+/// \ -> s
+read = \ -> return fpath.read();;
+
+/// Write users.
+/// \s -> ()
+write = \lang -> fpath.write(lang);;

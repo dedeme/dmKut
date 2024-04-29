@@ -12,7 +12,7 @@ process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       sys.print(rp.mk({
-        modelIds: arr.map(models.list(), \md -> return model.id(md);)
+        modelIds: arr.map(models.list(), \:model md -> return md.id;)
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

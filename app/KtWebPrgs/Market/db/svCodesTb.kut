@@ -1,0 +1,91 @@
+// Copyright 10-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Server codes table.
+
+import "libdm/log";
+import "data/qsvs";
+import "data/qsv";
+import "quotesDb";
+import "cts";
+
+fpath = path.cat([cts.dataPath, "svCodes.tb"]);
+
+/// Initialize table.
+/// \-> ()
+init = \ -> if (!file.exists(fpath)) file.write(fpath, "{}");;
+
+/// Returns a dictionary {nick: code} with company codes of 'serverId'.
+/// If such map does not exist, it is created.
+/// \s -> {s.}
+read = \serverId -> {
+  // {{s.}}
+  :dic SvCodes = js.r(file.read(fpath));
+
+  // [<qsv>.]
+  :arr Svs = qsvs.list();
+  for (id = SvCodes.keys()) {
+    if (!Svs.any(\:qsv sv -> return sv.id == id;))
+      log.error(str.fmt(
+        "Found codes of not existent server '%v'\n" +
+        "Codes can be deleted with 'svCodesTb_purge'",
+        [id]
+      ));
+  }
+
+  // [s.]
+  :arr Nicks = quotesDb.nicks();
+  // {s.}
+  NickCodes = {};
+  changedV = [false];
+  // [[[s,s].]]]
+  CodesOp = SvCodes.get(serverId);
+  if (!!CodesOp) {
+    for (n, c = CodesOp!) NickCodes.put(n, c);
+
+    for (nk = Nicks) {
+      if (!NickCodes.get(nk)) {
+        NickCodes.put(nk, "");
+        changedV! = true;
+      }
+    }
+
+    for (nk = NickCodes.keys()) {
+      if (!Nicks.any(\n -> return n == nk;)) {
+        NickCodes.remove(nk);
+        changedV! = true;
+      }
+    }
+  } else {
+    for (nk = Nicks) NickCodes.put(nk, "");
+    changedV! = true;
+  }
+
+  if (changedV!) write(serverId, NickCodes);
+
+  return NickCodes;
+};
+
+/// Write a dictionary {nick: code} in 'serverId'
+/// \s, {s.} -> ()
+write = \serverId, NkCodes -> {
+  // {{s.}}
+  :dic SvCodes = js.r(file.read(fpath));
+  SvCodes.put(serverId, NkCodes);
+  file.write(fpath, js.w(SvCodes));
+};
+
+/// Remove Nick-Codes of not existing servers.
+/// \-> ()
+purge = \ -> {
+  // {{s.}}
+  :dic SvCodes = js.r(file.read(fpath));
+
+  :arr SvIds = arr.map(qsvs.list(), \:qsv sv -> return sv.id;);
+  for (s = SvCodes.keys())
+    if (!SvIds.any(\id -> return id == s;))
+      SvCodes.remove(s);
+
+  file.write(fpath, js.w(SvCodes));
+};
+

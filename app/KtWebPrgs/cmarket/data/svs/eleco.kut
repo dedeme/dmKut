@@ -93,25 +93,23 @@ readHistoric = \html -> {
 
 // OTHER -----------------------------------------------------------------------
 
-// \-> s
-id = \ -> return "ELECO";;
+id = "ELECO";
 
-// \-> s
-name = \ -> return "El Economista";;
+name = "El Economista";
 
-// \-> b
-withDiary = \ -> return true;;
+withDiary = true;
 
 // \-> [s|s, b] ([html|error, ok])
 downloadDiary = \ -> {
   url = "https://www.eleconomista.es/mercados/mercado-continuo";
-  return sys.cmd(
+  R = sys.cmd(
     "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
   );
+  if (!R[1]) R[0] += url;
+  return R;
 };
 
-// \-> b
-withHistoric = \ -> return false;;
+withHistoric = false;
 
 // \s -> [s|s, b] ([html|error, ok])
 downloadHistoric = \code -> {

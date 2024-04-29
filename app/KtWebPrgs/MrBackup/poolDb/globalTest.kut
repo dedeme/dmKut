@@ -1,0 +1,102 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global test.
+
+import "data/testRs";
+import "cts";
+import "poolDb";
+
+/// \ -> {<testRs>.} :: {backupDirName: testResult}
+run = \ -> {
+	Rs = {}; // {<testRs>.} :: {backupDirName; testResult}
+	poolBase = cts.mrBackupTargets[0];
+  DirNames = []; // [s.]
+	for (dirName = file.dir(poolBase)) {
+		:testRs t = testRs.newDefault();
+    DirNames.push(dirName);
+		dir = path.cat([poolBase, dirName]);
+		if (!file.isDirectory(dir)) continue;
+
+		ftxt = path.cat([dir, "path.txt"]);
+		if (file.isRegular(ftxt)) {
+			t.withPathTxt = true;
+			tx = file.read(ftxt);
+			t.dpath = js.r(tx);
+			if (tx != "" & file.isDirectory(t.dpath)) t.pathOk = true;
+		}
+
+		fbig = path.cat([dir, "big"]);
+		if (file.exists(fbig)) t.isBig = true;
+
+		if (arr.size(file.dir(dir)) > 1) t.withBackups = true;
+
+		Rs.put(dirName, t);
+	}
+
+	for (i, pool = cts.mrBackupTargets) {
+		if (i == 0)	continue;
+
+		LdirNames = []; // [s.]
+		for (dirName = file.dir(pool)) {
+			LdirNames.push(dirName);
+
+			isMissingV = [true];
+			for (n = DirNames) {
+				if (n == dirName) {
+					isMissingV! = false;
+					break;
+				}
+			}
+			if (isMissingV!) {
+				:testRs t = testRs.newDefault();
+				t.notInBase = true;
+				Rs[dirName] = t;
+			}
+		}
+
+		for (n = DirNames) {
+			isMissingV = [true];
+			for (ln = LdirNames) {
+				if (n == ln) {
+					if (!lastTgzOk(poolBase, pool, n) | !equalsPathTxt(poolBase, pool, n))
+						Rs[n][testRs.synchronized] = false;
+
+					isMissingV! = false;
+				}
+			}
+			if (isMissingV!)
+				Rs[n][testRs.isMissing] = true;
+		}
+	}
+
+	return Rs;
+};
+
+// \s, s, s -> b
+lastTgzOk = \base, pool, n -> {
+	BaseTgzs = arr.filter(
+    file.dir(path.cat([base, n])),
+    \f -> return str.ends(f, ".tgz");
+  );
+	PoolTgzs = arr.filter(
+    file.dir(path.cat([pool, n])),
+    \f -> return str.ends(f, ".tgz");
+  );
+
+	if (BaseTgzs.size() == 0) return PoolTgzs.size() == 0;
+  if (PoolTgzs.size() == 0) return false;
+
+  lastBase = BaseTgzs.reduce(BaseTgzs[0], \r, e -> return e > r ? e : r;);
+  lastPool = PoolTgzs.reduce(PoolTgzs[0], \r, e -> return e > r ? e : r;);
+
+	return lastBase == lastPool;
+};
+
+// \s, s, s -> b
+equalsPathTxt = \base, pool, n -> {
+	txOp = poolDb.readPath(base, n, path.cat([base, n, "path.txt"]));
+	tx2Op = poolDb.readPath(pool, n, path.cat([pool, n, "path.txt"]));
+  if (!txOp | !tx2Op) return false;
+	return txOp! == tx2Op!;
+};

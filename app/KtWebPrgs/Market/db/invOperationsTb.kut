@@ -1,0 +1,21 @@
+// Copyright 15-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investor operations table.
+
+import "data/invOperation";
+import "cts";
+
+fpath = path.cat([cts.dataPath, "invOperations.tb"]);
+
+/// Initialize table.
+/// \-> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Read table.
+/// \ -> [<invOperation>.]
+read = \ -> return arr.map(js.r(file.read(fpath)), invOperation.fromJs);;
+
+/// Write table
+/// \[<invOperation>.] -> ()
+write = \Ops -> file.write(fpath, js.w(Ops));;

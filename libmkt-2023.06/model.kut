@@ -18,7 +18,7 @@ percParam = 1;
 ///   ParamNames   : Parameter names.
 ///   ParamTypes   : Parameter types. Each parameter can be:
 ///                  model.dayParam or model.percParam.
-///   ParamBases   : Minimum parameters to make simulations.
+///   ParamBases   : Minimum value for parameters to make simulations.
 ///   ParamBaseIncs: ParamBase increments.
 ///   ParamEnvIncs : Environment increments.
 ///   calc         : Function to calculare results. It has the following parameters:
@@ -80,7 +80,7 @@ paramEnvIncs = \md -> return md.Ei;;
 ///           This closes must be regularized (without -1.0 values).
 ///   Params: Parameter values.
 ///   action: Function to run for each date, after calculate the day
-///           references. It has nte following parameters:
+///           references. It has the following parameters:
 ///             - Closes: Day closes.
 ///             - Refs: Day references.
 ///               At the beginning their values can be '-1' until the
@@ -91,7 +91,8 @@ paramEnvIncs = \md -> return md.Ei;;
 calc = \md, Closes, Params, action -> md.c(Closes, Params, action);;
 
 /// 'calc' is not serialized
-/// \<model> -> [JS.] ([id, name, doc, ParamNames, ParamTypes])
+/// \<model> -> [JS.] ([id, name, doc, ParamNames, ParamTypes,
+///                     paramBases, paramBaseIncs, paramEnvIncs])
 toJs = \md -> return [
     md.i,
     md.n,

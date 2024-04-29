@@ -1,0 +1,35 @@
+// Copyright 10-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes servers.
+
+import "qsv";
+import "svs/bmania";
+import "svs/bsmks";
+import "svs/bym";
+import "svs/eleco";
+import "svs/inves";
+import "svs/mwatch";
+import "svs/wsj";
+import "svs/yahoo";
+
+/// Returns an array with registered quotes servers.
+/// \-> [<qsv>...]
+list = \-> return [
+    bmania.new(),
+    bsmks.new(),
+    bym.new(),
+    eleco.new(),
+    inves.new(),
+    mwatch.new(),
+    wsj.new(),
+    yahoo.new()
+  ];;
+
+/// Returns the current active diary server
+/// \-> <qsv>
+currentDiary = \-> return bym.new();;
+
+/// Returns the current active historic server
+/// \-> <qsv>
+currentHistoric = \-> return yahoo.new();;

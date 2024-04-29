@@ -1,22 +1,42 @@
-// Copyright 15-Aug-2023 ºDeme
+// Copyright 25-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Main script.
+/// Main module.
 
 import "KtWeb/rp";
-//import "db";
+import "db";
+import "cts";
 import "pgs/mainPg";
 
-Args = sys.args();
-ck = Args[0];
-Rq = js.r(Args[1]);
+// \ -> s
+help = \ -> return """
+  Use myPrg [help | version | key rq]
+  where
+    help: Shows this message.
+    version: Shows program version.
+    key rq: Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-rp.init(ck);
-//db.init();
+:arr Args = sys.args();
 
-switch(Rq.source) {
-  "Main": mainPg.process(Rq);
-  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    default: sys.println(help());
+  }
+  return;
 }
 
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
 
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
+  "Main": mainPg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+});

@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Encabezados</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='07-codigo.html'>Anterior (Código)</a> · <a href="index.html">Índice</a> · <a href='09-config.html'>Posterior (Configuración)</a></p>
+<hr>
+<p>Los encabezados aparecen en su propio párrafo y tienen una de las siguientes
+sintaxis:</p>
+
+<pre>
+### <i>texto</i>
+
+## <i>texto</i>
+
+# <i>texto</i>
+</pre>
+<p>Donde <i>texto</i> es HTML.</p>
+<p>Los encabezados de tipo '##' se utilizan para crear el índice de la página.
+Debido a ello no se deben utilizar las comillas en ellos -- tanto simples (')
+como dobles (").</p>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">### <i>Gran</i> encabezado
+
+Este es el encabezado más grande.
+
+## <i>Mediano</i> encabezado.
+
+Este se utiliza como índice.
+
+# <i>Pequeño</i> encabezado.
+
+Este es el encabezado más pequeño.
+</div>
+<script>aceConf("aceEditor-0", "kmd");</script>
+<p>Produce <a href="ej2/pg1.html">esta</a> página.</p>
+<hr>
+<p style="text-indent: 0px"><a href='07-codigo.html'>Anterior (Código)</a> · <a href="index.html">Índice</a> · <a href='09-config.html'>Posterior (Configuración)</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

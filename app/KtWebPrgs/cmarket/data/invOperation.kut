@@ -6,21 +6,15 @@
 /// Constructor
 ///   stocks  : If stocks > 0 is a sell operation.
 ///             If stocks == 0 is a buy operation.
-///   investor: Operation investor.
 ///   nick    : Operation nick.
-/// \i, i, s -> d<invOperation>
-new = \stocks, investor, nick -> return {stocks, investor, nick};;
+/// \i, s -> <invOperation>
+new : stocks, nick;
 
 /// \<invOperation> -> JS
-toJs = \O -> return [
-    math.itof(O.stocks),
-    math.itof(O.investor),
-    O.nick
-  ];;
+toJs = \O -> return O;;
 
 /// \JS -> <invOperation>
 fromJs = \A -> return new(
     math.ftoi(A[0]),
-    math.ftoi(A[1]),
-    A[2]
+    A[1]
   );;

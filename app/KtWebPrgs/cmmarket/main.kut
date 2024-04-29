@@ -5,6 +5,7 @@
 
 import "KtWeb/rp";
 import "libdm/log";
+import "libmkt/libmktHelper";
 import "data/cts";
 import "pgs/mainPg";
 import "pgs/descriptionPg";

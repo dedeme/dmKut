@@ -13,7 +13,7 @@ new = \ -> return model.new(
     "Quantum móvil",
 		qmobDoc.text,
 		["Intervalo"],
-    [model.percParam, model.percParam],
+    [model.percParam],
     [0.05],
     [0.01],
     [0.001],

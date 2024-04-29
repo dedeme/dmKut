@@ -1,18 +1,16 @@
-// Copyright 01-Dic-2022 ºDeme
+// Copyright 24-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Data base of jstb's.
 
-import "libdm/jstb";
+import "libdm/log";
 import "libmkt/qs";
 import "libmkt/quotes";
 import "libmkt/model";
 import "libmkt/models";
-import "data/cts";
+import "cts";
 import "data/flea";
 import "data/summaryRs";
-
-activityPath = path.cat([cts.dbPath, "activity.tb"]);
 
 modelsPath = path.cat([cts.dbPath, "models"]);
 
@@ -35,73 +33,37 @@ bwaPath = \mdId, date -> return path.cat(
   [historicPath(mdId), date, "bestWorstAvg.tb"]
 );;
 
+// Read companies.
+// \ -> [s.]
+readCos = \ -> {
+  CosT = js.r(file.read(path.cat([cts.marketDataPath, "ibex.tb"])));
+  :arr Cos = CosT[0];
+  Cos.sort(\c1, c2 -> return c1 < c2;);
+  return Cos;
+};
+
 /// Read CMarket quotes.
 /// \ -> <quotes>
 readQuotes = \ -> {
-  dataPath = cts.cmarketDataPath;
-
-  // \s -> s
-  readSqs = \nick ->
-    return file.read(path.cat([dataPath, "quotes", nick + ".tb"]));;
-
-  cosT = js.r(file.read(path.cat([dataPath, "cos.tb"])));
-  main = cosT[0];
-  Cos = arr.map(
-    arr.filter(
-      cosT[1],
-      \C -> return C[1] &
-        !arr.any(["ALM", "FAE", "GRE"], \nk -> return C[0] == nk;);
-    ),
-    \C -> return C[0];
-  );
-  arr.sort(Cos, \c1, c2 -> return c1 < c2;);
-
-  MainQs = qs.fromStr(cts.historicQuotes, readSqs(main));
-  if (!MainQs[1]) sys.throw(MainQs!);
-  Dates = qs.dates(MainQs!);
-
-  cols = arr.size(Cos);
-  rows = arr.size(Dates);
-  Opens = arr.new(rows, 0);
-  for (i = 0:rows) Opens[i] = arr.new(cols, 0.0);
-  Closes = arr.new(rows, 0);
-  for (i = 0:rows) Closes[i] = arr.new(cols, 0.0);
-  Maxs = arr.new(rows, 0);
-  for (i = 0:rows) Maxs[i] = arr.new(cols, 0.0);
-
-  for (i, c = Cos) {
-    QsRs = qs.fromStr(cts.historicQuotes, readSqs(c));
-    if (!QsRs[1]) sys.throw(QsRs!);
-    qts = QsRs!;
-
-    Ops = qs.opens(qts);
-    Cls = qs.closes(qts);
-    Mxs = qs.maxs(qts);
-    for (r = 0:rows) {
-      Opens[r][i] = Ops[r];
-      Closes[r][i] = Cls[r];
-      Maxs[r][i] = Mxs[r];
-    }
-  }
-
-  return quotes.new(arr.peek(Dates), Cos, Dates, Opens, Closes);
+  dpath = path.cat([cts.marketDataPath, "quotes"]);
+  Cos = readCos();
+  return quotes.read(dpath, Cos);
 };
 
-/// Returns the model list. Modesl with only one parameter are removed!!!.
-modelsList = \ -> return models.list();; /*return arr.filter(
-    models.list(),
-    \m -> return arr.size(model.paramBases(m)) > 1;
-  );;*/
+/// Returns the model list.
+modelsList = \ -> return models.list();;
 
 /// Reinitializes database.
+/// It must be called when a new model is added.
 init = \ -> {
+  log.reset();
+
   QsOp = [];
 
   file.mkdir(cts.dbPath);
-  if (!file.exists(activityPath)) writeActivity("stopped");
 
   file.mkdir(modelsPath);
-  for (mdId = arr.map(modelsList(), model.id)) {
+  for (mdId = arr.map(modelsList(), \:model md -> return md.id;)) {
     mdPath = modelPath(mdId);
     file.mkdir(mdPath);
     file.mkdir(path.cat([mdPath, "historic"]));
@@ -117,20 +79,10 @@ init = \ -> {
   }
 };
 
-/// Reads "activity.tb" and returns "active" or "stopped".
-/// \ -> s
-readActivity = \ -> return js.r(file.read(activityPath));;
-
-/// Writes "activity.tb".
-///   act: Value to write. Can be: "stopped" or "active".
-/// \s -> ()
-writeActivity = \act ->
-  file.write(activityPath, js.w(act == "stopped" ? act : "active"));;
-
 /// Reads 'fleas.tb' in model 'mdId'.
 /// Returns a fleas array sorted by evaluation points (descending).
 ///   mdId: Model identifier.
-/// \s -> [<flea>...]
+/// \s -> [<flea>.]
 readFleas = \mdId -> {
   return arr.map(js.r(file.read(fleasPath(mdId))), flea.fromJs);
 };
@@ -138,7 +90,7 @@ readFleas = \mdId -> {
 /// Writes 'fleas.tb' in model 'mdId'.
 ///   mdId : Model identifier.
 ///   fleas: Fleas array sorted by evaluation points (descending).
-/// \s, [<flea>...] -> ()
+/// \s, [<flea>.] -> ()
 writeFleas = \mdId, Fleas -> {
   now = time.now();
   today = time.toStr(now);
@@ -150,31 +102,31 @@ writeFleas = \mdId, Fleas -> {
   file.mkdir(path.parent(rkPath));
   file.write(rkPath, js.w(arr.map(Fleas[:40], flea.toJs)));
 
-  F = Fleas[0];
+  :flea f = Fleas[0];
   BWA = [
-    summaryRs.new(F.assets, F.profits, F.points),
-    summaryRs.new(F.assets, F.profits, F.points),
+    summaryRs.new(f.assets, f.profits, f.points),
+    summaryRs.new(f.assets, f.profits, f.points),
     summaryRs.new(0.0, 0.0, 0)
   ];
 
-  for (F = Fleas) {
-    B = BWA[0];
+  for (:flea f = Fleas) {
+    :summaryRs b = BWA[0];
     B2 = summaryRs.new(
-      F.assets > B.assets ? F.assets : B.assets,
-      F.profits > B.profits ? F.profits : B.profits,
-      F.points > B.points ? F.points : B.points
+      f.assets > b.assets ? f.assets : b.assets,
+      f.profits > b.profits ? f.profits : b.profits,
+      f.points > b.points ? f.points : b.points
     );
-    W = BWA[1];
+    :summaryRs w = BWA[1];
     W2 = summaryRs.new(
-      F.assets < W.assets ? F.assets : W.assets,
-      F.profits < W.profits ? F.profits : W.profits,
-      F.points < W.points ? F.points : W.points
+      f.assets < w.assets ? f.assets : w.assets,
+      f.profits < w.profits ? f.profits : w.profits,
+      f.points < w.points ? f.points : w.points
     );
-    A = BWA[2];
+    :summaryRs a = BWA[2];
     A2 = summaryRs.new(
-      A.assets + F.assets,
-      A.profits + F.profits,
-      A.points + F.points
+      a.assets + f.assets,
+      a.profits + f.profits,
+      a.points + f.points
     );
     BWA[0] = B2;
     BWA[1] = W2;
@@ -182,14 +134,16 @@ writeFleas = \mdId, Fleas -> {
   }
   size = arr.size(Fleas);
   sizef = math.itof(size);
-  A = BWA[2];
-  A2 = summaryRs.new(A.assets / sizef, A.profits / sizef, A.points / size);
+  :summaryRs a = BWA[2];
+  A2 = summaryRs.new(a.assets / sizef, a.profits / sizef, a.points / size);
   BWA[2] = A2;
 
-  file.write(bwaPath(mdId, today), js.w(arr.map(BWA, summaryRs.toJs)));
+  file.write(bwaPath(mdId, today), js.w(BWA));
 
-  Dates = file.dir(historicPath(mdId));
-  arr.sort(Dates, \d1, d2 -> return d1 > d2;);
+  // CLEAN
+
+  :arr Dates = file.dir(historicPath(mdId));
+  Dates.sort(\d1, d2 -> return d1 > d2;);
   minusYear = time.toStr(time.addDays(now, -365));
 
   dateV = ["11111111"];
@@ -207,37 +161,31 @@ writeFleas = \mdId, Fleas -> {
     }
     dateV! = d;
   }
-
 };
 
-/// Returns an dictionary {date -> [flea...]} with rankings of a model.
-/// \s -> {[<flea>...]...}
+/// Returns an dictionary {date -> [flea.]} with rankings of a model.
+/// \s -> {[<flea>.].}
 readRankings = \mdId -> {
   Dates = file.dir(historicPath(mdId));
-  Rk = {}; // {[<flea>...]...} :: {date -> [flea...]}
-  for (d = Dates) {
-    dic.put(
-      Rk,
-      d,
-      arr.map(js.r(file.read(rkPath(mdId, d))), flea.fromJs)
-    );
-  }
+  Rk = {}; // {[<flea>.].} :: {date -> [flea.]}
+  for (d = Dates)
+    Rk.put(d, arr.map(js.r(file.read(rkPath(mdId, d))), flea.fromJs));
   return Rk;
 };
 
 /// Returns an dictionary {date -> {model -> [best, worst, medium]}}, where
 /// best, worst and medium are arrays [assets, profits, points].
-/// \ -> {{[[f,f,f], [f,f,f], [f,f,f]]...}...}
+/// \ -> {{[[f,f,f], [f,f,f], [f,f,f]].}.}
 readSummary = \ -> {
-  R = {}; // {{[[f, f, f],[f, f, f],[f, f, f]] ...}...}
+  R = {}; // {{[[f, f, f],[f, f, f],[f, f, f]].}.}
   Models = file.dir(modelsPath);
   for (mdId = Models) {
     Dates = file.dir(historicPath(mdId));
     for (d = Dates) {
-      ModelDicOp = dic.get(R, d);
-      ModelDic = ModelDicOp ? ModelDicOp! : {};
-      dic.put(ModelDic, mdId, js.r(file.read(bwaPath(mdId, d))));
-      dic.put(R, d, ModelDic);
+      ModelDicOp = R.get(d);
+      :dic ModelDic = !ModelDicOp ? {} : ModelDicOp!;
+      ModelDic.put(mdId, js.r(file.read(bwaPath(mdId, d))));
+      R.put(d, ModelDic);
     }
   }
   return R;

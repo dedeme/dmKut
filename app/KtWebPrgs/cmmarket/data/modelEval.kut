@@ -8,15 +8,21 @@ import "fns";
 /// Constructor
 ///   params  : Calculus parameters.
 ///   times   : Historic evaluations number.
-///   hassets : Historic assets. (Money -- e.g. 104012.53)
+///   hassets : Historic final assets. (Money -- e.g. 104012.53)
 ///   hprofits: Historic profits. (Ratio -- e.g. 0.0321 [that is 3.21%]).
-///   hsales  : Historic number of sales.
-///   assets  : Last simulation assets. (Money -- e.g. 104012.53)
+///   hsales  : Historic total sales.
+///   assets  : Last simulation final assets. (Money -- e.g. 104012.53)
 ///   profits : Last simultarion profits. (Ratio -- e.g. 0.0321 [that is 3.21%]).
-///   sales   : Number of sales.
+///   sales   : Total sales.
 /// \[n...], i, f, f, f, f, f, f -> d<modelEval>
-new = \params, times, hassets, hprofits, hsales, assets, profits, sales ->
-  return {params, times, hassets, hprofits, hsales, assets, profits, sales};;
+new = \params, times,
+       hassets, hprofits, hsales,
+       assets, profits, sales
+       ->
+  return {params, times,
+       hassets, hprofits, hsales,
+       assets, profits, sales
+    };;
 
 /// \<modelEval> -> \[JS...]
 toJs = \M -> return [
@@ -59,7 +65,7 @@ best = \Ms -> {
 
 /// Returns the evalation with parameters 'params' of an array of model
 /// evaluations, or [] if such evaluation is not found.
-/// \[<modelEval>...], [f...] -> [<modelEval>]|[]
+/// \[<modelEval>.], [f.] -> [<modelEval>]|[]
 get = \Ms, Params -> return arr.find(
     Ms,
     \M -> return M.params == Params;
@@ -68,7 +74,7 @@ get = \Ms, Params -> return arr.find(
 /// Table 'eval' content data.
 ///   date: Date on which data was calculate in format YYYYMMDD.
 ///   evals: Array of parameter evaluations. One entry for each parameter set.
-/// \s, [<modelEval>...] -> d<modelEvalTb>
+/// \s, [<modelEval>.] -> d<modelEvalTb>
 newTb = \date, evals -> return {date, evals};;
 
 /// \<modelEvalTb> -> [JS...]

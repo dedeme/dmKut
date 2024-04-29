@@ -167,6 +167,7 @@ merge = \mqts, newQts, qts -> {
   I = [0];
   sz = arr.size(qts);
   Qs = arr.copy(qts); // to modify
+
   NqtsI = [0];
   nqtsSz = arr.size(newQts);
   QtsI = [0];
@@ -211,7 +212,7 @@ merge = \mqts, newQts, qts -> {
   // [s.]
   Errs = [];
 
-  if (mqts) {
+  if (!!mqts) {
     // [<qs>, [s.]]
     Rs = correctDates(mqts, QsR!);
     QsR! = Rs[0];

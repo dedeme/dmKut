@@ -1,0 +1,261 @@
+// Copyright 03-Oct-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data MWATCH ("MarketWatch").
+
+import "../qsv";
+import "libmkt/qs";
+import "libdm/ext";
+
+// \s -> [s] | []
+readVol = \tx -> {
+  mkRet = \n -> return [math.itos(math.ftoi(n))];;
+
+  if (tx == "") return ["0"];
+  if (str.ends(tx, "K")) {
+    vOp = math.fromEn(tx[:-1]);
+    if (!vOp) return [];
+    return mkRet(vOp! * 1000.0);
+  }
+  if (str.ends(tx, "M")) {
+    vOp = math.fromEn(tx[:-1]);
+    if (!vOp) return [];
+    return mkRet(vOp! * 1000000.0);
+  }
+
+  vOp = math.fromEn(tx);
+  if (!vOp) return [];
+  return mkRet(vOp!);
+};
+
+// DIARY -----------------------------------------------------------------------
+
+// \s -> [[s,f].],[s.]]
+readDaily = \html -> {
+  sys.throw("Not implemented");
+};
+
+// \-> [s, b] ([html|error, ok])
+downloadDaily = \ -> {
+  sys.throw("Not implemented");
+};
+
+// HISTORIC --------------------------------------------------------------------
+
+// \s -> [[<quote>.],[s.]]
+readHistoric = \html -> {
+  // [s.] (quotes type file 'NICK.tb')
+  Qs = [];
+  // [s.]
+  Errs = [];
+  ixV = [0];
+  ix2V = [0];
+
+  // \-> [<quote>.]
+  mkQs = \-> {
+    Qs, ok = qs.fromStr(Qs.size(), Qs.join("\n"));
+    if (ok) return Qs;
+    Errs.push(Qs);
+    return [];
+  };
+
+  // \s -> [[<quote>.], [s...]]
+  retError = \err -> {
+    Errs.push(err);
+    return [mkQs(), Errs];
+  };
+
+  ixV! = str.index(html, "<tbody>");
+  if (ixV! == -1) return retError("Beginning of table not found");
+  ixV! += 7;
+
+  endTable = str.indexFrom(html, "</tbody>", ixV!);
+  if (endTable == -1) return retError("End of table not found");
+
+  while () {
+    ixV! = str.indexFrom(html, "<tr>", ixV!);
+    if (ixV! == -1 | ixV! > endTable) break;
+    ixV! += 4;
+
+    endRow = str.indexFrom(html, "</tr>", ixV!);
+    if (endRow == -1) return retError("End of row not found");
+
+    // DATE
+    ixV! = str.indexFrom(html, '<td>', ixV!);
+    if (ixV! == -1) {
+      Errs.push("Beginning of field 'date' not found");
+      ixV! = endRow;
+      continue;
+    }
+    ixV! += 5;
+    ix2V! = str.indexFrom(html, "<", ixV!);
+    if (ix2V! == -1) {
+      Errs.push("End of field 'date' not found");
+      ixV! = endRow;
+      continue;
+    }
+    dateOp = time.fromEn(str.trim(html[ixV!:ix2V!]), "/");
+    if (!dateOp) {
+      Errs.push("Bad date: " + html[ixV!:ix2V!]);
+      continue;
+    }
+    date = time.toStr(dateOp!);
+
+    // OPEN
+    ixV! = str.indexFrom(html, "<td>", ixV!);
+    if (ixV! == -1) {
+      Errs.push("Beginning of field 'open' not found");
+      ixV! = endRow;
+      continue;
+    }
+    ixV! += 4;
+    ix2V! = str.indexFrom(html, "<", ixV!);
+    if (ix2V! == -1) {
+      Errs.push("End of field 'open' not found");
+      ixV! = endRow;
+      continue;
+    }
+    openOp = math.fromEn(str.trim(html[ixV!:ix2V!]));
+    if (!openOp) {
+      Errs.push("Bad open: " + html[ixV!:ix2V!]);
+      continue;
+    }
+    open = math.ftos(openOp!);
+
+    // MAX
+    ixV! = str.indexFrom(html, "<td>", ixV!);
+    if (ixV! == -1) {
+      Errs.push("Beginning of field 'max' not found");
+      ixV! = endRow;
+      continue;
+    }
+    ixV! += 4;
+    ix2V! = str.indexFrom(html, "<", ixV!);
+    if (ix2V! == -1) {
+      Errs.push("End of field 'max' not found");
+      ixV! = endRow;
+      continue;
+    }
+    maxOp = math.fromEn(str.trim(html[ixV!:ix2V!]));
+    if (!maxOp) {
+      Errs.push("Bad max: " + html[ixV!:ix2V!]);
+      continue;
+    }
+    max = math.ftos(maxOp!);
+
+    // MIN
+    ixV! = str.indexFrom(html, "<td>", ixV!);
+    if (ixV! == -1) {
+      Errs.push("Beginning of field 'min' not found");
+      ixV! = endRow;
+      continue;
+    }
+    ixV! += 4;
+    ix2V! = str.indexFrom(html, "<", ixV!);
+    if (ix2V! == -1) {
+      Errs.push("End of field 'min' not found");
+      ixV! = endRow;
+      continue;
+    }
+    minOp = math.fromEn(str.trim(html[ixV!:ix2V!]));
+    if (!minOp) {
+      Errs.push("Bad min: " + html[ixV!:ix2V!]);
+      continue;
+    }
+    min = math.ftos(minOp!);
+
+    // CLOSE
+    ixV! = str.indexFrom(html, "<td>", ixV!);
+    if (ixV! == -1) {
+      Errs.push("Beginning of field 'close' not found");
+      ixV! = endRow;
+      continue;
+    }
+    ixV! += 4;
+    ix2V! = str.indexFrom(html, "<", ixV!);
+    if (ix2V! == -1) {
+      Errs.push("End of field 'close' not found");
+      ixV! = endRow;
+      continue;
+    }
+    closeOp = math.fromEn(str.trim(html[ixV!:ix2V!]));
+    if (!closeOp) {
+      Errs.push("Bad close: " + html[ixV!:ix2V!]);
+      continue;
+    }
+    close = math.ftos(closeOp!);
+
+    // VOL
+    ixV! = str.indexFrom(html, "<td>", ixV!);
+    if (ixV! == -1) {
+      Errs.push("Beginning of field 'vol' not found");
+      ixV! = endRow;
+      continue;
+    }
+    ixV! += 4;
+    ix2V! = str.indexFrom(html, "<", ixV!);
+    if (ix2V! == -1) {
+      Errs.push("End of field 'vol' not found");
+      ixV! = endRow;
+      continue;
+    }
+    volOp = readVol(html[ixV!:ix2V!]);
+    if (!volOp) {
+      Errs.push("Bad vol: " + html[ixV!:ix2V!]);
+      continue;
+    }
+    vol = volOp!;
+
+    // END
+    Qs.push(str.fmt(
+      "%v:%v:%v:%v:%v:%v:false",
+      [date, open, close, max, min, vol]
+    ));
+    ixV! = endRow;
+  }
+
+  return [mkQs(), Errs];
+};
+
+// \s -> [s, b] ([html|error, ok])
+downloadHistoric = \code -> {
+  url = str.fmt(
+    "https://www.wsj.com/market-data/quotes/ES/%v/historical-prices",
+    [code]
+  );
+  return ext.wdriver(url, 2);
+};
+
+// OTHER -----------------------------------------------------------------------
+
+id = "WSJ";
+
+name = "WSJ";
+
+withDiary = false;
+
+// \ -> [[s,f].],[s.]]
+freadDaily = \ -> {
+  html, ok = downloadDaily();
+  if (!ok) return [[], ["Fail reading daily web page of " + id + "\n" + html]];
+  return readDaily(html);
+};
+
+withHistoric = true;
+
+// \s -> [[<quote>.],[s.]]
+freadHistoric = \code -> {
+  html, ok = downloadHistoric(code);
+file.write("/home/deme/tmp.txt", html);
+  if (!ok) return [
+    [],
+    ["Fail reading historic web page of " + id + "-" + code + "\n" + html]
+  ];
+  return readHistoric(html);
+};
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+    id, name, withDiary, freadDaily, withHistoric, freadHistoric
+  );;

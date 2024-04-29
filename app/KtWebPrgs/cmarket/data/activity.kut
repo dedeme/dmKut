@@ -6,16 +6,16 @@
 /// Constructor
 ///   tm      : Time of record this data.
 ///   activity: One of cts.actXXX
-/// \i, s -> d<activity>
-new = \tm, activity -> return {tm, activity};;
+/// \i, s -> <activity>
+new : tm, activity;
 
 /// Constructor with time.now as 'tm'.
 ///   activity: One of cts.actXXX
-/// \s -> d<activity>
-newNow = \activity -> return {tm: time.now(), activity};;
+/// \s -> <activity>
+newNow = \activity -> return new(time.now(), activity);;
 
 /// \<activity> -> JS
-toJs = \A -> return [math.itof(A.tm), A.activity];;
+toJs = \A -> return A;;
 
 /// \JS -> <activity>
 fromJs = \A -> return new(math.ftoi(A[0]), A[1]);;

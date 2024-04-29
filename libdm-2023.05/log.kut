@@ -34,14 +34,14 @@ readJs = \-> return file.read(File!);;
 /// Adds a warning to log.
 warning = \msg -> {
   L = read();
-  arr.push(L, [false, date(), msg[:400]]);
+  arr.push(L, [false, date(), str.fromRunes(str.toRunes(msg)[:400])]);
   write(L);
 };
 
 /// Adds an error to log.
 error = \msg -> {
   L = read();
-  arr.push(L, [true, date(), msg[:400]]);
+  arr.push(L, [true, date(), str.fromRunes(str.toRunes(msg)[:400])]);
   write(L);
 };
 

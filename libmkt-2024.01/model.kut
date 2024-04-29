@@ -1,0 +1,45 @@
+// Copyright 19-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Market model
+
+import "libmktHelper";
+
+/// Type of day parameter.
+/// i
+dayParam = 0;
+
+/// Type of percentage parameter.
+/// i
+percParam = 1;
+
+/// Constructor.
+///   id           : Model identifier (short name in uppercase).
+///   name         : Model name.
+///   doc          : Documentation.
+///   ParamNames   : Parameter names.
+///   ParamTypes   : Parameter types. Each parameter can be:
+///                  model.dayParam or model.percParam.
+/// \s, s, s, [s.], [i.] -> x<model>
+new : id, name, doc, ParamNames, ParamTypes;
+
+/// Returns references of a model.
+///   model  : Model.
+///   Closes : Matrix 'dates x companies' with market closes.
+///           This closes must be regularized (without -1.0 values).
+///   Params : Parameter values.
+/// \<model>, [[f.].], [f.] -> [[f.].]
+calc = \M, Closes, Params -> {
+  rq = {
+    "command": "mkRefs",
+    "modelId": M[id],
+    Closes,
+    Params
+  };
+  rRs = libmktHelper.send(rq);
+  if (!rRs[1]) sys.throw(rRs!);
+  return rRs!;
+};
+
+/// \<model> -> JS
+toJs = \M -> return M;;

@@ -1,78 +1,47 @@
-// Copyright 22-Jun-2023 ºDeme
+// Copyright 09-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Indexes reader.
 
 import "data/cts";
+import "libdm/ext";
 
-/// Read three indexes: cts.ibexNick, cts.euroNick and cts.usaNick,
+/// Read two indexes: cts.ibexNick and cts.euroNick,
 /// returning a dictionary {nick -> [currentQuote, yesterdayQuote]}
-/// \ -> [{[f, f]...}|s, b] Result
+/// \ -> [{[f, f].}|s, b] Result
 read = \ -> {
-	url = "https://www.eleconomista.es/indices-mundiales";
+  Rs = ext.wget("https://es.finance.yahoo.com/world-indices", true);
+  //file.write("tmp.txt", Rs[0]);
 
-	HtmlRs = sys.cmd(
-    "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
-  );
-  if (!HtmlRs[1]) return HtmlRs;
-  html = HtmlRs!;
+  html = Rs[0];
+  ixV = [str.index(html, '>^IBEX<')];
+  ixV! = str.indexFrom(html, 'value="', ixV!);
+  ix2V = [str.indexFrom(html, '"', ixV!+7)];
+  ibTodayOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!ibTodayOp) return ["Fail reading ^IBEX value", false];
+  ibToday = math.round(ibTodayOp!, 2);
+  ixV! = str.indexFrom(html, 'value="', ix2V!);
+  ix2V! = str.indexFrom(html, '"', ixV!+7);
+  ibIncOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!ibIncOp) return ["Fail reading ^IBEX increment", false];
+  ibInc = math.round(ibIncOp!, 2);
+  ibYesterday = ibToday - ibInc;
 
-  Ix = [0];
-  Ix2 = [0];
-	Ix! = str.index(html, "itemtype=\"//schema.org/SiteNavigationElement\"><a href=\"/indice/IBEX-35\"");
-	Ix! = str.indexFrom(html, "accion", Ix!);
-	Ix! = str.indexFrom(html, ">", Ix!) + 1;
-	Ix2! = str.indexFrom(html, "<", Ix!);
-	V00 = math.fromIso(str.trim(html[Ix!:Ix2!]));
-  if (!V00) return ["Bad number (" + html[Ix!:Ix2!] + ") reading IBEX 35.", false];
-  v00 = V00!;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, ">", Ix!) + 1;
-	Ix2! = str.indexFrom(html, "<", Ix!);
-  V01 = math.fromIso(str.trim(html[Ix!:Ix2!]));
-  if (!V01) return ["Bad number (" + html[Ix!:Ix2!] + ") reading IBEX 35.", false];
-  v01 = V01!;
-
-	Ix! = str.index(html, "itemtype=\"//schema.org/SiteNavigationElement\"><a href=\"/indice/EUROSTOXX-50\"");
-	Ix! = str.indexFrom(html, "accion", Ix!);
-	Ix! = str.indexFrom(html, ">", Ix!) + 1;
-	Ix2! = str.indexFrom(html, "<", Ix!);
-	V10 = math.fromIso(str.trim(html[Ix!:Ix2!]));
-  if (!V10) return ["Bad number (" + html[Ix!:Ix2!] + ") reading EUROTOXX.", false];
-  v10 = V10!;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, ">", Ix!) + 1;
-	Ix2! = str.indexFrom(html, "<", Ix!);
-  V11 = math.fromIso(str.trim(html[Ix!:Ix2!]));
-  if (!V11) return ["Bad number (" + html[Ix!:Ix2!] + ") reading EUROTOXX.", false];
-  v11 = V11!;
-
-	Ix! = str.index(html, "itemtype=\"//schema.org/SiteNavigationElement\"><a href=\"/indice/S-P-500\"");
-	Ix! = str.indexFrom(html, "accion", Ix!);
-	Ix! = str.indexFrom(html, ">", Ix!) + 1;
-	Ix2! = str.indexFrom(html, "<", Ix!);
-	V20 = math.fromIso(str.trim(html[Ix!:Ix2!]));
-  if (!V20) return ["Bad number (" + html[Ix!:Ix2!] + ") reading SP-500.", false];
-  v20 = V20!;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, "<td>", Ix!) + 1;
-	Ix! = str.indexFrom(html, ">", Ix!) + 1;
-	Ix2! = str.indexFrom(html, "<", Ix!);
-  V21 = math.fromIso(str.trim(html[Ix!:Ix2!]));
-  if (!V21) return ["Bad number (" + html[Ix!:Ix2!] + ") reading SP-500.", false];
-  v21 = V21!;
+  ixV! = str.indexFrom(html, '>^STOXX50E<', ix2V!);
+  ixV! = str.indexFrom(html, 'value="', ixV!);
+  ix2V! = str.indexFrom(html, '"', ixV!+7);
+  euTodayOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!euTodayOp) return ["Fail reading ^STOXX50E value", false];
+  euToday = math.round(euTodayOp!, 2);
+  ixV! = str.indexFrom(html, 'value="', ix2V!);
+  ix2V! = str.indexFrom(html, '"', ixV!+7);
+  euIncOp = math.stof(html[ixV!+7:ix2V!]);
+  if (!euIncOp) return ["Fail reading ^STOXX50E increment", false];
+  euInc = math.round(euIncOp!, 2);
+  euYesterday = euToday - euInc;
 
   Vs = {};
-  dic.put(Vs, cts.ibexNick, [v00, v01]);
-  dic.put(Vs, cts.euroNick, [v10, v11]);
-  dic.put(Vs, cts.usaNick, [v20, v21]);
+  dic.put(Vs, cts.ibexNick, [ibToday, ibYesterday]);
+  dic.put(Vs, cts.euroNick, [euToday, euYesterday]);
 	return [Vs, true];
 };

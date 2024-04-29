@@ -1,0 +1,45 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures management page
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/pict";
+import "db/picts";
+import "db/sels";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      group = sels.getPictsGroup();
+      TotalShown = picts.shownSights();
+      totalSights = TotalShown.totalSights;
+      shownSights = TotalShown.shownSights;
+      sys.print(rp.mkJs({
+        groups: js.wi(cts.pictureGroups),
+        group: js.ws(group),
+        picts: picts.readJs(group),
+        page: js.wi(sels.getPictsPage()),
+        totalSights: js.wi(totalSights),
+        shownSights: js.wi(shownSights)
+      }));
+    }
+    "setLevel": {
+      picts.setLevel(Rq.group, Rq.id, math.ftoi(Rq.level));
+      sys.print(rp.mkEmpty());
+    }
+    "setPage": {
+      sels.setPictsPage(math.ftoi(Rq.page));
+      sys.print(rp.mkEmpty());
+    }
+    "setGroup": {
+      sels.setPictsGroup(Rq.group);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+

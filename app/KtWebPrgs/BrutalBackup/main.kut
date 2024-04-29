@@ -1,32 +1,55 @@
-// Copyright 09-Feb-2023 ºDeme
+// Copyright 03-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// BrutalBackup main.
+/// Main module.
 
 import "KtWeb/rp";
 import "db";
+import "cts";
+import "pgs/listEditorPg";
+import "pgs/reportPg";
 import "backup";
-import "pgs/bkListEditor";
-import "pgs/runner";
 
-db.init();
+// \ -> s
+help = \ -> return """
+  Use BrutalBackup [help | version | init | start | key rq]
+  where
+    help: Shows this message.
+    version: Shows program version.
+    init: Initializes program.
+          Must be called only the first time that the program is called.
+    start: Starts backup.
+    key rq: Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-Args = sys.args();
-ck = Args[0];
+:arr Args = sys.args();
 
-if (ck == "@") {
-  backup.run(Args[1]);
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    "init": db.init();
+    default: sys.println(help());
+  }
   return;
 }
 
-Rq = js.r(Args[1]);
-
-rp.init(ck);
-
-switch(Rq.source) {
-  "BkListEditor": bkListEditor.process(Rq);
-  "Runner": runner.process(Rq);
-  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
 }
 
+key = Args[0];
 
+if (key == "start") {
+  backup.start(Args[1]);
+  return;
+}
+
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
+  "ListEditor": listEditorPg.process(Rq);
+  "Report": reportPg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+});

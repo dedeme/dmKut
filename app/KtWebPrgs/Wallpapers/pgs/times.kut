@@ -1,0 +1,31 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures page
+
+import "KtWeb/rp";
+import "db/sels";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      sys.print(rp.mk({
+        pict: math.itof(sels.getPictTime()),
+        shortDance: math.itof(sels.getShortDanceTime()),
+        longDance: math.itof(sels.getLongDanceTime())
+      }));
+    }
+    "update": {
+      value = math.ftoi(Rq.value);
+      switch (Rq.key) {
+        "pict": sels.setPictTime(value);
+        "shortDance": sels.setShortDanceTime(value);
+        default: sels.setLongDanceTime(value);
+      }
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

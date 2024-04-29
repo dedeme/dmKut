@@ -1,0 +1,30 @@
+// Copyright 12-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "KtWeb/rp";
+import "data/conf";
+import "db";
+import "db/confTb";
+import "db/pathsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+        dbKey: db.readKey(),
+        cf: confTb.read(),
+        Paths: pathsTb.read()
+      });
+    }
+    "savePath": {
+      dbKey = db.checkKey(Rq.dbKey);
+      :conf cf = confTb.read();
+      confTb.write(conf.mk(Rq.path, cf.showAll));
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

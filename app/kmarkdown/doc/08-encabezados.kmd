@@ -1,0 +1,39 @@
+=
+title = Encabezados
+=
+
+Los encabezados aparecen en su propio párrafo y tienen una de las siguientes
+sintaxis:
+
+``
+<pre>
+### <i>texto</i>
+
+## <i>texto</i>
+
+# <i>texto</i>
+</pre>
+``
+
+Donde _texto_ es HTML.
+
+Los encabezados de tipo '##' se utilizan para crear el índice de la página.
+Debido a ello no se deben utilizar las comillas en ellos -- tanto simples (')
+como dobles (").
+
+``kmd
+### <i>Gran</i> encabezado
+
+Este es el encabezado más grande.
+
+## <i>Mediano</i> encabezado.
+
+Este se utiliza como índice.
+
+# <i>Pequeño</i> encabezado.
+
+Este es el encabezado más pequeño.
+``
+
+Produce [ej2/pg1.html](esta) página.
+

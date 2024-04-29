@@ -1,0 +1,52 @@
+// Copyright 15-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting balance page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/acc/ann";
+import "data/acc/settlement";
+import "data/acc/pf";
+import "data/invOperation";
+import "db/acc/diariesDb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/invOperationsTb";
+import "db";
+import "cts";
+import "qspr";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      okV = [true];
+      :arr InvOperations = invOperationsTb.read(); // [<invOperation>.]
+      Rebuys = {}; // {s.} :: {nick -> date}
+
+      :arr Ys = diariesDb.investorYears();
+      for (y = Ys[:2]) ann.rebuys(Rebuys, diariesDb.investorAnns(y));
+      :arr Anns = !Ys ? [] : diariesDb.investorAnns(Ys[0]);
+      :settlement set = ann.mkSettlement(Anns);
+      if (!!set.Errors) {
+        okV! = false;
+        for (e = set.Errors) log.error(e);
+      }
+
+      return rp.mk({
+        ok: okV!,
+        Portfolio: set.Portfolio,
+        InvOperations,
+        Closes: closesTb.readOnlyCloses(), // {f.} :: {nick -> close}
+        Rebuys,
+        dbKey: db.readKey()
+      });
+    }
+    "update": {
+      qspr.updateOperations();
+      return rp.mk({ dbKey: db.readKey() });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

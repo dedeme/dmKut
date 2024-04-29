@@ -1,37 +1,90 @@
-// Copyright 20-Nov-2022 ºDeme
+// Copyright 27-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base of jstb's.
+/// Data base management.
 
-import "libdm/jstb";
+import "libdm/log";
+import "cts";
+import "db/annsTb";
 
-import "data/cts";
+klen = 20;
+dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    annsTb.init();
+    log.reset();
+    return;
+  }
+  sys.throw("Data base already is initialized");
+};
+
+/// Returns the state identifier.
+/// \ -> ();
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};
+
+/*
+
+import "libdm/dbchk";
+
+import "cts";
 import "data/ann";
 
-DbPath = [""];
+dbPathV = [""];
+dbCheckerV = [""];
 
 /// Initializes data base.
 /// \-> ()
 init = \ -> {
-  DbPath! = cts.dbPath;
-  if (!file.exists(DbPath!)) file.mkdir(DbPath!);
+  dbPathV! = cts.dbPath;
+  if (!file.exists(dbPathV!)) file.mkdir(dbPathV!);
+  dbCheckerV! = dbPathV! + "/checker.tb";
+  dbchk.init(dbCheckerV!);
 };
 
 /// Returns the table of 's' in 'sessionId.tb'
 /// \-> s<jstb>
 sessionIdTb = \-> return jstb.new(
-  DbPath! + "/sessionId.tb",
+  dbPathV! + "/sessionId.tb",
   \-> return "";,
-  sys.id,
-  sys.id
+  \v -> return v;,
+  \v -> return v;
 );;
 
 /// Returns the table of [<Ann>, ...] in "anns.tb"
 /// \-> a[<Ann>]<jstb>
 annsTb = \-> return jstb.newArr(
-  DbPath! + "/anns.tb",
+  dbPathV! + "/anns.tb",
   \-> return [];,
   ann.toJs,
   ann.fromJs
 );;
 
+/// Returns the data base checker key.
+/// \ -> s
+chkKey = \ -> return dbchk.get(dbCheckerV!);;
+
+/// Checks 'id' and if it is correct, run task.
+/// It returns a new 'id' or an empty string if 'id' is not valid.
+/// \s, \->() -> s
+check = \id, task -> return dbchk.check(dbCheckerV!, id, task);;
+*/

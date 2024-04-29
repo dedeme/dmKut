@@ -1,60 +1,163 @@
-// Copyright 09-Feb-2023 ºDeme
+// Copyright 05-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Backup process.
+/// Backup
 
 import "libdm/dsync";
-import "db";
+import "data/fromServer";
+import "data/fromClient";
+import "db/fromServerTb";
+import "db/fromClientTb";
 
-///
-run = \id -> {
-  BkListTbJs = db.bkListTb();
-  List = BkListTbJs.read();
+/// \s -> ()
+start= \key -> {
+  :fromServer sv = fromServerTb.read();
+  :fromClient cl = fromClientTb.read();
 
-  BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
-  ps = BkPaths!;
-  backupCheck = path.cat([ps.backup, "BrutalBackups.txt"]);
-  if (!file.exists(backupCheck)) {
-    ps.state = [];
-    ps.msgs = ["'" + backupCheck + "' no found"];
-    BkListTbJs.write(List);
-    return;
-  }
-  sourceCheck = path.cat([ps.source, "BrutalBackups.txt"]);
-  file.write(sourceCheck, "");
+  actionV = [cl.action];
 
-  if (ps.state) {
-    return;
-  }
+  stateV = [sv.state];
+  errorMsgV = [sv.errorMsg];
+  // [s.]
+  :arr Warnings = sv.Warnings;
+  totalCountV = [sv.totalCount];
+  currentCountV = [sv.currentCount];
 
-  ps.state = [0];
-  ps.msgs = [];
-  BkListTbJs.write(List);
+  th1 = thread.start(\ -> {
+    while () {
+      sys.sleep(900);
+      state = stateV!;
+      fromServerTb.write(fromServer.new(
+        state, errorMsgV!, Warnings, totalCountV!, currentCountV!
+      ));
+      if (state == fromServer.end) break;
 
-  Syn = dsync.newFiles (
-    ps.source,
-    ps.backup,
-    \Msg -> {
-      List = BkListTbJs.read();
-      BkPaths = arr.find(List, \Bk -> return Bk.id == id;);
-      ps = BkPaths!;
+      :fromClient cl = fromClientTb.read();
+      actionV! = cl.action;
 
-      Data = dsync.msgData(Msg);
-      switch (dsync.msgType(Msg)) {
-        dsync.state: ps.state = Data;
-        dsync.errCopy: arr.push(ps.msgs, "Fail copying:\n  " + Data);
-        dsync.errDel: arr.push(ps.msgs, "Fail deleting:\n  " + Data);
-        default: arr.push(ps.msgs, Data);
+      if (actionV! == fromClient.stop & state == fromServer.error){
+        fromServerTb.write(fromServer.new(
+          fromServer.end, errorMsgV!, Warnings, totalCountV!, currentCountV!
+        ));
+        break;
+      }
+    }
+  });
+
+  // \<file>, [[s, i].] -> ()
+  readFiles = \:file dir, :arr FpathsTm -> {
+      for (name = dir.dir()) {
+        :file fpath = path.cat([dir, name]);
+        if (fpath.isDirectory())
+          readFiles(fpath, FpathsTm);
+        else if (fpath.isRegular()) {
+          FpathsTm.push([fpath, fpath.tm()]);
+          if (FpathsTm.size() % 10 == 0) {
+            currentCountV! = FpathsTm.size();
+            if (actionV! == fromClient.stop)
+              sys.throw("Stoped when reading");
+          }
+        }
+      }
+    };
+
+  th2 = thread.start(\ -> {
+    try {
+      source = path.canonical(cl.source);
+      target = path.canonical(cl.target);
+      sourceLen = str.len(source) + 1;
+      targetLen = str.len(target) + 1;
+
+      kpath = path.cat([target, "BrutalBackups.txt"]);
+      if (!file.exists(kpath)){
+        stateV! = fromServer.error;
+        errorMsgV! = "BrutalBackups.txt not found in " + target;
+        return;
+      }
+      if (file.read(kpath) != key) {
+        stateV! = fromServer.error;
+        errorMsgV! = "Wrong key in BrutalBackups.txt";
+        return;
       }
 
-      BkListTbJs.write(List);
+      // [[s, i].]
+      SourceFTms = [];
+      stateV! = fromServer.readingSource;
+      currentCountV! = 0;
+      readFiles(source, SourceFTms);
+      for (ft = SourceFTms) ft[0] = ft[0][sourceLen:];
+      SourceFTms.sort(\e1, e2 -> return e1[0] < e2[0];);
+
+      // [[s, i].]
+      TargetFTms = [];
+      stateV! = fromServer.readingTarget;
+      currentCountV! = 0;
+      readFiles(target, TargetFTms);
+      for (ft = TargetFTms) ft[0] = ft[0][targetLen:];
+      TargetFTms.sort(\e1, e2 -> return e1[0] < e2[0];);
+
+      stateV! = fromServer.selecting;
+      totalCountV! = arr.size(SourceFTms);
+      // {ToUpdates: [[s, i].], ToDeletes: [[s, i].]}
+      :arr ToUpdates, :arr ToDeletes : dsync.run(SourceFTms, TargetFTms,
+        // \[s, i], [s, i], i -> i
+        \s, t, i -> {
+          currentCountV! = i;
+          if (actionV! == fromClient.stop)
+            sys.throw("Stoped when selecting");
+
+          return s[0] == t[0]
+            ? s[1] > t[1]
+              ? 1
+              : 0
+            : s[0] > t[0]
+              ? 2
+              : -1
+          ;
+      });
+
+      totalCountV! = arr.size(ToUpdates);
+      currentCountV! = 0;
+      stateV! = fromServer.copying;
+      for (i, fTm = ToUpdates) {
+        currentCountV! = i;
+        if (actionV! == fromClient.stop) {
+          stateV! = fromServer.end;
+          return;
+        }
+        rpath = fTm[0];
+        s = path.cat([source, rpath]);
+        t = path.cat([target, rpath]);
+        file.mkdir(path.parent(t));
+        file.copy(s, t);
+      }
+
+      stateV! = fromServer.deleting;
+      for (i, fTm = ToDeletes) file.del(path.cat([target, fTm[0]]));
+      file.write(kpath, "");
+
+      cleanDir = \:file dir -> {
+          :arr Fs = dir.dir();
+          if (Fs.size() == 0) file.del(dir);
+          else for (f = Fs) {
+              :file p = path.cat([dir, f]);
+              if (p.isDirectory()) cleanDir(p);
+            }
+        };
+      cleanDir(target);
+
+    } catch (e) {
+      stateV! = fromServer.error;
+      errorMsgV! = e[:str.index(e, "\n")];
+      Warnings.push(e);
+      return;
     }
-  );
 
-  dsync.update(Syn);
+    stateV! = fromServer.end;
+  });
 
-  ps.state = [];
-  BkListTbJs.write(List);
 
-  file.del(sourceCheck);
+  th1.join();
+  th2.join();
+
 };

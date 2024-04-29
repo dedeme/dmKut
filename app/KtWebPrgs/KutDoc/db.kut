@@ -24,8 +24,8 @@ init = \ -> {
 confTb = \-> return jstb.new(
   path.cat([DbPath!, "conf.tb"]),
   \-> return conf.mk("@", true);,
-  sys.id,
-  sys.id
+  \v -> return v;,
+  \v -> return v;
 );;
 
 /// Returns the table of '[<dpath>]' in "paths.tb"
@@ -35,8 +35,8 @@ pathsTb = \-> return jstb.newArr(
   \-> return [];,
   dpath.toJs,
   \j -> {
-      P = dpath.fromJs(j);
-      P.isValid = file.isDirectory(P.path);
+      :dpath P = dpath.fromJs(j);
+      P.isValid = file.isDirectory(P.spath);
       return P;
     }
 );;

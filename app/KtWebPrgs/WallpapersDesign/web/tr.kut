@@ -5,6 +5,7 @@
 
 import "KtWeb/rp";
 import "libdm/img";
+import "libdm/jstb";
 import "data/cts";
 import "data/image";
 import "db";
@@ -16,13 +17,23 @@ process = \Rq -> {
     "idata": {
       im = image.fromJs(Rq.image);
       ok = file.exists(path.cat([cts.sourcePath, im.id]));
-      processImg(im);
+      try {
+        processImg(im);
+      } catch (e) {
+        sys.sleep(100);
+        try {
+          processImg(im);
+        } catch (e) {
+          sys.sleep(100);
+          processImg(im);
+        }
+      }
       sys.print(rp.mkJs({
         ok: js.wb(ok)
       }));
     }
     "update": {
-      db.imagesTb().writeJs(js.w(Rq.images));
+      db.imagesTb()[jstb.writeJs](js.w(Rq.images));
       sys.print(rp.mkEmpty());
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

@@ -1,0 +1,22 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions.
+
+import "libdm/log";
+import "cts";
+
+/// Returns 'true' if currently the update process is running.
+/// \ -> b
+isBusy = \ -> {
+  rs, ok = sys.cmd("ps", ["-x"]);
+  if (!ok) {
+    log.error(rs);
+    sys.throw(rs);
+  }
+
+  return arr.any(
+    str.splitTrim(rs, "\n"),
+    \l -> return str.ends(l, cts.psCommand);
+  );
+};

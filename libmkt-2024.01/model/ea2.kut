@@ -1,0 +1,16 @@
+// Copyright 05-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Exponential mobil average (2).
+
+import "../model";
+import "doc/ea2Doc";
+
+/// Returns a new 'appr' model.
+new = \ -> return model.new(
+    "ME2",
+    "Media móvil exponencial (2)",
+    ea2Doc.text,
+    ["Días", "Banda"],
+    [model.dayParam, model.percParam]
+  );;

@@ -1,52 +1,63 @@
-// Copyright 07-Sep-2023 ºDeme
+// Copyright 11-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 import "KtWeb/rp";
 import "db";
 import "data/conf";
 import "data/dpath";
+import "db/confTb";
+import "db/pathsTb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "changeShowAll": {
-      confTb = db.confTb();
-      Cf = confTb.read();
-      Cf.showAll = Cf.showAll == true ? false : true;
-      confTb.write(Cf);
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mk({ dbKey });
+
+      :conf cf = confTb.read();
+      confTb.write(conf.mk(cf.spath, !cf.showAll));
+      return rp.mkEmpty();
     }
     "new": {
-      pathsTb = db.pathsTb();
-      Ps = pathsTb.read();
-      arr.push(Ps, dpath.new(Rq.id, Rq.path, true, false));
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mk({ dbKey });
+
+      :arr Ps = pathsTb.read();
+      Ps.push(dpath.new(Rq.id, Rq.path, true, false));
       pathsTb.write(Ps);
-      sys.print(rp.mkEmpty());
+      return rp.mkEmpty() ;
     }
     "changeShown": {
-      pathsTb = db.pathsTb();
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mk({ dbKey });
+
       Ps = pathsTb.read();
-      for (P = Ps)
-        if (P.id == Rq.id) P.isShown = P.isShown ? false : true;
+      for (:dpath p = Ps)
+        if (p.id == Rq.id) p.isShown = p.isShown ? false : true;
       pathsTb.write(Ps);
-      sys.print(rp.mkEmpty());
+      return rp.mkEmpty() ;
     }
     "delete": {
-      pathsTb = db.pathsTb();
-      Ps = pathsTb.read();
-      arr.filterIn(Ps, \P -> return P.id != Rq.id;);
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mk({ dbKey });
+
+      :arr Ps = pathsTb.read();
+      Ps.filterIn(\:dpath p -> return p.id != Rq.id;);
       pathsTb.write(Ps);
-      sys.print(rp.mkEmpty());
+      return rp.mkEmpty() ;
     }
     "modify": {
-      pathsTb = db.pathsTb();
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mk({ dbKey });
+
       Ps = pathsTb.read();
-      for (P = Ps) if (P.id == Rq.id) {
-        P.id = Rq.newId;
-        P.path = Rq.path;
+      for (:dpath p = Ps) if (p.id == Rq.id) {
+        p.id = Rq.newId;
+        p.spath = Rq.path;
       }
       pathsTb.write(Ps);
-      sys.print(rp.mkEmpty());
+      return rp.mkEmpty() ;
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

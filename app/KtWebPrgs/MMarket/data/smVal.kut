@@ -1,0 +1,18 @@
+// Copyright 30-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Summary value.
+
+/// Constructor.
+///   ix : Index in results array.
+///   val: Value.
+/// \i,f -> <smVal>
+new : ix, val;
+
+/// Update values of 'this'.
+/// \<smVal>, i, f -> ();
+up = \this, newIx, newVal -> {
+  this[ix] = newIx;
+  this[val] = newVal;
+};
+

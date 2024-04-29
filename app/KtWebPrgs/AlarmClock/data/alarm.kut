@@ -1,55 +1,47 @@
-// Copyright 25-Nov-2022 ºDeme
+// Copyright 01-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Alarm data.
 
-import "data/fns";
-
-II = fns.tlt;
-
-/// Constructor
+/// Constructor.
 ///   id: Identifier.
 ///   tm: Time (milliseconds) with minute precision.
-/// \s, f -> a<alarm>
-mk = \id, tm -> return [id, tm];;
+/// \s,i -> <alarm>
+mk : id, tm;
 
-/// \<alarm> -> s
-timeToStr = \A -> {
-  now = time.now();
-  return (time.day(now) == time.day(A[1]) ? II("Today") : II("Tomorrow")) +
-    " " + II("at") + " " + time.fmt("%t", A[1])[:-3]
-  ;
+/// \JS -> <alarm>
+fromJs = \A -> return [
+    A[0],
+    math.ftoi(A[1])
+  ];;
+
+/// Removes in place obsolete alarms
+/// [<alarm>.] -> ()
+update = \:arr As -> {
+  top = time.now() - 180000; // -3 minutes
+  As.filterIn(\a -> {
+    return a[tm] > top;
+  });
 };
 
-/// Returns 1, 0 or +1 depending on whether 'A1[1]' is >, == or < than 'A2[1]'.
-/// \<alarm>, <alarm> -> i
-compare = \A1, A2 -> {
+// Returns 1, 0 or +1 depending on whether 'A1[1]' is >, == or < than 'A2[1]'.
+// \<alarm>, <alarm> -> i
+cmp = \a1, a2 -> {
   fmt = "%Y%M%D%t";
-  d1 = time.fmt(fmt, fns.ftoi(A1[1]))[:-3];
-  d2 = time.fmt(fmt, fns.ftoi(A2[1]))[:-3];
-  return d1 > d2 ? 1: d1 < d2 ? -1 : 0;
+  d1 = time.format(a1[tm], fmt)[:-3];
+  d2 = time.format(a2[tm], fmt)[:-3];
+  return d1 > d2 ? 1 : d1 < d2 ? -1 : 0;
 };
 
 /// Adds in place a new alarm to an array. If its time is duplicated, function
 /// does nothing and returns 'false'. Otherwise, returns 'true'.
-/// [<alarm>, ...], <alarm> -> ()
-add = \As, A -> {
-  if (arr.any(As, \A0 -> return compare(A0, A) == 0;)) return false;
-  arr.push(As, A);
+/// [<alarm>.], <alarm> -> b
+add = \:arr As, a -> {
+  if (As.any(\a0 -> return cmp(a0, a) == 0;)) return false;
+  As.push(a);
   return true;
 };
 
 /// Removes in place any alarm of 'As' with its same time.
 /// [<alarm>, ...], <alarm> -> ()
-del = \As, A -> {
-  arr.filterIn(As, \A0 -> return compare(A0, A) != 0;);
-};
-
-/// Removes in place obsolete alarms
-/// [<alarm>, ...] -> ()
-update = \As -> {
-  tm = time.now() - 180000; // -3 minutes
-  arr.filterIn(As, \A -> {
-    return fns.ftoi(A[1]) > tm;
-  });
-};
+del = \As, a -> arr.filterIn(As, \a0 -> return cmp(a0, a) != 0;);;

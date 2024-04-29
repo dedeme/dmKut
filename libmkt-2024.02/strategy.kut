@@ -1,0 +1,159 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Trading strategy
+
+import "order";
+import "model";
+import "quotes";
+import "stRs";
+import "libmktHelper";
+
+/// Returns the result of a simulation.
+///   md      : Model.
+///   qs      : Quotes to perform the simulation.
+///   Params  : Model parameters.
+/// \<model>, <quotes>, [f.] -> <stRs>
+open = \:model md, :quotes qs, Params -> {
+  Rq = {
+    "command": "strategy",
+    "type": "open",
+    "modelId": md.id,
+    "Dates": qs.Dates,
+    "Cos": qs.Cos,
+    "Opens": qs.Opens,
+    "Closes": qs.Closes,
+    Params
+  };
+
+  R, ok = libmktHelper.send(Rq);
+  if (!ok) sys.throw(R);
+  R.Orders = arr.map(R.Orders, order.fromJs);
+  return stRs.new(
+    R.Refs, R.Orders,
+    R.Hreals, R.Haccs, R.Hrefs, R.Hwithdrawals,
+    R.cash, R.Buys, R.Sales, R.Profits
+  );
+};
+
+/// Returns the result of a simulation.
+/// Returns the the following dic 'JSONized'.
+///   - sales (n)   : Number of sales.
+///   - assets (n)  : cash + withdrawals + portfolio evaluated with closes.
+///   - accs (n)    : cash + withdrawals + portfolio evaluated with prices.
+///   - rfAssets (n): cash + withdrawals + portfolio evaluated with references.
+///   md      : Model.
+///   qs      : Quotes to perform the simulation.
+///   Params  : Model parameters.
+/// \<model>, <quotes>, [f.] -> {sales: f, assets: f, accs: f, rfAssets: f}
+openSimple = \:model md, :quotes qs, Params -> {
+  Rq = {
+    "command": "strategy",
+    "type": "openSimple",
+    "modelId": md.id,
+    "Dates": qs.Dates,
+    "Cos": qs.Cos,
+    "Opens": qs.Opens,
+    "Closes": qs.Closes,
+    Params
+  };
+
+  R, ok = libmktHelper.send(Rq);
+  if (!ok) sys.throw(R);
+  return R;
+};
+
+/// Returns the the following dic 'JSONized'.
+///   - sales (n)    : Number of sales.
+///   - assets (n)   : cash + withdrawals + portfolio evaluated with closes.
+///   - accs (n)     : cash + withdrawals + portfolio evaluated with prices.
+///   - refAssets (n): cash + withdrawals + portfolio evaluated with references.
+///   - profits (n)  : Profits ratio average. Portfolio evaluated with closes.
+///   - rfProfits (n): Profits ratio average. Portfolio evaluated with references.
+///   md      : Model.
+///   qs      : Quotes to perform the simulation.
+///   Params  : Model parameters.
+/// \<model>, <quotes>, [f.] ->
+///   {sales: f, assets: f, accs: f, rfAssets: f, profits: f, rfProfits: f}
+openSimple2 = \:model md, :quotes qs, Params -> {
+  Rq = {
+    "command": "strategy",
+    "type": "openSimple2",
+    "modelId": md.id,
+    "Dates": qs.Dates,
+    "Cos": qs.Cos,
+    "Opens": qs.Opens,
+    "Closes": qs.Closes,
+    Params
+  };
+
+  R, ok = libmktHelper.send(Rq);
+  if (!ok) sys.throw(R);
+  return R;
+};
+
+/// Returns the result of a simulation.
+/// Returns the the following dic 'JSONized'.
+///   - Sales ([f.])   : Number of sales.
+///                      One entry for each Parameter in the same order.
+///   - Assets ([f.])  : cash + withdrawals + portfolio evaluated with closes.
+///                      One entry for each Parameter in the same order.
+///   - Accs ([f.])     : cash + withdrawals + portfolio evaluated with prices.
+///                      One entry for each Parameter in the same order.
+///   - RfAssets ([f.]): cash + withdrawals + portfolio evaluated with references.
+///                      One entry for each Parameter in the same order.
+///   md      : Model.
+///   qs      : Quotes to perform the simulation.
+///   Params  : Array of model parameters.
+/// \<model>, <quotes>, [[f.].] ->
+///   {Sales: [f.], Assets: [f.], Accs: [f.], RfAssets: [f.]}
+stGroup = \:model md, :quotes qs, Params -> {
+  Rq = {
+    "command": "group",
+    "type": "open",
+    "modelId": md.id,
+    "Opens": qs.Opens,
+    "Closes": qs.Closes,
+    Params
+  };
+
+  R, ok = libmktHelper.send(Rq);
+  if (!ok) sys.throw(R);
+  return R;
+};
+
+/// Returns the result of a simulation.
+/// Returns the the following dic 'JSONized'.
+///   - Sales ([f.])    : Number of sales.
+///                       One entry for each Parameter in the same order.
+///   - Assets ([f.])   : cash + withdrawals + portfolio evaluated with closes.
+///                       One entry for each Parameter in the same order.
+///   - Accs ([f.])     : cash + withdrawals + portfolio evaluated with prices.
+///                      One entry for each Parameter in the same order.
+///   - RfAssets ([f.]) : cash + withdrawals + portfolio evaluated with references.
+///                       One entry for each Parameter in the same order.
+///   - Profits ([f.])  : Profits ratio average. Portfolio evaluated with Closes.
+///                       One entry for each Parameter in the same order.
+///   - RfProfits ([f.]): Profits ratio average. Portfolio evaluated with references.
+///                       One entry for each Parameter in the same order.
+///   md      : Model.
+///   qs      : Quotes to perform the simulation.
+///   Params  : Array of model parameters.
+/// \<model>, <quotes>, [[f.].] ->
+///   { Sales: [f.], Assets: [f.], Accs: [f.], RfAssets: [f.],
+///     Profits: [f.], RfProfits: [f.]}
+stGroup2 = \:model md, :quotes qs, Params -> {
+  Rq = {
+    "command": "group",
+    "type": "open2",
+    "modelId": md.id,
+    "Opens": qs.Opens,
+    "Closes": qs.Closes,
+    Params
+  };
+
+  R, ok = libmktHelper.send(Rq);
+  if (!ok) sys.throw(R);
+  return R;
+};
+

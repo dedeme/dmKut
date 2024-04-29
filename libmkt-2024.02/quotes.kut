@@ -1,0 +1,68 @@
+// Copyright 18-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes table data
+
+import "libmktHelper";
+
+/// Constructor
+///   Cos   : Company nicks.
+///   Dates : Quotes dates in format YYYYMMDD, from before to after.
+///   Opens : Array of normalized open quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Closes: Array of normalized close quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Maxs  : Array of normalized maximum quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Mins  : Array of normalized minimum quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+/// [s.], [s.], [[f.].], [[f.].],
+///                 [[f.].], [[f.].] -> <quotes>
+new : Cos, Dates, Opens, Closes, Maxs, Mins;
+
+/// Returns the index of one company from its nick, or -1 if nick is not found.
+/// \<quotes> -> i
+companyIndex = \qs, nick ->
+  return arr.index(qs[Cos], \c -> return c == nick;);;
+
+/// Extracts data of the company with index 'coIx'.
+///   qs: All the quotes.
+///   coIx: Index in qs.Cos of the company to extract.
+/// \<quotes> -> <quotes>
+getSingle = \qs, coIx -> {
+  Dates = qs[Dates];
+  rows = arr.size(Dates);
+  AllOpens = qs[Opens];
+  AllCloses = qs[Closes];
+  AllMaxs = qs[Maxs];
+  AllMins = qs[Mins];
+
+  Opens = arr.new(rows, 0);
+  Closes = arr.new(rows, 0);
+  Maxs = arr.new(rows, 0);
+  Mins = arr.new(rows, 0);
+  for (r = 0:rows) {
+    Opens[r] = [AllOpens[r][coIx]];
+    Closes[r] = [AllCloses[r][coIx]];
+    Maxs[r] = [AllMaxs[r][coIx]];
+    Mins[r] = [AllMins[r][coIx]];
+  }
+  return new([qs[Cos][coIx]], Dates, Opens, Closes, Maxs, Mins);
+};
+
+/// Read quotes4 of serveral companies.
+///   dpath : Directory with files 'NICK'.tb.
+///   Cos   : Nicks of companies to read.
+/// \s, [s.] -> <quotes>
+read = \dpath, Cos -> {
+  Rq = {
+    "command": "readQuotes",
+    "path"   : dpath,
+    "nquotes": 4,
+    "Cos"    : Cos
+  };
+
+  R, ok = libmktHelper.send(Rq);
+  if (!ok) sys.throw(R);
+  return new(R.Cos, R.Dates, R.Opens, R.Closes, R.Maxs, R.Mins);
+};

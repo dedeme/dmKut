@@ -1,0 +1,104 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base management.
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/quotes";
+import "extDb/quotesDb";
+import "data/evEs";
+import "data/evE";
+import "updater";
+import "cts";
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+
+    for (p = cts.Periods) file.mkdir(path.cat([cts.dataPath, p]));
+    updater.run();
+
+    return;
+  }
+  sys.throw("Data base already is initialized");
+};
+
+/// Returns dates of a period, from before to after.
+/// \s -> [s.]
+dates = \period -> {
+  :arr Ls = file.dir(path.cat([cts.dataPath, period]));
+  Ls.sort(\d1, d2 -> return d1 < d2;);
+  return Ls;
+};
+
+/// Returns unsorted model identifiers of the last date.
+modelIds = \ -> return file.dir(
+    path.cat([cts.dataPath, "daily", arr.peek(dates("daily"))])
+  );;
+
+/// Writes evaluation table.
+///   date : Date to write.
+///   mdId : Model identifier.
+///   evals: Evaluation array.
+/// \s, s, [<evE>.] -> ()
+write = \date, mdId, :arr evals -> {
+  weekInYear = \d -> {
+    :time tm = time.fromStr(d)!;
+    day1 = time.newDate(1, 1, tm.year());
+    wdEn = time.weekday(day1);
+    wd = wdEn == 0 ? 6 : wdEn - 1;
+    dfDays = tm.dfDays(day1);
+    return (dfDays + wd) / 7;
+  };
+
+  :arr dailyDates = dates("daily");
+  dailyDir = path.cat([cts.dataPath, "daily", date]);
+  file.mkdir(dailyDir);
+  file.write(path.cat([dailyDir, mdId]), js.w(evals.map(evE.toJs)));
+  for (d = dailyDates.take(dailyDates.size() - cts.datesInPeriod))
+    file.del(path.cat([cts.dataPath, "daily", d]));
+
+  :arr weeklyDates = dates("weekly");
+  :file weeklyDir = path.cat([cts.dataPath, "weekly", date]);
+  if (
+    !weeklyDates |
+    weeklyDir.exists() |
+    weekInYear(date) != weekInYear(weeklyDates.peek())
+  ) {
+    file.mkdir(weeklyDir);
+    file.write(path.cat([weeklyDir, mdId]), js.w(evals.map(evE.toJs)));
+    for (d = weeklyDates.take(weeklyDates.size() - cts.datesInPeriod))
+      file.del(path.cat([cts.dataPath, "weekly", d]));
+  }
+
+  :arr monthlyDates = dates("monthly");
+  :file monthlyDir = path.cat([cts.dataPath, "monthly", date]);
+  if (
+    !monthlyDates |
+    monthlyDir.exists() |
+    date[:6] != monthlyDates.peek()[:6]
+  ) {
+    file.mkdir(monthlyDir);
+    file.write(path.cat([monthlyDir, mdId]), js.w(evals.map(evE.toJs)));
+    for (d = monthlyDates.take(monthlyDates.size() - cts.datesInPeriod))
+      file.del(path.cat([cts.dataPath, "monthly", d]));
+  }
+};
+
+/// Reads evaluation table.
+/// If the table does not exist returns an empty array.
+///   date : Date to write.
+///   mdId : Model identifier.
+/// \s, s, s -> [<evE>.]
+read = \period, date, mdId -> {
+  p = path.cat([cts.dataPath, period, date, mdId]);
+  return file.exists(p)
+    ? arr.map(js.r(file.read(p)), evE.fromJs)
+    : []
+  ;
+};
+

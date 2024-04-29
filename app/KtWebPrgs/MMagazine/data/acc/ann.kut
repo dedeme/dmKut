@@ -5,16 +5,9 @@
 
 import "data/acc/op" : opMd ;
 
-/// Index of <Ann> field 0.
-id = 0;
-/// Index of <Ann> field 0.
-date = 1;
-/// Index of <Ann> field 0.
-op = 2;
-
 /// Creates a new Annotations.
 /// \i, s, <Op> -> a<Ann>
-new = \id, date, op -> return [id, date, op];;
+new : id, date, op;
 
 /// \<Ann> -> s
 toJs = \An -> return js.wa([

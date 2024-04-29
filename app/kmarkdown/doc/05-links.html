@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Hipervínculos e imágenes</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='04-defs.html'>Anterior (Definiciones y citas)</a> · <a href="index.html">Índice</a> · <a href='06-formulas.html'>Posterior (Formulas)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#Hipervínculos'>Hipervínculos</a><br>
+<a href='#Imágenes'>Imágenes</a><br>
+<a href='#Escape de '[''>Escape de '['</a>
+</p>
+<hr>
+<a name="Hipervínculos"></a>
+<h3>Hipervínculos</h3>
+<p>Se crean con la sintaxis:</p>
+<p><code>[link](texto)</code></p>
+<p>o simplemente</p>
+<p><code>[link]</code></p>
+<p>Este último caso es una abreviatura de</p>
+<p><code>[link](link)</code></p>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Hipervínculo con texto: [https://www.gnu.org](GNU).
+
+Hipervínculo sin texto: [https://www.gnu.org].</div>
+<script>aceConf("aceEditor-0", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Hipervínculo con texto: <a href="https://www.gnu.org">GNU</a>.</p>
+<p>Hipervínculo sin texto: <a href="https://www.gnu.org">https://www.gnu.org</a>.</p>
+</div><p><i>NOTA:</i></p>
+<p><i>La parte 'texto' del hipervínculo es HTML.</i></p>
+<div id="aceEditor-1" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Hipervínculo con texto: [https://www.gnu.org](G&lt;b>N&lt;/b>U).
+</div>
+<script>aceConf("aceEditor-1", "text");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Hipervínculo con texto: <a href="https://www.gnu.org">G<b>N</b>U</a>.</p>
+</div><a name="Imágenes"></a>
+<h3>Imágenes</h3>
+<p>Se crean con la sintaxis:</p>
+<p><code>![link]</code></p>
+<ul>
+<li>
+<p>Si la imagen se crea en párrafo aparte, aparece con recuadro.</p>
+</li>
+<li>
+<p>Si la imagen se crea dentro de un párrafo, aparece tal cual.</p>
+</li>
+</ul>
+<div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta es la flecha arriba (![img/up.png]) utilizada por kmarkdown.
+
+La misma flecha en párrafo aparte:
+
+![img/up.png]
+</div>
+<script>aceConf("aceEditor-2", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Esta es la flecha arriba (<img src="img/up.png">) utilizada por kmarkdown.</p>
+<p>La misma flecha en párrafo aparte:</p>
+<div><img style="border:1px solid rgb(110,130,150);" src="img/up.png"></div>
+</div><p><i>NOTA:</i></p>
+<p>Iniciar un párrafo con una imagen es un error:</p>
+<div id="aceEditor-3" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">![img/up.png] Esto es un error.
+</div>
+<script>aceConf("aceEditor-3", "kmd");</script>
+<p>Si se quiere empezar el párrafo con una imagen se puede colocar delante un
+espacio.</p>
+<div id="aceEditor-4" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);"> ![img/up.png] Esto no es un error.
+</div>
+<script>aceConf("aceEditor-4", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p> <img src="img/up.png"> Esto no es un error.</p>
+</div><a name="Escape de '['"></a>
+<h3>Escape de '['</h3>
+<p>Si se quiere escribir el caracter '[' sin que introduzca un hipervínculo o
+imagen, se debe usar '\['.</p>
+<div id="aceEditor-5" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esto no es un hipervínculo \[https://www.gnu.org] y
+esto no es una imagen !\[img/up.png].</div>
+<script>aceConf("aceEditor-5", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Esto no es un hipervínculo [https://www.gnu.org] y
+esto no es una imagen ![img/up.png].</p>
+</div><hr>
+<p style="text-indent: 0px"><a href='04-defs.html'>Anterior (Definiciones y citas)</a> · <a href="index.html">Índice</a> · <a href='06-formulas.html'>Posterior (Formulas)</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

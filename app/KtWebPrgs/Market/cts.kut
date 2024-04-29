@@ -1,0 +1,71 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+appName = "Market";
+/// Application version.
+version = "2024.04";
+/// Application path.
+appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Data version.
+dataVersion = "2024.04";
+/// Data path.
+dataPath = path.cat([global.cgiRoot, appName]);
+
+/// Number of quotes used to calculate companies volume.
+quotesVolume = 60;
+
+// Server --------------------------------------------------------------------
+
+/// Minimum entries for a valid reading of historic quotes.
+historicMinimumEntries = 4;
+
+/// Server configuration stopped
+serverStopped = 0;
+
+/// Server configuration active
+serverActive = 1;
+
+/// Server configuration selected
+serverSelected = 2;
+
+/// me nick.
+meNick = "<ME>";
+
+/// Ibex nick
+ibexNick = "<IBEX>";
+
+/// Euro index nick.
+euroNick = "<EURO>";
+
+/// All index nicks;
+IxNicks = [ibexNick, euroNick];
+
+// Scheduler -----------------------------------------------------------------
+
+/// Time to scheduler sleep (milliseconds)
+schedulerSleepTime = 900000; // 15'
+
+/// Time to scheduler sleep (milliseconds)
+schedulerWatchingTime = 120000; // 2'
+
+/// External servers (Bolsamania, Investing, etc.) delay in SECONDS
+serverDelay = 900; // 15 minutes
+
+/// Activity tyes
+sleeping, active :;
+
+/// Hour to start actHistoric fase
+actHistoricStart = 2;
+
+// Models - Investors --------------------------------------------------------
+
+/// Number of quotes for accounting charts.
+accountingQuotes = 250;
+
+/// Delay days after a sale with losses (7 days per week).
+daysLoss7 = 63;

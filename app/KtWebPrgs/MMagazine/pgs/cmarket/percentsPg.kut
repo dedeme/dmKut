@@ -3,35 +3,28 @@
 
 /// Profits page.
 
+import "libdm/jstb";
 import "KtWeb/rp";
 import "data/cts";
 import "data/dailyProfitsEntry";
 import "data/profitsEntry";
 import "data/acc/diary";
-import "ex/ktmarket/profits";
-import "ex/ktmarket/diariesDb";
+import "ex/cmarket/profits";
+import "ex/cmarket/diariesDb";
 import "db";
 
 /// \m -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      lvs = cts.investors;
       year = time.year(time.now());
-      //[[<DailyProfitsEntry>...]...]
-      InvPs = arr.fromIter(iter.map(
-        [0:cts.investors], \inv -> return profits.read(year, inv);
-      ));
-      Pfs = dailyProfitsEntry.mkProfits(InvPs);
+      //[<DailyProfitsEntry>.]
+      InvP = profits.read(year);
+      Pfs = dailyProfitsEntry.mkProfits(InvP);
       return rp.mk({
-        "investors": math.itof(cts.investors),
-        "initialAssets": arr.fromIter(
-            iter.map([0:lvs], \inv ->
-              return diary.initialAssets(diariesDb.read(year, inv).anns);
-            )
-          ),
+        "initialAssets": diary.initialAssets(diariesDb.read(year)[diary.Anns]),
         "profits": arr.map(Pfs, \e -> return profitsEntry.toJs(e);),
-        "ibex": js.r(db.ibexTb().readJs())
+        "ibex": js.r(db.ibexTb()[jstb.readJs]())
       });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

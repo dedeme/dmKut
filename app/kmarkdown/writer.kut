@@ -1,0 +1,590 @@
+// Copyright 11-Oct-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Kut Markdown writer.
+
+import "reader";
+import "err";
+
+// \s -> b
+isDigit = \ch -> return ch >= '0' & ch <= '9';;
+
+/// Process text from .kmd file and return the matching html.
+///   Hs        : Empty list of headers (##) to populate.
+///   isNumbered: 'true' if headers '##' should be numbered.
+///   Rd        : text reader. After reading 'Rd' can not be reused.
+/// \[s.], b, <reader> -> s
+process = \Hs, isNumbered, :reader rd -> {
+  aceIxV = [0];
+  :arr Html = []; // [<rune>.]
+
+  if (rd.peek() == "=" & rd.peekn(1) == "\n") {
+    while () {
+      rd.next();
+      if (rd.peek() == "") {
+        err.show("End of metadata (=\\n) not found");
+        break;
+      }
+      if (rd.peek() == "\n") {
+        rd.next();
+        if (rd.peek() == "=" & rd.peekn(1) == "\n") {
+          rd.next();
+          rd.next();
+          break;
+        }
+      }
+    }
+  }
+
+  while () {
+    rn = rd.peek();
+    if (rn == "") break;
+
+    if (rn == "\n") {
+      rd.next();
+      continue;
+    }
+
+    if (rn == "*" & rd.peekn(1) <= " ") {
+      rd.next();
+      rd.next();
+      ul0(Html, rd);
+    } else if (isDigit(rn) & rd.peekn(1) == "." & rd.peekn(2) <= " ") {
+      rd.next();
+      rd.next();
+      rd.next();
+      ol0(Html,rd);
+    } else if (rn == " " & rd.peekn(1) == " ") {
+      rd.next();
+      rd.next();
+      quote(Html, rd);
+    } else if (rn == "-" & rd.peekn(1) <= " ") {
+      rd.next();
+      rd.next();
+      dl(Html, rd);
+    } else if (rn == "#") {
+      rd.next();
+      if (rd.peek() <= " ") {
+        rd.next();
+        hn([], Html, rd, 3, false);
+      } else if (rd.peek() == "#") {
+        rd.next();
+        if (rd.peek() <= " ") {
+          rd.next();
+          hn(Hs, Html, rd, 2, isNumbered);
+        } else if (rd.peek() == "#") {
+          rd.next();
+          if (rd.peek() <= " ") {
+            rd.next();
+            hn([], Html, rd, 1, false);
+          } else {
+            hn([], Html, rd, 1, false);
+          }
+        } else {
+          hn(Hs, Html, rd, 2, isNumbered);
+        }
+      } else {
+        hn([], Html, rd, 3, false);
+      }
+    } else if (rn == "!" & rd.peekn(1) <= "[") {
+      rd.next();
+      rd.next();
+      img(Html, rd);
+    } else if (rn == "`" & rd.peekn(1) == "`") {
+      rd.next();
+      rd.next();
+      editor(Html, rd, aceIxV);
+    } else if (rn == "`") {
+      rd.next();
+      formula(Html, rd);
+    } else {
+      par(Html, rd);
+    }
+  }
+
+  return str.fromRunes(Html);
+};
+
+// \<reader>, s, s -> s
+verbatim = \:reader rd, start, terminator -> {
+  len = str.len(terminator);
+  Rs = []; // [s.]
+  while () {
+    rn = rd.peek();
+
+    if (rn == "") {
+      if (start[0] == "#")
+        err.show("Header " + start + " is the last text line");
+      else
+        err.show("Terminator of '" + start + "' not found");
+      break;
+    }
+    if (rn == terminator[0]) {
+      if (len == 1) {
+       rd.next();
+       break;
+      } else if (len == 2 & terminator[1] == rd.peekn(1)) {
+       rd.next();
+       rd.next();
+       break;
+      } else if (
+        len == 3 & terminator[1] == rd.peekn(1) & terminator[2] == rd.peekn(2)
+      ) {
+       rd.next();
+       rd.next();
+       rd.next();
+       break;
+      }
+    }
+    arr.push(Rs, rn);
+    rd.next();
+  }
+  return str.fromRunes(Rs);
+};
+
+// \<reader> -> s
+codeEmbeded = \:reader rd -> {
+  Rs = []; // [s.]
+  while () {
+    rn = rd.peek();
+
+    if (rn == "") {
+      err.show("Terminator of '```' not found");
+      break;
+    }
+    if (rn == terminator[0]) {
+      if (len == 1) {
+       rd.next();
+       break;
+      } else if (len == 2 & terminator[1] == rd.peekn(1)) {
+       rd.next();
+       rd.next();
+       break;
+      } else if (
+        len == 3 & terminator[1] == rd.peekn(1) & terminator[2] == rd.peekn(2)
+      ) {
+       rd.next();
+       rd.next();
+       rd.next();
+       break;
+      }
+    }
+    arr.push(Rs, rn);
+    rd.next();
+  }
+  return str.fromRunes(Rs);
+};
+
+// \[<rune>.], <reader>-> ()
+par = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<p>"));
+
+  isItalicV = [false];
+  isMonoV = [false];
+  rn0 = rd.peek();
+  rn1 = rd.peekn(1);
+  if (rn0 == "_" & rn1 > " " & rn1 != '_') {
+    rd.next();
+    isItalicV! = true;
+    Html.cat(str.toRunes("<i>"));
+  } else if (rn0 == "*" & rn1 > " " & rn1 != "*") {
+    rd.next();
+    isMonoV! = true;
+    Html.cat(str.toRunes("<code>"));
+  }
+
+  while () {
+    rn = rd.peek();
+    if (rn == "") break;
+    rd.next();
+
+    if (rn == "\n" & rd.peek() == "\n") break;
+
+    switch(rn) {
+      '<': Html.cat(str.toRunes("&lt;"));
+      '&': Html.cat(str.toRunes("&amp;"));
+      '·': Html.cat(str.toRunes("&nbsp;"));
+      '\\': {
+        if (rd.peek() == "\n") {
+          rd.next();
+          Html.cat(str.toRunes("<br>"));
+        } else {
+          Html.push(rn);
+        }
+      }
+      '_': {
+        if (
+          isItalicV! & Html.peek()  > " " &
+          (rd.peek() <= " " |
+            str.index(".,;:()[]{}!¡¿?", rd.peek()) != -1
+          )
+        ) {
+          isItalicV! = false;
+          Html.cat(str.toRunes("</i>"));
+        } else if (
+          !isItalicV! & Html.peek()  <= " " &
+          rd.peek() > " " & rd.peek() != "_"
+        ) {
+          isItalicV! = true;
+          Html.cat(str.toRunes("<i>"));
+        } else {
+          Html.push(rn);
+        }
+      }
+      '*': {
+        if (
+          isMonoV! & Html.peek()  > " " &
+          (rd.peek() <= " " |
+            str.index(".,;:()[]{}!¡¿?", rd.peek()) != -1
+          )
+        ) {
+          isMonoV! = false;
+          Html.cat(str.toRunes("</code>"));
+        } else if (
+          !isMonoV! & Html.peek()  <= " " &
+          rd.peek() > " " & rd.peek() != "*"
+        ) {
+          isMonoV! = true;
+          Html.cat(str.toRunes("<code>"));
+        } else {
+          Html.push(rn);
+        }
+      }
+      '[': {
+        if (!!Html & Html.peek()  == "\\") {
+          arr.pop(Html);
+          Html.push("[");
+        } else if (!!Html & Html.peek()  == "!") {
+          arr.pop(Html);
+          Html.cat(str.toRunes('<img src="'));
+          Html.cat(str.toRunes(verbatim(rd, "![", "]")));
+          Html.cat(str.toRunes('">'));
+        } else {
+          link = verbatim(rd, "[", "]");
+          rn2 = rd.peek();
+          textV = [link];
+          if (rn2 == "(") {
+            rd.next();
+            textV! = verbatim(rd, "(", ")");
+          }
+          arr.cat(
+            Html, str.toRunes('<a href="' + link + '">' + textV! + "</a>")
+          );
+        }
+      }
+      '`': {
+        if (rd.peek() == '`') {
+          rd.next();
+          Html.cat(str.toRunes(verbatim(rd, "``", "``")));
+        } else {
+          Html.cat(str.toRunes("\\(" + verbatim(rd, "`", "`") + "\\)"));
+        }
+      }
+      default: Html.push(rn);
+    }
+  }
+
+  if (isItalicV!) {
+    err.show("Italic without close");
+    Html.cat(str.toRunes("</i>"));
+  }
+  if (isMonoV!) {
+    err.show("Monospaced without close");
+    Html.cat(str.toRunes("</code>"));
+  }
+
+  Html.cat(str.toRunes("</p>\n"));
+  while (rd.peek() == "\n") rd.next();
+};
+
+// \[<rune>.], <reader> -> ()
+ul0 = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<ul>\n"));
+  while () {
+    Html.cat(str.toRunes("<li>\n"));
+    while () {
+      rn = rd.peek();
+      if (rn == "") break;
+      rn2 = rd.peekn(1);
+
+      if (rn == "*" & rn2 <= " ") {
+        rd.next();
+        rd.next();
+        ul1(Html, rd);
+      } else if (isDigit(rn) & rd.peekn(1) == "." & rd.peekn(2) <= " ") {
+        rd.next();
+        rd.next();
+        rd.next();
+        ol1(Html, rd);
+      } else par(Html, rd);
+
+      if (rd.peek() > " " | rd.peekn(1) > " ") break;
+      rd.next();
+      rd.next();
+    }
+    Html.cat(str.toRunes("</li>\n"));
+
+    if (rd.peek() == "*" & rd.peekn(1) <= " ") {
+      rd.next();
+      rd.next();
+      continue;
+    }
+    break;
+  }
+
+  Html.cat(str.toRunes("</ul>\n"));
+};
+
+// \[<rune>.], <reader> -> ()
+ul1 = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<ul>\n"));
+  while () {
+    Html.cat(str.toRunes("<li>\n"));
+    while () {
+      if (rd.peek() == "") break;
+      par(Html, rd);
+
+      if (
+        rd.peek() > " " | rd.peekn(1) > " " |
+        rd.peekn(2) > " " | rd.peekn(3) > " "
+      ) break;
+      rd.next();
+      rd.next();
+      rd.next();
+      rd.next();
+    }
+    Html.cat(str.toRunes("</li>\n"));
+
+    if (
+      rd.peek() <= " " & rd.peekn(1) <= " " &
+      rd.peekn(2) == "*" & rd.peekn(3) <= " "
+    ) {
+      rd.next();
+      rd.next();
+      rd.next();
+      rd.next();
+      continue;
+    }
+    break;
+  }
+
+  Html.cat(str.toRunes("</ul>\n"));
+};
+
+// \[<rune>.], <reader> -> ()
+quote = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<blockquote>\n"));
+  while () {
+    rn = rd.peek();
+    if (rn == "") break;
+    rn2 = rd.peekn(1);
+
+    if (rn == "*" & rn2 <= " ") {
+      rd.next();
+      rd.next();
+      ul1(Html, rd);
+    } else if (isDigit(rn) & rd.peekn(1) == "." & rd.peekn(2) <= " ") {
+      rd.next();
+      rd.next();
+      rd.next();
+      ol1(Html, rd);
+    } else par(Html, rd);
+
+    if (rd.peek() > " " | rd.peekn(1) > " ") break;
+    rd.next();
+    rd.next();
+  }
+  Html.cat(str.toRunes("</blockquote>\n"));
+};
+
+// \[<rune>.], <reader> -> ()
+ol0 = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<ol>\n"));
+  while () {
+    Html.cat(str.toRunes("<li>\n"));
+    while () {
+      rn = rd.peek();
+      if (rn == "") break;
+      rn2 = rd.peekn(1);
+
+      if (rn == "*" & rn2 <= " ") {
+        rd.next();
+        rd.next();
+        ul1(Html, rd);
+      } else if (isDigit(rn) & rd.peekn(1) == "." & rd.peekn(2) <= " ") {
+        rd.next();
+        rd.next();
+        rd.next();
+        ol1(Html, rd);
+      } else par(Html, rd);
+
+      if (rd.peek() > " " | rd.peekn(1) > " ") break;
+      rd.next();
+      rd.next();
+    }
+    Html.cat(str.toRunes("</li>\n"));
+
+    if (isDigit(rd.peek()) & rd.peekn(1) <= ".") {
+      rd.next();
+      rd.next();
+      continue;
+    }
+    break;
+  }
+
+  Html.cat(str.toRunes("</ol>\n"));
+};
+
+// \[<rune>.], <reader> -> ()
+ol1 = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<ol>\n"));
+  while () {
+    Html.cat(str.toRunes("<li>\n"));
+    while () {
+      if (rd.peek() == "") break;
+      par(Html, rd);
+
+      if (
+        rd.peek() > " " | rd.peekn(1) > " " |
+        rd.peekn(2) > " " | rd.peekn(3) > " "
+      ) break;
+      rd.next();
+      rd.next();
+      rd.next();
+      rd.next();
+    }
+    Html.cat(str.toRunes("</li>\n"));
+
+    if (
+      rd.peek() <= " " & rd.peekn(1) <= " " &
+      isDigit(rd.peekn(2)) & rd.peekn(3) == "." & rd.peekn(4) <= " "
+    ) {
+      rd.next();
+      rd.next();
+      rd.next();
+      rd.next();
+      rd.next();
+      continue;
+    }
+    break;
+  }
+
+  Html.cat(str.toRunes("</ol>\n"));
+};
+
+// \[<rune>.], <reader> -> ()
+dl = \:arr Html, :reader rd -> {
+  Html.cat(str.toRunes("<ol>\n"));
+  while () {
+    Html.cat(str.toRunes("<dt>" + verbatim(rd, "- ", "\n> ") + "</dt>\n"));
+    Html.cat(str.toRunes("<dd>\n"));
+    while () {
+      rn = rd.peek();
+      if (rn == "") break;
+      rn2 = rd.peekn(1);
+
+      if (rn == "*" & rn2 <= " ") {
+        rd.next();
+        rd.next();
+        ul1(Html, rd);
+      } else if (isDigit(rn) & rd.peekn(1) == "." & rd.peekn(2) <= " ") {
+        rd.next();
+        rd.next();
+        rd.next();
+        ol1(Html, rd);
+      } else par(Html, rd);
+
+      if (rd.peek() > " " | rd.peekn(1) > " ") break;
+      rd.next();
+      rd.next();
+    }
+    Html.cat(str.toRunes("</dd>\n"));
+
+    if (rd.peek() == "-" & rd.peekn(1) <= " ") {
+      rd.next();
+      rd.next();
+      continue;
+    }
+    break;
+  }
+
+  Html.cat(str.toRunes("</ol>\n"));
+};
+
+// \[s,], [<rune>.], <reader>, i, b -> ()
+hn = \Hs, :arr Html, :reader rd, n, isNumbered -> {
+  htmlH = n == 1 ? "h2" : n == 2 ? "h3" : "h4";
+  tx0 = verbatim(rd, n == 1 ? "###" : n == 2 ? "##" : "#", "\n\n");
+  tx = (isNumbered) ? math.itos(arr.size(Hs) + 1) + ". " + tx0 : tx0;
+
+  if (n == 2) Html.cat(str.toRunes('<a name="' + tx + '"></a>\n'));
+
+  Html.cat(str.toRunes(
+    "<" + htmlH + ">" + tx + "</" + htmlH + ">\n"
+  ));
+  while () {
+    if (rd.peek() == "\n") rd.next();
+    else break;
+  }
+
+  if (n == 2) arr.push(Hs, tx);
+};
+
+// \[<rune>.], <reader> -> ()
+img = \:arr Html, :reader rd -> {
+  src = verbatim(rd, "![", "]\n\n");
+  while () {
+    if (rd.peek() == "\n") rd.next();
+    else break;
+  }
+  Html.cat(str.toRunes(
+    '<div><img style="border:1px solid rgb(110,130,150);" src="' +
+    src +
+    '"></div>\n'
+  ));
+};
+
+// \[<rune>.], <reader> -> ()
+formula = \:arr Html, :reader rd -> {
+  fml = verbatim(rd, "`", "`\n");
+  if (rd.peek() == "=" & rd.peekn(1) == "\n") {
+    rd.next();
+    rd.next();
+    Html.cat(str.toRunes(
+      '<p><table><tr><td class="formula">\\(' + fml + '\\)</td></tr></table></p>\n'
+    ));
+  } else {
+    Html.cat(str.toRunes('<p>\\(' + fml + '\\)</p>\n'));
+  }
+  while () {
+    if (rd.peek() == "\n") rd.next();
+    else break;
+  }
+};
+
+// \[<rune>.], <reader>, [i] -> ()
+editor = \:arr Html, :reader rd, aceIxV -> {
+  tx = verbatim(rd, "``", "``\n");
+  ix = str.index(tx, "\n");
+  if (ix <= 0 | str.trim(tx[:ix]) == "") {
+    Html.cat(str.toRunes(tx));
+  } else {
+    tx = str.replace(
+      str.replace(tx, "&", "&amp;"),
+      "<", "&lt;"
+    );
+    ed = "aceEditor-" + math.itos(aceIxV!);
+    aceIxV! += 1;
+    lang = str.trim(tx[:ix]);
+    Html.cat(str.toRunes(
+      '<div id="' + ed + '" ' +
+      'style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">' +
+      tx[ix+1:] + "</div>\n" +
+      '<script>aceConf("' + ed + '", "' + lang + '");</script>\n'
+    ));
+  }
+  while () {
+    if (rd.peek() == "\n") rd.next();
+    else break;
+  }
+};

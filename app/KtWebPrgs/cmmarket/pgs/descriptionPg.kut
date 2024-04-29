@@ -5,7 +5,7 @@
 
 import "KtWeb/rp";
 import "libmkt/models";
-import "libmkt/model";
+import "data/jsModel";
 
 /// \m -> ()
 process = \Rq -> {
@@ -13,7 +13,7 @@ process = \Rq -> {
     "idata": {
       mdId = Rq.modelId;
       sys.print(rp.mk({
-        model: model.toJs(models.get(mdId)!)
+        model: jsModel.toJs(models.get(mdId)!)
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

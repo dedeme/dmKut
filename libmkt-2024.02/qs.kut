@@ -1,0 +1,289 @@
+// Copyright 19-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Array of company quotes management.
+
+import "quote";
+
+/// Returns a [quotes|error, ok] with quotes from the content of a
+/// 'NICK.tb' file. (From after to before)
+/// If the final number of quotes is different to 'size', or
+/// some quote can not be read, the first error found is returned.
+///   size: Number of quotes to return.
+///   s   : Text from a 'NICK.tb' file. It is trimized by this function.
+/// \i, s -> [[<quote>.]|s, b]
+fromStr = \size, s -> {
+  try {
+    Qs = arr.map(str.split(str.trim(s), "\n"), quote.fromStr);
+    if (Qs.size() != size)
+      sys.throw(
+        str.fmt("Wrong quotes number. Expected %d. Found %d", [size, Qs.size()])
+      );
+    return [Qs, true];
+  } catch (e) {
+    return [e, false];
+  }
+};
+
+/// Returns text to write in a 'NICK.tb' file.
+///   Qts: Quotes from after to before.
+/// \[<quote>.] -> s
+toStr = \:arr Qts -> return arr.join(Qts.map(quote.toStr), "\n");;
+
+/// Returns the quotes number of 'qts'
+/// \[<quote>.] -> i
+size = \:arr Qts -> return Qts.size();;
+
+/// Corrects "qts" and returns a list with corrections.
+///   Qts: Historic quotes (from after to before).
+///   ----
+///   Returns [Quotes, Errors]:
+///     A[0] : Quotes (from after to before), corrected if necessary.
+///     A[1] : Array with corrections.
+/// \[<quote>.] -> [[<quote>.], [s.]]
+correct = \:arr Qts -> {
+  // [s.]
+  Errs = [];
+
+  // \<quote>, [s.] -> ()
+  appendErrs = \:quote q, NewErrs ->
+    for (e = NewErrs) Errs.push(str.fmt("%v: %v", [q.date, e]));;
+
+  if (!Qts) return [[], []];
+
+  // <quote>
+  NewQs = [];
+  q1V = [[]];
+  q2V = [Qts[0]];
+  for (i = 1 : Qts.size()) {
+    q1V! = q2V!;
+    q2V! = Qts[i];
+
+    // [<quote>, [s.]]
+    q0, Errs0 = quote.correct2(q1V!, q2V!);
+    appendErrs(q0, Errs0);
+
+    // [<quote>, [s.]]
+    q1, Errs1 = quote.correct3(q0, q2V!);
+    appendErrs(q1, Errs1);
+
+    NewQs.push(q1);
+  }
+  // [<quote>, [s.]]
+  q0, Errs0 = quote.correct1(q2V!);
+  NewQs.push(q0);
+  appendErrs(q0, Errs0);
+
+  return [NewQs, Errs0];
+};
+
+/// Corrects extra o missing quotes in "qts" and returns a list with corrected
+/// quotes.
+///   Qts : Historic quotes of company (from after to before).
+///   Mqts: Historic quotes of main company (from after to before).
+///   ----
+///   Returns [Quotes, Errors]:
+///     A[0] : Quotes (from after to before), corrected if necessary.
+///     A[1] : Array with corrections.
+/// \[<quote>.], [<quote>.] -> [[<quote>.], [s.]]
+correctDates = \:arr Qts, :arr Mqts -> {
+  Errs = [];
+
+  // \<quote>, s -> ()
+  appendErr = \:quote q, err ->
+    Errs.push(str.fmt("%v: %v", [q.date, err]));;
+
+  // [<quote>.]
+  NewQs = [];
+  mIV = [0];
+  mSz= Mqts.size();
+  iV = [0];
+  sz = Qts.size();
+  while () {
+    mI = mIV!;
+    i = iV!;
+
+    if (mI < mSz) {
+      :quote mQ = Mqts[mI];
+      if (i < sz) {
+        :quote q = Qts[i];
+        if (mQ.date > q.date) {
+          appendErr(mQ, "Missing quote");
+          NewQs.push(quote.newMissing(mQ.date));
+          mIV! += 1;
+          continue;
+        }
+        if (mQ.date < q.date) {
+          appendErr(q, "Extra quote");
+          iV! += 1;
+          continue;
+        }
+        NewQs.push(q);
+        iV! += 1;
+        mIV! += 1;
+        continue;
+      }
+      appendErr(mQ, "Missing quote");
+      NewQs.push(quote.newMissing(mQ.date));
+      mIV! += 1;
+      continue;
+    }
+
+    if (i < sz) {
+      appendErr(Qts[i], "Extra quote");
+      iV! += 1;
+      continue;
+    }
+    break;
+  }
+
+  return [NewQs, Errs];
+};
+
+/// Merges new quotes with others already existent.
+///   NewQts: Last quotes read from the Internet (from after to before). It can not be empty.
+///   Mqts  : Main company quotes (from after to before). When quotes are of
+///           main company, it is an empty array.
+///   Qts   : Existent quotes in file system (from after to before).
+///   ----
+///   Returns [Quotes, Errors]:
+///     A[0]: Quotes (from after to before) made with the following process:
+///           1. Every quote on top with 'open = -1' is removed from "this"
+///              in the range of "newQts" dates.
+///           2. If there are new and old quotes for the same date, the old
+///              is selected.
+///           3. The return array is corrected.
+///     A[1]: Array with Errors returned by 'correct' and 'correctDates' in format
+///           "date: error".
+/// \[<quote>.], [<quote>.], [<quote>.] -> [[<quote>.], [s.]]
+merge = \:arr NewQts, :arr Mqts, :arr Qts -> {
+  iV = [0];
+  sz = Qts.size();
+  Qs = arr.copy(Qts); // to modify
+
+  nqtsIV = [0];
+  nqtsSz = NewQts.size();
+  qtsIV = [0];
+  while () {
+    i = iV!;
+    nqtsI = nqtsIV!;
+    qtsI = qtsIV!;
+
+    if (i >= sz) break;
+
+    if (nqtsI < nqtsSz) {
+      :quote nQ = NewQts[nqtsI];
+      if (qtsI < sz) {
+        :quote oldQ = Qts[qtsI];
+        if (nQ.date > oldQ.date) {
+          Qs[i] = nQ;
+          iV! += 1;
+          nqtsIV! += 1;
+          continue;
+        }
+        if (nQ.date < oldQ.date) {
+          Qs[i] = oldQ;
+          iV! += 1;
+          qtsIV! += 1;
+          continue;
+        }
+        if (quote.isMissing(oldQ)) Qs[i] = nQ;
+        else Qs[i] = oldQ;
+        iV! += 1;
+        qtsIV! += 1;
+        nqtsIV! += 1;
+        continue;
+      }
+    }
+
+    Qs[i] = Qts[qtsI];
+    iV! += 1;
+    qtsIV! += 1;
+  }
+
+  qsRV = [Qs];
+  // [s.]
+  Errs = [];
+
+  if (!!Mqts) {
+    // [[<quote>.], [s.]]
+    Rs, Errors = correctDates(qsRV!, Mqts);
+    qsRV! = Rs;
+    for (err = Errors) Errs.push(err);
+  }
+
+  // [[<quote>.], [s.]]
+  Rs, Errors = correct(qsRV!);
+  qsRV! = Rs;
+  for (err = Errors) Errs.push(err);
+
+  return [qsRV!, Errs];
+};
+
+/// Returns an [<quote.], copy of this, ordered from before to after.
+///   qts: Historic quotes (from after to before).
+/// \[<quote>.] -> [<quote>.]
+reverse = \:arr Qts -> return Qts.reverse();;
+
+/// Returns a array of dates with 'size == qs_size(this)', ordered from
+/// before to after
+///   qts: Historic quotes (from after to before).
+/// \[<quote>.] -> [s.]
+dates = \:arr Qts ->
+  return arr.map(Qts.reverse(), \:quote q -> return q.date;);;
+
+// \[f.] -> ()
+normalize = \Vs -> {
+  startV = [-1.0];
+  for (i, n = Vs)
+    if (n >= 0.0) {
+      startV! = n;
+      break;
+    }
+
+  if (startV! < 0.0) sys.throw("Every quote is < 0");
+
+  Vs[0] = startV!;
+  for (i = 1:arr.size(Vs))
+    if (Vs[i] < 0.0) Vs[i] = Vs[i - 1];
+};
+
+/// Returns a array of opens with 'size = [<quote>.].size', normalized and
+/// ordered from before to after
+///   Qts: Historic quotes (from after to before).
+/// \[<quote>.] -> [f.]
+opens = \:arr Qts -> {
+  R = arr.map(Qts.reverse(), \:quote q -> return q.open;);
+  normalize(R);
+  return R;
+};
+
+/// Returns a array of closes with 'size = qs_size(this)', normalized and
+/// ordered from before to after
+///   qts: Historic quotes (from after to before).
+/// \[<quote>.] -> [f.]
+closes = \:arr Qts -> {
+  R = arr.map(Qts.reverse(), \:quote q -> return q.close;);
+  normalize(R);
+  return R;
+};
+
+/// Returns a array of maxs with 'size = qs_size(this)', normalized and
+/// ordered from before to after
+///   qts: Historic quotes (from after to before).
+/// \[<quote>.] -> [f.]
+maxs = \:arr Qts -> {
+  R = arr.map(Qts.reverse(), \:quote q -> return q.max;);
+  normalize(R);
+  return R;
+};
+
+/// Returns a array of mins with 'size = qs_size(this)', normalized and
+/// ordered from before to after
+///   this: Historic quotes (from after to before).
+/// \[<quote>.] -> [f.]
+mins = \:arr Qts -> {
+  R = arr.map(Qts.reverse(), \:quote q -> return q.min;);
+  normalize(R);
+  return R;
+};

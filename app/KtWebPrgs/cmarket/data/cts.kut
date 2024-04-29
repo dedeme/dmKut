@@ -3,7 +3,6 @@
 
 /// Constants.
 
-import "libmkt/ffi";
 import "KtWeb/global";
 
 //Application ----------------------------------------------------------------
@@ -12,7 +11,7 @@ import "KtWeb/global";
 appName = "cmarket";
 
 /// Data version
-version = "202306";
+version = "202401";
 
 /// Data directory.
 dataPath = path.cat([global.cgiRoot, "CMarket"]);
@@ -43,11 +42,8 @@ ibexNick = "<IBEX>";
 /// Euro index nick.
 euroNick = "<EURO>";
 
-/// Usa index nick.
-usaNick = "<USA>";
-
 /// All index nicks;
-IxNicks = [ibexNick, euroNick, usaNick];
+IxNicks = [ibexNick, euroNick];
 
 // Scheduler -----------------------------------------------------------------
 
@@ -57,7 +53,7 @@ schedulerSleepTime = 900000; // 15'
 /// Time to scheduler sleep (milliseconds)
 schedulerWatchingTime = 120000; // 2'
 
-/// External servers (Infobolsa, Finanzas, etc.) delay in SECONDS
+/// External servers (Bolsamania, Investing, etc.) delay in SECONDS
 serverDelay = 900; // 15 minutes
 
 /// Activity state
@@ -71,35 +67,8 @@ actHistoricStart = 2;
 
 // Models - Investors --------------------------------------------------------
 
-/// Number of investors (from 0 to 2)
-investors = 3;
-
-/// Number of quotes in historic tables
-historicQuotes = 610;
-
 /// Number of quotes for accounting charts.
 accountingQuotes = 250;
 
-/// Fleas initial capital for each cycle
-initialCapital = ffi.initialCapital();
-
-/// Bet
-bet = ffi.bet();
-
-/// Minimun cash to bet
-minToBet = ffi.minToBet();
-
-/// No lost multiplicator
-noLossMultiplicator = ffi.noLossMultiplicator();
-
-/// Delay days after a sale with profits (in 5 days per week).
-strategyDaysWin = 0;
-
-/// Delay days after a sale with profits.
-daysWin = 0;
-
-/// Delay days after a sale with losses (in 5 days per week).
-strategyDaysLoss = 45;
-
-/// Delay days after a sale with losses.
-daysLost = 63;
+/// Delay days after a sale with losses (7 days per week).
+daysLoss7 = 63;

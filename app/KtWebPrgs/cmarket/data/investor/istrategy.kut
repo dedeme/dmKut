@@ -7,15 +7,15 @@
 ///   modelId: Market model identifier.
 ///   parms: Parameters for the model.
 /// \s, [f...] -> <istrategy>
-new = \modelId, params -> return {modelId, params};;
+new : modelId, Params;
 
 /// Returns 'true' if 'S1' == 'S2'.
 /// \<istrategy>, <istrategy> -> b
-eq = \S1, S2 -> return S1.modelId == S2.modelId & S1.params == S2.params;;
+eq = \S1, S2 -> return S1[modelId] == S2[modelId] & S1[Params] == S2[Params];;
 
 /// \<istrategy> -> JS
-toJs = \S -> return [S.modelId, S.params];;
+toJs = \S -> return S;;
 
 /// \JS -> <istrategy>
-fromJs = \A -> return new(A[0], A[1]);;
+fromJs = \A -> return A;;
 

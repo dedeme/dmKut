@@ -28,8 +28,8 @@ run = \-> {
     BestAsset = [-1.0 ];
     BestProfit = [-1.0 ];
     for (MeJs = ExTb[1]) {
-      Me = mModelEval.fromJs(MeJs);
-      arr.push(ParamEvals, [Me.params, mModelEval.heval(Me)]);
+      :mModelEval Me = mModelEval.fromJs(MeJs);
+      arr.push(ParamEvals, [Me.Params, mModelEval.heval(Me)]);
       BestPoint! = math.max(BestPoint!, mModelEval.heval(Me));
       BestAsset! = math.max(BestAsset!, Me.hassets);
       BestProfit! = math.max(BestProfit!, Me.hprofits);

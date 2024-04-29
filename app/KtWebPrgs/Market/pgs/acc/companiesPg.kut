@@ -1,0 +1,116 @@
+// Copyright 16-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "KtWeb/rp";
+import "libmkt/quotes";
+import "libmkt/models";
+import "libmkt/model";
+import "db/cosTb";
+import "db/svCodesTb";
+import "db/quotesDb";
+import "db/investorTb";
+import "db/acc/diariesDb";
+import "db/trading/closesTb";
+import "data/acc/ann";
+import "data/acc/settlement";
+import "data/co/cos";
+import "data/co/co";
+import "data/investor/investor";
+import "data/investor/istrategy";
+
+// \s -> s
+mkUrl = \nick -> {
+  Codes = svCodesTb.read("YAHOO");
+  Code = dic.get(Codes, nick);
+  if (!!Code)
+    return str.fmt(
+      "https://es.finance.yahoo.com/quote/%s", [Code!]
+    );
+  return "";
+};
+
+// \s -> s
+rpErr = \error -> return rp.mk({error});;
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      // [<ann>.]
+      :arr Anns = diariesDb.investorAnns(diariesDb.investorYears()[0]);
+      :settlement set = ann.mkSettlement(Anns);
+      Pf = set.Portfolio;
+      Nicks = arr.map(
+        arr.filter(cosTb.read()[cos.Cos], \:co c -> return c.isSelected;),
+        \:co c -> return c.nick;
+      );
+      Lst = []; // [[s, b, s].]
+      for (nk = Nicks)
+        Lst.push([nk, !!dic.get(Pf, nk), mkUrl(nk)]);
+
+      return rp.mk({
+        Lst
+      });
+    }
+    "nickData": {
+      nk = Rq.nick;
+      ClOp = dic.get(closesTb.read(), nk);
+      if (!ClOp) {return rpErr("Close of " + nk + " not found");}
+      isHistoric = ClOp![0];
+      cl = ClOp![1];
+      mainNick = cosTb.read()[cos.mainNick];
+      // <quotes>, b
+      Qs, ok = quotesDb.readQuotes(mainNick, nk);
+      if (!ok) {return rpErr(Qs);}
+      QsV = [Qs];
+      if (!isHistoric) {
+        :quotes qts = QsV!;
+        :arr Dates = qts.Dates;
+        Dates.shift();
+        Dates.push(time.toStr(time.now()));
+        :arr Opens = qts.Opens;
+        Opens.shift();
+        Opens.push([cl]);
+        :arr Closes = qts.Closes;
+        Closes.shift();
+        Closes.push([cl]);
+        // Maxs and mins are facke values.
+        QsV! = quotes.new(qts.Cos, Dates, Opens, Closes, Closes, Closes);
+      }
+      :quotes qts = QsV!;
+
+      Refs = []; //[[f.].]
+      :arr Anns = diariesDb.investorAnns(diariesDb.investorYears()[0]);
+      :settlement set = ann.mkSettlement(Anns);
+      Pf = set.Portfolio;
+      eOp = dic.get(Pf, nk);
+      stocks = !eOp ? 0 : eOp![0];
+      price = !eOp ? -1.0 : eOp![1];
+
+      strgOp = dic.get(investorTb.read()[investor.Nicks], nk);
+      if (!strgOp) {
+        rpErr(str.fmt("Strategy of %v not found", [nk]));
+        return;
+      }
+      :istrategy strg = strgOp!;
+      mdOp = models.get(strg.modelId);
+      if (!mdOp) {rpErr("Model " + strg.modelId + " not found"); return;}
+      :model md = mdOp!;
+      Params = strg.Params;
+      :arr Rs = md.calc(qts.Closes, Params);
+      Refs.push(Rs.map(\R -> return math.round(R!, 4);));
+
+      return rp.mk({
+        error: "",
+        price,
+        profits: math.itof(stocks) * (cl - price),
+        Dates: qts.Dates,
+        Closes: arr.map(qts.Closes, \cOp -> return cOp!;),
+        Refs
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

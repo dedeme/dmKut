@@ -8,13 +8,13 @@ import "libmkt/quote";
 /// Constructor:
 ///   cos: Nicks of current companies in index.
 ///   qs : 'cts.historicQuotes' last index values (From after to before).
-/// \[s.], <qs> -> d<ibex>
-new = \cos, qs -> return {cos, qs};;
+/// \[s.], <qs> -> <ibex>
+new : Cos, qs;
 
 /// \<ibex> -> JS
 toJs = \I -> return [
-    I.cos,
-    arr.map(I.qs, quote.toJs)
+    I[Cos],
+    arr.map(I[qs], quote.toJs)
   ];;
 
 /// \JS -> <ibex>

@@ -1,0 +1,56 @@
+// Copyright 06-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data synchronizer.
+
+/// Synchronization processing.
+/// Returns:
+///     * ToUpdates: Array of 'Sources' elements to update.
+///     * ToDeletes: Array of 'Targets' elements to delete.
+///   Sources : Sorted source list.
+///   Targets : Sorted target list.
+///   test    : Function \source, target, index -> rs, where 'rs' is
+///               *  2: 'source' > 'target'
+///               *  1: 'source' should be updated.
+///               *  0: 'source' should be not updated.
+///               * -1: 'source' < 'target'.
+/// \[*.], [*.], (*,*,i->i) -> {ToUpdates:[*.], ToDeletes:[*.]}
+run = \:arr Sources, :arr Targets, test -> {
+  // [*.]
+  ToUpdates = [];
+  // [*.]
+  ToDeletes = [];
+
+  ssize = Sources.size();
+  tsize = Targets.size();
+  isV = [0];
+  itV = [0];
+  while () {
+    is = isV!;
+    it = itV!;
+
+    if (is >= ssize) {
+      if (it >= tsize) break;
+      ToDeletes.push(Targets[it]);
+      itV! += 1;
+    } else if (it >= tsize) {
+      ToUpdates.push(Sources[is]);
+      isV! += 1;
+    } else {
+      r = test(Sources[is], Targets[it], is);
+      if (r == 2) {
+        ToDeletes.push(Targets[it]);
+        itV! += 1;
+      } else if (r == -1) {
+        ToUpdates.push(Sources[is]);
+        isV! += 1;
+      } else {
+        if (r == 1) ToUpdates.push(Sources[is]);
+        isV! += 1;
+        itV! += 1;
+      }
+    }
+  }
+
+  return {ToUpdates, ToDeletes};
+};

@@ -1,0 +1,47 @@
+// Copyright 10-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting diaries data base management.
+
+import "../accDb";
+import "data/chart/profitsEntry";
+import "cts";
+
+// s
+dpath = path.cat([accDb.dpath, "profits"]);
+
+// \i, i -> s
+fpath = \year -> return path.cat([dpath, str.fmt("%v.tb", [year])]);;
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> file.mkdir(dpath);;
+
+/// Read a profits table. If the annotations table does not exist, it
+/// returns an empty array.
+///   year: Year.
+/// \s -> [<profitsEntry>.]
+read = \year -> {
+  p = fpath(year);
+  return file.exists(p)
+    ? js.r(file.read(p))
+    : []
+  ;
+};
+
+/// Writes a profits table.
+///   year: Year.
+///   table: Profits table.
+/// \s, [<profitsEntry>.] -> ()
+write = \year, table ->
+  file.write(fpath(year), js.w(table));;
+
+/// Returns a sorted array from after to before of years with activity of
+/// the investor.
+/// \-> [s.]
+investorYears = \ -> {
+  Years = arr.map(file.dir(dpath), \f -> return f[:-3];);
+  Years.sort(\y1, y2 -> return y1 > y2;);
+  return Years;
+};
+

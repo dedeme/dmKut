@@ -1,0 +1,184 @@
+=
+title = Configuración
+=
+
+## Configuración de archivos .kmd
+
+En cada archivo *.kmd* se puede establecer un encabezado de configuración.
+Para ello:
+
+* En la primera línea se escribe '='.
+
+* En las siguietes se escriben los parámetros, uno por línea.
+
+* Para terminar se escribe una línea con el único carcter '='.
+
+Los parámetros son los siguientes:
+
+- <span style="color:#008080">book</span> = texto
+> Permite establecer el nombre de un libro. (Ver
+  [#Generación de un libro](Generación de un libro)).
+
+  _texto_ es HTML.
+
+- <span style="color:#008080">title</span> = texto
+> Permite establecer el nombre con que la página aparecerá en la composición
+  de un libro. (Ver [#Generación de un libro](Generación de un libro)).
+
+  _texto_ es HTML.
+
+- <span style="color:#008080">withoutUp</span>
+> Quita la flecha arriba situada al pie de página. Esta flecha se muestra
+  por defector.
+
+  _NOTA: Para que la flecha se muestre es preciso que en el directorio del
+  archivo *.kmd* haya un directorio *'img'* con un icono llamado *'up.png'*._
+
+- <span style="color:#008080">withDown</span>
+> Muestra una flecha abajo en la parte superior de la página.
+
+  _NOTA: Para que la flecha se muestre es preciso que en el directorio del
+  archivo *.kmd* haya un directorio *'img'* con un icono llamado *'down.png'*._
+
+- <span style="color:#008080">numbered</span>
+> Hace que los encabezados '##' aparezcan numerados.
+
+En el apartado _Generación de un libro_ se muestran varios ejemplos de
+configuración.
+
+## Generación de un libro
+
+Varias páginas _de un mismo directorio_ pueden agruparse para formar un libro.
+Para ello es necesario que en el apartado de configuración de al menos un
+archivo *.kmd*, aparezca el parámetro *"book"*.
+
+A la hora de generar un libro hay que tener en cuenta que:
+
+* Sólo los archivos del directorio superior se integrarán en el mismo.
+  No obstante puden seguir usándose subdirectorios para situar otros archivos
+  *.kmd* y generar sus páginas HTML.
+
+* Los archivos se integran alfabéticamente en el índice del libro. Por ello
+  es recomendable usar nombres numerados.
+
+* Si aparece el parámetro *"book"* en más de un archivo *.kmd*, se utilizará
+  como nombre del libro el valor _'texto'_ de cualquiera de ellos.
+
+Un ejemplo de libro se puede ver [ej3/index.html](aquí).
+
+Se han usado los siguientes archivos:
+
+# 01-ini.kmd
+
+``kmd
+=
+book = Libro de ejemplo
+title = Inicio
+numbered
+withDown
+=
+
+## Primera parte
+
+Esta es la primera parte.
+
+## Segunda parte
+
+Esta es la senguda parte.
+``
+
+# 02-med.kmd
+
+``kmd
+=
+title = Medio
+numbered
+withoutUp
+=
+
+## Primera parte
+
+Esta es la primera parte.
+
+## Segunda parte
+
+Esta es la senguda parte.
+``
+
+# 03-fin.kmd
+
+``kmd
+=
+title = Final
+
+withoutUp
+
+withDown
+=
+
+## Primera parte
+
+Esta es la primera parte.
+
+## Segunda parte
+
+Esta es la senguda parte.
+``
+
+## El archivo <i>styles.css</i>
+
+'kmarkdown' utiliza como hoja de estilos por defecto un archivo generado
+automáticamente llamado *'styles.css'*.
+
+Si dicho archivo ya existe, no se realiza la generacíón. Ello permite añadir
+estilos personalizados.
+
+Si posteriormente se quieren restablecer los valores por defecto, basta
+con borrar el actual archivo *'styles.css'* y valover a llamar a 'kmarkdown'.
+
+## El archivo <i>000header.html</i>
+
+Este archivo, al igual que *'styles.css'* es generado automáticamente por
+'kmarkdown'. Igualmente se puede modificar y restaurar con el mismo
+procedimiento indicado en el apartado anterior.
+
+*'000header.html'* es usado como encabezado de todas las páginas HTML que se
+generen. Tiene las siguientes partes relevantes:
+
+- Fijación del título de las páginas HTML.
+> Es el título que aparecerá en las pestañas del navegador. En el caso de un
+  libro puede coincidir o no con el nombre de éste.
+
+- Determinación de las hojas de estilo.
+> Por defecto se señala el archivo *'styles.css'* como hoja de estilos. Esto
+  puede cambiarse, aunque no es recomendable. Lo que se se puede hacer sin
+  problemas es añadir nuevas hojas de estilo.
+
+- Activación de 'MathJax'
+> Es imprescindible si se quiere utilizar la posibilidad de escribir fórmulas.
+
+  Además de la activación, se definen dos funciones *'DS'* y *'EX'*. Estas
+  definiciones se pueden eliminar sin peligro, así como puede añadirse
+  cualquiera otra que se considere conveniente.
+
+  También pueden definirse nuevos elementos de configuración de 'MathJax' en
+  este archivo.
+
+- Activación de 'Ace'
+> Por defecto se utiliza un directorio que cuelga del directorio en el que
+  se encuentran los archivos *.kmd* llamado *'ace'*.
+
+  Esto obliga a que en todos los directorios en los que se compilan archivos
+  *.kmd* tenga que haber un vínculo simbólico al directorio correspondiente.
+  Si no se quiere que suceda así, se puede modificar el path a *'acd.js'*
+  por un path absoluto o incluso por una URL.
+
+  Para más información sobre la instalación de 'ace' ver
+  [07-codigo.html#Requisitos] o directamente [https://ace.c9.io].
+
+  Tambien se crea una función llamada 'aceConf'. Esta función no se debe
+  borrar, aunque se puede modificar respetando la utilización de los
+  parámetros *'ed'* y *'mode'*.
+
+
+

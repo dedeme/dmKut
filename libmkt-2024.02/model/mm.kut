@@ -1,0 +1,16 @@
+// Copyright 05-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Maximum - minimum.
+
+import "../model";
+import "doc/mmDoc";
+
+/// Returns a new 'appr' model.
+new = \ -> return model.new(
+    "MX_MN",
+    "Máximo - Mínimo",
+		mmDoc.text,
+		["Días", "Banda"],
+    [model.dayParam, model.percParam]
+  );;

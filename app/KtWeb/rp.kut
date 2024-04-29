@@ -14,16 +14,21 @@ init = \comKey -> comKeyV! = comKey;;
 ///   Rp: Response. It is a 'JSONizable' normal object.
 ///       Example of reponse:
 ///        {"error": msg}
-///:\{<JS>} -> s
+/// \JS -> s
 mk = \Rp -> return cryp.encode(comKeyV!, js.w(Rp));;
 
 /// Returns a generic response to send to client.
 ///   Rp: Response. It is a 'JSON' object.
 ///       Example of reponse:
 ///        {"error": js.ws(msg)}
-///:\{s} -> s
+/// \{s.} -> s
 mkJs = \Rp -> return cryp.encode(comKeyV!, js.wo(Rp));;
 
 /// Returns an empty response.
-///:\-> s
-mkEmpty = \-> return mkJs({});;
+/// \-> s
+mkEmpty = \ -> return mkJs({});;
+
+/// Returns a "data base out of date" response:
+///   {"dbKey": ""}
+/// \ -> s
+mkOutdated = \ -> return mk({dbKey: ""});;

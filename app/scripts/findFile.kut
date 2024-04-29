@@ -5,7 +5,7 @@
 // Finds every file name which contains 'text'.
 // Use 'kut findFile -up tex' for search in uppercase.
 
-// s, s -> [s...]
+// s, s, b -> [s...]
 searchDir = \d, target, upcase -> {
   Rs = [];
   for (f0 = file.dir(d)){

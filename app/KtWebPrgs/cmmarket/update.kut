@@ -6,21 +6,20 @@
 import "db";
 import "libmkt/models";
 import "libmkt/model";
+import "libmkt/quotes2";
 import "data/modelEval";
 import "tester";
 
 /// \ -> ()
 run = \ -> {
-  QQs = db.updateQuotes(false);
-  Qs = QQs ? QQs! : db.readQuotes();
-  if (QQs) db.writeQuotes(Qs);
-//Qs = db.readQuotes();
-
-  for (md = models.list()) {
-    modelId = model.id(md);
+  :quotes2 qts = db.updateQuotes();
+  db.writeQuotes(qts);
+  qdate = arr.peek(qts.Dates);
+  for (:model md = models.list()) {
+    modelId = md.id;
     EvalsTb = db.readEvals(modelId);
-    if (EvalsTb.date >= Qs.date) continue;
-    Evals = tester.run(md, Qs, EvalsTb.evals);
-    db.writeEvals(modelId, modelEval.newTb(Qs.date, Evals));
+    overwrite = qdate == EvalsTb.date;
+    Evals = tester.run(md, overwrite, qts, EvalsTb.evals);
+    db.writeEvals(modelId, modelEval.newTb(qdate, Evals));
   }
 };

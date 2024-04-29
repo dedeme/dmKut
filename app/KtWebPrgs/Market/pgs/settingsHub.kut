@@ -1,0 +1,25 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Settings hub.
+
+import "KtWeb/rp";
+import "settings/calendarPg";
+import "settings/nicksPg";
+import "settings/nickEditorPg";
+import "settings/serversPg";
+import "settings/annsPg";
+import "settings/investorsPg";
+
+/// \{*.} -> s
+process = \Rq -> {
+  return switch (Rq.source) {
+    "CalendarPg": calendarPg.process(Rq);
+    "NicksPg": nicksPg.process(Rq);
+    "NickEditorPg": nickEditorPg.process(Rq);
+    "ServersPg": serversPg.process(Rq);
+    "AnnsPg": annsPg.process(Rq);
+    "InvestorsPg": investorsPg.process(Rq);
+    default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+  };
+};

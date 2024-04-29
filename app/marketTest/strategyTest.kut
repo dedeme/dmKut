@@ -1,0 +1,67 @@
+// Copyright 12-Dic-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// \ -> ()
+run = \ -> {
+  KutR = js.r(sys.cmd("fmarket", ["test"])!);
+  Kas = KutR[0];
+  Kos = KutR[1];
+
+  JavaR = js.r(sys.cmd("MarketModels", ["test"])!);
+  Jas = JavaR[0];
+  Jos = JavaR[1];
+
+  osOk = arr.size(Kos) == arr.size(Jos) &
+    iter.all([0:arr.size(Kos)], \i -> {
+      K = Kos[i];
+      J = Jos[i];
+      return K == J;
+    })
+  ;
+
+  if (!osOk) {
+    ordersError(Kos, Jos);
+    return;
+  }
+
+  asOk = arr.size(Kas) == arr.size(Jas) &
+    iter.all([0:arr.size(Kas)], \i -> {
+      K = Kas[i];
+      J = Jas[i];
+      return K == J;
+    })
+  ;
+
+  if (!asOk) {
+    assetsError(Kas, Jas);
+    return;
+  }
+
+  sys.println("Strategy test Ok");
+};
+
+ordersError = \Kos, Jos -> {
+  sys.println("Orders failed:");
+
+  ksz = arr.size(Kos);
+  jsz = arr.size(Jos);
+  max = ksz > jsz ? ksz : jsz;
+  iter.each([0:max], \i -> {
+    sys.print(i < ksz ? str.fmt("%v", [Kos[i]]) : "");
+    sys.println(i < jsz ? str.fmt("%v", [Jos[i]]) : "");
+  });
+
+};
+
+assetsError = \Kas, Jas -> {
+  sys.println("Assets failed:");
+
+  ksz = arr.size(Kas);
+  jsz = arr.size(Jas);
+  max = ksz > jsz ? ksz : jsz;
+  iter.each([0:max], \i -> {
+    sys.print(i < ksz ? str.fmt("|%v|%.4f|", [i, Kas[i]]) : "");
+    sys.print(" |-| ");
+    sys.println(i < jsz ? str.fmt("|%v|%.4f|", [i, Jas[i]]) : "");
+  });
+};

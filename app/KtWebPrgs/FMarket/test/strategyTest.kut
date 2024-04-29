@@ -1,0 +1,28 @@
+// Copyright 24-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Strategy test
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/strategy";
+import "libmkt/stRs";
+import "libmkt/order";
+import "db";
+import "cts";
+
+/// Run tests
+/// \ -> ()
+run = \ -> {
+  modelId = "QFIJO";
+  params = [0.14];
+  sys.print(process(modelId, params));
+};
+
+// \s, [f.] -> s
+process = \modelId, Params -> {
+  md = models.get(modelId)!;
+  :quotes qts = db.readQuotes();
+  :stRs rs = strategy.open(md, qts, Params);
+  return js.w([rs.Hreals, rs.Orders]);
+};

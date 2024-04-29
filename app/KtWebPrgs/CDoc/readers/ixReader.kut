@@ -4,43 +4,45 @@
 /// Package index reader.
 
 import "db";
+import "db/pathsTb";
 import "data/indexTree";
+import "data/dpath";
 
 // Read module documentation.
 // \s -> s
-docRead = \fpath -> {
-  if (!file.exists(fpath)) return "";
+docRead = \:file fpath -> {
+  if (!fpath.exists()) return "";
 
-  R = [""];
-  f = file.ropen(fpath);
+  rV = [""];
+  :file f = fpath.ropen();
   while () {
-    L = file.readLine(f);
-    if (arr.size(L) == 0) break;
+    lOp = f.readLine();
+    if (!lOp) break;
 
-    l = str.trim(L!);
+    l = str.trim(lOp!);
     if (str.starts(l, "#ifndef ")) break;
     if (str.starts(l, "///")) {
-      R! = l[4:];
+      rV! = l[4:];
       break;
     }
   }
-  file.close(f);
-  return R!;
+  f.close();
+  return rV!;
 };
 
 // Adds trees to node
 // \[m], s -> ()
-completeTrees = \Trees, dir -> {
+completeTrees = \:arr Trees, dir -> {
   Fnames = file.dir(dir);
   for (fname = Fnames) {
     fpath = path.cat([dir, fname]);
     if (file.isDirectory(fpath)) {
-      NewTree = indexTree.mk(fname, [], []);
-      arr.push(Trees, NewTree);
+      :indexTree NewTree = indexTree.new(fname, [], []);
+      Trees.push(NewTree);
       completeTrees(NewTree.Trees, fpath);
     } else {
       if (!str.ends(fname, ".h")) continue;
-      arr.push(Trees, indexTree.mk(fname[:-2], [docRead(fpath)], []));
+      Trees.push(indexTree.new(fname[:-2], [docRead(fpath)], []));
     }
   }
 };
@@ -48,13 +50,16 @@ completeTrees = \Trees, dir -> {
 /// Reads package index tree.
 /// \s -> [m]
 read = \pack -> {
-  Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
-  if (arr.size(Ppath) == 0) return [];
+  ppathOp = arr.find(
+    pathsTb.read(), \:dpath p -> return p.id == pack;
+  );
+  if (!ppathOp) return [];
+  :dpath ppath = ppathOp!;
 
-  root = path.cat([Ppath!.path, "include"]);
+  root = path.cat([ppath.spath, "include"]);
   if (!file.exists(root)) return [];
 
-  R = indexTree.mk("", [], []);
-  completeTrees(R.Trees, root);
-  return [R];
+  :indexTree r = indexTree.new("", [], []);
+  completeTrees(r.Trees, root);
+  return [r];
 };

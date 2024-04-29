@@ -7,13 +7,10 @@
 ///   model: Model id.
 ///   value: Math.round (evaluation * 100000).
 /// \s, i -> d<ModelFloat>
-new = \model, eval ->  return {
-  model,
-  eval
-};;
+new : model, eval;
 
 /// \<ModelEval> -> [*(JS)...]
-toJs = \Me -> return [Me.model, math.itof(Me.eval)];;
+toJs = \Me -> return Me;;
 
 /// \[*(JS)...] -> <ModelEval>
 fromJs = \A -> return new(

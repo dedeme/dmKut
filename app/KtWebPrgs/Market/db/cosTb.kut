@@ -1,0 +1,71 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <cos> table.
+
+import "cts";
+import "data/co/cos";
+import "data/co/co";
+import "quotesDb";
+
+fpath = path.cat([cts.dataPath, "cos.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write(cos.newDefault());;
+
+/// Writes table.
+/// \<cos> -> ()
+write = \o -> file.write(fpath, js.w(o));;
+
+/// Update and returns companies in quotes data base.
+/// \ -> <cos>
+read = \ -> {
+  // [s.]
+  :arr Nicks = quotesDb.nicks();
+
+  changedV = [false];
+  :cos cs = js.r(file.read(fpath));
+  // [<co>.]
+  NewCos = [];
+  for (:co oldC = cs.Cos) {
+    if (Nicks.any(\n -> return n == oldC.nick;))
+      NewCos.push(oldC);
+    else
+      changedV! = true;
+  }
+  for (n = Nicks) {
+    if (!NewCos.any(\:co c -> return c.nick == n;)) {
+      NewCos.push(co.new(n, false));
+      changedV! = true;
+    }
+  }
+
+  mainNick = Nicks.any(\n -> return n == cs.mainNick;)
+    ? cs.mainNick
+    : !Nicks ? cs.mainNick : Nicks[0]
+  ;
+  if (mainNick != cs.mainNick) changedV! = true;
+
+  r = cos.new(mainNick, NewCos);
+  if (changedV!) write(r);
+  return r;
+};
+
+/// Select - Deselect a company.
+///   nick: Company nick.
+///   value: If it is 'true' 'nick' is selected. Oterwise it is deselected.
+/// \s, b -> ()
+select = \nick, value -> {
+  :cos cs = read();
+  for (i, :co c = cs.Cos)
+    if (c.nick == nick) cs.Cos[i] = co.new(nick, value);
+  write(cs);
+};
+
+/// Make 'nick' the main company.
+/// \s -> ()
+setMain = \nick -> {
+  :cos cs = read();
+  write(cos.new(nick, cs.Cos));
+};

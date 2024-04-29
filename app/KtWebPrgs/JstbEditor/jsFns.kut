@@ -86,12 +86,12 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
         Cf = Tp.fieldCf;
 
         // [[i, s], ...]
-        A2 = Cf & Cf!.IndexKeyFilter
+        A2 = !!Cf & Cf!.IndexKeyFilter
           ? A1[Cf!.IndexKeyFilter!.startRange : Cf!.IndexKeyFilter!.endRange]
           : A1
         ;
 
-        if (Cf & Cf!.ValueFilter) {
+        if (!!Cf & Cf!.ValueFilter) {
           arr.filterIn(
             A2,
             \Ij -> return str.index(Ij[1], Cf!.ValueFilter!) != -1;
@@ -118,10 +118,10 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
 
         Cf = Tp.fieldCf;
 
-        if (Cf) {
+        if (!!Cf) {
           cf = Cf!;
 
-          if (cf.IndexKeyFilter) {
+          if (!!cf.IndexKeyFilter) {
             f = cf.IndexKeyFilter!;
             text = f.isUpper ? str.toUpper(f.text) : f.text;
             kfilter = \key -> {
@@ -135,7 +135,7 @@ pTpath = \hash, tooBig, jdata, Tp, Ch -> {
             arr.filterIn(A1, \Kv -> return kfilter(Kv[0]););
           }
 
-          if (cf.ValueFilter) {
+          if (!!cf.ValueFilter) {
             arr.filterIn(
               A1,
               \Kv -> return str.index(Kv[1], cf.ValueFilter!) != -1;

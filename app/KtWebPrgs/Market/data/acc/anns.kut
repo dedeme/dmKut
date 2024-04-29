@@ -1,0 +1,41 @@
+// Copyright 13-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Annotations table data.
+
+import "ann";
+
+/// Constructor. Use 'new'.
+///   nextId: Next annotation identifier.
+///   Anns  : Annotations array.
+/// \i, [<ann>.] -> <anns>
+new0 : nextId, Anns;
+
+/// Constructor of an empty annotations table.
+/// \-> <anns>
+new = \ -> return new0(0, []);;
+
+/// Adds a n annotation. 'A.id' will be overwritten.
+/// \<anns>, <ann> -> ()
+add = \as, :ann a -> {
+  a.id = as[nextId];
+  arr.push(as[Anns], a);
+  as[nextId] += 1;
+};
+
+/// Deletes la annotation with identifier 'id' if exists.
+/// \<anns>, i -> ()
+del = \as, i -> {
+  ix = arr.index(as[Anns], \:ann a -> return a.id == i;);
+  if (ix != -1) arr.remove(as[Anns], ix);
+};
+
+/// \<anns> -> JS
+toJs = \as -> return [as[nextId], arr.map(as[Anns], ann.toJs)];;
+
+/// \JS -> <anns>
+fromJs = \A -> return new0(
+    math.ftoi(A[0]),
+    arr.map(A[1], ann.fromJs)
+  );;
+

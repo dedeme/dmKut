@@ -1,0 +1,54 @@
+// Copyright 17-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Application entry.
+
+import "libdm/log";
+import "cts";
+import "db";
+import "server";
+import "pgs/mainPg";
+import "pgs/homePg";
+import "pgs/settingsPg";
+import "pgs/changePassPg";
+
+// \ -> s
+help = \ -> return """
+  Use KutPost [help | version | init | start | rq]
+  where
+    help: Shows this message.
+    version: Shows program version.
+    init: Initializes program.
+          Must be called only the first time that the program is called.
+    start: Starts server.
+    key rq: Requests 'rq' with 'key'. (Sent by browser)
+  """;;
+
+log.setPath(path.cat([cts.dataPath, "log.tb"]));
+
+:arr Args = sys.args();
+
+if (Args.size() != 1) {
+  sys.println(help);
+  return;
+}
+
+rq = Args[0];
+switch (rq) {
+  "version": sys.println(cts.version);
+  "init": db.init();
+  "start": server.run();
+  "help": sys.println(help());
+  default: try {
+    :: Rq = js.r(rq);
+    sys.print(switch (Rq.source) {
+      "Main": mainPg.process(Rq);
+      "Home": homePg.process(Rq);
+      "Settings": settingsPg.process(Rq);
+      "ChangePass": changePassPg.process(Rq);
+      default: sys.throw("Value of source '" + Rq.source + "' is missing");
+    });
+  } catch (e) {
+    sys.printError(e);
+  }
+}

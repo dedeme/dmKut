@@ -1,0 +1,63 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program start.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "cts";
+import "db";
+import "tests";
+import "pgs/summaryPg";
+import "pgs/directoriesPg";
+import "wgs/dirRowWg";
+import "poolDb/update";
+
+// \ -> s
+help = \ -> return """
+  Use MrBakup [help | version | init | test | update | key rq]
+  where
+    help   : Shows this message.
+    version: Shows program version.
+    init   : Initializes program.
+             Must be called only the first time that the program is run.
+    test   : Program testing.
+    update : Update data bases.
+    key rq : Requests 'rq' with 'key'. (Sent by browser)
+  """;;
+
+log.setPath(path.cat([cts.dataPath, "log.tb"]));
+
+:arr Args = sys.args();
+
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    "init": db.init();
+    "update": try {
+        update.run();
+      } catch(e) {
+        log.error(e);
+        sys.throw(e);
+      }
+    "test": tests.run();
+    default: sys.println(help());
+  }
+  return;
+}
+
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
+
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
+  "SummaryPg": summaryPg.process(Rq);
+  "DirectoriesPg": directoriesPg.process(Rq);
+  "DirRowWg": dirRowWg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+});

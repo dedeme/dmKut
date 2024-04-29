@@ -1,0 +1,146 @@
+// Copyright 10-Nov-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Program start.
+///
+/// It depends on 'geckodriver'. It can be download, into the same directory
+/// that this file, from:
+///   https://github.com/mozilla/geckodriver/releases
+///
+/// Also it requires "libdm/log" and the 'log' previously initialized.
+///
+/// Use:
+///   wdriver [start|stop|active|log|page URL tm]
+/// where:
+///   active     : Returns 'true' or 'false' depending on web server state.
+///   log        : Returns JSON-serialized log.
+///   resetLog   : Reset log.
+///   page URL tm: Read a web page:
+///                 URL: page url.
+///                 tm : Seconds to wait for full page load.
+
+import "libdm/log";
+import "wdriver";
+
+help = """
+    Use:
+      wdriver [active|log|resetLog|page URL tm]
+    where:
+      active     : Returns 'true' or 'false' depending on web server state.
+      log        : Returns JSON-serialized log.
+      resetLog   : Reset log.
+      page URL tm: Read a web page:
+                    URL: page url.
+                    tm : Seconds to wait for full page load.
+  """;
+
+geckoPath = path.cat([path.parent(sys.mainPath()), "geckodriver"]);
+if (!file.exists(geckoPath)) {
+  sys.println("File 'geckodriver' not found");
+  return;
+}
+
+appHome = path.cat([sys.home(), ".dmKutApp", "wdriver"]);
+dpgIds = path.cat([appHome, "pgIds"]);
+if (!file.exists(dpgIds)) {
+  file.mkdir(appHome);
+  file.mkdir(dpgIds);
+}
+log.init(path.cat([appHome, "log.txt"]));
+
+As = sys.args();
+
+if (arr.size(As) == 1) {
+  switch (As[0]) {
+    "active": sys.print(wdriver.active() ? "true" : "false");
+    "log": sys.print(log.readJs());
+    "resetLog": log.reset();
+    default: sys.println(help);
+  }
+} else if (arr.size(As) == 3 & As[0] == "page" & math.isDigits(As[2])) {
+  wdriver.stop();
+  errV = [""];
+  thread.run(\ -> {
+    errV! = [wdriver.start(geckoPath)];
+  });
+  sys.sleep(100);
+  if (errV! != "") {
+    log.error(errV!);
+    sys.print("");
+    return;
+  }
+
+  idRs = wdriver.connect();
+  if (!idRs[1]) {
+    log.error(idRs!);
+    sys.print("");
+    wdriver.stop();
+    return;
+  }
+  sId = idRs!;
+
+  pgId = newPageId();
+  Ids = readPageIds();
+  if (Ids[0] != pgId) {
+    ixV = [arr.index(Ids, \id -> return id == pgId;)];
+    tmV = [time.now()];
+
+    while () {
+      Ids = readPageIds();
+      ix = arr.index(Ids, \id -> return id == pgId;);
+      if (ix <= 0) break;
+      if (ix == ixV!) {
+        if (time.now() - tmV! > 30000) // Stalled page
+          removePageId(Ids[0]);
+      } else {
+        ixV! = ix;
+        tmV! = time.now();
+      }
+      sys.sleep(1000);
+    }
+
+    if (ixV! == -1) {
+      log.error("Page id '" + pgId + "' is missing");
+      sys.print("");
+
+      wdriver.disconnect(sId);
+      wdriver.stop();
+      return;
+    }
+  }
+
+  pgRs = wdriver.page(math.stoi(As[2])!, sId, As[1]);
+
+  if (pgRs[1]) {
+    sys.print(pgRs[0]);
+  } else {
+    log.error(pgRs[0]);
+    sys.print("");
+  }
+
+  removePageId(pgId);
+  wdriver.disconnect(sId);
+  wdriver.stop();
+} else {
+  sys.println(help);
+}
+
+// Writes and returns page identifier.
+// \ -> s
+newPageId = \ -> {
+  fid = file.tmp(dpgIds, math.itos(time.now()));
+  file.write(fid, "");
+  return path.base(fid);
+};
+
+// Returns a ascendent sorted list of page identifiers.
+// \ -> [s.]
+readPageIds = \ -> {
+  Ids = file.dir(dpgIds);
+  arr.sort(Ids, \s1, s2 -> return s1 < s2;);
+  return Ids;
+};
+
+// Removes the page identifier 'pgId'.
+// \s -> ()
+removePageId = \pgId -> file.del(path.cat([dpgIds, pgId]));;

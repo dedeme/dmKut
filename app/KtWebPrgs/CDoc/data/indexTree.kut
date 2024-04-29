@@ -7,13 +7,6 @@
 ///   id   : Index entry identifier.
 ///   doc  : [Documentation], if the entry is a file path.
 ///          Otherwise its value is [].
-///   trees: If 'doc' is '[]', entries of directory.
-/// \s, [s]|[], [<indexTree>...] -> <indexTree>
-mk = \id, Doc, Trees -> return {id, Doc, Trees};;
-
-/// \<indexTree> -> a(JS)
-toJs = \I -> return [I.id, I.Doc, arr.map(I.Trees, toJs)];;
-
-/// \a(JS) -> <indexTree>
-fromJs = \A -> return mk(A[0], A[1], arr.map(A[2], fromJs));;
-
+///   Trees: If 'doc' is '[]', entries of directory.
+/// \s, [s]|[], [<indexTree>.] -> <indexTree>
+new : id, doc, Trees;

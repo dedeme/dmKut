@@ -5,51 +5,35 @@
 <meta name="author" content="ºDeme." />
 <link rel="icon" type="image/png" href="img/favicon.png" />
 <link rel="stylesheet" href="styles.css" type="text/css" />
-<title>Kmarkdown Tests</title>
-<script id="MathJax-script"
-  async src="/dm/www/sci/mathjax/tex-mml-chtml.js"></script>
-<script src="/dm/www/ace/ace.js"></script>
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
 <script>
 window.MathJax = {
   tex: {
-    inlineMath: [['$', '$']],
     macros: {
       DS: "\\displaystyle",
       EX: "{\\times 10}"
     }
   }
 };
+</script>
 
-function aceConf(ed, langIx) {
-  ed.setTheme("ace/theme/deme");
-  ed.getSession().setTabSize(2);
-  ed.getSession().setUseSoftTabs(true);
-  ed.setOptions({
-    readOnly: true,
-    maxLines: 100000
-  });
-  switch (langIx) {
-  case 0:
-    ed.getSession().setMode("ace/mode/kmarkdown");
-    break;
-  case 1:
-    ed.getSession().setMode("ace/mode/html");
-    break;
-  case 2:
-    ed.getSession().setMode("ace/mode/javascript");
-    break;
-  case 3:
-    ed.getSession().setMode("ace/mode/css");
-    break;
-  default:
-    console.log("Ace language " + langIx + " not found.");
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
   }
-}
-aceFns = [];
-
-window.onload = function () {
-  for (fn of aceFns) fn();
-}
 </script>
 </head>
-

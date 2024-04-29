@@ -47,12 +47,12 @@ new = \IndexKeyFilter, ValueFilter -> return { IndexKeyFilter, ValueFilter };;
 
 /// \<fieldCf> -> [*(JS)...]
 toJs = \F -> return [
-  F.IndexKeyFilter ? [indexKeyFilterToJs(F.IndexKeyFilter!)] : [],
+  !!F.IndexKeyFilter ? [indexKeyFilterToJs(F.IndexKeyFilter!)] : [],
   F.ValueFilter
 ];;
 
 /// \[*(JS)...] -> <fieldCf>
 fromJs = \A -> return new(
-    A[0] ? [indexKeyFilterFromJs(A[0]!)] : [],
+    !!A[0] ? [indexKeyFilterFromJs(A[0]!)] : [],
     A[1]
   );;

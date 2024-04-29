@@ -1,0 +1,104 @@
+=
+title = Listas
+=
+
+## Creación
+
+Las listas se crean usando '*' o usando  \['digito'+'.'].
+
+En el primer caso se crean listas no ordenadas y el segundo listas ordenadas
+con números. Estos números se generan automáticamente y no dependen del dígito
+usado en su creación.
+
+``kmd
+Esto es una lista no ordenada:
+
+* Item 1
+
+* Item 2
+
+Esto es una lista ordenada:
+
+1. Item 1
+
+2. Item 2
+
+Que es igual que:
+
+0. Item 1
+
+0. Item 2 ``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Esto es una lista no ordenada:
+
+* Item 1
+
+* Item 2
+
+Esto es una lista ordenada:
+
+1. Item 1
+
+2. Item 2
+
+Que es igual que:
+
+0. Item 1
+
+0. Item 2
+
+``</div>``
+
+## Anidamiento
+
+Una lista soporta varios párrafos en un mismo item y un nivel de anidamento.
+
+Sin embargo no admite "definiciones" ni "citas".
+
+``kmd
+
+* Este es un item con un corte linea\
+  y dos párrafos.
+
+  Este es el segundo párrafo.
+
+* Este es un item con una lista anidada.
+
+  1. Este es el primer párrafo del primer item.
+
+    Este es el segundo párrafo del primer item.
+
+  2. Este Segundo item sólo tiene um párrafo.
+
+* Este es un item normal.
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+* Este es un item con un corte linea\
+  y dos párrafos.
+
+  Este es el segundo párrafo.
+
+* Este es un item con una lista anidada.
+
+  1. Es el primer párrafo del primer item.
+
+    Es el segundo párrafo del primer item.
+
+  2. Este Segundo item sólo tiene um párrafo.
+
+* Este es un item normal.
+
+``</div>``
+
+- NOTA
+> _El texto de cada nivel de anidamiento se debe escribir con dos espacios
+  en blanco iniciales por cada nivel. (Ver líneas 3, 5 y 11 del anterior
+  ejemplo)._

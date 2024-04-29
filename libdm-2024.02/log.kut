@@ -1,0 +1,42 @@
+// Copyright 06-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Log utility.
+/// Function 'setPath' must be called before any other function!!!.
+/// Log table is initialized with 'reset'.
+
+fileOp = [];
+
+/// Set file path of log.
+/// \s -> ()
+setPath = \fpath -> arr.push(fileOp, fpath);;
+
+// () -> s
+date = \-> return time.format(time.now(), "%D/%M/%Y(%t)");;
+
+// [[b,s,s]...] -> ()
+write = \L -> file.write(fileOp!, js.w(L));;
+
+// \-> [[b,s,s]...]
+read = \-> return js.r(file.read(fileOp!));;
+
+/// Returns the log serialized.
+/// \-> s
+readJs = \-> return file.read(fileOp!);;
+
+/// Adds a warning to log.
+warning = \msg -> {
+  :arr L = read();
+  L.push([false, date(), str.fromRunes(str.toRunes(msg)[:400])]);
+  write(L);
+};
+
+/// Adds an error to log.
+error = \msg -> {
+  :arr L = read();
+  L.push([true, date(), str.fromRunes(str.toRunes(msg)[:400])]);
+  write(L);
+};
+
+/// Reset log.
+reset = \-> file.write(fileOp!, "[]");;

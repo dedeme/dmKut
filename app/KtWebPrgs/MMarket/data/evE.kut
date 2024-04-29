@@ -1,0 +1,109 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Evaluation table entry.
+
+import "fns";
+import "upRs";
+import "cts";
+
+/// Constructor.
+///   times   : Number of historic evaluations
+///   eval    : Last evaluation.
+///   avg     : Evaluation average.
+///   dev     : Evaluation deviation.
+///   crr     : Evaluation corrected average.
+/// \i,<upRs>,<upRs>,<upRs>,<upRs> -> <evE>
+new0 : times, eval, avg, dev, crr;
+
+/// Constructor without corrected average.
+///   times   : Number of historic evaluations
+///   eval    : Last evaluation.
+///   avg     : Evaluation average.
+///   dev     : Deviation.
+/// \i,<upRs>,<upRs>,<upRs> -> <evE>
+new = \times, eval, :upRs avg, :upRs dev ->
+  return new0(times, eval, avg, dev, upRs.new(
+    avg.sales - dev.sales, avg.real - dev.real,
+    avg.acc - dev.acc, avg.prof - dev.prof
+  ));;
+
+/// Constructor for first time.
+///   lst    : Last evaluation.
+/// \<upRs> -> <evE>
+newFirst = \lst -> return new(1, lst, lst, upRs.new(0.0, 0.0, 0.0, 0.0));;
+
+/// Constructor from previous evaluation.
+///   previous: Previous evE.
+///   lst     : Last evaluation.
+/// \<evE>, <upRs> -> <evE>
+newUpdate = \previous, :upRs lst -> {
+  t0 = previous[times];
+  t1 = math.itof(t0 >= cts.evalDays ? t0 : t0 + 1);
+  t = t1 - 1.0;
+
+  :upRs a = previous[avg];
+  :upRs d = previous[dev];
+  navg = upRs.new(
+    (a.sales * t + lst.sales) / t1,
+    (a.real * t + lst.real) / t1,
+    (a.acc * t + lst.acc) / t1,
+    (a.prof * t + lst.prof) / t1
+  );
+  ndev = upRs.new(
+    (d.sales * t + fns.abs(lst.sales - navg.sales)) / t1,
+    (d.real * t + fns.abs(lst.real - navg.real)) / t1,
+    (d.acc * t + fns.abs(lst.acc - navg.acc)) / t1,
+    (d.prof * t + fns.abs(lst.prof - navg.prof)) / t1
+  );
+
+  return new(t1, lst, navg, ndev);
+};
+
+/// Constructor replacing previous evaluation.
+///   previous: Previous evE.
+///   lst     : Last evaluation.
+/// \<evE>, <upRs> -> <evE>
+newReplace = \previous, :upRs lst -> {
+  t = math.itof(previous[times]);
+  :upRs e = previous[eval];
+  :upRs a = previous[avg];
+  :upRs d = previous[dev];
+  navg = upRs.new(
+    (a.sales * t - e.sales + lst.sales) / t,
+    (a.real * t - e.real + lst.real) / t,
+    (a.acc * t - e.acc + lst.acc) / t,
+    (a.prof * t - e.prof + lst.prof) / t
+  );
+  ndev = upRs.new(
+    ( d.sales * t +
+      fns.abs(fns.abs(e.sales - a.sales) - fns.abs(lst.sales - navg.sales))
+     ) / t,
+    ( d.real * t +
+      fns.abs(fns.abs(e.real - a.real) - fns.abs(lst.real - navg.real))
+     ) / t,
+    ( d.acc * t +
+      fns.abs(fns.abs(e.acc - a.acc) - fns.abs(lst.acc - navg.acc))
+     ) / t,
+    ( d.prof * t +
+      fns.abs(fns.abs(e.prof - a.prof) - fns.abs(lst.prof - navg.prof))
+     ) / t
+  );
+  return new(t, lst, navg, ndev);
+};
+
+/// \<evE> -> JS
+toJs = \o -> return [
+    o[times],
+    upRs.toJs(o[eval]),
+    upRs.toJs(o[avg]),
+    upRs.toJs(o[dev])
+  ];;
+
+/// \JS -> <evE>
+fromJs = \A -> return new(
+    math.ftoi(A[times]),
+    upRs.fromJs(A[eval]),
+    upRs.fromJs(A[avg]),
+    upRs.fromJs(A[dev])
+  );;

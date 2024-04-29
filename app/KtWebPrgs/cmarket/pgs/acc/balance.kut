@@ -7,7 +7,9 @@ import "KtWeb/rp";
 import "libdm/log";
 import "data/cts";
 import "data/acc/ann";
+import "data/acc/settlement";
 import "data/acc/pf";
+import "data/invOperation";
 import "db/acc/diariesDb";
 import "db/trading/closesTb";
 import "db/trading/refsTb";
@@ -19,37 +21,32 @@ process = \Rq -> {
     "idata": {
       Ok = [true];
       Oprs = invOperationsTb.read();
-      Ledgers = []; // [<ldg>...]
-      PfsJs = []; // [{[f, f]...}] :: [{nick -> [stocks, price]}...]
-      Jails = []; // [[s...]...]
-      for (inv = 0:cts.investors) {
-        Ys = diariesDb.investorYears(inv);
-        Anns = Ys ? diariesDb.investorAnns(inv, Ys[0]) : [];
-        Set = ann.mkSettlement(Anns);
-        if (Set.errors) {
-          Ok! = false;
-          for (e = Set.errors) log.error(e);
-        }
-        arr.push(Ledgers, Set.ledger);
-        arr.push(PfsJs, pf.toJs(Set.portfolio));
-        arr.push(
-          Jails,
-          arr.map(
-            arr.filter(Oprs, \O -> return O.stocks > 0 & O.investor == inv;),
-            \O -> return O.nick;
-          )
-        );
+
+      Ys = diariesDb.investorYears();
+      Anns = !!Ys ? diariesDb.investorAnns(Ys[0]) : [];
+      :settlement set = ann.mkSettlement(Anns);
+      if (!!set.Errors) {
+        Ok! = false;
+        for (e = set.Errors) log.error(e);
       }
-      Refs = refsTb.read();
-      for (k, V = Refs)
-        Refs[k] = arr.fromIter(iter.map([0:cts.investors], \i -> return V[i][1];));
+
+      // {f.}
+      Refs = dic.fromArr(arr.map(
+        dic.toArr(refsTb.read()), \Kv -> return [Kv[0], Kv[1][1]];
+      ));
+      // [s.]
+      Jails = arr.map(
+        arr.filter(Oprs, \:invOperation o -> return o.stocks > 0;),
+        \:invOperation o -> return o.nick;
+      );
+
       sys.print(rp.mk({
         ok: Ok!,
-        ledgers: Ledgers,
-        portfolios: PfsJs,
+        ledger: set.ledger,
+        portfolio: set.Portfolio,
         jails: Jails,
         closes: closesTb.readOnlyCloses(), // {f...} :: {nick -> close}
-        refs: Refs // {[f...]...} :: (nick -> [ref...]) a ref for each investor.
+        refs: Refs // {f.} :: (nick -> ref).
       }));
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

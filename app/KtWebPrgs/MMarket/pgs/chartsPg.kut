@@ -1,0 +1,123 @@
+// Copyright 05-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main charts page.
+
+import "libmkt/stRs";
+import "libmkt/models";
+import "libmkt/order";
+import "libmkt/quotes";
+import "libmkt/strategy";
+import "libmkt/cts" : mcts;
+import "KtWeb/rp";
+import "extDb/quotesDb";
+import "data/modelEval";
+import "data/evE";
+import "data/upRs";
+import "fns";
+import "cts";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      mdId, invIx : Rq;
+      ixV = [math.ftoi(invIx)];
+      :arr Es = db.read("daily", arr.peek(db.dates("daily")), mdId);
+      eV = Es[0];
+      if (ixV! < 0) {
+        ixV! = 0;
+        eV! = Es[0];
+        for (i, :evE e = Es) {
+          :upRs ecrr = e.crr;
+          if (ecrr.sales < cts.minSales) continue; // Filter sales-
+          :evE r = eV!;
+          :upRs rcrr = r.crr;
+          if (ecrr.pon > rcrr.pon) {
+            ixV! = i;
+            eV! = e;
+          }
+        }
+      } else {
+        eV! = Es[ixV!];
+      }
+      ix = ixV!;
+      Params = fns.ixToParams(mdId, ix);
+
+      :evE ev = eV!;
+      :upRs last = ev.eval;
+      :upRs crr = ev.crr;
+      mdEv = modelEval.new(crr.pon, crr.sales, last.pon, last.sales);
+      :model md = models.get(mdId)!;
+      :quotes qts = quotesDb.read();
+      :stRs rs = strategy.open(md, qts, Params);
+
+      // only for calculating ponderation.
+      invRs = upRs.new(
+        0.0, // fake value
+        arr.peek(rs.Hreals) / mcts.initialCapital,
+        arr.peek(rs.Haccs) / mcts.initialCapital,
+        1.0 + arr.reduce(rs.Profits, 0.0, \r, e -> return r + e;) /
+            math.itof(arr.size(rs.Profits))
+      );
+
+      BuyCos, QuarantineCos : CoStates(qts.Dates, rs.Orders);
+
+      return rp.mk({
+        rs,
+        mdEv,
+        invIxFinal: ixV!,
+        pond: invRs.pon,
+        Closes: qts.Closes,
+        Dates: qts.Dates,
+        Cos: qts.Cos,
+        BuyCos,
+        QuarantineCos
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+// \[s.], [<order>.] -> {BuyCos:[f.], QuarantineCos:[f.]}
+CoStates = \:arr Dates, :arr Orders -> {
+  dSize = Dates.size();
+  oSize = Orders.size();
+
+  Pf = {}; // {f.} :: {nick -> price}
+  BuyCos = arr.new(dSize, 0);
+  QuarantineCos = arr.new(dSize, 0);
+  if (!!Orders) {
+    iOV = [0];
+    :order o = Orders[iOV!];
+    oV = [o];
+    oDateV = [o.date];
+    for (i, d = Dates) {
+      while(oDateV! <= d & iOV! < oSize) {
+        :order o = oV!;
+        if (o.type == mcts.orderBuy) {
+          dic.put(Pf, o.nick, o.price);
+        } else {
+          bprice = Pf[o.nick];
+          dic.remove(Pf, o.nick);
+          days = o.price >= bprice * mcts.noLossMultiplicator
+            ? 0 :
+            mcts.daysLoss
+          ;
+          end0 = i + days;
+          end = end0 >= dSize ? dSize : end0;
+          for (j = i:end) QuarantineCos[j] += 1;
+        }
+        iOV! += 1;
+        if (iOV! < oSize) {
+          :order o = Orders[iOV!];
+          oV! = o;
+          oDateV! = o.date;
+        }
+      }
+      BuyCos[i] = dic.size(Pf);
+    }
+  }
+  return {BuyCos, QuarantineCos};
+};

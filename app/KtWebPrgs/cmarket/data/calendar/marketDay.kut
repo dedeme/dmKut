@@ -9,20 +9,16 @@
 ///   mopen : Open minute.
 ///   hclose: Close hour.
 ///   mclose: Close minute.
-/// \s, i, i, i, i -> d<marketDay>
-new = \date, hopen, mopen, hclose, mclose ->
-  return {date, hopen, mopen, hclose, mclose};;
+/// \s, i, i, i, i -> <marketDay>
+new : date, hopen, mopen, hclose, mclose;
 
-/// \<marketDay> -> [JS...]
-toJs = \M -> return [
-    M.date,
-    math.itof(M.hopen),
-    math.itof(M.mopen),
-    math.itof(M.hclose),
-    math.itof(M.mclose)
-  ];;
+/// \marketDay> -> <timetable>
+toTimetable = \M -> return M[1:];;
 
-/// \[JS...] -> <marketDay>
+/// \<marketDay> -> JS
+toJs = \M -> return M;;
+
+/// \JS -> <marketDay>
 fromJs = \A -> return new(
     A[0], math.ftoi(A[1]), math.ftoi(A[2]), math.ftoi(A[3]), math.ftoi(A[4])
   );;

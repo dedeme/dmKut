@@ -1,0 +1,113 @@
+=
+title = Definiciones y citas
+=
+
+## Definiciones
+
+Las definiciones se crean usando '-' y '>'-
+
+- '-'
+> Introduce el término.
+
+  Éste se extiende hasta el primer retorno de carro seguido por '>'.
+
+  _NOTA: El texto es un texto HTML_.
+
+- '>'
+> Introduce la definición. Ésta puede tener varios párrafos y listas simples
+(sin anidamiento).
+
+``kmd
+Definiciones:
+
+- La primera
+> Esta es una definición simple.
+
+- La se<b>g</b>unda
+> Esta tiene dos párrafos. Este es el primero
+
+  Y este el segundo.
+
+- La <br> tercera
+> Esta lleva una lista:
+
+  * Item 1, Párrafo 1.
+
+    Item 1, Párrafo 2
+
+  * Item 2
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Definiciones:
+
+- La primera
+> Esta es una definición simple.
+
+- La se<b>g</b>unda
+> Esta tiene dos párrafos. Este es el primero
+
+  Y este el segundo.
+
+- La <br> tercera
+> Esta lleva una lista:
+
+  * Item 1, Párrafo 1.
+
+    Item 1, Párrafo 2
+
+  * Item 2
+
+``</div>``
+
+- NOTA
+> _El texto en los niveles de anidamiento se debe escribir con dos espacios
+  iniciales por cada nivel. (Ver lineas 9 y 16 del anterior ejemplo)._
+
+## Citas
+
+Se crean identando un párrafo.
+
+Las citas permiten varios párrafos y listas simples (sin anidamiento).
+
+``kmd
+Una cita interesante:
+
+  Tal y cual
+
+  Y pascual
+
+  1. Item Tal.
+
+    Segundo párrafo del item Tal.
+
+  2. Item pascual.
+
+Se acabó la cita.``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Una cita interesante:
+
+  Tal y cual
+
+  Y pascual
+
+  1. Item Tal.
+
+    Segundo párrafo del item Tal.
+
+  2. Item pascual.
+
+Se acabó la cita.
+
+``</div>``
+
+- NOTA
+> _El texto en los niveles de anidamiento se debe escribir con dos espacios
+  iniciales por cada nivel. (Ver lineas 5 y 9 del anterior ejemplo)._

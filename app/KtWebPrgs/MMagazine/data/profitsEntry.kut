@@ -4,14 +4,11 @@
 /// Profits data of all the investors.
 
 /// Creates a profits entry.
-///   \s, [f...] -> d<ProfitsEntry>
-new = \date, profits -> return {
-  date,
-  profits
-};;
+///   \s, f -> <ProfitsEntry>
+new : date, profits;
 
 /// \<ProfitsEntry> -> [*(JS)...]
-toJs = \Pe -> return [Pe.date, Pe.profits];;
+toJs = \Pe -> return Pe;;
 
 /// \[*(JS)...] -> <ProfitsEntry>
-fromJs = \A -> return new(A[0], A[1]);;
+fromJs = \A -> return A;;

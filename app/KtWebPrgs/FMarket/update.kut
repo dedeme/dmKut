@@ -10,17 +10,10 @@ import "data/flea";
 /// Runs a reproductive cycle and registers its results.
 /// \ -> ()
 run = \ -> {
-  if (db.readActivity() != "stopped") return;
-  db.writeActivity("active");
-
-  for (mdId = arr.map(db.modelsList(), model.id)) {
-    if (db.readActivity() == "stopped") return;
-
+  qts = db.readQuotes();
+  for (mdId = arr.map(db.modelsList(), \:model md -> return md.id;)) {
     Fleas = db.readFleas(mdId);
-    Qs = db.readQuotes();
-    NewFleas = flea.cycle(Fleas, Qs);
+    NewFleas = flea.newCycle(Fleas, qts);
     db.writeFleas(mdId, NewFleas);
   }
-
-  db.writeActivity("stopped");
 };

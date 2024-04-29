@@ -1,0 +1,76 @@
+// Copyright 19-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Creates fluxbox menu from template.
+
+fmenu = "menu.txt";
+fflux = "/home/deme/.fluxbox/menu";
+
+tabV = ["  "];
+
+// \<file>, i, s -> ()
+processLine = \:file target, i, line -> {
+  l = str.trim(line);
+  if (l == "" | l[0] =="#") {
+    return;
+  }
+
+  switch (l[0]) {
+  '-': target.writeText(str.fmt("%v[nop]\n", [tabV!]));
+  '/': {
+    target.writeText(str.fmt("%v[submenu] (%v)\n", [tabV!, l[1:]]));
+    tabV! += "  ";
+  }
+  '<': {
+    if (tabV! != "") tabV! = tabV![:-2];
+    target.writeText(str.fmt("%s[end]\n", [tabV!]));
+  }
+  '*': {
+    :arr Fields = str.split(l, "||");
+    switch(Fields.size()){
+      3: Fields[1] = Fields[2];
+      2: {}
+      default: sys.print(str.fmt(
+          "Bad number of fields (%v)\n%v: %v\n", [Fields.size(), i, l]
+        ));
+    }
+    target.writeText(
+      str.fmt(
+        "%v[exec] (%v) {%v}\n",
+        [tabV!, Fields[0][1:], Fields[1]]
+      )
+    );
+  }
+  default:
+    sys.print(str.fmt(
+      "Invalid directive. Line must start with '-', '&lt;' or '*'.\n%v:%v\n",
+      [i, l]
+    ));
+  }
+};
+
+
+:file target = file.wopen(fflux);
+target.writeText("[begin] (Principal)\n");
+
+iV = [0];
+:file source = file.ropen(fmenu);
+while () {
+  lineOp = source.readLine();
+  if (!lineOp) break;
+  iV! += 1;
+  processLine(target, iV!, lineOp!);
+}
+source.close();
+
+target.writeText(
+  "  [nop]\n" +
+  "  [submenu] (fluxbox)\n" +
+  "    [include] (/etc/X11/fluxbox/fluxbox-menu)\n" +
+  "  [end]\n" +
+  "[end]\n"
+);
+
+target.close();
+
+sys.println("Menú terminado\n");

@@ -3,20 +3,22 @@
 
 import "data/doc";
 import "data/docEntry";
+import "data/dpath";
 import "db";
+import "db/pathsTb";
 
 /// Module reader.
 
 // \<file>, s -> [s, s] | [] :: [doc, line] | []
-readDoc = \f, l -> {
-  // \[s] | s -> s
+readDoc = \:file f, l -> {
+  // \[s]|[] -> s
   findLine = \lOp -> {
     if (!lOp) return "";
-    if (str.trim(lOp!)) return lOp!;
+    if (str.trim(lOp!) != "") return lOp!;
     while () {
-      lOp = file.readLine(f);
+      lOp = f.readLine();
       if (!lOp) return "";
-      if (str.trim(lOp!)) return lOp!;
+      if (str.trim(lOp!) != "") return lOp!;
     }
   };
 
@@ -25,46 +27,46 @@ readDoc = \f, l -> {
     Bf = []; // [s.]
     ltrim = str.ltrim(lV!);
 
-    if (str.starts(ltrim, "///")) {
+    if (ltrim.starts("///")) {
       lOp = [];
       ltrimV = [ltrim];
       while () {
-        if (str.len(ltrimV!) == 3) arr.push(Bf, "");
+        if (str.len(ltrimV!) == 3) Bf.push("");
         else {
           ch = ltrim[3];
-          arr.push(Bf, ch <= " " ? ltrimV![4:] : ltrimV![3]);
+          Bf.push(ch <= " " ? ltrimV![4:] : ltrimV![3]);
         }
-        nlOp = file.readLine(f);
-        arr.clear(lOp);
-        if (nlOp) arr.push(lOp, nlOp!);
+        nlOp = f.readLine();
+        lOp.clear();
+        if (!!nlOp) arr.push(lOp, nlOp!);
         if (!lOp | !str.starts(str.trim(lOp!), "///")) break;
         ltrimV! = str.ltrim(lOp!);
       }
       lV! = findLine(lOp);
       if (str.starts(str.ltrim(lV!), "/")) continue;
-      else return [arr.join(Bf, "\n"), lV!];
+      else return [Bf.join("\n"), lV!];
     }
 
-    if (str.starts(ltrim, "/**")) {
-      lOp = file.readLine(f);
+    if (ltrim.starts("/**")) {
+      lOp = f.readLine();
       if (!lOp) return [];
       ltrim = str.ltrim(lOp!);
-      if (str.index(ltrim, "*/") != -1) return [];
-      strip = str.len(lOp!) - str.len(ltrim);
+      if (ltrim.index("*/") != -1) return [];
+      strip = str.len(lOp!) - ltrim.len();
 
       ltrimV = [ltrim];
       while () {
-        arr.push(Bf, ltrimV!);
-        nlOp = file.readLine(f);
+        Bf.push(ltrimV!);
+        nlOp = f.readLine();
         arr.clear(lOp);
-        if (nlOp) arr.push(lOp, nlOp!);
+        if (!!nlOp) arr.push(lOp, nlOp!);
         if (!lOp | str.index(lOp!, "*/") != - 1) break;
         l = lOp!;
         ltrimV! = str.len(l) < strip ? "" : l[strip:];
       }
-      lV! = findLine(file.readLine(f));
+      lV! = findLine(f.readLine());
       if (str.starts(str.ltrim(lV!), "/")) continue;
-      else return [arr.join(Bf, "\n"), lV!];
+      else return [Bf.join("\n"), lV!];
     }
 
     return [];
@@ -77,7 +79,7 @@ readDoc = \f, l -> {
 // \s, s -> n
 indexes = \tx, chs -> {
   Ixs = []; // [n]
-  for (i = 0:str.len(chs)) arr.push(Ixs, str.index(tx, chs[i]));
+  for (i = 0:str.len(chs)) Ixs.push(str.index(tx, chs[i]));
 
   ixV = [-1];
   for (ix = Ixs)
@@ -98,8 +100,8 @@ mkLink = \s -> {
   r = str.replace(s[:ixV!], "#", "_");
 
   Bf = []; //[s.];
-  for (i = 0:str.len(r)) if (r[i] > " ") arr.push(Bf, r[i]);
-  return arr.join(Bf, "");
+  for (i = 0:r.len()) if (r[i] > " ") Bf.push(r[i]);
+  return Bf.join("");
 };
 
 // \s -> b
@@ -138,52 +140,52 @@ readNameBk = \tx, i -> {
 };
 
 // \<file>, s, b -> s
-readCode = \f, line, isFirst -> {
+readCode = \:file f, line, isFirst -> {
   l = str.ltrim(line);
 
-  if (isFirst & str.starts(l, "#ifndef ")) return "overview";
+  if (isFirst & l.starts("#ifndef ")) return "overview";
 
   Bf = []; // [s.]
 
-  if (str.starts(l, "#define ")) {
+  if (l.starts("#define ")) {
     lV = [l];
     while () {
       l = lV!;
-      arr.push(Bf, l + "\n");
-      if (str.ends(l, "\\")) {
-        lOp = file.readLine(f);
-        if (lOp) {
+      Bf.push(l + "\n");
+      if (l.ends("\\")) {
+        lOp = f.readLine();
+        if (!!lOp) {
           lV! = lOp!;
           continue;
         }
       }
-      return arr.join(Bf, "");
+      return Bf.join("");
     }
   }
   // else
 
-  if (str.starts(l, "#")) return "";
+  if (l.starts("#")) return "";
 
 
   withBracketsV = [0];
   lineOp = [line];
-  while (lineOp) {
+  while (!!lineOp) {
     line = lineOp!;
     if (withBracketsV! == 0) {
       ix = indexes(line, ";{");
       if (ix == -1) {
-        arr.push(Bf, line + "\n");
+        Bf.push(line + "\n");
         newLineOp = file.readLine(f);
-        arr.clear(lineOp);
-        if (newLineOp) arr.push(lineOp, newLineOp!);
+        lineOp.clear();
+        if (!!newLineOp) lineOp.push(newLineOp!);
         continue;
       }
       // else
 
       ch = line[ix];
       ix1 = ix + 1;
-      arr.push(Bf, line[:ix1]);
-      if (ch == ';') return arr.join(Bf, "");
+      Bf.push(line[:ix1]);
+      if (ch == ';') return Bf.join("");
 
       lineOp! = line[ix1:];
       withBracketsV! = 1;
@@ -193,17 +195,17 @@ readCode = \f, line, isFirst -> {
 
     ix = indexes(line, "{}");
     if (ix == -1) {
-      arr.push(Bf, line + "\n");
-      newLineOp = file.readLine(f);
-      arr.clear(lineOp);
-      if (newLineOp) arr.push(lineOp, newLineOp!);
+      Bf.push(line + "\n");
+      newLineOp = f.readLine();
+      lineOp.clear();
+      if (!!newLineOp) lineOp.push(newLineOp!);
       continue;
     }
     // else
 
     ch = line[ix];
     ix1 = ix + 1;
-    arr.push(Bf, line[:ix1]);
+    Bf.push(line[:ix1]);
     withBracketsV! += ch == "{" ? 1 : -1;
 
     lineOp! = line[ix1:];
@@ -214,13 +216,16 @@ readCode = \f, line, isFirst -> {
 
 /// \s, s -> [<doc>] | []
 read = \pack, pt -> {
-  Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
-  if (arr.size(Ppath) == 0) return [];
+  ppathOp = arr.find(
+    pathsTb.read(), \:dpath p -> return p.id == pack;
+  );
+  if (!ppathOp) return [];
+  :dpath ppath = ppathOp!;
 
-  fpath = path.cat([Ppath!.path, "include", pt + ".h"]);
+  fpath = path.cat([ppath.spath, "include", pt + ".h"]);
   if (!file.exists(fpath)) return [];
 
-  Doc = doc.new("", [], [], [], [], [], [], []);
+  :doc dc = doc.new("", [], [], [], [], [], [], []);
 
   f = file.ropen(fpath);
   isFirstV = [true];
@@ -231,65 +236,65 @@ read = \pack, pt -> {
 
     if (str.starts(str.trim(l), "/")) {
       docRs = readDoc(f, l);
-      if (docRs & docRs[1]) {
+      if (!!docRs & docRs[1] != "") {
         cd = readCode(f, docRs[1], isFirstV!);
         cdTrim = str.trim(cd);
         d = docRs[0];
 
         isFirstV! = false;
 
-        if (cd == "overview") {
-          Doc.doc = d;
-        } else if (str.starts(cd, "#define")) {
-          arr.push(Doc.defines, docEntry.new(
+        if (cdTrim == "overview") {
+          dc.docTx = d;
+        } else if (cdTrim.starts("#define ")) {
+          arr.push(dc.defines, docEntry.new(
             readName(cdTrim, str.len("#define ")),
             d, cd, mkLink(cdTrim)
           ));
-        } else if (str.starts(cd, "typedef ")) {
+        } else if (cdTrim.starts("typedef ")) {
           ix0 = str.index(cdTrim, ')');
           ix = ix0 == -1 ? str.len(cdTrim) : ix0;
-          arr.push(Doc.typedefs, docEntry.new(
+          arr.push(dc.typedefs, docEntry.new(
             readNameBk(cdTrim, ix),
             d, cd, mkLink(cdTrim)
           ));
-        } else if (str.index(cdTrim, '{') != -1) {
+        } else if (cdTrim.index('{') != -1) {
           if (str.starts(cd, "enum ")) {
-            arr.push(Doc.enums, docEntry.new(
+            arr.push(dc.enums, docEntry.new(
               readName(cdTrim, str.len("enum ")),
               d, cd, mkLink(cdTrim)
             ));
           }
-          if (str.starts(cd, "struct ")) {
-            arr.push(Doc.structs, docEntry.new(
+          if (cdTrim.starts("struct ")) {
+            arr.push(dc.structs, docEntry.new(
               readName(cdTrim, str.len("struct ")),
               d, cd, mkLink(cdTrim)
             ));
           }
-          if (str.starts(cd, "union ")) {
-            arr.push(Doc.unions, docEntry.new(
+          if (cdTrim.starts("union ")) {
+            arr.push(dc.unions, docEntry.new(
               readName(cdTrim, str.len("union ")),
               d, cd, mkLink(cdTrim)
             ));
           }
         } else {
-          ix = str.index(cdTrim, '=');
+          ix = cdTrim.index('=');
           if (ix != -1) {
-            arr.push(Doc.vars, docEntry.new(
+            arr.push(dc.vars, docEntry.new(
               readNameBk(cdTrim, ix),
               d, cd, mkLink(cdTrim)
             ));
           } else {
-            ix = str.index(cdTrim, '(');
+            ix = cdTrim.index('(');
             if (ix != -1) {
               ixV = [ix];
               if (str.starts(str.trim(cdTrim[ix + 1:]), "*"))
                 ixV! = str.indexFrom(cdTrim, ix, ')');
-              arr.push(Doc.functions, docEntry.new(
+              arr.push(dc.functions, docEntry.new(
                 readNameBk(cdTrim, ixV!),
                 d, cd, mkLink(cdTrim)
               ));
-            } else if (cdTrim) {
-              arr.push(Doc.vars, docEntry.new(
+            } else if (cdTrim != "") {
+              arr.push(dc.vars, docEntry.new(
                 readNameBk(cdTrim, str.len(cdTrim)),
                 d, cd, mkLink(cdTrim)
               ));
@@ -300,5 +305,5 @@ read = \pack, pt -> {
     }
   }
 
-  return [Doc];
+  return [dc];
 };

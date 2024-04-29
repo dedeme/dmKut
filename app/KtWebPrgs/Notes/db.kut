@@ -1,0 +1,85 @@
+// Copyright 13-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base.
+
+import "KtWeb/global";
+import "cts";
+
+dbPathV = [""];
+
+normalPath = \ -> return path.cat([dbPathV!, "normal"]);;
+
+trashPath = \ -> return path.cat([dbPathV!, "trash"]);;
+
+/// Initializes data base.
+/// \-> ()
+init = \ -> {
+  dbPath = path.cat([global.cgiRoot, cts.appName]);
+  dbPathV! = dbPath;
+  if (!file.exists(dbPath)) {
+    file.mkdir(dbPath);
+    file.mkdir(normalPath());
+    file.mkdir(trashPath());
+  }
+};
+
+/// Reads file.
+/// \s, b -> s
+read = \id, isTrash -> return isTrash
+    ? file.read(path.cat([trashPath(), id]))
+    : file.read(path.cat([normalPath(), id]))
+  ;;
+
+/// Writes file.
+/// \s, b, s -> s
+write = \id, isTrash, text ->
+    if (isTrash) file.write(path.cat([trashPath(), id]), text);
+    else file.write(path.cat([normalPath(), id]), text);
+  ;
+
+/// Makes file name from its text.
+/// \s -> s
+mkName = \tx -> {
+  Text = str.toRunes(str.trim(tx));
+  ix = arr.index(Text, \r -> return r == "\n";);
+  return ix == -1
+    ? !!Text
+      ? arr.join(Text[:15], "")
+      : "◊◊◊"
+    : arr.join(Text[:ix][:15], "")
+  ;
+};
+
+/// Files list
+/// \b -> [{s, s}.] :: [{id, name}.]
+list = \isTrash -> {
+  mkFileId = \dpath, id ->
+    return {id, name: mkName(file.read(path.cat([dpath, id])))};;
+
+  dpath = isTrash ? trashPath() : normalPath();
+  return arr.map(file.dir(dpath), \id -> return mkFileId(dpath, id););
+};
+
+/// Returns 'true' if 'id' exists.
+/// \s, b -> b
+exists = \id, isTrash -> return isTrash
+    ? file.exists(path.cat([trashPath(), id]))
+    : file.exists(path.cat([normalPath(), id]))
+  ;;
+
+/// Remove 'id' if 'id' exists.
+/// \s, b -> b
+remove = \id, isTrash ->
+    if (isTrash) file.del(path.cat([trashPath(), id]));
+    else file.del(path.cat([normalPath(), id]));
+  ;
+
+/// Remove out of date files in trash.
+/// \ -> ()
+clean = \ -> {
+  now = time.now();
+  List = list(true);
+  for (E = List)
+    if (time.dfDays(now, math.stoi(E.id)!) > 31) remove(E.id, true);
+};

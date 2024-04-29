@@ -1,0 +1,85 @@
+title = "--title=Kut Servidores";
+SvData = [
+    {ix: 1, name: "KtWeb", command: "kut2",
+        Pars: ["/dm/KtWeb/KtWeb", "start"]},
+    {ix: 2, name: "Kron", command: "kut2",
+      Pars: ["/dm/dmKut/app/KtWebPrgs/Kron/main", "start"]},
+    {ix: 3, name: "Market", command: "kut2",
+      Pars: ["/dm/dmKut/app/KtWebPrgs/Market/main", "start"]},
+    {ix: 4, name: "KutPost", command: "kut2",
+      Pars: ["/dm/dmKut/app/KutPost/KutPost/main", "start"]}
+  ];
+// <svData> -> <rsData>
+mkRsData = \Procs, D -> {
+  cmd = !D.Pars
+    ? D.command
+    : D.command + " " + arr.join(D.Pars, " ")
+  ;
+
+  for (l = Procs) {
+    if (str.ends(l, cmd)) {
+      ix = str.index(l, " ");
+      pid = ix == -1 ? "    ???" : ("       " + l[:ix])[-7:];
+      return {
+          ix: D.ix, name: D.name, command: D.command, Pars: D.Pars,
+          state: "Activo", pid
+        };
+    }
+  }
+  return {
+      ix: D.ix, name: D.name, command: D.command, Pars: D.Pars,
+      state: "Detenido", pid: "    ---"
+    };
+};
+
+while () {
+  procs, ok = sys.cmd("ps", ["x"]);
+  if (!ok) {
+    sys.cmd("zenity", ["--error", title, "--text=" + procs]);
+    break;
+  }
+  Procs = str.splitTrim(procs, "\n");
+
+  :arr Acts = []; // [<rsData>.]
+  :arr Deacts = []; // [<rsData>.]
+  for (SvD = SvData) {
+    RsData = mkRsData(Procs, SvD);
+    if (RsData.state == "Activo") Acts.push(RsData);
+    else Deacts.push(RsData);
+  }
+
+  txV = [""];
+  if (!!Acts) {
+    Acts.sort(\D1, D2 -> return D1.ix < D2.ix;);
+    txV! += "Activos:\n  " +
+      arr.join(Acts.map(\D -> return D.pid + " " + D.name;), "\n  ");
+    if (!!Deacts) txV! += "\n\n";
+  }
+  if (!!Deacts) {
+    Deacts.sort(\D1, D2 -> return D1.ix < D2.ix;);
+    txV! += "Detenidos:\n  " +
+      arr.join(Deacts.map(\D -> return D.pid + " " + D.name;), "\n  ");
+    txV! += "\n\n¿Activar servidores detenidos?";
+  }
+
+  if (!!Deacts) {
+    bash = "zenity --question " + title + " " +
+      '--text="' + txV! + '"\necho $?\n';
+    ftmp = file.tmp("", "servers");
+    file.write(ftmp, bash);
+    r, ok = sys.cmd("bash", [ftmp]);
+    file.del(ftmp);
+    if (!ok) {
+      sys.cmd("zenity", ["--error", title, "--text=" + r]);
+      break;
+    }
+    if (r[0] == "1") break;
+
+    for (D = Deacts) thread.run(\-> sys.cmd(D.command, D.Pars););
+  } else {
+    r, ok = sys.cmd("zenity", ["--info", title, "--text=" + txV!]);
+    if (!ok) sys.cmd("zenity", ["--error", title, "--text=" + r!]);
+    break;
+  }
+}
+

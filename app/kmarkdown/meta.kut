@@ -1,0 +1,12 @@
+// Copyright 13-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Page metatada.
+
+/// Constructor.
+///   fpage   : File relative path without extension '.kmd'
+///   title   : Page title or "".
+///   numbered: 'true' if headers '##' should be numbered.
+///   withUp  : 'true' if an up arrow is shown.
+///   withDown: 'true' if an down arrow is shown./// \s,s,b,b,b -> <meta>
+new : fpage, title, numbered, withUp, withDown;

@@ -17,12 +17,13 @@ init = \ -> {
 };
 
 /// Reads table. Closes table is a dictionary:
-///   For companies and 'cts.meNick' -> {nick->[isFromHistoric, close]}
-///   For indexes -> {nick->[isFromHistoric, [currentValue, yesterdayValue]]}
+///   For companies and 'cts.meNick' -> {nick: [isFromHistoric, close]}
+///   For indexes -> {nick: [isFromHistoric, [currentValue, yesterdayValue]]}
 /// \ -> {[b,f]...}
 read = \ -> return js.r(db.read(closesPath));;
 
-/// Read table with only closes. {nick -> close}
+/// For companies and 'cts.meNick' reads table with only closes. {nick: close}
+/// For indexes reads table with only currentValue. {nick: currentValue}
 /// \ -> {f...}
 readOnlyCloses = \ -> {
   R = {};

@@ -3,6 +3,7 @@
 
 /// Main page.
 
+import "libdm/jstb";
 import "KtWeb/rp";
 import "db";
 import "data/conf";
@@ -31,13 +32,13 @@ switch(Rq.source) {
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": sys.print(rp.mk({
-      conf: db.confTb().read(),
-      paths: arr.map(db.pathsTb().read(), dpath.toJs)
+      conf: db.confTb()[jstb.read](),
+      paths: db.pathsTb()[jstb.read]()
     }));
     "savePath": {
-      confTb = db.confTb();
-      Cf = confTb.read();
-      confTb.write(conf.mk(Rq.path, Cf.showAll));
+      :jstb confTb = db.confTb();
+      :conf Cf = confTb.read#();
+      confTb.write#(conf.mk(Rq.path, Cf.showAll));
       sys.print(rp.mkEmpty());
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

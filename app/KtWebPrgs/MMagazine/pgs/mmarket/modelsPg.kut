@@ -14,8 +14,13 @@ process = \Rq -> {
     });
     "rank": {
       Rank = ranksDb.rank(Rq.date)!;
+      type = switch(Rq.type) {
+        "points": 0;
+        "assets": 1;
+        default: 2;
+      };
       return rp.mk({
-        modelValues: Rank[Rq.type]
+        modelValues: Rank[type]
       });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

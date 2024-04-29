@@ -1,18 +1,12 @@
-// Copyright 06-Nov-2022 ºDeme
+// Copyright 13-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Configuration data.
 
 /// Returns configutation data.
 ///   lang: Applications default language.
-/// \s -> d<conf>
-new = \lang -> return { lang : lang };;
+/// \s -> <conf>
+new : lang;
 
 /// Returns the default configuration data.
-mk = \-> return new ("es");;
-
-/// \d<conf> -> [*(JS)...]
-toJs = \C -> return [C.lang];;
-
-/// \[*(JS)...] -> d<conf>
-fromJs = \A -> return new(A[0]);;
+newDefault = \-> return new("es");;

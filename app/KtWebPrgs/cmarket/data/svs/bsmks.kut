@@ -1,0 +1,134 @@
+// Copyright 21-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data BSMKS ("Bsmarkets").
+
+import "data/qs/qsv";
+import "libmkt/qs";
+
+// DIARY -----------------------------------------------------------------------
+
+// \s -> [[[s, f]...], [s...]]
+readDiary = \html -> {
+  // [[s, f]...]
+  Values = [];
+  // [s...]
+  Errs = [];
+  Ix = [0];
+  Ix2 = [0];
+
+  // \s -> [[s, f]...], [s...]]
+  retError = \err -> {
+    arr.push(Errs, err);
+    return [Values, Errs];
+  };
+
+  for (i = 0:3) {
+    Ix! = str.indexFrom(html, "<tbody>", Ix!);
+    if (Ix! == -1) return retError("Beginning of table not found");
+    Ix! += 7;
+  }
+
+  endTable = str.indexFrom(html, "</tbody>", Ix!);
+  if (endTable == -1) return retError("End of table not found");
+
+  while () {
+    Ix! = str.indexFrom(html, "<tr ", Ix!);
+    if (Ix! == -1 | Ix! > endTable) break;
+    Ix! += 4;
+
+    endRow = str.indexFrom(html, "</tr>", Ix!);
+    if (endRow == -1) return retError("End of row not found");
+
+    // CODE
+    for (i = 0:2) {
+      Ix! = str.indexFrom(html, "title=", Ix!);
+      if (Ix! == -1) {
+        arr.push(Errs, "Beginning of field 'code' not found");
+        Ix! = endRow;
+        continue;
+      }
+      Ix! += 7;
+    }
+
+    Ix! = str.indexFrom(html, ">", Ix!);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'code' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 1;
+
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'code' not found");
+      Ix! = endRow;
+      continue;
+    }
+    code = html[Ix!:Ix2!];
+
+    // VALUE
+    Ix! = str.indexFrom(html, "55_tr\">", Ix2! + 1);
+    if (Ix! == -1) {
+      arr.push(Errs, "Beginning of field 'value' not found");
+      Ix! = endRow;
+      continue;
+    }
+    Ix! += 7;
+    Ix2! = str.indexFrom(html, "<", Ix!);
+    if (Ix2! == -1) {
+      arr.push(Errs, "End of field 'code' not found");
+      Ix! = endRow;
+      continue;
+    }
+    try {
+      arr.push(Values, [code, math.fromIso(html[Ix!:Ix2!])!]);
+    } catch(e) {
+      arr.push(Errs, "Bad quote : " + html[Ix!:Ix2!]);
+    }
+
+    // END
+    Ix! = endRow;
+  }
+
+  return [Values, Errs];
+};
+
+// HISTORIC --------------------------------------------------------------------
+
+// \s -> [<qs>|[], [s...]]
+readHistoric = \html -> {
+  sys.throw("Not implemented");
+};
+
+// OTHER -----------------------------------------------------------------------
+
+id = "BSMKS";
+
+name = "Bsmarkets";
+
+withDiary = true;
+
+// \-> [s|s, b] ([html|error, ok])
+downloadDiary = \ -> {
+  url = "https://www.bsmarkets.com/cs/Satellite?cid=1191407147971&pagename=BSMarkets2%2FPage%2FPage_Interna_WFG_Template&language=es_ES";
+  R = sys.cmd(
+    "timeout", ["-s", "KILL", "30", "wget", "-q", "--no-cache", "-O", "-", url]
+  );
+  if (!R[1]) R[0] += url;
+  return R;
+};
+
+withHistoric = false;
+
+// \s -> [s|s, b] ([html|error, ok])
+downloadHistoric = \code -> {
+  sys.throw("Not implemented");
+};
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+    id, name, withDiary, downloadDiary, readDiary,
+    withHistoric, downloadHistoric, readHistoric
+  );;

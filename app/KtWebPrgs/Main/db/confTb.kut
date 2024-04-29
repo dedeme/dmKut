@@ -1,0 +1,22 @@
+// Copyright 13-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Configuration table.
+
+import "cts";
+import "data/conf";
+import "db";
+
+fpath = path.cat([cts.dataPath, "conf.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write(conf.newDefault());;
+
+/// Reads table.
+/// \ -> <conf>
+read = \ -> return js.r(file.read(fpath));;
+
+/// Writes table.
+/// \<conf> -> ()
+write = \o -> file.write(fpath, js.w(o));;

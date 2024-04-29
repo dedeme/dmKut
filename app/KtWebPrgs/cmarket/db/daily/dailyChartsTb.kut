@@ -22,9 +22,9 @@ init = \ -> {
 readJs = \ -> return db.read(fpath);;
 
 /// Returns table.
-/// \ -> [<dailyChart>...]
+/// \ -> [<dailyChart>.]
 read = \ -> return arr.map(js.r(readJs()), dailyChart.fromJs);;
 
 /// Write table.
-/// \[<dailyChart>...] -> ()
+/// \[<dailyChart>.] -> ()
 write = \DCs -> db.write(fpath, js.w(arr.map(DCs, dailyChart.toJs)));;

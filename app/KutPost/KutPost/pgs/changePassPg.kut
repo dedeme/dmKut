@@ -1,0 +1,29 @@
+// Copyright 15-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Change password page.
+
+import "cts";
+import "data/user";
+import "db/usersTb";
+
+/// \ {*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "changePass": {
+      usr, oldPass, newPass : Rq;
+      okV = [false];
+      pass = cryp.key(oldPass, cts.klen);
+      :arr Us = usersTb.read();
+      uOp = Us.find(\:user u -> return u.id == usr &  pass == u.pass;);
+      if (!!uOp) {
+        :user u = uOp!;
+        u.pass = cryp.key(newPass, cts.klen);
+        usersTb.write(Us);
+        okV! = true;
+      }
+      return js.w({ ok: okV! });
+    }
+    default: sys.throw("Value of rq '" + Rq.rq + "' is missing");
+  }
+};

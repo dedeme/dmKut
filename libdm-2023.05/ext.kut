@@ -60,7 +60,7 @@ puppeteer = \url, tm -> {/*
         "let done = false;" +
         "(async () => {"+
         "  try {"+
-        "    const browser = await puppeteer.launch();"+
+        "    const browser = await puppeteer.launch({headless:'new'});"+
         "    const page = await browser.newPage();"+
         "    page.setDefaultNavigationTimeout(%v);"+
         "    await page.goto('%v',{waitUntil:'networkidle0'});"+
@@ -77,6 +77,19 @@ puppeteer = \url, tm -> {/*
   ;
   cm2 = str.fmt(cm, [tm, url]);
   return sys.cmd("node", ["-e", cm2]);
+};
+
+/// Calls a kut program to read a web page.
+/// If the reading fails, it returns [error, false], otherwise returns
+/// [html, true].
+///   url: Url to read.
+///   tm : Seconds to wait for full page load. A good value is 2.
+///        The time for wait until giving up is 30''.
+/// \s, i -> [s, b]
+wdriver = \url, tm -> {
+  Rs = sys.cmd2("wdriver", ["page", url, math.itos(tm)]);
+  if (Rs! != "") return [Rs!, true];
+  return ["Page " + url + " could not be read", false];
 };
 
 /// Returns the md5 sum of a file. It calls "md5sum 'f'".

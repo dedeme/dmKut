@@ -1,0 +1,68 @@
+// Copyright 13-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Edit page.
+
+import "KtWeb/rp";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      isTrash = Rq.isTrash;
+      List = db.list(isTrash); // [{id:s, name:s}.]
+      arr.sort(List, \E1, E2 -> return E1.id > E2.id;);
+      text = !!List ? db.read(List[0].id, isTrash) : "";
+      sys.print(rp.mk({
+        list: List,
+        text
+      }));
+    }
+    "new": {
+      db.write(math.itos(time.now()), false, "");
+      sys.print(rp.mkEmpty());
+    }
+    "download": {
+      id = Rq.id;
+      name = Rq.name;
+      text = db.exists(id, false) ? db.read(id, false) : name + " not found";
+      sys.print(rp.mk({text}));
+    }
+    "remove": {
+      id = Rq.id;
+      if (db.exists(id, false)) {
+        text = db.read(id, false);
+        db.remove(id, false);
+        if (text != "") db.write(math.itos(time.now()), true, text);
+        db.clean();
+      }
+      sys.print(rp.mkEmpty());
+    }
+    "rescue": {
+      id = Rq.id;
+      if (db.exists(id, true)) {
+        text = db.read(id, true);
+        db.remove(id, true);
+        db.write(math.itos(time.now()), false, text);
+      }
+      sys.print(rp.mkEmpty());
+    }
+    "getText": {
+      isTrash = Rq.isTrash;
+      id = Rq.id;
+      text = db.exists(id, isTrash) ? db.read(id, isTrash) : "";
+      sys.print(rp.mk({text}));
+    }
+    "setText": {
+      id = Rq.id;
+      text = Rq.text;
+      db.write(id, false, text);
+      sys.print(rp.mk({
+        name: db.mkName(text)
+      }));
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

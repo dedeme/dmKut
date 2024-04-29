@@ -14,7 +14,7 @@ process = \Rq -> {
     "index": {
       IxT = ixReader.read(Rq.pack);
       sys.println(rp.mk({
-        "index": IxT
+        "index": !!IxT
           ? [indexTree.toJs(IxT!)]
           : []
       }));

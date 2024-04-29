@@ -1,0 +1,37 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Update data.
+
+import "libmkt/quotes";
+import "libmkt/models";
+import "libmkt/model";
+import "extDb/quotesDb";
+import "data/evEs";
+import "cts";
+import "db";
+
+/// Update date.
+run = \ -> {
+  :quotes qts = quotesDb.read();
+  date = arr.peek(qts.Dates);
+
+  :arr DataDates = db.dates("daily");
+  if (!DataDates) {
+    for (:model md = models.list()) db.write(date, md.id, evEs.first(md, qts));
+    return;
+  }
+  lastDataDate = DataDates.peek();
+
+  for (:model md = models.list()) {
+    Evals = db.read("daily", date, md.id);
+    if (!Evals) {
+      Evals = db.read("daily", lastDataDate, md.id);
+      if (!Evals) db.write(date, md.id, evEs.first(md, qts));
+      else db.write(date, md.id, evEs.update(md, qts, Evals));
+    } else {
+      db.write(date, md.id, evEs.replace(md, qts, Evals));
+    }
+  }
+};
+

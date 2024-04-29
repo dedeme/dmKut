@@ -1,0 +1,76 @@
+// Copyright 25-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global rankings page.
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/cts" : mcts;
+import "data/rkRow";
+import "data/rk";
+import "data/rkEntry";
+import "data/simParams";
+import "data/imodel";
+import "data/ival";
+import "cts";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      type, stats : Rq;
+      return js.w({
+        "initialCapital": mcts.initialCapital,
+        "All": mkRankRows(type, stats),
+        "Models": arr.map(models.list(), \:model md -> {
+            mdId = md.id;
+            bases = simParams.paramBases(mdId);
+            incrs = simParams.paramIncrs(mdId);
+            return imodel.new(
+              mdId, md.name,
+              md.ParamNames, md.ParamTypes, bases, incrs
+            );
+          })
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+// Returns ranks.
+// \s, s -> [<rkRow>.]
+mkRankRows = \type, stats -> {
+  // \s, i -> [<rkEntry>.]
+  mkEntries = \period, idate -> {
+    // [<rkEntry>.]
+    Entries = [];
+    for (mdId = arr.map(models.list(), \:model md -> return md.id;)) {
+      invValOp = db.rankValue(mdId, period, type, idate, stats);
+      if (!invValOp) Entries.push(rkEntry.new(mdId, 0, []));
+      else {
+        :ival invVal = invValOp!;
+        Entries.push(rkEntry.new(mdId, invVal.ix, [invVal.val]));
+      }
+    }
+    return Entries;
+  };
+
+  // \s -> [<rk>.]
+  mkRanks = \period -> {
+    // [<rk>.]
+    Ranks = [];
+    for (i, d = db.rankDates(period)) {
+      Ranks.push(rk.new(d, mkEntries(period, i)));
+    }
+    return Ranks;
+  };
+
+  // [<rkRow>.]
+  RankRows = [];
+  for (period = cts.Periods) {
+    RankRows.push(rkRow.new(period, mkRanks(period)));
+  }
+
+  return RankRows;
+};

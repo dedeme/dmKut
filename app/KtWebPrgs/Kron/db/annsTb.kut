@@ -1,0 +1,21 @@
+// Copyright 27-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Annotations table.
+
+import "cts";
+import "data/ann";
+
+fpath = path.cat([cts.dataPath, "anns.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<ann>.]
+read = \ -> return arr.map(js.r(file.read(fpath)), ann.fromJs);;
+
+/// Writes table.
+/// \[<ann>.] -> ()
+write = \tb -> file.write(fpath, js.w(arr.map(tb, ann.toJs)));;

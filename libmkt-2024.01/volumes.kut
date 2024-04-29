@@ -1,0 +1,27 @@
+// Copyright 31-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "libmktHelper";
+
+/// Read volume average (in €) of serveral companies.
+/// Returns one value for eac company. If data can not be read, the company
+/// value is set to 0.
+///
+/// NOTE: This function depends on kmarketSpeed.
+///
+///   dpath  : Directory with files 'NICK'.tb.
+///   samples: Number of samples to make the average.
+///   Cos    : Nicks of companies to read.
+/// \s, i, [s.] -> [f.]
+read = \dpath, samples, Cos -> {
+  rq = {
+    "command": "volumes",
+    "path"   : dpath,
+    "samples": samples,
+    "Cos"    : Cos
+  };
+
+  rsRs = libmktHelper.send(rq);
+  if (!rsRs[1]) sys.throw(rsRs!);
+  return rsRs!.Vols;
+};

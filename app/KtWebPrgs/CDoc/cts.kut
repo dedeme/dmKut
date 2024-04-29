@@ -1,0 +1,19 @@
+// Copyright 11-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+appName = "CDoc";
+/// Application version.
+version = "2024.03";
+/// Application path.
+appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Data version.
+dataVersion = "2024.03";
+/// Application path.
+dataPath = path.cat([global.cgiRoot, appName]);
+
+

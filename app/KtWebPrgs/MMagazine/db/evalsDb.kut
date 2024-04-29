@@ -41,7 +41,7 @@ paramsEvals = \model, date ->
 /// \s -> [[[f...], f]...]
 lastParamsEvals = \model -> {
   dts = dates(model);
-  if (dts) {
+  if (!!dts) {
     maxDate = arr.reduce(dts, dts[0], \r, d -> return d > r ? d : r;);
     return paramsEvals(model, maxDate);
   }
@@ -54,7 +54,7 @@ purge = \Models -> {
   RegisteredModels = models();
   for (m = RegisteredModels) {
     if (!arr.any(Models, \m2 -> return m2 == m;)) {
-      log.warning("Delected " + mpath(m));
+      log.warning("Deleted " + mpath(m));
       file.del(mpath(m));
     }
   }

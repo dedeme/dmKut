@@ -10,44 +10,35 @@ import "libmkt/model";
 import "data/cts";
 import "data/investor/investor";
 import "data/investor/istrategy";
-import "db/investorsTb";
+import "db/investorTb";
 
 /// \m -> ()
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      investorIx = math.ftoi(Rq.investorIx);
-      Investor = investorIx <= cts.investors
-        ? [investorsTb.read()[investorIx]]
-        : []
-      ;
-
       sys.print(rp.mk({
-        ok: Investor & true,
-        models: arr.map(models.list(), \md -> return model.toJs(md);),
-        investor: investor.toJs(Investor!),
-        investors: math.itof(cts.investors)
+        investor: investor.toJs(investorTb.read()),
+        models: arr.map(models.list(), \md -> return model.toJs(md);)
       }));
     }
     "updateAll": {
-      err = investorsTb.update();
-      if (err) log.error(err);
+      err = investorTb.update();
+      if (err != "") log.error(err);
       sys.print(rp.mk({
-        ok: !err & true
+        ok: err == ""
       }));
     }
     "update": {
-      investorIx = math.ftoi(Rq.investorIx);
       nickName = Rq.nickName;
       modelId = Rq.modelId;
       Params = Rq.params;
 
-      Investors = investorsTb.read();
-      if (nickName)
-        Investors[investorIx].nicks[nickName] = istrategy.new(modelId, Params);
+      :investor inv = investorTb.read();
+      if (nickName != "")
+        inv.Nicks[nickName] = istrategy.new(modelId, Params);
       else
-        Investors[investorIx].base = istrategy.new(modelId, Params);
-      investorsTb.write(Investors);
+        inv.base = istrategy.new(modelId, Params);
+      investorTb.write(inv);
 
       sys.print(rp.mkEmpty());
     }

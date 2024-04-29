@@ -1,0 +1,28 @@
+// Copyright 30-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Summary page.
+
+import "libmkt/models";
+import "libmkt/model";
+import "KtWeb/rp";
+import "data/sm";
+import "data/smE";
+import "data/smVal";
+import "data/evE";
+import "data/upRs";
+import "db";
+import "cts";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      , mdId : Rq;
+      return rp.mk({
+        MdEvals: db.read("daily", arr.peek(db.dates("daily")), mdId)
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

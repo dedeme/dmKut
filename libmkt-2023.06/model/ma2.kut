@@ -1,0 +1,27 @@
+// Copyright 05-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Mobil average.
+
+import "../model";
+import "../ffi";
+import "doc/ma2Doc";
+
+/// Returns a new 'appr' model.
+new = \ -> return model.new(
+    "MM2",
+    "Media móvil 2",
+		ma2Doc.text,
+		["Corta", "Larga"],
+    [model.dayParam, model.dayParam],
+    [5.0, 30.0],
+    [1.0, 5.0],
+    [1.0, 1.0],
+		calc
+  );;
+
+// \[<vec>.], [f.], (\<vec>, <vec> -> ()) -> ()
+calc = \Closes, Params, fn -> {
+  Env = {Closes, Params};
+  for (Row = Closes) fn(Row, ffi.calcMa2(Env));
+};

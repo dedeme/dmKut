@@ -1,0 +1,12 @@
+// Copyright 08-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <cashEntry> data definition.
+
+/// Constructor.
+///   month   : Annotation month.
+///   desc    : Annotation decription.
+///   isIncome: 'true' if annotation is an income.
+///   am      : Annotation amount.
+/// \s,s,b,f -> <cashEntry>
+new : month, desc, isIncome, am;

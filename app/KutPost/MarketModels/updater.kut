@@ -1,0 +1,88 @@
+// Copyright 22-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Upadate data
+
+import "libmkt/strategy";
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/quotes";
+import "libmkt/stRs";
+import "data/simParams";
+import "cts";
+import "extDb/quotesDb";
+import "db";
+
+/// Update data.
+/// \ -> ()
+run = \ -> {
+  :quotes qts = quotesDb.read();
+  for (:model md = models.list()) {
+    date = arr.peek(qts.Dates);
+    mdId = md.id;
+    Prices, Accs, Refs =
+      arr.size(md.ParamTypes) == 1 ? calc1(md, qts) : calc2(md, qts);
+    db.update(mdId, date, Prices, Accs, Refs);
+  }
+};
+
+// Calculates pices and references.
+// Returns [prices, accounting, references] each with as many elements as
+//    Params has.
+// \<model>, <quotes>, [[f.].] -> [[i.], [i.], [i.]]
+calc = \md, qts, Params -> {
+  :: StRs = strategy.stGroup(md, qts, Params);
+  Prices = [];
+  Accs = [];
+  Refs = [];
+  Assets = StRs.Assets;
+  AcAssets = StRs.Accs;
+  RfAssets = StRs.RfAssets;
+  for (i, ns = StRs.Sales) {
+    if (math.ftoi(ns) < cts.minSales) { // Remove lower number of sales.
+      Prices.push(-1);
+      Accs.push(-1);
+      Refs.push(-1);
+    } else {
+      Prices.push(math.ftoi(Assets[i]));
+      Accs.push(math.ftoi(AcAssets[i]));
+      Refs.push(math.ftoi(RfAssets[i]));
+    }
+  }
+
+  return [Prices, Accs, Refs];
+};
+
+
+// Calculates pices and references of model with 1 parameter.
+// Returns [prices, accounting, references] each one with cts.simulationSteps
+//    elements.
+// \<model>, <quotes> -> [[i.], [i.], [i.]]
+calc1 = \:model md, qts -> {
+  mdId = md.id;
+  b = simParams.paramBases(mdId)[0];
+  inc = simParams.paramIncrs(mdId)[0];
+  Params = [];
+  for (i = 0:cts.simulationSteps)
+    arr.push(Params, [b + inc * math.itof(i)]);
+  return calc(md, qts, Params);
+};
+
+// Calculates pices and references of model with 2 parameters.
+// Returns [prices, accounting, references] each one with
+//    cts.simulationSteps x cts.simulationSteps elements.
+// \<model>, <quotes> -> [[i.], [i.], [i.]]
+calc2 = \:model md, qts -> {
+  mdId = md.id;
+  b0 = simParams.paramBases(mdId)[0];
+  b1 = simParams.paramBases(mdId)[1];
+  inc0 = simParams.paramIncrs(mdId)[0];
+  inc1 = simParams.paramIncrs(mdId)[1];
+
+  Params = [];
+  for (r = 0:cts.simulationSteps) for (c = 0:cts.simulationSteps)
+    arr.push(Params, [b0 + inc0 * math.itof(r), b1 + inc1 * math.itof(c)]);
+
+  return calc(md, qts, Params);
+};
+

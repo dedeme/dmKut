@@ -1,0 +1,121 @@
+=
+title = Hipervínculos e imágenes
+=
+
+## Hipervínculos
+
+Se crean con la sintaxis:
+
+*\[link](texto)*
+
+o simplemente
+
+*\[link]*
+
+Este último caso es una abreviatura de
+
+*\[link](link)*
+
+``kmd
+Hipervínculo con texto: [https://www.gnu.org](GNU).
+
+Hipervínculo sin texto: [https://www.gnu.org].``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Hipervínculo con texto: [https://www.gnu.org](GNU).
+
+Hipervínculo sin texto: [https://www.gnu.org].
+
+``</div>``
+
+_NOTA:_
+
+_La parte 'texto' del hipervínculo es HTML._
+
+
+``text
+Hipervínculo con texto: [https://www.gnu.org](G&lt;b>N&lt;/b>U).
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Hipervínculo con texto: [https://www.gnu.org](G<b>N</b>U).
+
+``</div>``
+
+
+## Imágenes
+
+Se crean con la sintaxis:
+
+*!\[link]*
+
+* Si la imagen se crea en párrafo aparte, aparece con recuadro.
+
+* Si la imagen se crea dentro de un párrafo, aparece tal cual.
+
+``kmd
+Esta es la flecha arriba (![img/up.png]) utilizada por kmarkdown.
+
+La misma flecha en párrafo aparte:
+
+![img/up.png]
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Esta es la flecha arriba (![img/up.png]) utilizada por kmarkdown.
+
+La misma flecha en párrafo aparte:
+
+![img/up.png]
+
+``</div>``
+
+_NOTA:_
+
+Iniciar un párrafo con una imagen es un error:
+
+``kmd
+![img/up.png] Esto es un error.
+``
+
+Si se quiere empezar el párrafo con una imagen se puede colocar delante un
+espacio.
+
+``kmd
+ ![img/up.png] Esto no es un error.
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+ ![img/up.png] Esto no es un error.
+
+``</div>``
+
+## Escape de '['
+
+Si se quiere escribir el caracter '\[' sin que introduzca un hipervínculo o
+imagen, se debe usar '\\['.
+
+``kmd
+Esto no es un hipervínculo \[https://www.gnu.org] y
+esto no es una imagen !\[img/up.png].``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Esto no es un hipervínculo \[https://www.gnu.org] y
+esto no es una imagen !\[img/up.png].
+
+``</div>``

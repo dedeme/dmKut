@@ -1,0 +1,164 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Functions using external programs.
+
+/// If 'isMozilla' is 'false', it calls "wget -q --no-cache -O - 'url'" and
+/// returns the text read.
+/// If 'isMozilla' is 'true', it calls:
+///   wget --user-agent Mozilla
+///     --load-cookies=/home/deme/.mozilla/firefox/bfrqeymk.default/cookies.sqlite
+///     -q --no-cache -O - url
+/// If the reading fails, it returns [error, false], otherwise returns
+/// [html, true].
+/// \s, b -> [s, b]
+wget = \url, isMozilla -> {
+  Moz = [
+    "--user-agent", "Mozilla",
+    "--load-cookies=/home/deme/" +
+      ".mozilla/firefox/bfrqeymk.default/cookies.sqlite"
+  ];
+  Base = ["-q", "--no-cache", "-O", "-", url];
+  Opts = isMozilla ? Moz + Base : Base;
+  return sys.cmd("wget", Opts);
+};
+
+/// Calls 'bash' with a script for 'node.js' to read a web page.
+/// If the reading fails, it returns [error, false], otherwise returns
+/// [html, true].
+///   url: Url to read.
+///   tm : Milliseconds to wait for reading.
+/// \s, i -> [s, b]
+puppeteer = \url, tm -> {/*
+  tmpName = file.tmp("/tmp", "libdm_ext_puppeteer");
+  cm = str.fmt("node -e \""+
+    "const puppeteer = require('puppeteer');"+
+    "(async () => {"+
+    "  try {"+
+    "    const browser = await puppeteer.launch();"+
+    "    const page = await browser.newPage();"+
+    "    page.setDefaultNavigationTimeout(%v);"+
+    "    await page.goto('%v',{waitUntil:'domcontentloaded'});"+
+    "    await page.cookies();" +
+    "    const ct = await page.content();"+
+    "    console.log(ct);"+
+    "    await browser.close();"+
+    "  } catch (e) {"+
+    "    console.error(e.toString());"+
+    "    process.exit(1);"+
+    "  }"+
+    "})();"+
+    "\"",
+    [tm, url]
+  );
+  file.write(tmpName, cm);
+  HtmlErr = sys.cmd("bash", [tmpName]);
+  file.del(tmpName);
+  return HtmlErr;*/
+
+  cm =  "const puppeteer = require('puppeteer');"+
+        "let done = false;" +
+        "(async () => {"+
+        "  try {"+
+        "    const browser = await puppeteer.launch({headless:'new'});"+
+        "    const page = await browser.newPage();"+
+        "    page.setDefaultNavigationTimeout(%v);"+
+        "    await page.goto('%v',{waitUntil:'networkidle0'});"+
+        "    await page.cookies();"+
+        "    const ct = await page.content();"+
+        "    console.log(ct);"+
+        "    await browser.close();"+
+        "    done = true;" +
+        "  } catch (e) {"+
+        "    console.error(e.toString());"+
+        "    process.exit(1);"+
+        "  }"+
+        "})();"
+  ;
+  cm2 = str.fmt(cm, [tm, url]);
+  return sys.cmd("node", ["-e", cm2]);
+};
+
+/// Calls a kut program to read a web page.
+/// If the reading fails, it returns [error, false], otherwise returns
+/// [html, true].
+///   url: Url to read.
+///   tm : Seconds to wait for full page load. A good value is 2.
+///        The time for wait until giving up is 30''.
+/// \s, i -> [s, b]
+wdriver = \url, tm -> {
+  Rs = sys.cmd2("wdriver", ["page", url, math.itos(tm)]);
+  if (Rs! != "") return [Rs!, true];
+  return ["Page " + url + " could not be read", false];
+};
+
+/// Returns the md5 sum of a file. It calls "md5sum 'f'".
+///   f: File to check.
+/// \s -> s
+md5 = \f -> {
+  r, ok = sys.cmd("md5sum", [f]);
+  if (ok) return r[:32];
+  sys.throw(r);
+};
+
+/// Returns the md5 sum of a string. It calls
+///     bash -c "echo -n " + js.ws('s') + " | md5sum"
+///   s: String to check.
+/// \s -> s
+md5Str = \s -> {
+  r, ok = sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | md5sum"]);
+  if (ok) return r[:32];
+  sys.throw(r);
+};
+
+/// Returns the sha256 sum of a file. It calls "sha256sum 'f'".
+///   f: File to check.
+/// \s -> s
+sha256 = \f -> {
+  r, ok = sys.cmd("sha256sum", [f]);
+  if (ok) return r[:64];
+  sys.throw(r);
+};
+
+/// Returns the sha256 sum of a string. It calls
+///     bash -c "echo -n " + js.ws('s') + " | sha256sum"
+///   s: String to check.
+/// \s -> s
+sha256Str = \s -> {
+  r, ok = sys.cmd("bash", ["-c", "echo -n " + js.ws(s) + " | sha256sum"]);
+  if (ok) return r[:64];
+  sys.throw(r);
+};
+
+/// Returns 'Files' converted to 'pdf'. It calls
+///     If 'isBook' is true:
+///     htmldoc --book --charset utf-8 --footer ... --size A4 -t pdf ['Files']
+///     If 'isBook' is false:
+///     htmldoc --webpage --charset utf-8 --footer ... --size A4 -t pdf ['Files']
+/// htmldoc documentation: https://www.msweet.org/htmldoc/htmldoc.html
+///   isBook: 'true' if a book shuld be generated.
+///   Files : Files in HTML to convert.
+/// \b, [s...] -> <bytes>
+htmldoc = \isBook, Files -> {
+  R = sys.cmd2(
+    "htmldoc",
+    [ isBook ? "--book" : "--webpage",
+      "--charset", "utf-8", "--footer", "...", "--size", "A4", "-t", "pdf"
+    ] + Files
+  );
+  if (R[1] != "" & !str.starts(str.trim(R[1]), "PAGES:")) sys.throw(R[1]);
+  return bytes.fromStr(R[0]);
+};
+
+/// Returns 'html' converted to 'pdf'. It calls 'htmldoc'.
+///   isBook: 'true' if a book shuld be generated.
+///   html  : Text in HTML to convert.
+/// \b, s -> <bytes>
+htmldocStr = \isBook, html -> {
+  tmp = file.tmp("", "kut_htmldoc");
+  file.write(tmp, html);
+  r = htmldoc(isBook, [tmp]);
+  file.del(tmp);
+  return r;
+};
+

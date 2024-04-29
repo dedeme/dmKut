@@ -1,0 +1,678 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes processing management.
+
+import "libdm/log";
+import "libmkt/quotes";
+import "libmkt/qs";
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/cts" : mcts;
+import "data/qsprRs";
+import "data/co/cos";
+import "data/co/co";
+import "data/svs/indexesSv";
+import "data/svs/ibexSv";
+import "data/investor/investor";
+import "data/investor/istrategy";
+import "data/qsvs";
+import "data/qsv";
+import "data/acc/ann";
+import "data/acc/ldg";
+import "data/acc/opr";
+import "data/acc/settlement";
+import "data/invOperation";
+import "data/ibex";
+import "data/chart/dailyInvestorData";
+import "data/chart/dailyChart";
+import "data/chart/profitsEntry";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/acc/diariesDb";
+import "db/acc/profitsDb";
+import "db/quotesDb";
+import "db/investorTb";
+import "db/cosTb";
+import "db/svCodesTb";
+import "db/invOperationsTb";
+import "db/ibexTb";
+import "db/daily/dailyChartsTb";
+import "cts";
+
+// Create a <qsprRs> without error nor warnings.
+//   value: Result value.
+//   Returns {value: 'value', withWarnings: false, withError: false}
+// \* -> <qsprRs>
+ok = \value -> return qsprRs.new(value, false, false);;
+
+// Create a <qsprRs> with error written in log. (qsprRs.value = [])
+//   msg: Error message.
+//   Returns {value: [], withWarnings: false, withError: true}
+// \s -> <qsprRs>
+error = \msg -> {
+  log.error(msg);
+  return qsprRs.new([], false, true);
+};
+
+// Create a <qsprRs> with warnings written in log.
+//   msgs: Warning messages
+//   value: Result value.
+//   Returns {value: 'value', withWarnings: true, withError: false}
+// \[s.], * -> d<qsprRs>
+warning = \msgs, value -> {
+  for (w = msgs) log.warning(w);
+  return qsprRs.new(value, true, false);
+};
+
+// Returns a new <qsprRs> such that:
+//   - If rs.withError == true -> rs is returned.
+//   - Otherwise 'fn' is run and its result is returned. If rs is withWarnings
+//     the final result is withWarnings too.
+//   rs: First result.
+//   fn: Function with 'rs.value' as argument.
+// \<qsprRs>, (\* -> <qsprRs>) -> <qsprRs>
+bind = \:qsprRs rs, fn -> {
+  if (rs.withError) return rs;
+  :qsprRs rs2 = fn(rs.value);
+  rs2.withWarnings |= rs.withWarnings;
+  return rs2;
+};
+
+// UTILITIES -------------------------------------------------------------------
+
+// \s, s, i -> <qsprRs<[<quote>.]>>
+toQs = \prefix, qts, size -> {
+  qts, okR = qs.fromStr(size, qts);
+  return okR
+    ? ok(qts)
+    : error(prefix + ": " + qts)
+  ;
+};
+
+// \s -> <qsprRs<[<quote>.]>>
+getQs = \nick -> {
+  qts, okR = quotesDb.readQs(nick);
+  return okR
+    ? ok(qts)
+    : error("Reading company " + nick + ": " + qts)
+  ;
+};
+
+// \s, s -> <qsprRs<[<quote>.]>>
+simpleCorrection = \prefix, qts ->{
+  return bind(
+    toQs(prefix, qts, mcts.historicQuotes),
+    \Qs -> {
+      // [[<quote>.], [s.]]
+      Qs2, :arr Errs = qs.correct(Qs);
+      return !Errs
+        ? ok(Qs2)
+        : warning(Errs.map(\e -> return prefix + ": " + e;), Qs2)
+      ;
+    });};
+
+// \s, [<quote>.], [<quote>.] -> <qsprRs<[<quote>.]>>
+dateCorrection = \prefix, Mqs, Qs -> {
+  // [[<quote>.], [s.]]
+  Qs2, :arr Errs = qs.correctDates(Qs, Mqs);
+  return !Errs
+    ? ok(Qs2)
+    : warning(Errs.map(\e -> return prefix + ": " + e;), Qs2)
+  ;
+};
+
+// \s, s -> <qsprRs<s>>
+getCode = \prefix, nick -> {
+  :qsv sv = qsvs.currentHistoric();
+  codeOp = dic.get(svCodesTb.read(sv.id), nick);
+  if (!codeOp) return error(prefix + str.fmt(": Code of %v not found", [nick]));
+  return ok(codeOp!);
+};
+
+// \s, s -> <qsprRs<[<quote>.]>>
+downloadHistoric = \prefix, code -> {
+  :qsv sv = qsvs.currentHistoric();
+
+  // [<quote>.],[s.]
+  :arr Qs, :arr Errs = qsv.readHistoric(sv, code);
+
+  if (!Qs)
+    return error(prefix + ": Quotes can not be read\n  " + Errs.join("  \n"));
+
+  if (Qs.size() < cts.historicMinimumEntries)
+    return error(prefix + str.fmt(
+      ": Only %v quotes found (Minimum %v)",
+      [Qs.size(), cts.historicMinimumEntries]
+    ));
+
+  return !Errs
+    ? ok(Qs)
+    : warning(Errs, Qs)
+  ;
+};
+
+// \ -> <qsprRs<<qs>>>
+downloadIbexHistoric = \ -> {
+  // [<quotes>.], [s.]
+  :arr Qs, :arr Errs = ibexSv.readHistoricQuotes();
+
+  errV = [""];
+  if (!Qs) errV! = "IBEX: Quotes can not be read";
+  else {
+    if (Qs.size() == 0) errV! = "IBEX: No quotes found";
+    else if (Qs.size() < cts.historicMinimumEntries)
+      errV! =str.fmt(
+        "IBEX: Only %v quotes found (Minimum %v)",
+        [Qs.size(), cts.historicMinimumEntries]
+      );
+  }
+
+  if (errV! != "") {
+    for (w = Errs) log.warning(w);
+    return error(errV!);
+  }
+
+  return !Errs
+    ? ok(Qs)
+    : warning(Errs, Qs)
+  ;
+};
+
+// \s, [<quote>.], [<quote>.], [<quote>.] -> <qsprRs<[<quote>.]>>
+merge = \prefix, Mqs, Nqs, Oqs -> {
+  // [<quote>.], [s.]
+  Qs, :arr Errs = qs.merge(Nqs, Mqs, Oqs);
+  return !Errs
+    ? ok(Qs)
+    : warning(Errs.map(\e -> return prefix + ": " + e;), Qs)
+  ;
+};
+
+// PUBLIC INTERFACE ------------------------------------------------------------
+
+/// Returns <qsprRs<s>> with 'qts' corected.
+/// Return and paremeter 'qts' are type file 'NICK.tb'.
+///   prefix: Prefix for errors and warnings.
+///   qts   : Company quotes. (Company can not be main)
+/// \s, s -> <qsprRs<s>>
+correctStr = \prefix, qts ->
+  return bind(
+    simpleCorrection(prefix, qts),
+    \Qs -> return ok(qs.toStr(Qs));
+  );;
+
+/// Return <qsprRs<s>> with 'qts' corected.
+/// Return and paremeter 'qts' are type file 'NICK.tb'.
+///   prefix  : Prefix for errors and warnings.
+///   qs      : Company quotes.
+///   mainNick: Main company nick.
+/// \s, s, s -> <qsprRs<s>>
+correctStr2 = \prefix, qts, mainNick ->
+  return bind(
+    simpleCorrection(prefix, qts),
+    \Qs -> return bind(
+        getQs(mainNick),
+        \Mqs -> return bind(
+          dateCorrection(prefix, Mqs, Qs),
+          \Qs -> return ok(qs.toStr(Qs));
+        );
+      );
+    );;
+
+/// Reads quotes of 'nick' from current server, merges with current quotes,
+/// corrects and, if it have not errors, writes them in 'quotesDb'.
+///   prefix  : Prefix for errors and warnings.
+///   mainNick: Main company nick.
+///   nick    : Company nick.
+/// \s, s, s -> <qsprRs<[<quote>.]>>
+updateHistoric = \prefix, mainNick, nick ->
+    return bind(
+      getCode(prefix, nick),
+      \code -> return bind(
+        downloadHistoric(prefix, code),
+        \newQs -> return bind(
+          getQs(nick),
+          \oldQs -> return bind(
+            nick == mainNick
+              ? ok([])
+              : getQs(mainNick),
+            \mainQs -> {
+              :qsprRs R = merge(prefix, mainQs, newQs, oldQs);
+              quotesDb.write(nick, qs.toStr(R.value));
+              return R;
+            }
+          );
+        );
+      );
+    );;
+
+/// Reads quotes of Ibex, merges with current quotes,
+/// corrects and, if it have not errors, writes them in 'ibexTb'.
+///   mainNick: Main company nick.
+/// \s -> <qsprRs<qs>>
+updateIbexHistoric = \mainNick -> {
+  :ibex qts = ibexTb.read();
+  return bind(
+    downloadIbexHistoric(),
+    \newQs -> return bind(
+      ok(qts.Qs),
+      \oldQs -> return bind(
+        getQs(mainNick),
+        \mainQs -> {
+          :qsprRs R = merge("IBEX", mainQs, newQs, oldQs);
+          ibexTb.write(ibex.new(qts.Cos, R.value));
+          return R;
+        }
+      );
+    );
+  );
+};
+
+/// Update last closes and references tables from historic and returns
+/// "" or an error if the update failed.
+/// \s -> s
+updateClosesAndRefs = \:co cp -> {
+  if (arr.any(cts.IxNicks, \e -> return e == cp;)) {
+    :arr Ixs, ok = indexesSv.read();
+    if (!ok) return Ixs;
+    :dic Closes = closesTb.read();
+    Closes.put(cp, [true, Ixs[cp]]);
+    closesTb.write(Closes);
+    return "";
+  }
+
+  Qs, ok = quotesDb.readQs(cp);
+  if (!ok) return [Qs, ok];
+  :dic Closes = closesTb.read();
+  Closes.put(cp, [true, arr.peek(qs.closes(Qs))]);
+  closesTb.write(Closes);
+
+  :dic Refs = refsTb.read();
+  :investor inv = investorTb.read();
+
+  strgOp = dic.get(inv.Nicks, cp);
+  if (!strgOp) return str.fmt(
+      "Strategy for %v not found", [cp]
+    );
+  :istrategy strg = strgOp!;
+
+  mdOp = models.get(strg.modelId);
+  if (!mdOp) return str.fmt(
+      "Model %s of %v not found", [strg.modelId, cp]
+    );
+  :model md = mdOp!;
+
+  :cos cs = cosTb.read();
+  mainNick = cs.mainNick;
+
+  :quotes qts, ok2 = quotesDb.readQuotes(mainNick, cp);
+  if (!ok2) return qts; // error
+
+  // [[f.].]
+  :arr Srfs = md.calc(qts.Closes, strg.Params);
+  currentRef = Srfs.pop()[0];
+  prevRef = Srfs.peek()[0];
+  Refs.put(cp, [prevRef, currentRef]);
+
+  refsTb.write(Refs);
+
+  return "";
+};
+
+/// Update closes from daily data. Returns an empty string it all go good or
+/// a error message.
+/// \ -> s
+updateDailyCloses = \ -> {
+  :qsv sv = qsvs.currentDiary();
+  :dic Codes = svCodesTb.read(sv.id);
+
+  :arr CodeQuotes, Errs = sv.readDaily();
+  if (!!Errs) for (w = Errs) log.warning(w);
+
+
+  :dic Closes = closesTb.read();
+  :cos cs = cosTb.read();
+  :arr SelNicks = arr.map(
+    arr.filter(cs.Cos, \:co c -> return c.isSelected;),
+    \:co c -> return c.nick;
+  );
+
+  NewCloses = {}; // {[b,f].}
+  for (nk = SelNicks) {
+    codeOp = Codes.get(nk);
+    if (!codeOp) {
+      log.error("Code of " + nk + " not found in " + sv.id());
+      QuoteOp = Closes.get(nk);
+      if (!QuoteOp) log.error("Quote of " + nk + " not found");
+      else NewCloses.put(nk, [false, QuoteOp![1]]);
+    } else {
+      NkQuoteOp = arr.find(CodeQuotes, \NQ -> return NQ[0] == codeOp!;);
+      if (!NkQuoteOp) {
+        log.error("Daily quote of " + nk + " not found");
+        QuoteOp = Closes.get(nk);
+        if (!QuoteOp) log.error("Quote of " + nk + " not found");
+        else NewCloses.put(nk, [false, QuoteOp![1]]);
+      } else {
+        NewCloses.put(nk, [false, NkQuoteOp![1]]);
+      }
+    }
+  }
+
+  // Indexes nick
+  :dic Ixs, ok = indexesSv.read();
+  if (ok) {
+    for (nk = cts.IxNicks)
+      NewCloses.put(nk, [false, Ixs[nk]]);
+  } else {
+    for (nk = cts.IxNicks)
+      NewCloses.put(nk, Closes[nk]);
+    log.error(Ixs);
+  }
+
+  closesTb.write(NewCloses);
+
+  return "";
+};
+
+/// Update operations. Returns a message if an error happend. Otherwise returns
+/// an empty string.
+/// \b -> s
+updateOperations = \ -> {
+  :dic Closes = closesTb.read();
+  :dic Refs = refsTb.read();
+  :arr Years = diariesDb.investorYears();
+  Anns = !Years ? [] : diariesDb.investorAnns(Years[0]);
+  :settlement set = ann.mkSettlement(Anns);
+  :dic Pf = set.Portfolio;
+
+  InvOps = []; // [<invOperation>...]
+  Nicks = arr.map(
+    arr.filter(cosTb.read()[cos.Cos], \:co c -> return c.isSelected;),
+    \:co c -> return c.nick;
+  );
+  for (nk = Nicks) {
+    hCloseOp = dic.get(Closes, nk);
+    if (!hCloseOp) return "Closes of " + nk + " not found in 'closes.tb'";
+    isHistoric = hCloseOp![0];
+    cl = hCloseOp![1];
+
+    // [<quote>.]
+    :arr Qs, ok = quotesDb.readQs(nk);
+    if (!ok) return Qs;
+    Cls = qs.closes(Qs);
+    pvCl = isHistoric ? Cls[-2:][0] : arr.peek(Cls);
+
+    RfsOp = dic.get(Refs, nk);
+    if (!RfsOp) return "References of " + nk + " not found in 'refs.tb'";
+
+    Rfs = RfsOp!;
+    rf = isHistoric ? Rfs[0] : Rfs[1];
+    if (pvCl < rf & rf < cl) {
+      InvOps.push(invOperation.new(0, nk));
+    } else if (pvCl > rf & rf > cl) {
+      StPrOp = dic.get(Pf, nk);
+      if (!!StPrOp) {
+        stocks = StPrOp![0];
+        InvOps.push(invOperation.new(stocks, nk));
+      }
+    }
+  }
+
+  /* For when keeping stocks that had to be sold.
+  for (:invOperation old = invOperationsTb.read())
+    if (
+      old.stocks > 0 &
+      dic.hasKey(Pf, old.nick) &
+      !!Pf[old.nick] &
+      !InvOps.any(\:invOperation iO -> return iO.nick == old.nick;
+      )
+    )
+      InvOps.push(old);
+  */
+
+  invOperationsTb.write(InvOps);
+  return "";
+};
+
+/// Craate daily charts table.
+/// Must be called after 'qspr.updateClosesAndRefs'.
+createDailyCharts = \ -> {
+  now = time.now();
+  today = time.toStr(now);
+  h = time.hour(now);
+
+  :cos cs = cosTb.read();
+  :arr SelNicks = arr.map(
+    arr.filter(cs.Cos, \:co c -> return c.isSelected;),
+    \:co c -> return c.nick;
+  );
+
+  :dic Closes = closesTb.read();
+  :dic Refs = refsTb.read();
+
+  BuyAnns = []; // [<ann>.]
+  cashV = [0.0];
+  Anns = diariesDb.investorAnns(today[:4]);
+  :settlement set = ann.mkSettlement(Anns);
+  :ldg l = set.ledger;
+  :dic Pf = set.Portfolio;
+  cashV! += l.cash;
+  for (:ann a = Anns)
+    if (a.date >= today & opr.type(a.op) == opr.buT)
+      BuyAnns.push(a);
+
+  Entries = []; // [<dailyChart>.]
+  allCloseV = [0.0];
+  allQuoteV = [0.0];
+  for (nk = SelNicks) {
+    :arr Qs, ok = quotesDb.readQs(nk);
+    if (!ok) {
+      log.error(Qs);
+      continue;
+    }
+    historicClose = arr.peek(qs.closes(Qs));
+
+    CloseOp = Closes.get(nk);
+    if (!CloseOp) {
+      log.error("Close of " + nk + " not found");
+      continue;
+    }
+    close = CloseOp![1];
+
+    :investor inv = investorTb.read();
+    :istrategy strg = inv.Nicks[nk];
+
+    StPrOp = Pf.get(nk);
+    StPr = !StPrOp ? [0, 0.0] : StPrOp!;
+    stocks = StPr[0];
+    price = StPr[1];
+    new = stocks > 0 & BuyAnns.any(\:ann a -> return opr.nick(a.op) == nk;);
+
+    allQuoteV! += math.itof(stocks) * close;
+    if (new) allCloseV! += math.itof(stocks) * price;
+    else allCloseV! += math.itof(stocks) * historicClose;
+
+    RefOp = Refs.get(nk);
+    if (!RefOp) log.error("References of " + nk + " not found");
+    ref = !RefOp ? close : RefOp![1];
+    invData = dailyInvestorData.new(
+      strg.modelId,
+      strg.Params,
+      stocks,
+      price,
+      ref,
+      new
+    );
+    arr.push(Entries, dailyChart.new(nk, close, [h], [close], invData));
+  }
+
+  Entries.push(dailyChart.new(
+    cts.meNick, cashV! + allCloseV!, [h], [cashV! + allQuoteV!],
+    dailyInvestorData.mkEmpty()
+  ));
+
+  // Indexes nick
+  for (nk = cts.IxNicks) {
+    Qs = Closes[nk][1];
+    arr.push(Entries, dailyChart.new(
+      nk, Qs[1], [h], [Qs[0]], dailyInvestorData.mkEmpty()
+    ));
+  }
+
+  dailyChartsTb.write(Entries);
+};
+
+/// Update daily chart table.
+/// \ -> ();
+updateDailyCharts = \ -> {
+  now = time.now();
+  today = time.toStr(now);
+  h = time.hour(now);
+
+  :cos cs = cosTb.read();
+  SelNicks = arr.map(
+    arr.filter(cs.Cos, \:co c -> return c.isSelected;),
+    \:co c -> return c.nick;
+  );
+
+  BuyAnns = []; // [<ann>.]
+  cashV = [0.0];
+  Anns = diariesDb.investorAnns(today[:4]);
+  :settlement set = ann.mkSettlement(Anns);
+  :ldg l = set.ledger;
+  :dic Pf = set.Portfolio;
+  cashV! += l.cash;
+  for (:ann a = Anns)
+    if (a.date >= today & opr.type(a.op) == opr.buT)
+      BuyAnns.push(a);
+
+  :dic Closes = closesTb.read();
+  :dic Refs = refsTb.read();
+
+  :arr Entries = dailyChartsTb.read(); // [<dailyChart>.]
+  allCloseV = [0.0];
+  allQuoteV = [0.0];
+  for (nk = SelNicks) {
+    eOp = Entries.find(\:dailyChart e -> return e.nick == nk;);
+    if (!eOp) updateClosesAndRefs(nk);
+
+    :arr Qs, ok = quotesDb.readQs(nk);
+    if (!ok) {
+      log.error(Qs);
+      continue;
+    }
+    historicClose = arr.peek(qs.closes(Qs));
+
+    CloseOp = Closes.get(nk);
+    if (!CloseOp) {
+      log.error("Close of " + nk + " not found");
+      continue;
+    }
+    close = CloseOp![1];
+
+    :investor inv = investorTb.read();
+    :istrategy strg = inv.Nicks[nk];
+    StPrOp = Pf.get(nk);
+    StPr = !StPrOp ? [0, 0.0] : StPrOp!;
+    stocks = StPr[0];
+    price = StPr[1];
+    new = stocks > 0 & BuyAnns.any(\:ann a -> return opr.nick(a.op) == nk;);
+
+    allQuoteV! += math.itof(stocks) * close;
+    if (new) allCloseV! += math.itof(stocks) * price;
+    else allCloseV! += math.itof(stocks) * historicClose;
+
+    RefOp = Refs.get(nk);
+    if (!RefOp) log.error("References of " + nk + " not found");
+    ref = !RefOp ? close : RefOp![1];
+    invData = dailyInvestorData.new(
+      strg.modelId,
+      strg.Params,
+      stocks,
+      price,
+      ref,
+      new
+    );
+    if (!eOp) {
+      Entries.push(dailyChart.new(nk, close, [h], [close], invData));
+    } else {
+      :dailyChart e = eOp!;
+      arr.push(e.Hours, h);
+      arr.push(e.Quotes, close);
+      e.invData = invData;
+    }
+  }
+
+  :dailyChart e = arr.find(
+    Entries, \:dailyChart e -> return e.nick == cts.meNick;
+  )!;
+  e.close = allCloseV! + cashV!;
+  arr.push(e.Hours, h);
+  arr.push(e.Quotes, allQuoteV! + cashV!);
+
+  NoCosEntries = Entries.filter(
+    \:dailyChart e -> return arr.any(cts.IxNicks, \nk -> return e.nick == nk;);
+  );
+  for (:dailyChart e = NoCosEntries) {
+    ClOp = Closes.get(e.nick);
+    if (!!ClOp) e.close = ClOp![1][1];
+    :arr Qs = e.Quotes;
+    Qs.push(!ClOp ? Qs.peek() : ClOp![1][0]);
+    arr.push(e.Hours, h);
+  }
+
+  dailyChartsTb.write(Entries);
+};
+
+/// Update historic profits. Returns an array with errors.
+/// \ -> [s.]
+updateHistoricProfits = \ -> {
+  today = time.toStr(time.now());
+  year = today[:4];
+  Closes = closesTb.read();
+  Refs = refsTb.read();
+  Errs = []; // [s.]
+
+  :settlement set = ann.mkSettlement(diariesDb.investorAnns(year));
+  :ldg L = set.ledger;
+  Pf = set.Portfolio;
+  PrSum = [0.0];
+  AccSum = [0.0];
+  RfSum = [0.0];
+  for (nk, E = Pf) {
+    stocks = E[0];
+    AccSum! += math.itof(stocks) * E[1];
+    ClOp = dic.get(Closes, nk);
+    if (!!ClOp) PrSum! += math.itof(stocks) * ClOp![1];
+    else arr.push(Errs, "Close of " + nk + " not found");
+
+    RfOp = dic.get(Refs, nk);
+    if (!!RfOp) {
+      if (!!ClOp) {
+        rfV = [RfOp![1]];
+        if (rfV! > ClOp![1]) rfV! = ClOp![1];
+        RfSum! += math.itof(stocks) * rfV!;
+      }
+    } else {
+      arr.push(Errs, "References of " + nk + " not found");
+    }
+  }
+
+  tbYear = profitsDb.investorYears()[0];
+  if (year != tbYear)
+    profitsDb.write(year, profitsEntry.new(today, 0.0, 0.0, 0.0));
+
+  prff = \val -> return val + L.cash + L.equity;;
+
+  :arr Entries = profitsDb.read(year);
+  :profitsEntry e = Entries.pop();
+  newE = profitsEntry.new(
+    today, prff(PrSum!), prff(AccSum!), prff(RfSum!)
+  );
+  if (e.date != today) Entries.push(e);
+  Entries.push(newE);
+  profitsDb.write(year, Entries);
+
+  return Errs;
+};

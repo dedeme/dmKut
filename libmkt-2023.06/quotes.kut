@@ -10,15 +10,15 @@ import "ffi";
 ///   cos   : Company nicks.
 ///   dates : Quotes dates in format YYYYMMDD, from before to after.
 ///   opens : Array of normalized opens quotes (without -1).
-///           Its rows match 'dates' and is columns 'cos'.
+///           Its rows match 'dates' and its columns 'cos'.
 ///   closes: Array of normalized closes quotes (without -1).
-///           Its rows match 'dates' and is columns 'cos'.
+///           Its rows match 'dates' and its columns 'cos'.
 ///   ----
 ///   also <quotes> has the following fields:
 ///   vopens [<vec>.] :  Matrix of normalized opens quotes (without -1).
-///                       Its rows match 'dates' and is columns 'cos'.
+///                       Its rows match 'dates' and its columns 'cos'.
 ///   vcloses [<vec>.]: Matrix of normalized closes quotes (without -1).
-///           Its rows match 'dates' and is columns 'cos'.
+///           Its rows match 'dates' and its columns 'cos'.
 /// \s, [s.], [s.],
 ///  [[f.].], [[f.].] -> d<quotes>
 new = \date, cos, dates, opens, closes ->

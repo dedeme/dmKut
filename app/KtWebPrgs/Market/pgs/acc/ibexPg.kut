@@ -1,0 +1,31 @@
+// Copyright 15-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Obex page.
+
+import "KtWeb/rp";
+import "db/ibexTb";
+import "db/cosTb";
+import "data/qsprRs";
+import "data/co/cos";
+import "sch";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mkJs({
+        ibx : ibexTb.readJs()
+      });
+    }
+    "update": {
+      mainNick = cosTb.read()[cos.mainNick];
+      :qsprRs rs = sch.ibexHistoricUpdate(mainNick);
+      return rp.mk({
+        withError: rs.withError,
+        withWarnings: rs.withWarnings
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

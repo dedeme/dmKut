@@ -3,6 +3,10 @@
 
 /// Quote server interface.
 
+//
+mk : vid, vname, vwithDiary, fdownloadDiary, freadDiary,
+        vwithHistoric, fdownloadHistoric, freadHistoric;
+
 /// Constructor
 ///   id: Returns <qsv> identifier.
 ///   name: Returns <qsv> name.
@@ -13,38 +17,38 @@
 ///   downloadHistoric: Returns the result of executing sys.cmd to read historic
 ///                     quotes of a company.
 ///   readHistoric: Returns tuple [[quotes]|[], [error...]] from a web page.
-/// \ \-> s,
-///   \-> s,
-///   \-> b,
+/// \ s,
+///   s,
+///   b,
 ///   \-> [s|s, b] ([html|error, ok])
 ///   \s -> [[[s, f]...], [s...]]
-///   \-> b,
+///   b,
 ///   \s -> [s|s, b] ([html|error, ok])
 ///   \s -> [<qs>|[], [s...]]
 /// -> x<qsv>
-new = \ id, name, withDiary, downloadDiary, readDiary,
+new = \id, name, withDiary, downloadDiary, readDiary,
         withHistoric, downloadHistoric, readHistoric ->
-  return {
+  return mk(
     id, name, withDiary, downloadDiary, readDiary,
     withHistoric, downloadHistoric, readHistoric
-  };;
+  );;
 
 /// Returns Qsv identifier.
 /// \<qsv> -> s
-id = \sv -> return sv.id();;
+id = \Sv -> return Sv[vid];;
 
 /// Returns this name.
 /// \<qsv> -> s
-name = \sv -> return sv.name();;
+name = \Sv -> return Sv[vname];;
 
 /// Returns 'true' if this read diary quotes.
 /// \<qsv> -> b
-withDiary = \sv -> return sv.withDiary();;
+withDiary = \Sv -> return Sv[vwithDiary];;
 
 /// Returns values [html|error, ok] result of executing sys.cmd to read
 /// diary quotes.
 /// \<qsv> -> [s|s, b]
-downloadDiary = \sv -> return sv.downloadDiary();;
+downloadDiary = \Sv -> return Sv[fdownloadDiary]();;
 
 /// Read a web page.
 ///   sv: Quotes server.
@@ -53,18 +57,18 @@ downloadDiary = \sv -> return sv.downloadDiary();;
 ///    Returns tuple [[[companyCode, value]...], [error...]]
 /// NOTE: In both tuples, arrays can be empty.
 /// \<qsv>, s -> [[[s, f]...], [s...]]
-readDiary = \sv, webPage -> return sv.readDiary(webPage);;
+readDiary = \Sv, webPage -> return Sv[freadDiary](webPage);;
 
 /// Returns 'true' if this read historic quotes.
 /// \<qsv> -> b
-withHistoric = \sv -> return sv.withHistoric();;
+withHistoric = \Sv -> return Sv[vwithHistoric];;
 
 /// Returns values [html|error, ok] result of executing sys.cmd to read
 /// historic quotes of a company.
 ///   sv: Quotes server.
 ///   code: Code of company in 'sv'.
 /// \<qsv>, s -> [s|s, b]
-downloadHistoric = \sv, code -> return sv.downloadHistoric(code);;
+downloadHistoric = \Sv, code -> return Sv[fdownloadHistoric](code);;
 
 /// Read a web page.
 ///   sv: Quotes server.
@@ -72,4 +76,4 @@ downloadHistoric = \sv, code -> return sv.downloadHistoric(code);;
 ///   ----
 ///   Returns tuple [[quotes]|[], [error...]] from a web page.
 /// \<qsv, s -> [[<qs>]|[], [s...]]
-readHistoric = \sv, webPage -> return sv.readHistoric(webPage);;
+readHistoric = \Sv, webPage -> return Sv[freadHistoric](webPage);;

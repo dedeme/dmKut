@@ -1,0 +1,23 @@
+// Copyright 03-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// [<bkEntry>.] table.
+
+import "cts";
+import "data/bkEntry";
+import "db";
+
+fpath = path.cat([cts.dataPath, "bkEntry.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<bkEntry>.]
+read = \ -> return js.r(file.read(fpath));;
+
+/// Writes table.
+/// \[<bkEntry>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;
+

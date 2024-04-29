@@ -1,0 +1,53 @@
+// Copyright 30-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Maps page.
+
+import "libmkt/models";
+import "libmkt/model";
+import "KtWeb/rp";
+import "data/evE";
+import "data/upRs";
+import "db";
+import "cts";
+
+// Summary period types
+pCavg, pLast, pAvg =;
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "values": {
+      mdId, period, i, type, vsource : Rq;
+      ix = math.ftoi(i);
+      itype = math.ftoi(type);
+      isource = math.ftoi(vsource);
+      Vals = [];
+      :arr Dates = db.dates(period);
+      dateV = [""];
+      if (Dates.size() > ix) {
+        date = Dates.reverse()[ix];
+        dateV! = date;
+        Es = db.read(period, date, mdId);
+        for (:evE e = Es) {
+          :upRs rs = itype == pCavg
+            ? e.crr
+            : itype == pLast
+              ? e.eval
+              : e.avg
+          ;
+          Vals.push(rs.sales < cts.minSales
+            ? -1
+            : rs[isource]
+          );
+        }
+      }
+
+      return rp.mk({
+        Vals,
+        date: dateV!
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

@@ -1,0 +1,28 @@
+// Copyright 17-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Information for daily chart.
+
+import "dailyInvestorData";
+
+/// Constructor.
+///   nick   : Company nick.
+///            There are next extra nicks:
+///              cts.meNick, cts.ibexNic and cts.euroNick.
+///   close  : Previous market day close.
+///            - If inv.ref > close, its position is to buy.
+///   Hours  : Hour of each daily quote. (Updated each 'tic').
+///   Quotes : Daily quotes. (Updated each 'tic').
+///   invData: Data of the investor
+///            Extra nicks have an empty <dailyInvestorData>.
+/// \s,f,[i.],[f.],<dailyInvestorData> -> <dailyChart>
+new : nick, close, Hours, Quotes, invData;
+
+/// \JS -> <dailyChart>
+fromJs = \A -> return [
+    A[nick],
+    A[close],
+    arr.map(A[Hours], math.ftoi),
+    A[Quotes],
+    dailyInvestorData.fromJs(A[invData])
+  ];;

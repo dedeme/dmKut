@@ -1,0 +1,98 @@
+// Copyright 10-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Servers page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "data/qsvs";
+import "data/qsv";
+import "db/svCodesTb";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      , selected : Rq;
+
+      return rp.mk({
+        dbKey: db.readKey(),
+        Svs: arr.map(qsvs.list(), \:qsv sv -> return [
+            sv.id, sv.name, sv.withDaily, sv.withHistoric
+          ];),
+        dailySv: qsvs.currentDiary()[qsv.id],
+        historicSv: qsvs.currentHistoric()[qsv.id],
+        Codes: selected == "" ? {} : svCodesTb.read(selected)
+      });
+    }
+    "setCodes": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      // s, {s.}
+      svId, Codes : Rq;
+      svCodesTb.write(svId, Codes);
+      return rp.mk({ dbKey });
+    }
+    "testDaily": {
+      , svId : Rq;
+      withErrorsV = [false];
+      withWarningsV = [false];
+
+      svOp = arr.find(qsvs.list(), \:qsv s -> return s.id == svId;);
+      if (!svOp) {
+        log.error(str.fmt("Daily test: Server '%v' not found", [svId]));
+        withErrorsV! = true;
+      } else {
+        :qsv sv = svOp!;
+        // [<quotes>.], [s.]
+        Qs, Errs = sv.readDaily();
+        if (!Qs) {
+          withErrorsV! = true;
+          for (err = Errs)
+            log.error(str.fmt("(Daily test in %s) %s", [svId, err]));
+        } else if (!!Errs) {
+          withWarningsV! = true;
+          for (err = Errs)
+            log.warning(str.fmt("(Daily test in %s) %s", [svId, err]));
+        }
+      }
+
+      return rp.mk({
+        withErrors: withErrorsV!,
+        withWarnings: withWarningsV!
+      });
+    }
+    "testCo": {
+      svId, nick, code : Rq;
+      withErrorsV = [false];
+      withWarningsV = [false];
+
+      svOp = arr.find(qsvs.list(), \:qsv s -> return s.id == svId;);
+      if (!svOp) {
+        log.error(str.fmt("Historic test: Server '%v' not found", [svId]));
+        withErrorsV! = true;
+      } else {
+        :qsv sv = svOp!;
+        // [<quotes>.], [s.]
+        Qs, Errs = sv.readHistoric(code);
+        if (!Qs) {
+          withErrorsV! = true;
+          for (err = Errs)
+            log.error(str.fmt("(Historic test in %s:%s) %s", [svId, nick, err]));
+        } else if (!!Errs) {
+          withWarningsV! = true;
+          for (err = Errs)
+            log.warning(str.fmt("(Historic test in %s:%s) %s", [svId, nick, err]));
+        }
+      }
+
+      return rp.mk({
+        withErrors: withErrorsV!,
+        withWarnings: withWarningsV!
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

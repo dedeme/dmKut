@@ -1,7 +1,10 @@
 // Copyright 06-Mar-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
+import "libdm/jstb";
 import "data/doc";
+import "data/docEntry";
+import "data/dpath";
 import "db";
 
 /// Module reader.
@@ -9,19 +12,26 @@ import "db";
 // \s -> [s, s] | []
 takeId = \s -> {
   ix = str.index(s, "=");
-  if (ix == -1) return [];
+  if (ix == -1) {
+    ix = str.index(s, ":");
+    if (ix == -1) return [];
+    return [str.rtrim(s[:ix]) + ":", str.ltrim(s[ix + 1:])];
+  }
   return [str.rtrim(s[:ix]), str.ltrim(s[ix + 1:])];
 };
 
 /// \s, s -> [m]
 read = \pack, pt -> {
-  Ppath = arr.find(db.pathsTb().read(), \P -> return P.id == pack;);
-  if (arr.size(Ppath) == 0) return [];
+  ppathOp = arr.find(
+    db.pathsTb()[jstb.read](), \:dpath p -> return p.id == pack;);
+  if (!ppathOp) return [];
+  :dpath ppath = ppathOp!;
 
-  fpath = path.cat([Ppath!.path, pt + ".jkut"]);
+  fpath = path.cat([ppath.spath, pt + ".jkut"]);
   if (!file.exists(fpath)) return [];
 
   Doc = [""];
+  Inds = [];
   Funcs = [];
   Vals = [];
 
@@ -85,14 +95,34 @@ read = \pack, pt -> {
     "code0":
       if (l != "") {
         if (!str.starts(l, "\\") & !str.starts(l, "async ")) {
-          arr.push(Vals, doc.mkEntry(Id!, DocBf!, Id!, Id!));
-          St! = "init";
+          if (str.ends(Id!, ":")) {
+            Id! = Id![:-1];
+            ix = str.index(l, ";");
+            if (ix != -1) {
+              arr.push(
+                Inds,
+                docEntry.mk(
+                  Id!,
+                  DocBf!,
+                  Id! + " : " + l[:ix + 1],
+                  Id!)
+              );
+              St! = "init";
+            } else {
+              Code! = Id! + " : " + l + "\n";
+              CodeLines! = 1;
+              St! = "code2";
+            }
+          } else {
+            arr.push(Vals, docEntry.mk(Id!, DocBf!, Id!, Id!));
+            St! = "init";
+          }
         } else {
           ix = str.index(l, "->");
           if (ix != -1) {
             arr.push(
               Funcs,
-              doc.mkEntry(
+              docEntry.mk(
                 Id!,
                 DocBf!,
                 Id! + " = " + l[:ix + 2],
@@ -111,7 +141,7 @@ read = \pack, pt -> {
       if (CodeLines! > 5) {
         arr.push(
           Funcs,
-          doc.mkEntry(
+          docEntry.mk(
             Id!,
             DocBf!,
             Code! + " ...",
@@ -125,10 +155,42 @@ read = \pack, pt -> {
           if (ix != -1) {
             arr.push(
               Funcs,
-              doc.mkEntry(
+              docEntry.mk(
                 Id!,
                 DocBf!,
                 Code! + "  " +  l[:ix + 2],
+                Id!
+              )
+            );
+            St! = "init";
+          } else {
+            Code! += "  " + l + "\n";
+            CodeLines! += 1;
+          }
+        }
+      }
+    "code2":
+      if (CodeLines! > 5) {
+        arr.push(
+          Inds,
+          docEntry.mk(
+            Id!,
+            DocBf!,
+            Code! + " ...",
+            Id!
+          )
+        );
+        St! = "init";
+      } else {
+        if (l != "") {
+          ix = str.index(l, ";");
+          if (ix != -1) {
+            arr.push(
+              Inds,
+              docEntry.mk(
+                Id!,
+                DocBf!,
+                Code! + "  " +  l[:ix + 1],
                 Id!
               )
             );
@@ -143,5 +205,5 @@ read = \pack, pt -> {
   }
   file.close(f);
 
-  return [doc.mk(Doc!, Funcs, Vals)];
+  return [doc.mk(Doc!, Inds, Funcs, Vals)];
 };

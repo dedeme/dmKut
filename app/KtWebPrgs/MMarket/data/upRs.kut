@@ -1,0 +1,35 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Update result.
+
+import "libmkt/cts" : mcts;
+
+/// Constructor.
+///   sales: Sales number.
+///   real : Assets ratio (1+profits) with current quotes.
+///   acc  : Assets ratio (1+profits) with accounting quote values,
+///   prof : Profits ratio (1+profits).
+///   pon  : Ponderation ratio.
+/// \f,f,f,f,f -> <upRs>
+new0 : sales, real, acc, prof, pon;
+
+/// Constructor without points.
+///   sales: Sales number.
+///   real : Assets ratio (1+profits) with current quotes.
+///   acc  : Assets ratio (1+profits) with accounting quote values,
+///   prof : Profits ratio (1+profits).
+/// \f,f,f,f -> <upRs>
+new = \sales, real, acc, prof ->
+  return new0(sales, real, acc, prof, real * 0.4 + acc * 0.4 + prof * 0.2);;
+
+/// \<upRs> -> JS
+toJs = \o -> return [o[sales], o[real], o[acc], o[prof]];;
+
+/// \JS -> <upRs>
+fromJs = \A -> return new(
+    A[sales],
+    A[real],
+    A[acc],
+    A[prof]
+  );;

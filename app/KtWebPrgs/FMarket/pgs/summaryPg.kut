@@ -10,9 +10,9 @@ import "db";
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      sys.print(rp.mk({
-        summary: db.readSummary()
-      }));
+      return rp.mk({
+        Summary: db.readSummary()
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

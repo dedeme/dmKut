@@ -1,0 +1,64 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base management.
+
+import "libdm/log";
+import "db/calendarTb";
+import "db/quotesDb";
+import "db/cosTb";
+import "db/tradingDb";
+import "db/investorTb";
+import "db/invOperationsTb";
+import "db/svCodesTb";
+import "db/accDb";
+import "db/ibexTb";
+import "db/dailyDb";
+import "db/activityTb";
+import "cts";
+
+klen = 20;
+dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    log.reset();
+
+    calendarTb.init();
+    quotesDb.init();
+    cosTb.init();
+    tradingDb.init();
+    investorTb.init();
+    svCodesTb.init();
+    accDb.init();
+    invOperationsTb.init();
+    ibexTb.init();
+    dailyDb.init();
+    activityTb.init();
+    return;
+  }
+  sys.throw("Data base already is initialized");
+};
+
+/// Returns the state identifier.
+/// \ -> ();
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};

@@ -1,0 +1,24 @@
+// Copyright 13-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <cgiSession> data definition.
+
+/// Constructor.
+///   id   : Identifier.
+///   key  : Session key.
+///   user : User identifier.
+///   level: User level.
+///   tm   : Expiration time.
+///   lapse: Time increment when session is used.
+/// \s,s,s,s,i,i -> <cgiSession>
+new : id, key, user, level, tm, lapse;
+
+/// \JS -> <cgiSession>
+fromJs = \A -> return [
+    A[id],
+    A[key],
+    A[user],
+    A[level],
+    math.ftoi(A[tm]),
+    math.ftoi(A[lapse])
+  ];;

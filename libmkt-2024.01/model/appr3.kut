@@ -1,0 +1,16 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Approximations (2) model.
+
+import "../model";
+import "doc/appr3Doc";
+
+/// Returns a new 'appr2' model.
+new = \ -> return model.new(
+    "APRX3",
+    "Aproximaciones sucesivas (3)",
+    appr3Doc.text,
+    ["Inicio", "Aproximación"],
+    [model.percParam, model.percParam]
+  );;

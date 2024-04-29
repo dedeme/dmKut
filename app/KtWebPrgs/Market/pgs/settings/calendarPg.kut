@@ -1,0 +1,46 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Calendar page.
+
+import "KtWeb/rp";
+import "db/calendarTb";
+import "data/calendar/calendar";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+        dbKey: db.readKey(),
+        cal: calendarTb.read()
+      });
+    }
+    "setGeneral": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :calendar cal = calendarTb.read();
+      calendarTb.write(calendar.new(Rq.tt, cal.Holidays, cal.SpecialDays));
+      return rp.mk({ dbKey });
+    }
+    "setHolidays": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :calendar cal = calendarTb.read();
+      calendarTb.write(calendar.new(cal.general, Rq.Holidays, cal.SpecialDays));
+      return rp.mk({ dbKey });
+    }
+    "setSpecialDays": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :calendar cal = calendarTb.read();
+      calendarTb.write(calendar.new(cal.general, cal.Holidays, Rq.SpecialDays));
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

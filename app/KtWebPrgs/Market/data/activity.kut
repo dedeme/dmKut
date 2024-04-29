@@ -1,0 +1,27 @@
+// Copyright 17-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <activity> data.
+
+import "cts";
+
+/// Constructor.
+///   tm      : Time of record this data.
+///   activity: One of cts.actXXX
+/// \i,s -> <activity>
+new : tm, activity;
+
+/// Constructor with time.now as 'tm'.
+///   activity: One of cts.actXXX
+/// \s -> <activity>
+newNow = \activity -> return new(time.now(), activity);;
+
+/// Default constructor.
+/// \ -> <activity>
+newDefault = \->  return new(1652263649990, cts.sleeping);;
+
+/// \JS -> <activity>
+fromJs = \A -> return [
+    math.ftoi(A[tm]),
+    A[activity]
+  ];;

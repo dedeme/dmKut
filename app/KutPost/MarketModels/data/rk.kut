@@ -1,0 +1,12 @@
+// Copyright 25-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Date global rank.
+
+import "rkEntry";
+
+/// Constructor.
+///   date   : Date in format "YYYYMMDD".
+///   Entries: Unsorted array of entries.
+/// \s,[<rkEntry>.] -> <rk>
+new : date, Entries;

@@ -21,23 +21,23 @@ demeKey =
 noSessionKey = "nosession";
 
 /// Cgi home directory. Must be initialized with 'cgi.init'.
-Home = [""];
+homeV = [""];
 
 // File password.
 // s
 fkey = cryp.key(demeKey, str.len(demeKey));
 
 // Communication key.
-ComKey = [""];
+comKeyV = [""];
 
-// Expiration in seconds. Must be initialized with 'cgi.init'.
+// Expiration in seconds\ Must be initialized with 'cgi.init'.
 // [i]
-TExpiration = [0];
+tExpirationV = [0];
 
 // USERS
 
 // Returns a new user.
-// \s, s, s -> m
+// \s, s, s -> <user>
 userNew = \id, pass, level ->
   return {
     "id"   : id,
@@ -46,16 +46,16 @@ userNew = \id, pass, level ->
   };
 ;
 
-// \m -> s
-userToJs = \U ->
+// \<user> -> s
+userToJs = \u ->
   return js.wa([
-    js.ws(U.id),
-    js.ws(U.pass),
-    js.ws(U.level)
+    js.ws(u.id),
+    js.ws(u.pass),
+    js.ws(u.level)
   ]);
 ;
 
-// \s -> m
+// \s -> <user>
 userFromJs = \s -> {
   A = js.ra(s);
   return userNew(
@@ -65,22 +65,22 @@ userFromJs = \s -> {
   );
 };
 
-// \m -> ()
+// \[<user.>] -> ()
 writeUsers = \Us -> {
-  j = js.wa(arr.map(Us, \U -> return userToJs(U);));
-  file.write(path.cat([Home!, "users.tb"]), cryp.encode(fkey, j));
+  j = js.wa(arr.map(Us, userToJs));
+  file.write(path.cat([homeV!, "users.tb"]), cryp.encode(fkey, j));
 };
 
-// \-> [m]
+// \-> [<user>.]
 readUsers = \-> {
-  j = cryp.decode(fkey, file.read(path.cat([Home!, "users.tb"])));
-  return arr.map(js.ra(j), \s -> return userFromJs(s););
+  j = cryp.decode(fkey, file.read(path.cat([homeV!, "users.tb"])));
+  return arr.map(js.ra(j), userFromJs);
 };
 
 // SESSIONS
 
 // Returns a new session
-// \s, s, s, s, s, i, i -> m
+// \s, s, s, s, s, i, i -> <session>
 sessionNew = \id, comKey, conKey, user, level, tm, lapse ->
   return {
     "id": id,
@@ -93,20 +93,20 @@ sessionNew = \id, comKey, conKey, user, level, tm, lapse ->
   };
 ;
 
-// \m -> s
-sessionToJs = \S ->
+// \<session> -> s
+sessionToJs = \s ->
   return js.wa([
-    js.ws(S.id),
-    js.ws(S.comKey),
-    js.ws(S.conKey),
-    js.ws(S.user),
-    js.ws(S.level),
-    js.wi(S.tm),
-    js.wi(S.lapse)
+    js.ws(s.id),
+    js.ws(s.comKey),
+    js.ws(s.conKey),
+    js.ws(s.user),
+    js.ws(s.level),
+    js.wi(s.tm),
+    js.wi(s.lapse)
   ]);
 ;
 
-// \s -> m
+// \s -> <session>
 sessionFromJs = \s -> {
   A = js.ra(s);
   return sessionNew(
@@ -120,28 +120,28 @@ sessionFromJs = \s -> {
   );
 };
 
-// If 's' is in time, returns a new session with 's.tm' updated. Otherwise
+// If 's' is in time, returns a new session with 's\tm' updated. Otherwise
 // return [].
-// \m -> [m]
-updateSession = \S -> {
+// \<session> -> [<session>]|[]
+updateSession = \s -> {
   now = time.now() / 1000;
-  if (S.tm + S.lapse < now) return [];
-  return [sessionNew(S.id, S.comKey, S.conKey, S.user, S.level, now, S.lapse)];
+  if (s.tm + s.lapse < now) return [];
+  return [sessionNew(s.id, s.comKey, s.conKey, s.user, s.level, now, s.lapse)];
 };
 
-// \m -> ()
+// \[<session>.] -> ()
 writeSessions = \Ss -> {
-  j = js.wa(arr.map(Ss, \S -> return sessionToJs(S);));
-  file.write(path.cat([Home!, "sessions.tb"]), cryp.encode(fkey, j));
+  j = js.wa(arr.map(Ss, sessionToJs));
+  file.write(path.cat([homeV!, "sessions.tb"]), cryp.encode(fkey, j));
 };
 
-// \-> [m]
+// \-> [<session>.]
 readSessions = \-> {
-  j = cryp.decode(fkey, file.read(path.cat([Home!, "sessions.tb"])));
-  return arr.map(js.ra(j), \s -> return sessionFromJs(s););
+  j = cryp.decode(fkey, file.read(path.cat([homeV!, "sessions.tb"])));
+  return arr.map(js.ra(j), sessionFromJs);
 };
 
-// Adds session and purges sessions.
+// Adds session and purges sessions\
 // \s, s, s, s, s, i -> ()
 addSession = \sessionId, comKey, conKey, user, level, lapse -> {
   now = time.now() / 1000;
@@ -154,10 +154,10 @@ addSession = \sessionId, comKey, conKey, user, level, lapse -> {
 };
 
 // Replace one session
-// \m -> ()
-replaceSession = \S -> {
-  NewSessions = arr.filter(readSessions(), \OldS -> return OldS.id != S.id;);
-  arr.push(NewSessions, S);
+// \<session> -> ()
+replaceSession = \s -> {
+  NewSessions = arr.filter(readSessions(), \oldS -> return oldS.id != s.id;);
+  arr.push(NewSessions, s);
   writeSessions(NewSessions);
 };
 
@@ -165,11 +165,11 @@ replaceSession = \S -> {
 
 /// Initialize cgi.
 ///   homeDir: Absolute path of 'cgi' home directory.
-///   texpiration: Expiration time in seconds.
+///   texpiration: Expiration time in seconds\
 /// \s, i-> ()
 init = \homeDir, texpiration-> {
-  Home! = homeDir;
-  TExpiration! = texpiration;
+  homeV! = homeDir;
+  tExpirationV! = texpiration;
 
   if (!file.exists(homeDir)) {
     file.mkdir(homeDir);
@@ -186,16 +186,16 @@ init = \homeDir, texpiration-> {
 putUser = \id, pass, level -> {
   pass = cryp.key(pass, klen);
   Users = readUsers();
-  NewUser = userNew(id, pass, level);
-  Add = [true];
-  for (i, U = Users) {
-    if (U.id == id) {
-      Add! = false;
-      Users[i] = NewUser;
+  newUser = userNew(id, pass, level);
+  addV = [true];
+  for (i, u = Users) {
+    if (u.id == id) {
+      addV! = false;
+      Users[i] = newUser;
       break;
     }
   }
-  if (Add!) arr.push(Users, NewUser);
+  if (addV!) arr.push(Users, newUser);
   writeUsers(Users);
 };
 
@@ -203,7 +203,7 @@ putUser = \id, pass, level -> {
 /// \s -> ()
 delUser = \id -> {
   Users = readUsers();
-  writeUsers(arr.filter(Users, \U -> return U.id != id;));
+  writeUsers(arr.filter(Users, \u -> return u.id != id;));
 };
 
 /// Check user password and returns:
@@ -212,8 +212,8 @@ delUser = \id -> {
 /// \s, s -> s
 checkUser = \id, pass -> {
   pass = cryp.key(pass, klen);
-  for (U = readUsers()) {
-    if (U.id == id & U.pass == pass) return U.level;
+  for (u = readUsers()) {
+    if (u.id == id & u.pass == pass) return u.level;
   }
   return "";
 };
@@ -230,30 +230,31 @@ checkUser = \id, pass -> {
 ///                 level : String.
 /// \s -> s
 connect = \sessionId -> {
-  ComKey! = sessionId;
+  comKeyV! = sessionId;
   failRp = rp({
     "key": js.ws(""),
     "conKey": js.ws(""),
     "user": js.ws(""),
     "level": js.ws("")
   });
-  S = arr.find(readSessions(), \S -> return S.id == sessionId;);
-  if (arr.size(S) > 0) {
-      S = updateSession(S!);
-      if (arr.size(S) > 0) {
-        S = S!;
-        conKey = cryp.genK(klen);
-        replaceSession(sessionNew(
-          S.id, S.comKey, conKey, S.user, S.level, S.tm, S.lapse
-        ));
-        return rp({
-          "key": js.ws(S.comKey),
-          "conKey": js.ws(conKey),
-          "user": js.ws(S.user),
-          "level": js.ws(S.level)
-        });
-      } else return failRp;
-  } else return failRp;
+  oldSOp = arr.find(readSessions(), \s -> return s.id == sessionId;);
+  if (!oldSOp) return failRp;
+  oldS = oldSOp!;
+
+  sOp = updateSession(oldS);
+  if (!sOp) return failRp;
+  s = sOp!;
+
+  conKey = cryp.genK(klen);
+  replaceSession(sessionNew(
+    s.id, s.comKey, conKey, s.user, s.level, s.tm, s.lapse
+  ));
+  return rp({
+    "key": js.ws(s.comKey),
+    "conKey": js.ws(conKey),
+    "user": js.ws(s.user),
+    "level": js.ws(s.level)
+  });
 };
 
 /// Sends to client 'sessionId', 'communicationKey' and 'userLevel'. If
@@ -261,7 +262,7 @@ connect = \sessionId -> {
 ///   key           : Communication key
 ///   user          : User id.
 ///   pass          : User password.
-///   withExpiration: If is set to false, session will expire after 30 days.
+///   withExpiration: If is set to false, session will expire after 30 days\
 ///   return        : Response with next fields:
 ///                     sessionId: String
 ///                     key      : String
@@ -269,14 +270,14 @@ connect = \sessionId -> {
 ///                     level    : String
 /// \s, s, s, b -> s
 authentication = \key, user, pass, withExpiration -> {
-  ComKey! = key;
+  comKeyV! = key;
   level = checkUser(user, pass);
 
   if (level != "") {
     sessionId = cryp.genK(klen);
     newComKey = cryp.genK(klen);
     conKey = cryp.genK(klen);
-    lapse = withExpiration ? TExpiration! : tNoExpiration;
+    lapse = withExpiration ? tExpirationV! : tNoExpiration;
 
     addSession(sessionId, newComKey, conKey, user, level, lapse);
 
@@ -300,19 +301,17 @@ authentication = \key, user, pass, withExpiration -> {
 ///   conKey: Connection key. If its value is "", this parameter is not used.
 /// \s, s -> [s]|[]
 getComKey = \ssId, conKey -> {
-  S = arr.find(readSessions(), \S -> return S.id == ssId;);
-  if (arr.size(S) > 0) {
-    if (conKey != "" & conKey != S!.conKey) return [];
-    S = updateSession(S!);
-    if (arr.size(S) > 0) {
-      ComKey! = S!.comKey;
-      return [ComKey!];
-    } else return [];
-  } else return [];
+  sOp = arr.find(readSessions(), \s -> return s.id == ssId;);
+  if (!sOp) return [];
+  s = sOp!;
+
+  if (conKey != "" & conKey != s.conKey) return [];
+  comKeyV! = s.comKey;
+  return [comKeyV!];
 };
 
 /// Changes user password.
-/// The operation will fail if 'user' authentication fails.
+/// The operation will fail if 'user' authentication fails\
 ///    user   : User id to change password.
 ///    oldPass: Old password.
 ///    newPass: New password.
@@ -320,26 +319,26 @@ getComKey = \ssId, conKey -> {
 ///               ok: Bool ('true' if operation succeds)
 /// \s, s, s -> s
 changePass = \user, oldPass, newPass -> {
-  Ok = [false];
+  okV = [false];
   Us = readUsers();
-  for (i, U = Us) {
-    if (U.id == user) {
-      if (cryp.key(oldPass, klen) == U.pass) {
-        Us[i] = userNew(U.id, cryp.key(newPass, klen), U.level);
+  for (i, u = Us) {
+    if (u.id == user) {
+      if (cryp.key(oldPass, klen) == u.pass) {
+        Us[i] = userNew(u.id, cryp.key(newPass, klen), u.level);
         writeUsers(Us);
-        Ok! = true;
+        okV! = true;
       }
       break;
     }
   }
-  return rp({"ok": js.wb(Ok!)});
+  return rp({"ok": js.wb(okV!)});
 };
 
 /// Deletes 'sessionId' and returns an empty response.
 ///   sessionId: Session identifier.
 /// \s -> s
 delSession = \sessionId -> {
-  writeSessions(arr.filter(readSessions(), \S -> return S.id != sessionId;));
+  writeSessions(arr.filter(readSessions(), \s -> return s.id != sessionId;));
   return rpEmpty();
 };
 
@@ -350,7 +349,7 @@ delSession = \sessionId -> {
 ///      Example of reponse:
 ///        {"error": js.ws(msg)}
 /// \m -> s
-rp = \Rp -> return cryp.encode(ComKey!, js.wo(Rp));;
+rp = \Rp -> return cryp.encode(comKeyV!, js.wo(Rp));;
 
 /// Returns an empty response.
 /// \-> s
@@ -365,7 +364,7 @@ rpError = \msg -> return rp({"error": js.ws(msg)});;
 /// codified with the key 'noSessionKey' ("nosession")
 /// \-> s
 rpExpired = \-> {
-  ComKey! = noSessionKey;
+  comKeyV! = noSessionKey;
   return rp({"expired": js.wb(true)});
 };
 

@@ -1,0 +1,16 @@
+// Copyright 26-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Fix model.
+
+import "../model";
+import "doc/qfixDoc";
+
+/// Returns a new 'qfix' model.
+new = \ -> return model.new(
+    "QFIJO",
+    "Quantum fijo",
+    qfixDoc.text,
+    ["Salto"],
+    [model.percParam]
+  );;

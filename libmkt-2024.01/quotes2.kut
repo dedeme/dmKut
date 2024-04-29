@@ -1,0 +1,66 @@
+// Copyright 27-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes table data
+
+import "libmktHelper";
+
+/// Constructor
+///   Cos   : Company nicks.
+///   Dates : Quotes dates in format YYYYMMDD, from before to after.
+///   Opens : Array of normalized open quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Closes: Array of normalized close quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+/// \[s.], [s.],
+///  [[f.].], [[f.].] -> d<quotes2>
+new : Cos, Dates, Opens, Closes;
+
+/// Returns the index of one company from its nick, or -1 if nick is not found.
+/// \<quotes2> -> i
+companyIndex = \Qs, nick ->
+  return arr.index(Qs[Cos], \c -> return c == nick;);;
+
+/// Returns data of the company with index 'coIx' in format '<quotes>'.
+/// \<quotes2> -> <quotes2>
+getSingle = \Qs, coIx -> {
+  Dates = Qs[Dates];
+  rows = arr.size(Dates);
+  AllOpens = Qs[Opens];
+  AllCloses = Qs[Closes];
+
+  Opens = arr.new(rows, 0);
+  Closes = arr.new(rows, 0);
+  for (r = 0:rows) {
+    Opens[r] = [AllOpens[r][coIx]];
+    Closes[r] = [AllCloses[r][coIx]];
+  }
+  return new([Qs[Cos][coIx]], Dates, Opens, Closes);
+};
+
+/// \<quotes2> -> [JS.]
+toJs = \Q -> return Q;;
+
+/// \[JS.] -> <quotes2>
+fromJs = \A -> return A;;
+
+/// Read quotes2 of serveral companies.
+///
+/// NOTE: This function depends on kmarketSpeed.
+///
+///   dpath : Directory with files 'NICK'.tb.
+///   Cos   : Nicks of companies to read.
+/// \s, [s.] -> <quotes2>
+read = \dpath, Cos -> {
+  rq = {
+    "command": "readQuotes",
+    "path"   : dpath,
+    "nquotes": 2,
+    "Cos"    : Cos
+  };
+
+  rsRs = libmktHelper.send(rq);
+  if (!rsRs[1]) sys.throw(rsRs!);
+  R = rsRs!;
+  return new(R.Cos, R.Dates, R.Opens, R.Closes);
+};

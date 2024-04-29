@@ -4,7 +4,9 @@
 /// Quotes data base
 
 import "libmkt/qs";
-import "libmkt/quotes";
+import "libmkt/volumes";
+import "libmkt/quotes2";
+import "libmkt/cts" : mcts;
 import "data/cts";
 import "db";
 
@@ -33,7 +35,7 @@ read = \nick -> return db.read(fpath(nick));;
 
 /// Returns [quotes(<qs>)|error, ok] of a company file (from after to before).
 /// \s -> [<qs>|s, b]
-readQs = \nick -> return qs.fromStr(cts.historicQuotes, read(nick));;
+readQs = \nick -> return qs.fromStr(mcts.historicQuotes, read(nick));;
 
 /// Write content of a company file.
 /// \s, s -> ()
@@ -41,8 +43,8 @@ write = \nick, data -> db.write(fpath(nick), data);;
 
 /// Returns [quotes(<quotes>)|error, ok] of a company file (from before to after).
 ///   mainNick: Nick of the main company. (To extract dates)
-///   nick: Nick to make <quotes>.
-/// \s -> [<quotes>|s, b]
+///   nick: Nick to make <quotes2>.
+/// \s -> [<quotes2>|s, b]
 readQuotes = \mainNick, nick -> {
   MainQs = readQs(mainNick);
   if (!MainQs[1]) return MainQs;
@@ -53,8 +55,7 @@ readQuotes = \mainNick, nick -> {
   Qs = NickQs!;
 
   return [
-    quotes.new(
-      arr.peek(Dates),
+    quotes2.new(
       [nick],
       Dates,
       arr.map(qs.opens(Qs), \Q -> return [Q];),
@@ -64,3 +65,11 @@ readQuotes = \mainNick, nick -> {
   ];
 };
 
+/// Read volume average (in €) of serveral companies.
+/// Returns one value for eac company. If data can not be read, the company
+/// value is set to 0.
+///   Cos    : Nicks of companies to read.
+/// [s.] -> [f.]
+readVolumes = \Cos -> {
+  return volumes.read(db.pathOf(dpath), cts.quotesVolume, Cos);
+};

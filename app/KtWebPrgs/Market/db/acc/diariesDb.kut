@@ -1,0 +1,57 @@
+// Copyright 13-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting diaries data base management.
+
+import "../accDb";
+import "data/acc/anns";
+import "cts";
+
+// s
+dpath = path.cat([accDb.dpath, "diaries"]);
+
+// \i, i -> s
+fpath = \year -> return path.cat([dpath, str.fmt("%v.tb", [year])]);;
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  file.mkdir(dpath);
+  year = time.format(time.now(), "%Y");
+  write(year, anns.new());
+};
+
+/// Read an annotation table. If the annotations table does not exist, it
+/// returns an empty <anns>
+///   year: Year.
+/// \s -> <anns>
+read = \year -> {
+  p = fpath(year);
+  return file.exists(p)
+    ? anns.fromJs(js.r(file.read(p)))
+    : anns.new()
+  ;
+};
+
+/// Writes an annotation table.
+///   table: Annotations table.
+/// \s, <anns> -> ()
+write = \year, :anns table ->
+  file.write(fpath(year), js.w(table.toJs()));;
+
+/// Returns a sorted array from after to before of years with activity of the
+/// investor.
+/// \ -> [s.]
+investorYears = \ -> {
+  Years = arr.map(file.dir(dpath), \f -> return f[:-3];);
+  Years.sort(\y1, y2 -> return y1 > y2;);
+  return Years;
+};
+
+/// Returns an unsorted array with annotations of one investor.
+/// \s -> [<ann>.]
+investorAnns = \year -> {
+  :anns as = read(year);
+  return as.Anns;
+};
+

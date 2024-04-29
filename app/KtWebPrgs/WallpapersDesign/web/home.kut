@@ -3,6 +3,7 @@
 
 /// Home page.
 
+import "libdm/jstb";
 import "KtWeb/rp";
 import "db";
 import "art";
@@ -15,7 +16,7 @@ process = \Rq -> {
     "idata": {
       for (f = file.dir(cts.targetPath))
         file.del(path.cat([cts.targetPath, f]));
-      ImgsData = db.imagesTb().read();
+      ImgsData = db.imagesTb()[jstb.read]();
       ImgsSource = file.dir(cts.sourcePath);
       for (i, im = ImgsSource) {
         pt = path.cat([cts.sourcePath, im]);
@@ -51,8 +52,8 @@ process = \Rq -> {
       }));
     }
     "dim": sys.print(rp.mk({
-        width: math.itof(db.confTb().read().width),
-        height: math.itof(db.confTb().read().height)
+        width: math.itof(db.confTb()[jstb.read]().width),
+        height: math.itof(db.confTb()[jstb.read]().height)
       }));
     "save": {
       group = Rq.group;
@@ -62,7 +63,7 @@ process = \Rq -> {
     }
     "changeDim": {
       confTb = db.confTb();
-      conf = confTb.read();
+      conf = confTb[jstb.read]();
       conf.width = math.ftoi(Rq.width);
       conf.height = math.ftoi(Rq.height);
       confTb.write(conf);

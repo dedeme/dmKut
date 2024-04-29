@@ -1,0 +1,21 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <calendar> table.
+
+import "cts";
+import "data/calendar/calendar";
+
+fpath = path.cat([cts.dataPath, "calendar.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write(calendar.newDefault());;
+
+/// Reads table.
+/// \ -> <calendar>
+read = \ -> return calendar.fromJs(js.r(file.read(fpath)));;
+
+/// Writes table.
+/// \<calendar> -> ()
+write = \o -> file.write(fpath, js.w(o));;

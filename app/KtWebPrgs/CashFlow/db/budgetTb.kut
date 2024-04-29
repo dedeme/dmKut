@@ -1,4 +1,4 @@
-// Copyright 29-Aug-2023 ºDeme
+// Copyright 11-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Budget table.
@@ -8,10 +8,11 @@
 mk = \ypath -> writeJs(ypath, mkEmpty());;
 
 /// \s -> s
-readJs = \ypath ->
-    if (file.exists(ypath)) return file.read(path.cat([ypath, "budget.tb"]));
-    else return mkEmpty();
-  ;
+readJs = \ypath -> {
+  :file p = path.cat([ypath, "budget.tb"]);
+  if (p.exists()) return p.read();
+  else return "[]";
+};
 
 /// \s, s -> ()
 writeJs = \ypath, jsStr -> file.write(path.cat([ypath, "budget.tb"]), jsStr);;

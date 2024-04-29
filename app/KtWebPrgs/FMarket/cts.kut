@@ -1,0 +1,55 @@
+// Copyright 22-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Progam constants
+
+import "KtWeb/global";
+import "libmkt/cts";
+
+/// s
+appName = "FMarket";
+
+/// Application version.
+/// s
+version = "202404";
+
+/// Data base path
+/// s
+dbPath = path.cat([global.cgiRoot, appName]);
+
+/// cmarket data directory.
+marketDataPath = "/dm/KtWeb/dmcgi/Market";
+
+/// Log path
+/// s
+logPath = path.cat([dbPath, "log.tb"]);
+
+/// Command to make calculations.
+/// s
+calcCmd = "fmarket";
+
+/// Main model.
+mainModel = "APRX";
+
+/// Number of fleas per model
+fleasPerModel = 1000;
+
+/// Number of steps for evaluation (equals to CMMarket)
+/// f
+evalSteps = 20.0;
+
+/// Assets ratio for evaluation.
+assetsRatio = 0.6;
+
+/// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
+maxAssets = cts.initialCapital * maxProfitsAvgRatio;
+
+/// Profits ratio for evaluation.
+profitsAvgRatio = 1.0 - assetsRatio;
+
+/// Maximum ratio for profits evaluation. (1€ generates 3€)
+maxProfitsAvgRatio = 3.0;
+
+/// Number of fleas in fleas ranking
+fleasInRanking = 40;
+

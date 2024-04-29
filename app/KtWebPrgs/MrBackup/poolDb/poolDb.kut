@@ -1,0 +1,172 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pool data base functions.
+
+import "libdm/log";
+import "cts";
+import "update";
+
+/// Reads file 'path.txt' in 'pool/dir', returning '[]' if it is not found
+/// or not valid.
+/// \s, s, s -> ([s]|[])
+readPath = \pool, dir, f -> {
+  try {
+    return [js.r(file.read(f))];
+  } catch (e) {
+    log.error(str.fmt(
+      "El archivo 'path.txt' del directorio (%v)\n"+
+        "en el depósito (%v) no es válido.",
+      [dir, pool]
+    ));
+    return [];
+  }
+};
+
+/// Reads path.txt in 'pool/dir', testing the file and its directory,
+/// returning [] if it happends an error.
+/// \s, s -> ([s]|][])
+readPathTxt = \pool, dir -> {
+	d = path.cat([pool, dir]);
+	if (!file.isDirectory(d)) {
+		log.error(str.fmt(
+			"Archivo (%v) del depósito (%v) no es un directorio.", [dir, pool]
+		));
+		return [];
+	}
+	p = path.cat([d, "path.txt"]);
+	if (!file.exists(p)) {
+		log.error(str.fmt(
+			"Falta 'path.txt' en (%v) del depósito (%v).", [dir, pool]
+		));
+		return [];
+	}
+	pathOp = readPath(pool, dir, p);
+	if (!pathOp) return [];
+  pth = pathOp!;
+
+	if (!file.isDirectory(pth)) {
+		log.error(str.fmt(
+			"El archivo de 'path.txt' (%v)\n" +
+				"en (%v) del depósito (%v) no es un directorio.",
+			[pth, dir, pool]
+		));
+		return [];
+	}
+	return [pth];
+};
+
+/// Adds directory
+/// \s -> ()
+addDir = \id -> {
+	for (pool = cts.mrBackupTargets) {
+		d = path.cat([pool, id]);
+		file.mkdir(d);
+		file.write(path.cat([d, "path.txt"]), js.w(""));
+	}
+};
+
+/// Delete a directory
+/// \s -> ()
+delete = \id -> {
+	for (pool = cts.mrBackupTargets) {
+		d = path.cat([pool, id]);
+		file.del(d);
+	}
+};
+
+/// Changes directory identifier.
+/// \s, s -> ()
+changeDir = \oldId, newId -> {
+	for (pool = cts.mrBackupTargets) {
+		d = path.cat([pool, oldId]);
+		if (file.isDirectory(d)) {
+			newD = path.cat([pool, newId]);
+			file.rename(d, newD);
+		}
+	}
+};
+
+/// Changes directory calification of big.
+/// \s -> ()
+changeBig = \id -> {
+	f = path.cat([cts.mrBackupTargets[0], id, "big"]);
+	exists = file.exists(f);
+
+	for (pool = cts.mrBackupTargets) {
+		f2 = path.cat([pool, id, "big"]);
+		if (exists) file.del(f2);
+		else file.write(f2, "");
+	}
+};
+
+/// Changes path.txt
+/// \s, s -> ()
+changePath = \id, newPath -> {
+	for (pool = cts.mrBackupTargets) {
+		d = path.cat([pool, id]);
+		if (file.isDirectory(d))
+			file.write(path.cat([d, "path.txt"]), js.w(newPath));
+	}
+};
+
+/// Shows every pool directory.
+/// \s -> ()
+showDirs = \id -> {
+	for (e = cts.mrBackupTargets) {
+		d = path.cat([e, id]);
+    thread.run(\->
+      sys.cmd("thunar", [file.isDirectory(d) ? d : e]);
+    );
+	}
+  sys.sleep(100);
+};
+
+/// Update backups of a directory.
+/// \s -> ()
+updateDir = \id -> {
+	for (pool = cts.mrBackupTargets)
+		update.updateDir(pool, id);
+};
+
+/// Copies other directory to base.
+/// \s -> ()
+copyToBase = \id -> {
+	sourceV = [""];
+	for (i = 1:arr.size(cts.mrBackupTargets)) {
+		pool = cts.mrBackupTargets[i];
+		d = path.cat([pool, id]);
+		if (file.isDirectory(d)) {
+			sourceV! = pool;
+			break;
+		}
+	}
+	if (sourceV! != "" & sourceV! != cts.mrBackupTargets[0]) {
+		file.copy(path.cat([sourceV!, id]), cts.mrBackupTargets[0]);
+	}
+};
+
+/// Copies base to other directories.
+/// \s -> ()
+copyFromBase = \id -> {
+	source = path.cat([cts.mrBackupTargets[0], id]);
+	if (file.isDirectory(source)) {
+		for (i = 1:arr.size(cts.mrBackupTargets)) {
+			pool = cts.mrBackupTargets[i];
+			file.del(path.cat([pool, id]));
+			file.copy(source, pool);
+		}
+	}
+};
+
+/// Creates path.txt
+/// \s -> ()
+createPathTxt = \id -> {
+	for (pool = cts.mrBackupTargets) {
+		d = path.cat([pool, id]);
+		if (file.isDirectory(d)) {
+			file.write(path.cat([d, "path.txt"]), js.w(""));
+		}
+	}
+};
+

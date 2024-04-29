@@ -1,14 +1,15 @@
-// Copyright 29-Aug-2023 ºDeme
+// Copyright 11-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Years data base
 
-import "data/cts";
+import "cts";
 import "db/yearDb";
+
+dpath = path.cat([cts.dataPath, "years"]);
 
 /// \ -> ()
 init = \ -> {
-	dpath = path.cat([cts.dbPath, "years"]);
 	if (!file.exists(dpath)) file.mkdir(dpath);
 
 	y = time.year(time.now());
@@ -21,8 +22,8 @@ init = \ -> {
 
 /// Returns data base path of a year.
 /// \s -> s
-yearPath = \y -> return path.cat([cts.dbPath, "years", y]);;
+yearPath = \y -> return path.cat([dpath, y]);;
 
 /// Returns unsorted list of years
 /// \ -> [s.]
-list = \ -> return file.dir(path.cat([cts.dbPath, "years"]));;
+list = \ -> return file.dir(dpath);;

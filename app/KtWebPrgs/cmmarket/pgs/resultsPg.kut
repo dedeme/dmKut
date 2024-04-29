@@ -5,8 +5,8 @@
 
 import "KtWeb/rp";
 import "libmkt/models";
-import "libmkt/model";
 import "data/modelEval";
+import "data/jsModel";
 import "db";
 
 /// \m -> ()
@@ -15,7 +15,7 @@ process = \Rq -> {
     "idata": {
       mdId = Rq.modelId;
       sys.print(rp.mk({
-        model: model.toJs(models.get(mdId)!),
+        model: jsModel.toJs(models.get(mdId)!),
         evals: arr.map(db.readEvals(mdId).evals, modelEval.toJs)
       }));
     }

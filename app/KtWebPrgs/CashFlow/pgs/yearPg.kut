@@ -1,20 +1,19 @@
-// Copyright 29-Aug-2023 ºDeme
+// Copyright 09-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Pan page.
+/// Year page.
 
 import "KtWeb/rp";
 import "db/yearsDb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
-      sys.print(rp.mk({
-        years: yearsDb.list()
-      }));
+      return rp.mk({
+          Years: yearsDb.list()
+        });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
-

@@ -1,0 +1,45 @@
+// Copyright 21-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Strategy simple test.
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/quotes";
+import "libmkt/strategy";
+import "extDb/quotesDb";
+import "data/simParams";
+
+/// Returns
+///   {{sales: f, cash: f, assets: f, rfAssets: f,
+///     profits: f, rfProfits: f}.} :: {modelId: Rs}
+/// \{*.} -> {*.}
+run = \Rq -> {
+  qts = quotesDb.read();
+  :arr List = models.list();
+
+  mdRs = {}; //{{sales: f, cash: f, assets: f, rfAssets: f,
+             //  profits: f, rfProfits: f}.}
+  for (:model md = List) {
+    Params = [];
+    :arr Ps = simParams.paramBases(md.id);
+    Incs = simParams.paramIncrs(md.id);
+    for (i = 0:20) {
+      Params.push(Ps.copy());
+      for (j, v = Ps) Ps[j] = v + Incs[j];
+    }
+
+    :: Gr = strategy.stGroup2(md, qts, Params);
+    :: Sum = {sales: 0.0, assets: 0.0, accs: 0.0, rfAssets: 0.0,
+              profits: 0.0, rfProfits: 0.0};
+    for (v = Gr.Sales) Sum.sales += v;
+    for (v = Gr.Assets) Sum.assets += v;
+    for (v = Gr.Accs) Sum.accs += v;
+    for (v = Gr.RfAssets) Sum.rfAssets += v;
+    for (v = Gr.Profits) Sum.profits += v;
+    for (v = Gr.RfProfits) Sum.rfProfits += v;
+    mdRs.put(md.id, Sum);
+  }
+
+  return mdRs;
+};

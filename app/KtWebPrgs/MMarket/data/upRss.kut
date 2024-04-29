@@ -1,0 +1,93 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Array of upRss management.
+
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/strategy";
+import "libmkt/cts" : mcts;
+import "upRs";
+import "cts";
+
+/// Reads model results.
+/// If model is of one parameter returns an array of 'cts.evalSteps' size.
+/// If model is of two parameter returns a matrix of 'cts.evalSteps' (rows) x
+///   'cts.evalSteps' (cols), where 'rows' are the first parameter values and
+///   'cols' are the second paramenter ones.
+/// \<model>, <quotes> -> [<upRs>.]
+read = \:model md, qts -> {
+  :arr Base = cts.ParamBases[md.id];
+  :arr Inc = cts.ParamBaseIncs[md.id];
+  :arr Einc = cts.ParamEnvIncs[md.id];
+
+  Params = []; // [[f].] | [[f, f].]
+  if (Base.size() == 1) {
+    base = Base[0];
+    inc = Inc[0];
+    einc = Einc[0];
+    for (s = 0:cts.evalSteps) {
+      sf = math.itof(s);
+      for (es = cts.startEnvSteps:cts.endEnvSteps) {
+        esf = math.itof(es);
+        Params.push([base + inc * sf + einc * esf]);
+      }
+    }
+  } else {
+    base0 = Base[0];
+    base1 = Base[1];
+    inc0 = Inc[0];
+    inc1 = Inc[1];
+    einc0 = Einc[0];
+    einc1 = Einc[1];
+    for (s0 = 0:cts.evalSteps) for (s1 = 0:cts.evalSteps) {
+      s0f = math.itof(s0);
+      s1f = math.itof(s1);
+      for (es0 = cts.startEnvSteps:cts.endEnvSteps)
+        for (es1 = cts.startEnvSteps:cts.endEnvSteps) {
+          es0f = math.itof(es0);
+          es1f = math.itof(es1);
+          Params.push([
+            base0 + inc0 * s0f + einc0 * es0f,
+            base1 + inc1 * s1f + einc1 * es1f
+          ]);
+        }
+    }
+  }
+
+  Sales, Assets, Accs, Profits : strategy.stGroup2(md, qts, Params);
+
+  n = Base.size() == 1 ? cts.envSteps : cts.envSteps * cts.envSteps;
+  nf = math.itof(n);
+  nf2 = nf * mcts.initialCapital;
+  stepsV = [0];
+  salesV = [0.0];
+  assetsV = [0.0];
+  accsV = [0.0];
+  profitsV = [0.0];
+  R = []; // [<upRs>.]
+  for (i = 0:arr.size(Sales)) {
+    if (stepsV! == n) {
+      stepsV! = 0;
+      rs = upRs.new(
+        salesV! / nf, assetsV! / nf2, accsV! / nf2, (profitsV! / nf) + 1.0
+      );
+      R.push(rs);
+      salesV! = 0.0;
+      assetsV! = 0.0;
+      accsV! = 0.0;
+      profitsV! = 0.0;
+    }
+    salesV! += Sales[i];
+    assetsV! += Assets[i];
+    accsV! += Accs[i];
+    profitsV! += Profits[i];
+    stepsV! += 1;
+  }
+  rs = upRs.new(
+    salesV! / nf, assetsV! / nf2, accsV! / nf2, (profitsV! / nf) + 1.0
+  );
+  R.push(rs);
+
+  return R;
+};

@@ -1,0 +1,21 @@
+// Copyright 25-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "libdm/log";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "getLog": return js.wo({
+        Log: log.readJs()
+      });
+    "resetLog": {
+        log.reset();
+        return "{}";
+      }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

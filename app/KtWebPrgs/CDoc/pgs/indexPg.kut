@@ -12,12 +12,12 @@ import "data/indexTree";
 process = \Rq -> {
   switch (Rq.rq) {
     "index": {
-      IxTOp = ixReader.read(Rq.pack);
-      sys.println(rp.mk({
-        "index": IxTOp
-          ? [indexTree.toJs(IxTOp!)]
-          : []
-      }));
+      ixTOp = ixReader.read(Rq.pack);
+      return rp.mk({
+        indexOp: !ixTOp
+          ? []
+          : [ixTOp!]
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

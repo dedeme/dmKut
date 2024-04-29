@@ -1,0 +1,103 @@
+// Copyright 03-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Backups list page.
+
+import "KtWeb/rp";
+import "data/bkEntry";
+import "data/fromServer";
+import "data/fromClient";
+import "db/bkEntryTb";
+import "db/fromServerTb";
+import "db/fromClientTb";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      // [<bkEntry>.]
+      List = bkEntryTb.read();
+      // [<bkEntry>.]
+      :arr NewList = [];
+      for(:bkEntry e = List) {
+        source = e.source;
+        sourceErrorV = [""];
+        if (!file.exists(source))
+          sourceErrorV! = "'" + source + "' not found.";
+        else if (!file.isDirectory(source))
+          sourceErrorV! = "'" + source + "' is not a directory.";
+
+        backup = e.backup;
+        backupErrorV = [""];
+        if (!file.exists(backup))
+          backupErrorV! = "'" + backup + "' not found.";
+        else if (!file.isDirectory(backup))
+          backupErrorV! = "'" + backup + "' is not a directory.";
+        else if (!file.exists(path.cat([backup, "BrutalBackups.txt"])))
+          backupErrorV! = "'BrutalBackups.txt' not found in '" + backup + "'";
+
+        NewList.push(bkEntry.new(
+          e.id, source, sourceErrorV!, backup, backupErrorV!
+        ));
+      }
+
+      return rp.mk({
+          dbKey: db.readKey(),
+          List: NewList,
+          sv: fromServerTb.read()
+        });
+    }
+    "addModify": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :arr List = bkEntryTb.read();
+      entryOp = List.find(\:bkEntry e -> return e.id == Rq.id;);
+      if (!entryOp) {
+        List.push(bkEntry.new(Rq.id, Rq.from, "", Rq.to, ""));
+      } else {
+        :bkEntry entry = entryOp!;
+        entry.setSource(Rq.from);
+        entry.setBackup(Rq.to);
+      }
+      bkEntryTb.write(List);
+
+      return rp.mkEmpty();
+    }
+    "del": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :arr List = bkEntryTb.read();
+
+      List.filterIn(\:bkEntry e -> return e.id != Rq.id;);
+      bkEntryTb.write(List);
+
+      return rp.mkEmpty();
+    }
+    "run": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      key = cryp.genK(64);
+      :fromClient cl = Rq.fromClient;
+      kpath = path.cat([cl.target, "BrutalBackups.txt"]);
+      if (file.exists(kpath)) file.write(kpath, key);
+
+      fromClientTb.write(cl);
+      :fromServer sv = fromServer.newDefault();
+      sv.setState(fromServer.readingSource);
+      fromServerTb.write(sv);
+
+      thread.run(\ -> {
+        sys.cmd("kut2", [sys.mainPath()[:-4], "start", key]);
+      });
+      sys.sleep(200);
+
+      return rp.mkEmpty();
+    }
+
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

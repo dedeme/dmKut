@@ -14,7 +14,7 @@
 /// \{[i, f]...}, s, i, f -> ()
 add = \portfolio, nick, stocks, price -> {
   Old = dic.get(portfolio, nick);
-  if (Old) {
+  if (!!Old) {
     E = Old!;
     ss = E[0] + stocks;
     pr = (math.itof(E[0]) * E[1] + math.itof(stocks) * price) / math.itof(ss);
@@ -54,10 +54,3 @@ remove = \portfolio, nick, stocks -> {
   return [E[1], ""];
 };
 
-/// Returns a new dictionary, replacing 'ints' por 'floats' in portfolio.
-/// \{[i, f]...} -> {[f, f]...}
-toJs = \Pf -> {
-  R = {};
-  for (k, V = Pf) dic.put(R, k, [math.itof(V[0]), V[1]]);
-  return R;
-};

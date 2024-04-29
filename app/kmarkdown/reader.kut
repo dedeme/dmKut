@@ -1,0 +1,57 @@
+// Copyright 11-Oct-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Kut Markdown reader.
+
+// Constructor.
+//   fpath: File being processed.
+//   Runes: Text runes.
+//   ix   : Current Runes index.
+//   pos  : Current Runes [line-character] position.
+// \s, [s.],i,[i, i] -> <reader>
+new0 : fPath, Runes, ix, lcPos;
+
+/// Constructor.
+///   fpath: Path of file to read.
+/// \s -> <reader>
+new = \fpath -> return new0 (fpath, str.toRunes(file.read(fpath)), 0, [1, 1]);;
+
+/// File being processed.
+/// \<reader> -> s
+fpath = \rd -> return rd[fPath];;
+
+/// Line-character of last read character position.
+/// \<reader> -> [i, i]
+pos = \rd -> return rd[lcPos];;
+
+/// Current rune (R[ix]) or "" if the end of text is reached.
+/// Note: 'peek' does not modify position in Runes.
+/// \<reader> -> s
+peek = \rd -> {
+  :arr Rs = rd[Runes];
+  return rd[ix] < Rs.size() ? Rs[rd[ix]] : "";
+};
+
+/// Next n-current (Rune[ix+n]) or ""if end of text is reached.
+/// Note: 'peekn' does not modify position in Runes.
+/// \<reader>, i -> s
+peekn = \rd, n -> {
+  :arr Rs = rd[Runes];
+  return rd[ix] < Rs.size() - n ? Rs[rd[ix] + n] : "";
+};
+
+/// Advances the reader postion (ix++).
+/// \<reader> -> ()
+next = \rd -> {
+  :arr Rs = rd[Runes];
+  if (rd[ix] < Rs.size()) {
+    r = Rs[rd[ix]];
+    rd[ix] += 1;
+    if (r == "\n") {
+      rd[lcPos][0] += 1;
+      rd[lcPos][1] = 0;
+    } else {
+      rd[lcPos][1] += 1;
+    }
+  }
+};

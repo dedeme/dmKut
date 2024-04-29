@@ -2,6 +2,7 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 import "KtWeb/rp";
+import "libdm/jstb";
 import "db";
 import "data/conf";
 import "data/dpath";
@@ -9,50 +10,43 @@ import "data/dpath";
 /// \m -> ()
 process = \Rq -> {
   switch (Rq.rq) {
-    "changeLang": {
-      confTb = db.confTb();
-      Cf = confTb.read();
-      Cf.lang = Cf.lang == "es" ? "en" : "es";
-      confTb.write(Cf);
-      sys.print(rp.mkEmpty());
-    }
     "changeShowAll": {
-      confTb = db.confTb();
-      Cf = confTb.read();
-      Cf.showAll = Cf.showAll == true ? false : true;
-      confTb.write(Cf);
+      :jstb confTb = db.confTb();
+      :conf Cf = confTb.read#();
+      Cf.showAll = Cf.showAll ? false : true;
+      confTb.write#(Cf);
       sys.print(rp.mkEmpty());
     }
     "new": {
-      pathsTb = db.pathsTb();
-      Ps = pathsTb.read();
+      :jstb pathsTb = db.pathsTb();
+      Ps = pathsTb.read#();
       arr.push(Ps, dpath.mk(Rq.id, Rq.path, true, false));
-      pathsTb.write(Ps);
+      pathsTb.write#(Ps);
       sys.print(rp.mkEmpty());
     }
     "changeShown": {
-      pathsTb = db.pathsTb();
-      Ps = pathsTb.read();
-      for (P = Ps)
+      :jstb pathsTb = db.pathsTb();
+      Ps = pathsTb.read#();
+      for (:dpath P = Ps)
         if (P.id == Rq.id) P.isShown = P.isShown ? false : true;
-      pathsTb.write(Ps);
+      pathsTb.write#(Ps);
       sys.print(rp.mkEmpty());
     }
     "delete": {
-      pathsTb = db.pathsTb();
-      Ps = pathsTb.read();
-      arr.filterIn(Ps, \P -> return P.id != Rq.id;);
-      pathsTb.write(Ps);
+      :jstb pathsTb = db.pathsTb();
+      Ps = pathsTb.read#();
+      arr.filterIn(Ps, \:dpath P -> return P.id != Rq.id;);
+      pathsTb.write#(Ps);
       sys.print(rp.mkEmpty());
     }
     "modify": {
-      pathsTb = db.pathsTb();
-      Ps = pathsTb.read();
-      for (P = Ps) if (P.id == Rq.id) {
+      :jstb pathsTb = db.pathsTb();
+      Ps = pathsTb.read#();
+      for (:dpath P = Ps) if (P.id == Rq.id) {
         P.id = Rq.newId;
-        P.path = Rq.path;
+        P.spath = Rq.path;
       }
-      pathsTb.write(Ps);
+      pathsTb.write#(Ps);
       sys.print(rp.mkEmpty());
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");

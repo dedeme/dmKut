@@ -1,0 +1,124 @@
+=
+title = Párrafos
+=
+
+## Creación
+
+Los párrafos tienen que estar separados por dos retornos de carro.
+
+``kmd
+Esta línea
+y esta están en el mismo párrafo.
+
+Esta otra está en párrafo distinto.``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Esta línea
+y esta están en el mismo párrafo.
+
+Esta otra está en párrafo distinto.
+
+``</div>``
+
+## Corte de línea
+
+Dentro del párrafo se puede forzar que una linea se corte en el punto
+deseado, terminándola con '\'.
+
+``kmd
+Esta línea \
+y esta están en el mismo párrafo; pero en distinta línea.
+
+Esta otra está en párrafo distinto.``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Esta línea \
+y esta están en el mismo párrafo; pero en distinta línea.
+
+Esta otra está en párrafo distinto.
+
+``</div>``
+
+## Formato
+
+Se pueden utilizar '*' y '_' para establecer texto con formato '<code>' y
+'cursiva' respectivamente.
+
+Estos signos deben aparecer inmediatamente antes y despues del texto a resaltar.
+
+Para finalizar el formato es preciso que después de '*' o '_' aparezca un fin
+de línea, espacio en blanco o uno de los simbolos *".,;:()[]{}!¡¿?"*.
+
+``kmd
+Esta _cursiva_ está correcta pero ni esta _ cursiva_ ni esta _cursiva _ lo
+están_.
+
+Esta _cur-siva_ también vale. Y _esta_.``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Esta _cursiva_ está correcta pero ni esta _ cursiva_ ni esta _cursiva _ lo
+están_.
+
+Esta _cur-siva_ también vale. Y _esta_.
+
+``</div>``
+
+_NOTA:_
+
+'**' y '__' no tienen efecto en el formato.
+
+## Inyección de HTML
+
+Una inyección de HTML se puede realizar en el interior de un párrafo o a
+su comienzo.
+
+# Interior en un párrafo.
+
+Se introduce y se finaliza con ``&#x0060;&#x0060;``.
+
+``text
+Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>;
+&#x0060;&#x0060;pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Este texto está en <b>formato <big>normal</big></b>;
+``pero este lo esta en <b>formato <big>de inyección</big></b>``.
+
+``</div>``
+
+# Al comienzo del párrafo.
+
+En este caso es conveniente colocar los caracteres ``&#x0060;&#x0060;`` iniciales
+en una línea aparte, para evitar interferencia con la opción de presentación
+de código.
+
+``text
+Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>.
+
+&#x0060;&#x0060;
+Pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Este texto está en <b>formato <big>normal</big></b>.
+
+``
+Pero este lo esta en <b>formato <big>de inyección</big></b>.``
+
+``</div>``

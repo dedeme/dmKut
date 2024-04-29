@@ -1,0 +1,38 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investor data.
+
+import "libmkt/models";
+import "libmkt/model";
+import "istrategy";
+
+/// Constructor.
+///   base : Strategy by default.
+///   Nicks: Dictionary {nick: strategy}.
+/// \<istrategy>,{<istrategy>.} -> <investor>
+new : base, Nicks;
+
+/// Create a default investor.
+///   Nicks: Array of company nicks.
+/// \[s.] -> <investor>
+newDefault = \Nicks -> {
+  :model md = models.list()[0];
+  st = istrategy.new(
+    md.id,
+    arr.map(md.ParamTypes, \p -> return 1.0;)
+  );
+  Nks = {}; // {<istrategy>...}
+  for (nk = Nicks) Nks.put(nk, st);
+  return new(st, Nks);
+};
+
+/*
+///
+fromJs = \A -> {
+  return new(
+    A[0],
+    dic.fromArr(A[1])
+  );
+};
+*/

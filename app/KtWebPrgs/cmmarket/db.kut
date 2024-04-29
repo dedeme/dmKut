@@ -3,8 +3,9 @@
 
 /// Data base
 
+import "libdm/log";
 import "libmkt/qs";
-import "libmkt/quotes";
+import "libmkt/quotes2";
 import "libmkt/models";
 import "libmkt/model";
 import "data/cts";
@@ -19,60 +20,20 @@ evalsTbPath = \modelId -> return path.cat(
     [cts.dataPath, "evals", modelId + ".tb"]
   );;
 
-// \f, f -> [<modeEval>...]
-initEvals1 = \base, inc -> {
-  Evals = []; // [<modelEval>...]
-  mid = cts.evalSteps / 2;
-  V = [base];
-  for (i = 0:cts.evalSteps) {
-    v = V!;
-    V! += inc;
-    arr.push(
-      Evals,
-      i == mid
-        ? modelEval.new([v], 0, 110000.0, 0.1, 1, 110000.0, 0.1, 1.0)
-        : modelEval.new([v], 0, 100000.0, 0.0, 0, 100000.0, 0.0, 0.0)
-    );
-  }
-  return Evals;
-};
-
-// \[f, f], [f, f] -> [<modeEval>...]
-initEvals2 = \Bases, Incs -> {
-  Evals = []; // [<modelEval>...]
-  mid = cts.evalSteps / 2;
-  V0 = [Bases[0]];
-  for (i0 = 0:cts.evalSteps) {
-    v0 = V0!;
-    V0! += Incs[0];
-    V1 = [Bases[1]];
-    for (i1 = 0:cts.evalSteps) {
-      v1 = V1!;
-      V1! += Incs[1];
-      arr.push(
-        Evals,
-        i0 == mid & i1 == mid
-          ? modelEval.new([v0, v1], 0, 110000.0, 0.1, 1, 110000.0, 0.1, 1.0)
-          : modelEval.new([v0, v1], 0, 100000.0, 0.0, 0, 100000.0, 0.0, 0.0)
-      );
-    }
-  }
-
-  return Evals;
-};
-
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
     file.mkdir(path.cat([cts.dataPath, "evals"]));
 
-    writeQuotes(updateQuotes(true)!);
+    log.init(path.cat([cts.dataPath, "log.tb"]));
+    writeQuotes(updateQuotes());
   }
 
+  log.init(path.cat([cts.dataPath, "log.tb"]));
   Update = [false];
-  for (md = models.list()) {
-    mdId = model.id(md);
+  for (:model md = models.list()) {
+    mdId = md.id;
     if (!file.exists(evalsTbPath(mdId))) {
       writeEvals(mdId, modelEval.newTb("11111111", []));
       Update! = true;
@@ -82,64 +43,15 @@ init = \ -> {
 };
 
 /// Read CMarket quotes.
-/// If 'force' == false and the last date of CMarket-quotes <= CMMarket-quotes
-/// returns [];
-/// \b -> [<quotes>]|[]
-updateQuotes = \force -> {
-  cmDate = lastSourceDate();
-  Stop = [false];
-  if (!force) {
-    cmmDate = readQuotes().date;
-    if (cmDate <= cmmDate) Stop! = true;
-  }
-  if (Stop!) return [];
-
+/// \b -> <quotes>
+updateQuotes = \ -> {
   dataPath = cts.cmarketDataPath;
-  cosT = js.r(file.read(path.cat([dataPath, "cos.tb"])));
-  main = cosT[0];
-  Cos = arr.map(
-    arr.filter(
-      cosT[1],
-      \C -> return C[1] &
-        !arr.any(["ALM", "FAE", "GRE"], \nk -> return C[0] == nk;);
-    ),
-    \C -> return C[0];
-  );
+  qpath = path.cat([dataPath, "quotes"]);
+  ibexT = js.r(file.read(path.cat([dataPath, "ibex.tb"])));
+  Cos = ibexT[0];
   arr.sort(Cos, \c1, c2 -> return c1 < c2;);
 
-  // \s -> s
-  readSqs = \nick ->
-    return file.read(path.cat([dataPath, "quotes", nick + ".tb"]));;
-
-  MainQs = qs.fromStr(cts.historicQuotes, readSqs(main));
-  if (!MainQs[1]) sys.throw(MainQs!);
-  Dates = qs.dates(MainQs!);
-
-  cols = arr.size(Cos);
-  rows = arr.size(Dates);
-  Opens = arr.new(rows, 0);
-  for (i = 0:rows) Opens[i] = arr.new(cols, 0.0);
-  Closes = arr.new(rows, 0);
-  for (i = 0:rows) Closes[i] = arr.new(cols, 0.0);
-  Maxs = arr.new(rows, 0);
-  for (i = 0:rows) Maxs[i] = arr.new(cols, 0.0);
-
-  for (i, c = Cos) {
-    QsRs = qs.fromStr(cts.historicQuotes, readSqs(c));
-    if (!QsRs[1]) sys.throw(QsRs!);
-    qts = QsRs!;
-
-    Ops = qs.opens(qts);
-    Cls = qs.closes(qts);
-    Mxs = qs.maxs(qts);
-    for (r = 0:rows) {
-      Opens[r][i] = Ops[r];
-      Closes[r][i] = Cls[r];
-      Maxs[r][i] = Mxs[r];
-    }
-  }
-
-  return [quotes.new(cmDate, Cos, Dates, Opens, Closes)];
+  return quotes2.read(qpath, Cos);
 };
 
 /// Returns the last quote read by cmarket or throws an exception if such date
@@ -157,11 +69,11 @@ lastSourceDate = \ -> {
 
 /// Read quotes from "quotes.tb".
 /// \ -> <quotes>
-readQuotes = \ -> return quotes.fromJs(js.r(file.read(quotesTbPath)));;
+readQuotes = \ -> return quotes2.fromJs(js.r(file.read(quotesTbPath)));;
 
 /// Writes quotes to 'quotes.tb"
 /// \<quotes> -> ()
-writeQuotes = \Qs -> file.write(quotesTbPath, js.w(quotes.toJs(Qs)));;
+writeQuotes = \qts -> file.write(quotesTbPath, js.w(quotes2.toJs(qts)));;
 
 /// Read evaluations from "evals/MODEL_ID.tb".
 /// \s -> <modelEvalTb>

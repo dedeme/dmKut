@@ -4,6 +4,7 @@
 /// Annotation data.
 
 import "data/broker";
+import "libmkt/cts" : mcts;
 import "data/cts";
 import "opr";
 import "settlement";
@@ -15,13 +16,13 @@ import "pf";
 ///       the annotation is added to its <annsTb>.
 ///   date: Annotation date.
 ///   op: Operation annotated.
-/// \i, s, <opr> -> d<ann>
-new = \id, date, op -> return {id, date, op};;
+/// \i, s, <opr> -> <ann>
+new : id, date, op;
 
 /// \<ann> -> JS
 toJs = \An -> {
-  R = [math.itof(An.id), An.date];
-  arr.cat(R, opr.toJs(An.op));
+  R = [math.itof(An[id]), An[date]];
+  arr.cat(R, opr.toJs(An[op]));
   return R;
 };
 
@@ -29,21 +30,21 @@ toJs = \An -> {
 fromJs = \A -> return new(math.ftoi(A[0]), A[1], opr.fromJs(A[2:]));;
 
 /// Returns a ledger from 'As'.
-/// \[<ann>...] -> <settlement>
+/// \[<ann>.] -> <settlement>
 mkSettlement = \As -> {
   arr.sort(As, \A1, A2 -> {
-    if (A1.date == A2.date) {
-      if (opr.type(A1.op) == opr.buT) return true;
-      else if (opr.type(A2.op) == opr.buT) return false;
-      return A1.id < A2.id;
+    if (A1[date] == A2[date]) {
+      if (opr.type(A1[op]) == opr.buT) return true;
+      else if (opr.type(A2[op]) == opr.buT) return false;
+      return A1[id] < A2[id];
     }
-    return A1.date < A2.date;
+    return A1[date] < A2[date];
   });
-  L = ldg.new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  :ldg L = ldg.new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   Pf = {}; // {[i, f]...}
   Errs = []; // [s...]
   for (A = As) {
-    op = A.op;
+    op = A[op];
     switch (opr.type(op)) {
       opr.seT: {
         nk = opr.nick(op);
@@ -61,7 +62,7 @@ mkSettlement = \As -> {
 
           oldPr = oldPrErr[0];
           err = oldPrErr[1];
-          if (err) arr.push(Errs, err);
+          if (err != "") arr.push(Errs, err);
           oldV = math.round(ssf * oldPr, 2);
           v = math.round(ssf * pr, 2);
           incomes = pr == -0.01 ? 0.0 : math.round(broker.sell(ss, pr), 2);
@@ -171,8 +172,8 @@ rebuys = \Prev, Anns -> {
   put = \nk, dt -> {
     if (dt < today) return;
     Old = dic.get(Prev, nk);
-    if (Old) {
-      if (dt > Old!) dic[nk] = dt;
+    if (!!Old) {
+      if (dt > Old!) Prev[nk] = dt;
     } else {
       dic.put(Prev, nk, dt);
     }
@@ -180,26 +181,26 @@ rebuys = \Prev, Anns -> {
 
   Pf = {}; // {[i, n]...} :: {nick -> [stocks, price]}
   for (A = Anns) {
-    op = A.op;
+    op = A[op];
     switch (opr.type(op)) {
       opr.seT: {
-        dt = A.date;
+        dt = A[date];
         nk = opr.nick(op);
         sts = opr.stocks(op);
         pr = opr.price(op);
         Pv = dic.get(Pf, nk);
-        if (Pv) {
+        if (!!Pv) {
           StPr = Pv!;
           dif = StPr[0] - sts;
           if (dif > 0) Pf[nk] = [dif, StPr[1]];
           else dic.remove(Pf, nk);
-          trapDate = pr < StPr[1] * cts.noLossMultiplicator
-            ? addDays(dt, cts.daysLost)
-            : addDays(dt, cts.daysWin)
+          trapDate = pr < StPr[1] * mcts.noLossMultiplicator
+            ? addDays(dt, cts.daysLoss7)
+            : dt
           ;
           put(nk, trapDate);
         } else {
-          put(nk, addDays(dt, cts.daysLost));
+          put(nk, addDays(dt, cts.daysLoss7));
         }
       }
       opr.buT: {
@@ -207,7 +208,7 @@ rebuys = \Prev, Anns -> {
         sts = opr.stocks(op);
         pr = opr.price(op);
         Pv = dic.get(Pf, nk);
-        if (Pv) {
+        if (!!Pv) {
           StPr = Pv!;
           sum = sts + StPr[0];
           newPr = (math.itof(sts) * pr + math.itof(StPr[0]) * StPr[1]) /

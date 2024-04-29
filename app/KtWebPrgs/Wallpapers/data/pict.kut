@@ -1,0 +1,22 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Picture data.
+
+/// Constructor.
+/// Implements the <sighter> interface.
+///   level : Picture level (1, 2, or 3).
+///   sights: Number of sights in normal mode.
+///   id    : Picture name.
+/// \i, i, s -> <pict> / <sighter>
+new = \level, sights, id -> return {level, sights, id};;
+
+/// Returns a <pict> with 'level=1' and 'sight=0'
+/// \s -> <pict>
+mk = \id -> return new(1, 0, id);;
+
+/// \<pict> -> JS
+toJs = \P -> return [math.itof(P.level), math.itof(P.sights), P.id];;
+
+/// \JS -> <pict>
+fromJs = \A -> return new(math.ftoi(A[0]), math.ftoi(A[1]), A[2]);;

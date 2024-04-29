@@ -13,9 +13,9 @@ fpath = "invOperations.tb";
 init = \ -> if (!db.exists(fpath)) write([]);;
 
 /// Read table.
-/// \ -> [<invOperation>...]
+/// \ -> [<invOperation>.]
 read = \ -> return arr.map(js.r(db.read(fpath)), invOperation.fromJs);;
 
 /// Write table
-/// \[<invOperation>...] -> ()
+/// \[<invOperation>.] -> ()
 write = \Ops -> db.write(fpath, js.w(arr.map(Ops, invOperation.toJs)));;

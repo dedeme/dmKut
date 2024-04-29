@@ -1,0 +1,19 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting data base.
+
+import "acc/diariesDb";
+import "acc/profitsDb";
+import "cts";
+
+/// Data base path.
+dpath = path.cat([cts.dataPath, "acc"]);
+
+/// Initializes data base.
+/// \ -> ()
+init = \ -> {
+  file.mkdir(dpath);
+  diariesDb.init();
+  profitsDb.init();
+};

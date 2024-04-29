@@ -23,7 +23,7 @@ pdT = "pd";
 ndT = "nd";
 
 // \i, i, f, s -> x<opr>
-new = \tp, i, f, s -> return {tp, i, f, s};;
+new : tp, i, f, s;
 
 /// Makes a sell operation
 /// \s, i, f -> <opr>
@@ -62,34 +62,34 @@ newNd = \amount, cause -> return new(ndT, 0, amount, cause);;
 
 /// Returns operation type. Can be seT, buT, stT, inT, wiT, prT, feT, pdT or ndT.
 /// \<opr> -> s
-type = \op -> return op.tp;;
+type = \op -> return op[tp];;
 
 /// Returns nick if type of 'op' is se, bu or st.
 /// \<opr> -> s
-nick = \op -> return op.s;;
+nick = \op -> return op[s];;
 
 /// Returns stocks if type of 'op' is se, bu or st.
 /// \<opr> -> i
-stocks = \op -> return op.i;;
+stocks = \op -> return op[i];;
 
 /// Returns price if type of 'op' is se, bu or st.
 /// \<opr> -> s
-price = \op -> return op.f;;
+price = \op -> return op[f];;
 
 /// Returns amount if type of 'op' is in, wi, pr, fe, pd or md.
 /// \<opr> -> f
-amount = \op -> return op.f;;
+amount = \op -> return op[f];;
 
 /// Returns cause if type of 'op' is pr, fe, pd or md.
 /// \<opr> -> s
-cause = \op -> return op.s;;
+cause = \op -> return op[s];;
 
 /// \<opr> -> JS
-toJs = \op -> return switch(op.tp) {
-    seT, buT, stT: [op.tp, op.s, math.itof(op.i), op.f];
-    prT, feT, pdT, ndT: [op.tp, op.f, op.s];
-    inT, wiT: [op.tp, op.f];
-    default: sys.throw("Unknown operation of type " + op.tp);
+toJs = \op -> return switch(op[tp]) {
+    seT, buT, stT: [op[tp], op[s], op[i], op[f]];
+    prT, feT, pdT, ndT: [op[tp], op[f], op[s]];
+    inT, wiT: [op[tp], op[f]];
+    default: sys.throw("Unknown operation of type " + op[tp]);
   };;
 
 /// \JS -> <opr>

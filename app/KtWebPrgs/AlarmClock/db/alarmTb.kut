@@ -1,0 +1,22 @@
+// Copyright 02-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// [<alarm>.] table.
+
+import "cts";
+import "data/alarm";
+import "db";
+
+fpath = path.cat([cts.dataPath, "alarm.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<alarm>.]
+read = \ -> return arr.map(js.r(file.read(fpath)), alarm.fromJs);;
+
+/// Writes table.
+/// \[<alarm>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;

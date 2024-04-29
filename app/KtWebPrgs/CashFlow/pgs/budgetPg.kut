@@ -1,37 +1,47 @@
-// Copyright 29-Aug-2023 ºDeme
+// Copyright 08-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Budget main page.
+/// Budget page.
 
 import "KtWeb/rp";
-import "data/cash";
 import "db/yearsDb";
 import "db/planTb";
-import "db/diaryTb";
 import "db/balanceTb";
+import "db/diaryTb";
 import "db/budgetTb";
 import "db/hcontaDb";
+import "db";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       year = Rq.year;
-      ypath = yearsDb.yearPath(year);
       nYear = math.stoi(year)!;
+      ypath = yearsDb.yearPath(year);
       previousPath = yearsDb.yearPath(math.itos(nYear - 1));
-      HcData = hcontaDb.read(year);
-      hcBalance = js.w(HcData.balance);
-      hcDiary = js.w(cash.toJs(HcData.diary));
-      sys.print(rp.mkJs({
-        plan: planTb.readJs(ypath),
-        cBalance: balanceTb.readJs(ypath),
-        hcBalance,
-        hcDiary,
-        cDiary: diaryTb.readJs(ypath),
-        budget: budgetTb.readJs(ypath),
-        previousBudget: budgetTb.readJs(previousPath)
-      }));
+      hcBalance, HcDiary = hcontaDb.read(year);
+
+      return rp.mkJs({
+          Plan: planTb.readJs(ypath),
+          HcDiary: js.w(HcDiary),
+          CFDiary: diaryTb.readJs(ypath),
+          Budget: budgetTb.readJs(ypath),
+          PreviousBudget: budgetTb.readJs(previousPath),
+          hcBalance: js.w(hcBalance),
+          cBalance: balanceTb.readJs(ypath),
+          dbKey: js.w(db.readKey())
+        });
+    }
+    "updateBalance": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      year = Rq.year; //s
+      value = Rq.value; //n
+      ypath = yearsDb.yearPath(year);
+      balanceTb.writeJs(ypath, js.w(value));
+      return rp.mk({ dbKey });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

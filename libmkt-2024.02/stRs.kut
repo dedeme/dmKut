@@ -1,0 +1,27 @@
+// Copyright 28-Jun-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data returned by 'strategy.run'
+
+/// Constructor:
+/// NOTE: Orders, Hassets, Hwithdrawals and cash come from global
+///       simulation. Buys, Sales and Profits come from single simualation.
+///   Refs: References matrix of Dates(rows)xCos(columns).
+///   Orders: Every market order ordered by date.
+///   Hreals: Real assets historic (calculated with closes).
+///           One value for each date.
+///   Haccs: Accounting assets historic (calculated with buy prices).
+///           One value for each date.
+///   Hrefs: Reference assets historic (calculated with references).
+///           One value for each date.
+///   Hwithdrawals: Withdrawals historic. One value for each date.
+///   cash: Final cash + withdrawals.
+///   Buys: Buy dates. One array for each company (from before to after).
+///   Sales: Sales dates. One array for each company (from before to after).
+///   Profits: Profits ratios. One for each company.
+/// \[[f.].], [<order>.],
+///   [f.], [f.], [f.], [f.],
+///   f, [[s.].], [[s.].], [f.] -> <strRs>
+new : Refs, Orders,
+      Hreals, Haccs, Hrefs, Hwithdrawals,
+      cash, Buys, Sales, Profits;

@@ -1,0 +1,28 @@
+// Copyright 17-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Investor information for daily chart.
+
+/// Constructor.
+///   modelId: Investor model identifier.
+///   params : Model parameters.
+///   stocks : Stocks number in portfolio. 0 if the company is not en portfolio.
+///   price  : Stock buy value.
+///   ref    : Reference of buy-sell
+///   new    : 'true' if stocks has been bought today.
+/// \s,[f.],i,f,d,b -> <dailyInvestorData>
+new : modelId, Params, stocks, price, ref, isNew;
+
+/// Returns an empty not valid <dailyInvestorData> to use with indexes.
+/// \ -> <dailyInvestorData>
+mkEmpty = \ -> return new("", [0.0], 0, 0.0, 0.0, false);;
+
+/// \JS -> <dailyInvestorData>
+fromJs = \A -> return [
+    A[modelId],
+    A[Params],
+    math.ftoi(A[stocks]),
+    A[price],
+    A[ref],
+    A[isNew]
+  ];;

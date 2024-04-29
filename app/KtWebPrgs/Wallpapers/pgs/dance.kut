@@ -1,0 +1,33 @@
+// Copyright 29-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Dance page
+
+import "KtWeb/rp";
+import "data/cts";
+import "data/pict";
+import "db/danceSongs";
+import "db/sels";
+import "pictures";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      isShort = Rq.isShort;
+      GroupPict = pictures.getPicture();
+      danceSongs.incrementPlays(Rq.songGroup, Rq.song, isShort);
+      duration = isShort
+        ? math.itof(sels.getShortDanceTime()) * 60000.0
+        : math.itof(sels.getLongDanceTime()) * 60000.0
+      ;
+      sys.print(rp.mk({
+        group: GroupPict.group,
+        pict: pict.toJs(GroupPict.pict),
+        duration
+      }));
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

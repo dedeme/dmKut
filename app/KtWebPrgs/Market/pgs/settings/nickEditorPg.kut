@@ -1,0 +1,183 @@
+// Copyright 12-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Nick editor page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "libmkt/quote";
+import "data/qsvs";
+import "data/qsv";
+import "db/quotesDb";
+import "db/svCodesTb";
+import "db";
+import "qspr";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      mainNick, nick : Rq;
+
+      :: Rp = {
+        dbKey: db.readKey(),
+        ok: true,
+        Quotes: [], // [<quote>.]
+        manuals: 0,
+        Mquotes: [], // [<quote>.]
+        SvIdCodes: [] // [[s,s,s].]
+      };
+
+      Mqs, ok = quotesDb.readQs(mainNick);
+      if (ok) {
+        Rp.Mquotes = Mqs;
+        :arr Qs, ok = quotesDb.readQs(nick);
+        if (ok) {
+          Rp.Quotes = Qs;
+          Rp.manuals = math.itof(
+            Qs.reduce(0, \r, :quote e -> return e.force ? r + 1 : r;)
+          );
+          for (:qsv sv = qsvs.list()) {
+            id = sv.id;
+            :dic Codes = svCodesTb.read(id);
+            codeOp = Codes.get(nick);
+            if (!codeOp) {
+              log.error(str.fmt(
+                "Fail reading code of %v in server %v", [nick, id]
+              ));
+              Rp.ok = false;
+              break;
+            } else {
+              arr.push(Rp.SvIdCodes, [id, sv.withHistoric, codeOp!]);
+            }
+          }
+        } else {
+          log.error(str.fmt("Fail reading %v: %v", [nick, Qs]));
+          Rp.ok = false;
+        }
+      } else {
+        log.error(str.fmt("Fail reading %v: %v", [mainNick, Mqs]));
+        Rp.ok = false;
+      }
+
+      return rp.mk(Rp);
+    }
+    "download": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :: Rp = {
+        dbKey,
+        result: ""
+      };
+
+      mainNick, nick : Rq;
+      , withError, withWarnings = qspr.updateHistoric(
+        "Updating " + nick, mainNick, nick
+      );
+      if (withError) {
+        Rp.result = "error";
+      } else {
+        err = qspr.updateClosesAndRefs(nick);
+        if (err != "") {
+          log.error(err);
+          Rp.result = "error";
+        } else {
+          qspr.updateOperations();
+          if (withWarnings) Rp.result = "warnings";
+        }
+      }
+
+      return rp.mk(Rp);
+    }
+    "updateCode": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      svId, nick, code : Rq;
+      // {s.}
+      NkCds = svCodesTb.read(svId);
+      NkCds[nick] = code;
+      svCodesTb.write(svId, NkCds);
+      return rp.mk({ dbKey });
+    }
+    "qModify": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      mainNick, nick, qts : Rq;
+      prefix = "Fail modifying " + nick;
+      , withError, withWarnings = nick == mainNick
+        ? qspr.correctStr(prefix, qts)
+        : qspr.correctStr2(prefix, qts, mainNick)
+      ;
+      ok = !withError & !withWarnings;
+      if (ok) quotesDb.write(nick, qts);
+      return rp.mk({ dbKey, ok });
+    }
+    "serverTest": {
+      server, nick, code : Rq;
+      withErrorsV = [false];
+      withWarningsV = [false];
+
+      svOp = arr.find(qsvs.list(), \:qsv s -> return s.id == server;);
+      if (!svOp) {
+        log.error(str.fmt("Server '%s' not found", [server]));
+        withErrorsV! = true;
+      } else {
+        :qsv sv = svOp!;
+        // [[<quote>.],[s.]]
+        Qs, Errs = sv.readHistoric(code);
+        if (!Qs) {
+          for (err = Errs)
+            log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
+          withWarningsV! = true;
+          withErrorsV! = true;
+        } else {
+          if (!!Errs) {
+            for (err = Errs)
+              log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
+            withWarningsV! = true;
+          }
+        }
+      }
+      return rp.mk({
+        withErrors: withErrorsV!,
+        withWarnings: withWarningsV!
+      });
+    }
+    "test": {
+      mainNick, nick, qts : Rq;
+      prefix = "Fail testing " + nick;
+      , withError, withWarnings = nick == mainNick
+        ? qspr.correctStr(prefix, qts)
+        : qspr.correctStr2(prefix, qts, mainNick)
+      ;
+      return rp.mk({
+        result: withError
+          ? "error"
+          : withWarnings
+            ? "warnings"
+            : ""
+      });
+    }
+    "getQuotes": {
+      , nick : Rq;
+
+      :: Rp = {
+        ok: true,
+        Quotes: [] // [<quote>.]
+      };
+
+      Qs, ok = quotesDb.readQs(nick);
+      if (ok) {
+        Rp.Quotes = Qs;
+      } else {
+        log.error(str.fmt("Fail reading %s: %s", [nick, Qs]));
+        Rp.ok = false;
+      }
+      return rp.mk(Rp);
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

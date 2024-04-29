@@ -1,19 +1,19 @@
-// Copyright 15-Aug-2023 ºDeme
+// Copyright 25-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Database
 
-import "data/cts";
+import "cts";
 
 /// Read all data base.
 /// 'data' is a JSON string.
-/// \ -> {s, s, s, s} :: {timeStamp, year, years, data}
+/// \ -> {s, s, [s.], s} :: {timeStamp, year, Years, data}
 readData = \ -> {
 	dir = cts.dataPath;
 	if (!file.exists(dir)) {
 		file.mkdir(dir);
 		dt = time.now();
-		year = time.fmt("%Y", dt);
+		year = dt.format("%Y");
 		file.write(
 			path.cat([dir, "control.tb"]),
       js.w(["", year])
@@ -25,15 +25,15 @@ readData = \ -> {
 	year0 = A[1];
 	Years = []; // [s.]
 	for (fname = file.dir(dir))
-		if (str.ends(fname, ".db")) arr.push(Years, fname[0:-3]);
-	arr.sort(Years, \y1, y2 -> return y1 < y2;);
+		if (str.ends(fname, ".db")) Years.push(fname[0:-3]);
+	Years.sort(\y1, y2 -> return y1 < y2;);
 
-  year = arr.any(Years, \y -> return y == year0;) ? year0 : arr.peek(Years);
+  year = Years.any(\y -> return y == year0;) ? year0 : Years.peek();
 
 	return {
     timeStamp: A[0],
     year,
-    years: Years,
+    Years,
     data: file.read(path.cat([dir, year + ".db"]))
   };
 };
@@ -48,7 +48,7 @@ writeData = \timeStamp, year, data -> {
   A = js.r(file.read(controlTb));
   if (A[0] != timeStamp) return "";
 
-  newTimeStamp = time.fmt("%Y%M%D%T", time.now());
+  newTimeStamp = cryp.genK(20);
   file.write(controlTb, js.w([newTimeStamp, year]));
   file.write(path.cat([cts.dataPath, year + ".db"]), data);
   return newTimeStamp;
@@ -63,7 +63,7 @@ changeYear = \timeStamp, year -> {
   A = js.r(file.read(controlTb));
   if (A[0] != timeStamp) return "";
 
-  newTimeStamp = time.fmt("%Y%M%D%T", time.now());
+  newTimeStamp = cryp.genK(20);
   file.write(controlTb, js.w([newTimeStamp, year]));
   return newTimeStamp;
 };

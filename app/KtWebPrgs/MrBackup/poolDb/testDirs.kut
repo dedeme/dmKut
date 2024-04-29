@@ -1,0 +1,164 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Directories testing.
+
+import "libdm/log";
+import "cts";
+import "poolDb";
+
+/// Testing pool directories.
+/// \ -> {i, i, i, i} :: {pools, badPools, dirs, badDirs}
+run = \ -> {
+  :: R = {pools: 0, badPools: 0, dirs: 0, badDirs: 0};
+
+	R.pools = arr.size(cts.mrBackupTargets);
+	base = cts.mrBackupTargets[0];
+  files, badFiles : testDirs1(base);
+  R.dirs = files;
+  if (badFiles > 0) {
+    R.badPools = R.pools;
+    R.badDirs = badFiles;
+    return R;
+  }
+
+  BaseDirs = file.dir(base);
+
+  PoolsOk = arr.filter(cts.mrBackupTargets[1:], \pool -> {
+    , badFiles : testDirs1(pool);
+    if (badFiles > 0) {
+      R.badPools += 1;
+      R.badDirs += badFiles;
+      return false;
+    }
+
+    PoolDirs = file.dir(pool);
+    badFiles2 = testDir2(BaseDirs, pool, PoolDirs);
+    if (badFiles2 > 0) {
+      R.badPools += 1;
+      R.badDirs += badFiles2;
+      return false;
+    }
+
+    return true;
+  });
+
+  :dic BaseMap = mkMapNameSize(base);
+  for (pool = PoolsOk) {
+    :dic PoolMap = mkMapNameSize(pool);
+    badFilesV = [0];
+    for (k, V = BaseMap) {
+      Pv = PoolMap[k];
+      if (V.name != Pv.name) {
+        log.error(str.fmt(
+					"El archivo (%v) no es el último de (%v) en (%v)",
+					[V.name, k, pool]
+				));
+				badFilesV! += 1;
+				continue;
+      }
+      if (V.size != Pv.size) {
+        log.error(str.fmt(
+					"Incorrecto tamaño del archivo (%v) de (%v) en (%v).\n" +
+						"Esperado: %v. Real: %v.",
+					[V.name, k, pool, V.size, Pv.size]
+				));
+				badFilesV! += 1;
+				continue;
+      }
+    }
+
+    if (badFilesV! > 0) {
+      R.badPools += 1;
+      R.badDirs += badFilesV!;
+    }
+  }
+
+  return R;
+};
+
+// Tests directory state (1).
+//    - Pool exists.
+//    - Directory is an existent directory
+//    - Directory contains a correct 'path.txt'
+// \s -> {i, i} :: {files, badFiles}
+testDirs1 = \pool -> {
+  :: R = {files: 0, badFiles: 0};
+
+	if (!file.exists(pool)) {
+		log.error(str.fmt(
+			"Depósito (%v) no encontrado.", [pool]
+		));
+		R.files = 1;
+		R.badFiles = 1;
+		return R;
+	}
+
+  for (fname = file.dir(pool)) {
+    R.files += 1;
+    if (!poolDb.readPathTxt(pool, fname)) R.badFiles += 1;
+  }
+
+  return R;
+};
+
+//  Tests directory state (2).
+//    - Directories of pool are the same that directories of base.
+// Returns the number of files in bad condition.
+// \[s.], s, [s.] -> i
+testDir2 = \BaseDirs, poolId, PoolDirs -> {
+  rV = [0];
+	for (e1 = BaseDirs) {
+		missingV = [true];
+		for (e2 = PoolDirs) {
+			if (e2 == e1) {
+				missingV! = false;
+				break;
+			}
+		}
+		if (missingV!) {
+			log.error(str.fmt(
+				"El directorio (%v) falta en (%v)", [e1, poolId]
+			));
+			rV! += 1;
+		}
+	}
+
+	for (e1 = PoolDirs) {
+		missingV = [true];
+		for (e2 = BaseDirs) {
+			if (e2 == e1) {
+				missingV! = false;
+				break;
+			}
+		}
+		if (missingV!) {
+			log.error(str.fmt(
+				"El directorio (%v) sobra en (%v)", [e1, poolId]
+			));
+			rV! += 1;
+		}
+	}
+
+	return rV!;
+};
+
+// Returns the last file and its size of 'pool' directories.
+// \s -> {{s, i}.} :: {file: {name, size}}
+mkMapNameSize = \pool -> {
+	R = {}; // {{s, i}.} :: {dir -> {name, size}}
+	for (d = file.dir(pool)) {
+		Tgzs = arr.filter(
+      file.dir(path.cat([pool, d])),
+      \f -> return str.ends(f, ".tgz");
+    );
+		if (!Tgzs) {
+			R.put(d, {name: "", size: 0});
+			continue;
+		}
+    name = Tgzs.reduce(Tgzs[0], \r, e -> return e > r ? e : r;);
+		R.put(d, {name, size: file.size(path.cat([pool, d, name]))});
+	}
+	return R;
+};
+

@@ -1,0 +1,9 @@
+// Copyright 25-Feb-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Result of 'qspr' functions.
+/// Warnings and errors are registered in 'log'.
+///   value: Object returned.
+///   withWarnings: 'true' if there are warnings.
+///   withError: 'true' if there is an error.
+new : value, withWarnings, withError;

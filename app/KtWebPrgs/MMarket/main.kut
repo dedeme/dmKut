@@ -1,0 +1,56 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main module.
+
+import "KtWeb/rp";
+import "updater";
+import "db";
+import "cts";
+import "pgs/mainPg";
+import "pgs/summaryPg";
+import "pgs/resultsPg";
+import "pgs/mapsPg";
+import "pgs/chartsPg";
+
+// \ -> s
+help = \ -> return """
+  Use MMarket [help | version | init | update | key rq]
+  where
+    help   : Shows this message.
+    version: Shows program version.
+    init   : Initializes program.
+             Must be called only the first time that the program is called.
+    update : Update data.
+    key rq : Requests 'rq' with 'key'. (Sent by browser)
+  """;;
+
+:arr Args = sys.args();
+
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    "init": db.init();
+    "update": updater.run();
+    default: sys.println(help());
+  }
+  return;
+}
+
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
+
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
+  "MainPg": mainPg.process(Rq);
+  "SummaryPg": summaryPg.process(Rq);
+  "ResultsPg": resultsPg.process(Rq);
+  "MapsPg": mapsPg.process(Rq);
+  "ChartsPg": chartsPg.process(Rq);
+  default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+});

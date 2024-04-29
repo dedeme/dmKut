@@ -1,0 +1,135 @@
+// Copyright 10-Nov-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Web driver.
+///
+/// It depends on 'geckodriver'. (see 'main.kut').
+///
+/// The driver must be started with
+///   start("path-to-geckodriver");
+/// It can be stoped with
+///   stop();
+///
+/// After starting a conection should be made.
+/// Connect:
+///   id = connect();
+/// Close connection:
+///   disconnect(id);
+
+/// Start Web Driver.
+///   fpath: Driver path. (p.e. /bin/geckodriver)
+/// \s -> error
+start = \fpath -> {
+  rRsV = [["", true]];
+  rRsV! = sys.cmd(fpath, []);
+  rRs = rRsV!;
+  if (rRs[1]) return "";
+  for (l = str.splitTrim(rRs[0], "\n"))
+    if (!str.starts(l, "***")) return l;
+  return "";
+};
+
+/// Create a session and returns [sessionId|error, ok?]
+/// \ -> [s|s, b] (Result)
+connect = \ -> {
+  R = sys.cmd2("curl", [
+      '-H', 'Content-Type: application/json',
+      '-d', """
+          {"capabilities":
+            {"alwaysMatch":
+              { "acceptInsecureCerts": true,
+                "moz:firefoxOptions":{"args": ["-headless"]}
+              }
+            }
+          }
+        """,
+      'http://localhost:4444/session'
+    ]);
+  rp = R[0];
+  if (rp == "") return ["curl call failed (Server stopped?)", false];
+  json = js.r(rp);
+  if (dic.hasKey(json, "value")){
+    if (dic.hasKey(json.value, "sessionId"))
+      return [json.value.sessionId, true];
+    if (dic.hasKey(json.value, "error"))
+      return [json.value.error + "\n" + json.value.message, false];
+    return ["Field error is missing", false];
+  }
+  return ["Field value is missing", false];
+};
+
+/// Close session with idenfier 'id'
+///   id: Session identifier retrieved with 'connect' or "".
+/// \s -> ()
+disconnect = \id -> {
+  sys.cmd("curl", ["-X", "DELETE", "http://localhost:4444/session/" + id]);
+};
+
+/// Get page
+///   tm : Wait time in seconds (between 0 and 30, both inclusive).
+///   id : Session identifier retrieved with 'connect'.
+///   url: Page url.
+/// \i, s, s -> [s|s, b] (Result)
+page = \tm, id, url -> {
+  tmSleep = tm <= 0 ? 0 : tm >= 30 ? 30000 : tm * 1000;
+
+  R = sys.cmd2("curl", [
+      '-H', 'Content-Type: application/json',
+      '-d', '{"url":"' + url + '"}',
+      'http://localhost:4444/session/' + id + '/url'
+    ]);
+  rp = R[0];
+  if (rp == "") return ["curl call failed (Server stopped?)", false];
+  ob = js.ro(rp);
+  if (!dic.hasKey(ob, "value")) return ["Field value is missing", false];
+  valJs = ob.value;
+  if (!js.isNull(valJs)) {
+    val = js.r(valJs);
+    if (dic.hasKey(val, "error"))
+      return [val.error + "\n" + val.message, false];
+    return ["Field error is missing", false];
+  }
+
+  sys.sleep(tmSleep);
+
+  R2 = sys.cmd2("curl", ["http://localhost:4444/session/" + id + "/source"]);
+  rp2 = R2[0];
+  if (rp2 == "") return ["curl(2) call failed", false];
+  json = js.r(rp2);
+  if (dic.hasKey(json, "value")){
+    return [json.value, true];
+  }
+  return ["Field value is missing", false];
+};
+
+/// Returns 'true' if web driver is active.
+/// \ -> b
+active = \ -> {
+  rRs = sys.cmd("ps", ["-x"]);
+  ps = arr.filter(
+    str.split(rRs[0], "\n"),
+    \l -> return
+        str.index(l, "geckodriver") != -1 |
+        str.index(l, "firefox-esr --marionette -headless") != -1
+      ;
+  );
+  return arr.size(ps) > 0;
+};
+
+/// Stop web driver.
+/// \ -> ()
+stop = \ -> {
+  rRs = sys.cmd("ps", ["-x"]);
+  ps = arr.filter(
+    str.splitTrim(rRs[0], "\n"),
+    \l -> return
+        str.index(l, "geckodriver") != -1 |
+        str.index(l, "firefox-esr --marionette -headless") != -1
+      ;
+  );
+
+  for (p = ps) {
+    pid = p[:str.index(p, " ")];
+    sys.cmd("kill", [pid]);
+  }
+};

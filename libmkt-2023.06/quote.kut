@@ -64,7 +64,7 @@ correct1 = \Q -> {
     arr.push(Errs, "Close < Min");
   }
 
-  Qr = Errs ?  new(Q.date, Q.open, Q.close, Max!, Min!, Q.vol, true) : Q;
+  Qr = !!Errs ?  new(Q.date, Q.open, Q.close, Max!, Min!, Q.vol, true) : Q;
   return [Qr, Errs];
 };
 
@@ -126,7 +126,7 @@ correct2 = \Qcurrent, Qprevious -> {
     arr.push(Errs, "Close < Min");
   }
 
-  Qr = Errs
+  Qr = !!Errs
     ? new(Qcurrent.date, Open!, Close!, Max!, Min!, Qcurrent.vol, true)
     : Qcurrent
   ;
@@ -159,7 +159,7 @@ correct3 = \Qcurrent, Qprevious -> {
   if (Qcurrent.max < Qprevious.max * 0.8) arr.push(Errs, "Max -20%");
   if (Qcurrent.min < Qprevious.min * 0.8) arr.push(Errs, "Min -20%");
 
-  Qr = Errs
+  Qr = !!Errs
     ? new (
         Qcurrent.date, Qcurrent.open, Qcurrent.close,
         Qcurrent.max, Qcurrent.min, Qcurrent.vol, true

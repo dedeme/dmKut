@@ -1,0 +1,18 @@
+// Copyright 16-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Stays page.
+
+import "KtWeb/rp";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": return rp.mk({
+        Stays: db.readStays()
+      });
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

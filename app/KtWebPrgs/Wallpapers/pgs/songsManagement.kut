@@ -1,0 +1,51 @@
+// Copyright 26-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures page
+
+import "KtWeb/rp";
+import "db/songs";
+import "db/sels";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      Groups = songs.getGroups();
+      group0 = sels.getSongsGroup();
+      group = group0 == "" ? Groups[0] : group0;
+      sys.print(rp.mkJs({
+        groups: js.w(Groups),
+        group: js.w(group),
+        songs: songs.readJs(group),
+        songGroup: js.w(sels.getSongGroup()),
+        song: js.w(sels.getSong())
+      }));
+    }
+    "changeGroup": {
+      group = Rq.group;
+      for (g = songs.getGroups()) if (group == g) sels.setSongsGroup(group);
+      sys.print(rp.mkEmpty());
+    }
+    "setLevel": {
+      songs.setLevel(Rq.group, Rq.song, math.ftoi(Rq.level));
+      sys.print(rp.mkEmpty());
+    }
+    "setLapse": {
+      songs.setLapse(Rq.group, Rq.song, math.ftoi(Rq.lapse));
+      sys.print(rp.mkEmpty());
+    }
+    "setSel": {
+      group = Rq.group;
+      song = Rq.song;
+      for (g = songs.getGroups()) if (group == g)
+        for(S = songs.read(g)) if (S.id == song) {
+          sels.setSongGroup(group);
+          sels.setSong(song);
+        }
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

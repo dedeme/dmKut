@@ -1,13 +1,12 @@
-// Copyright 16-Nov-2022 ºDeme
+// Copyright 26-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base.
+/// Data base management.
 
-import "KtWeb/global";
-import "libdm/jstb";
-import "data/cts";
+import "cts";
 import "data/accAnn";
 import "data/monthAnn";
+import "db/placesTb";
 
 // EXTERN DATA BASE
 
@@ -23,41 +22,41 @@ YearsRange = [
 ];
 
 /// Read hollidays (bills) annotations.
-/// \-> [<monthAnn>...]
+/// \-> [<monthAnn>.]
 readBills = \ -> {
   R = [];
-  Month = [math.itos(YearsRange[0]) + "01"];
-  Sum = [0.0];
+  monthV = [math.itos(YearsRange[0]) + "01"];
+  sumV = [0.0];
   for (year = YearsRange[0] : YearsRange[1] + 1) {
     y = math.itos(year) + ".db";
     pth = path.cat([cts.accPath, y]);
     A = js.ra(file.read(pth));
     for (annJs = js.ra(A[3])) {
       Fields = js.ra(annJs);
-      Am = dic.get(js.ro(Fields[2]), cts.billsAcc);
-      Am2 = dic.get(js.ro(Fields[3]), cts.staysAcc);
-      if (!Am) {
-        Am0 = dic.get(js.ro(Fields[3]), cts.billsAcc);
-        if (Am0) arr.push(Am, "-" + Am0!);
+      amV = dic.get(js.ro(Fields[2]), cts.billsAcc);
+      am2V = dic.get(js.ro(Fields[3]), cts.staysAcc);
+      if (!amV) {
+        am0V = dic.get(js.ro(Fields[3]), cts.billsAcc);
+        if (!!am0V) arr.push(amV, "-" + am0V!);
       }
-      if (Am & !Am2) {
+      if (!!amV & !am2V) {
         mdate = js.rs(Fields[0])[0:6];
-        if (mdate > Month!) {
-          arr.push(R, monthAnn.mk(Month!, [], Sum!));
-          Month! = mdate;
-          Sum! = js.rf(Am!);
+        if (mdate > monthV!) {
+          R.push(monthAnn.new(monthV!, [], sumV!));
+          monthV! = mdate;
+          sumV! = js.rf(amV!);
         } else {
-          Sum! += js.rf(Am!);
+          sumV! += js.rf(amV!);
         }
       }
     }
   }
-  arr.push(R, monthAnn.mk(Month!, [], Sum!));
-  return arr.filter(R, \a -> return a[2] > 0.0;);
+  R.push(monthAnn.new(monthV!, [], sumV!));
+  return arr.filter(R, \:monthAnn a -> return a.amount > 0.0;);
 };
 
 /// Read hotels (stays) annotations.
-/// \-> [<accAnn>, ...]
+/// \-> [<accAnn>.]
 readStays = \ -> {
   R = [];
   for (year = YearsRange[0] : YearsRange[1] + 1) {
@@ -67,16 +66,11 @@ readStays = \ -> {
     for (i, annJs = A[3]) {
       if (i == 0) continue;
       Fields = annJs;
-      Am = year == 2022
+      amV = year == 2022
         ? Fields[0] == "20220916" ? [] : dic.get(Fields[2], cts.staysAcc22)
         : dic.get(Fields[2], cts.staysAcc)
       ;
-      if (Am) {
-        arr.push(
-          R,
-          accAnn.mk(Fields[0], Fields[1], Am!)
-        );
-      }
+      if (!!amV) R.push(accAnn.new(Fields[0], Fields[1], amV!));
     }
   }
   return R;
@@ -84,21 +78,37 @@ readStays = \ -> {
 
 // PROGAM DATA BASE
 
-DbPath = [""];
+klen = 20;
+dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
 
-/// Initializes data base.
-/// \-> ()
+/// Initializes data base
+/// \ -> ()
 init = \ -> {
-  dbPath = path.cat([global.cgiRoot, cts.appName]);
-  DbPath! = dbPath;
-  if (!file.exists(dbPath)) file.mkdir(dbPath);
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    placesTb.init();
+    return;
+  }
+  sys.throw("Data base already is initialized");
 };
 
-/// Returns the table of places in "places.tb"
-/// \-> d[s]<jsdb>
-placesTb = \-> return jstb.new(
-  DbPath! + "/places.tb",
-  \-> return {};,
-  sys.id,
-  sys.id
-);;
+/// Returns the state identifier.
+/// \ -> ();
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};
+

@@ -1,42 +1,44 @@
-// Copyright 07-Sep-2023 ºDeme
+// Copyright 11-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base of jstb's.
+/// Data base management.
 
-import "libdm/jstb";
-import "KtWeb/global";
-import "data/cts";
-import "data/conf";
-import "data/dpath";
+import "cts";
+import "db/confTb";
+import "db/pathsTb";
 
-DbPath = [""];
+klen = 20;
+dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
 
-/// Initializes data base.
-/// \-> ()
+/// Initializes data base
+/// \ -> ()
 init = \ -> {
-  dbPath = path.cat([global.cgiRoot, cts.appName]);
-  DbPath! = dbPath;
-  if (!file.exists(dbPath)) file.mkdir(dbPath);
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    confTb.init();
+    pathsTb.init();
+    return;
+  }
+  sys.throw("Data base already is initialized");
 };
 
-/// Returns the table of '<conf>' in "conf.tb"
-/// \-> <jsdb>
-confTb = \-> return jstb.new(
-  path.cat([DbPath!, "conf.tb"]),
-  \-> return conf.mk("@", true);,
-  sys.id,
-  sys.id
-);;
+/// Returns the state identifier.
+/// \ -> ();
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
 
-/// Returns the table of '[<dpath>]' in "paths.tb"
-/// \-> <jsdb>
-pathsTb = \-> return jstb.newArr(
-  path.cat([DbPath!, "paths.tb"]),
-  \-> return [];,
-  dpath.toJs,
-  \j -> {
-      P = dpath.fromJs(j);
-      P.isValid = file.isDirectory(P.path);
-      return P;
-    }
-);;
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};
+

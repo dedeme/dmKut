@@ -1,0 +1,22 @@
+// Copyright 05-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <fromServer> table.
+
+import "cts";
+import "data/fromServer";
+import "db";
+
+fpath = path.cat([cts.dataPath, "fromServer.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write(fromServer.newDefault());;
+
+/// Reads table.
+/// \ -> <fromServer>
+read = \ -> return fromServer.fromJs(js.r(file.read(fpath)));;
+
+/// Writes table.
+/// \<fromServer> -> ()
+write = \o -> file.write(fpath, js.w(o));;

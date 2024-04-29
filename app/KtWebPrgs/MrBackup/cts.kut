@@ -1,0 +1,33 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+appName = "MrBackup";
+/// Application version.
+version = "2024.04";
+/// Application path.
+appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Data version.
+dataVersion = "2024.04";
+/// Data path.
+dataPath = path.cat([global.cgiRoot, appName]);
+
+/// Pools
+///
+/// First pool is the pool base.
+///
+/// Directories must be added and created in file system manually.
+/// [s.]
+mrBackupTargets = [
+    "/home/deme/MrBackup",
+    "/media/disk1/dm/MrBackup",
+    "/media/deme/Elements/MrBackup"
+  ];
+/// 'ps -x' command to control if update is running.
+psCommand = "kut /dm/KtWeb/prgs/MrBackup/kut/main update";
+/// MrBackup terminal command parameters.
+terminalCommand = [path.cat([appPath, "main"]), "update"];

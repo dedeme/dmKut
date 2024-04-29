@@ -18,13 +18,13 @@ new = \table, field, fieldCf -> return { table, field, fieldCf };;
 toJs = \T -> return [
   table.toJs(T.table),
   field.toJs(T.field),
-  T.fieldCf ? [fieldCf.toJs(T.fieldCf!)] : []
+  !!T.fieldCf ? [fieldCf.toJs(T.fieldCf!)] : []
 ];;
 
 /// \[*(JS)...] -> <tpath>
 fromJs = \A -> return new(
     table.fromJs(A[0]),
     field.fromJs(A[1]),
-    A[2] ? [fieldCf.fromJs(A[2]!)] : []
+    !!A[2] ? [fieldCf.fromJs(A[2]!)] : []
   );;
 

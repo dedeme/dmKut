@@ -1,0 +1,12 @@
+// Copyright 25-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global rank entry.
+
+/// Constructor.
+///   id : Model identifier.
+///   ix : Index of investor.
+///   val: Price, reference or deviation. It it is '[]', 'val' is not valid
+///        and there is a message in log.
+/// \s,i,[i]|[] -> <RkEntry>
+new : id, ix, val;

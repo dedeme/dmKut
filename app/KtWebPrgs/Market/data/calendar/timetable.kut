@@ -1,0 +1,20 @@
+// Copyright 07-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Time table data.
+
+/// Constructor.
+///   hopen : Open hour.
+///   mopen : Open minute.
+///   hclose: Close hour.
+///   mclose: Close minute.
+/// \i,i,i,i -> <timetable>
+new : hopen, mopen, hclose, mclose;
+
+/// \JS -> <mktDay>
+fromJs = \A -> return [
+    math.ftoi(A[hopen]),
+    math.ftoi(A[mopen]),
+    math.ftoi(A[hclose]),
+    math.ftoi(A[mclose])
+  ];;

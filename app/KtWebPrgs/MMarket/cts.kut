@@ -1,0 +1,88 @@
+// Copyright 29-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+appName = "MMaket";
+/// Application version.
+version = "2024.03";
+/// Data version.
+dataVersion = "2024.03";
+/// Data path.
+dataPath = path.cat([global.cgiRoot, appName]);
+/// Days for geometrical results average
+evalDays = 80;
+/// Number of steps for evaluation
+evalSteps = 20;
+/// Number of steps for evaluation environment.
+envSteps = endEnvSteps - startEnvSteps;
+/// First step for evaluation environment (inclusive)
+startEnvSteps = -2;
+/// First step for evaluation environment (exclusive).
+endEnvSteps = 3;
+/// Minimum sales to compute results.
+minSales = 80.0;
+
+/// Data base ------------------------------------------------------------------
+
+/// Periods to save data
+Periods = ["daily", "weekly", "monthly"];
+/// Dates in period.
+datesInPeriod = 20;
+
+// External paths --------------------------------------------------------------
+
+/// Directory of historic quotes tables type 'NICK.tb'.
+quotesPath = "/dm/KtWeb/dmcgi/Market/quotes";
+/// Table with ibex data.
+ibexTb = "/dm/KtWeb/dmcgi/Market/ibex.tb";
+
+// Simulation parameteres ------------------------------------------------------
+
+/// Simulation bases.
+ParamBases = {
+    "APRX": [0.15, 0.005],
+    "APRX2": [0.15, 0.005],
+    "APRX3": [0.15, 0.005],
+    "ME": [5.0, 0.01],
+    "ME2": [5.0, 0.01],
+    "MM": [5.0, 0.01],
+    "MX_MN": [5.0, 0.01],
+    "QFIJO": [0.05],
+    "QMOV": [0.05],
+    "SS_BB": [0.15, 0.068],
+    "SSBB0": [0.15]
+  };
+
+/// Simulation base increments.
+ParamBaseIncs = {
+    "APRX": [0.01, 0.005],
+    "APRX2": [0.01, 0.005],
+    "APRX3": [0.01, 0.005],
+    "ME": [2.0, 0.005],
+    "ME2": [2.0, 0.005],
+    "MM": [2.0, 0.005],
+    "MX_MN": [2.0, 0.005],
+    "QFIJO": [0.01],
+    "QMOV": [0.01],
+    "SS_BB": [0.01, 0.004],
+    "SSBB0": [0.01]
+  };
+
+/// Simulation environment increments.
+ParamEnvIncs = {
+    "APRX": [0.001, 0.001],
+    "APRX2": [0.001, 0.001],
+    "APRX3": [0.001, 0.001],
+    "ME": [1.0, 0.001],
+    "ME2": [1.0, 0.001],
+    "MM": [1.0, 0.001],
+    "MX_MN": [1.0, 0.001],
+    "QFIJO": [0.001],
+    "QMOV": [0.001],
+    "SS_BB": [0.001, 0.0008],
+    "SSBB0": [0.001]
+  };

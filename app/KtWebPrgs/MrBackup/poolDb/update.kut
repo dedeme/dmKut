@@ -1,0 +1,225 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Update backups.
+
+import "libdm/log";
+import "cts";
+import "poolDb";
+
+/// \ -> ()
+run = \ -> {
+	log.warning("Updating backups...");
+	pool = cts.mrBackupTargets[0];
+	for (dir = file.dir(pool)) updateDir(pool, dir);
+	log.warning("Bakups updated");
+};
+
+/// \s, s -> ()
+updateDir = \pool, dir -> {
+	pdirOp = poolDb.readPathTxt(pool, dir);
+	if (!pdirOp) {
+		f = path.cat([pool, dir]);
+		if (!file.isDirectory(f)) {
+			file.del(f);
+			log.error(str.fmt("Deleted %v\n", [f]));
+		}
+
+		return; // skip directory without 'path.txt'
+	}
+  pdir = pdirOp!;
+
+  Tgzs = arr.filter(
+      file.dir(path.cat([pool, dir])),
+      \f -> return str.ends(f, ".tgz");
+    );
+
+  name = !!Tgzs
+    ? arr.reduce(Tgzs, Tgzs[0], \r, e -> return e > r ? e : r;)
+    : ""
+  ;
+  lastTime = name != ""
+    ? file.tm(path.cat([pool, dir, name]))
+    : 0
+  ;
+
+	if (shouldUpdate(pdir, lastTime)) {
+		log.warning(dir + ": Updating...");
+		if (backup(pdir, dir))
+			log.warning(dir + ": Updated.");
+		else
+			log.error(dir + ": Updating FAILED!!!");
+	}
+};
+
+// \s, i -> b
+shouldUpdate = \dir, tm -> {
+	for (fname = file.dir(dir)) {
+		p = path.cat([dir, fname]);
+		if (file.isDirectory(p)) {
+			if (shouldUpdate(p, tm)) return true;
+			continue;
+		}
+		if (file.isRegular(p) & file.tm(p) > tm) return true;
+	}
+	return false;
+};
+
+// \s, s -> b
+backup = \source, target -> {
+	fileName = time.toStr(time.now()) + ".tgz";
+	tmpDir = file.tmp("", "MrBackup");
+	file.mkdir(tmpDir);
+
+	tmpFile = path.cat([tmpDir, fileName]);
+  error = tar(source, tmpFile);
+  if (error != "") {
+    log.error(error);
+    file.del(tmpDir);
+		return false;
+	}
+
+	for (pool = cts.mrBackupTargets) {
+		poolDir = path.cat([pool, target]);
+		file.copy(tmpFile, poolDir);
+		clean(poolDir);
+	}
+
+  file.del(tmpDir);
+	return true;
+};
+
+// Returns "" if all was well or a message if an error happened.
+// \s, s -> s
+tar = \source, target -> {
+	cwd = file.wd();
+  file.cd(path.parent(source));
+
+  try {
+    OE = sys.cmd2("tar", ["-czf", target, path.base(source)]);
+    file.cd(cwd);
+    if (OE[0] != "" | OE[1] != "") return OE[0] != "" ? OE[0] : OE[1];
+    return "";
+  } catch (e) {
+    file.cd(cwd);
+    return e;
+  }
+};
+
+// \s -> ()
+clean = \dir -> {
+	dnow = time.now();
+	now = time.toStr(dnow);
+
+	All = []; // [s.]
+	for (fname = file.dir(dir)) {
+		p = path.cat([dir, fname]);
+		if (file.isDirectory(p)) {
+			file.del(p);
+			log.error(str.fmt("Deleted %v\n", [p]));
+      continue;
+		}
+		arr.push(All, fname);
+	}
+
+	isBigV = [false];
+	Tgzs = []; // [s.]
+	for (e = All) {
+		if (e == "path.txt") continue;
+		if (e == "big") {
+			isBigV! = true;
+			continue;
+		}
+		if (!str.ends(e, ".tgz")) {
+			f = path.cat([dir, e]);
+			file.del(f);
+			log.error(str.fmt("Deleted %v\n", f));
+			continue;
+		}
+		date = e[:-4];
+		Rs = time.fromStr(date);
+		if (!Rs) {
+			f = path.cat([dir, e]);
+			file.del(f);
+			log.error(str.fmt("Deleted %v\n", f));
+			continue;
+		}
+		if (date < "20190101" | date > now) {
+			f = path.cat([dir, e]);
+			file.del(f);
+			log.error(str.fmt("Deleted %v\n", f));
+			continue;
+		}
+    arr.push(Tgzs, date);
+	}
+
+  arr.sort(Tgzs, \t1, t2 -> return t1 > t2;);
+
+	if (isBigV!) {
+		if (arr.size(Tgzs) > 3) {
+			nowM = now[:6];
+			nowY = now[:4];
+			ToDelete = []; // [s.]
+			dayV = [true];
+			monthV = [true];
+			yearV = [true];
+			savedV = [0];
+			for (tgz = Tgzs) {
+				if (dayV!) {
+					dayV! = false;
+					savedV! += 1;
+					continue;
+				}
+				if (monthV!) {
+					if (tgz[:6] == nowM) {
+						arr.push(ToDelete, tgz);
+						continue;
+					}
+					monthV! = false;
+					savedV! += 1;
+					continue;
+				}
+				if (yearV!) {
+					if (tgz[:4] == nowY) {
+						arr.push(ToDelete, tgz);
+						continue;
+					}
+					yearV! = false;
+					savedV! += 1;
+					continue;
+				}
+				arr.push(ToDelete, tgz);
+			}
+
+      for (i = 0 : 3 - savedV!) arr.shift(ToDelete);
+
+			for (tgz = ToDelete) {
+				f = path.cat([dir, tgz + ".tgz"]);
+				file.del(f);
+			}
+		}
+	} else {
+		nowD = time.toStr(time.addDays(dnow, -7));
+		lastMV = [now[:6]];
+		nowY = now[:4];
+		lastYV = [nowY];
+		for (i, e = Tgzs) {
+			if (e >= nowD) continue;
+
+			eY = e[:4];
+			if (eY == nowY | i < 18) {
+				eM = e[:6];
+				if (eM != lastMV!) {
+					lastMV! = eM;
+					continue;
+				}
+			} else if (eY != lastYV!) {
+				lastYV! = eY;
+				continue;
+			}
+			f = path.cat([dir, e + ".tgz"]);
+			file.del(f);
+		}
+	}
+};
+

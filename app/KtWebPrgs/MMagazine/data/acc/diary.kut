@@ -8,12 +8,7 @@ import "data/acc/op";
 
 /// Creates a new Diary.
 /// \i, [<Ann>...] -> d<Diary>
-new = \nextId, Anns -> {
-  return {
-    "nextId": nextId,
-    "anns": Anns
-  };
-};
+new : nextId, Anns;
 
 /// Returns 'initial capital' + 'stock values' at the beginning of the year.
 /// \[<Ann>...] -> f

@@ -1,0 +1,15 @@
+// Copyright 12-Dic-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test main script.
+
+import "modelTest";
+import "strategyTest";
+
+/// Run tests
+run = \ -> {
+  //modelTest.run();
+  strategyTest.run();
+};
+
+

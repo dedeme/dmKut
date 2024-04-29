@@ -1,0 +1,59 @@
+// Copyright 18-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main module.
+
+import "libdm/log";
+import "test/k00all";
+import "pgs/logPg";
+import "pgs/globalPg";
+import "pgs/modelsPg";
+import "cts";
+import "db";
+import "updater";
+
+// \ -> s
+help = \ -> return """
+  Use MarketModels [help | version | init | update | test <request> | <request>]
+  where
+    help   : Shows this message.
+    version: Shows program version.
+    init   : Initializes program.
+             Must be called only the first time that the program is called.
+    update : Updates data base.
+    test   : Run tests.
+    request: Request sent by browser.
+  """;;
+
+log.setPath(path.cat([cts.dataPath, "log.tb"]));
+
+:arr Args = sys.args();
+
+if (Args.size() == 2 & Args[0] == "test") {
+  sys.print(k00all.process(Args[1]));
+  return;
+}
+
+if (Args.size() != 1 & (Args.size() != 2 | Args[1] != "")) {
+  sys.println(help());
+  return;
+}
+
+rq = Args[0];
+switch (rq) {
+  "update": updater.run();
+  "version": sys.println(cts.version);
+  "init": db.init();
+  "help", "": sys.println(help());
+  default: try {
+    :: Rq = js.r(rq);
+    sys.print(switch(Rq.source) {
+      "LogPg": logPg.process(Rq);
+      "GlobalPg": globalPg.process(Rq);
+      "ModelsPg": modelsPg.process(Rq);
+      default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+    });
+  } catch (e) {
+    sys.printError(e);
+  }
+}

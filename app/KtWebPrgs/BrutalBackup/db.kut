@@ -1,28 +1,45 @@
-// Copyright 10-Feb-2023 ºDeme
+// Copyright 03-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base
+/// Data base management.
 
-import "libdm/jstb";
-import "KtWeb/global";
-import "data/cts";
-import "data/bkPaths";
+import "cts";
+import "db/bkEntryTb";
+import "db/fromClientTb";
+import "db/fromServerTb";
 
-DbPath = [""];
+klen = 20;
+dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
 
-/// Initializes data base.
-/// \-> ()
+/// Initializes data base
+/// \ -> ()
 init = \ -> {
-  dbPath = path.cat([global.cgiRoot, cts.appName]);
-  DbPath! = dbPath;
-  if (!file.exists(dbPath)) file.mkdir(dbPath);
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    bkEntryTb.init();
+    fromClientTb.init();
+    fromServerTb.init();
+    return;
+  }
+  sys.throw("Data base already is initialized");
 };
 
-/// Returns the table of 'a<bkPaths>' in "bkPathsList.tb"
-/// \-> a<jsdb>
-bkListTb = \-> return jstb.newArr(
-  DbPath! + "/bkPathsList.tb",
-  \-> return [];,
-  bkPaths.toJs,
-  bkPaths.fromJs
-);;
+/// Returns the state identifier.
+/// \ -> ();
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};

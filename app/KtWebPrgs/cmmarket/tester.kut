@@ -8,184 +8,174 @@ import "libmkt/strategy";
 import "libmkt/order";
 import "data/result";
 import "data/modelEval";
+import "data/simParams";
 import "data/cts";
 
 
+//i
+evalStepsSquare = cts.evalSteps * cts.evalSteps;
 // i
-envSteps2 = cts.envSteps / 2;
+envSteps2 = math.itof(cts.envSteps / 2);
+//i
+envStepsSquare = cts.envSteps * cts.envSteps;
+// f
+fEnvSteps = math.itof(cts.envSteps);
+// f
+fEnvStepsSquare = math.itof(envStepsSquare);
 
-// Test a parameter environment
-// \<model>, <quotes>, f -> <result>
-runB1 = \md, Qs, param -> {
-  inc = model.paramEnvIncs(md)[0];
-  RResult = [result.new(0.0, 0.0, 0.0)];
-  V = [param];
-  for (i = 0:envSteps2) V! -= inc;
-  for (i = 0:cts.envSteps) {
-    v = V!;
-    V! += inc;
-    StrRs = strategy.run(md, Qs, [v], cts.daysWin, cts.daysLoss);
-    Hassets = StrRs.hassets;
-    Profits = StrRs.profits;
-    R = RResult!;
-    RResult! = result.new(
-      R.assets + Hassets[arr.size(Hassets)-1],
-      R.profits +
-        arr.reduce(Profits, 0.0, \r, e -> return r + e;) /
-            math.itof(arr.size(Profits)),
-      R.sales + math.itof(order.sales(StrRs.orders))
+// Creates a new evaluation.
+// EnvRs is a dictionary {sales: f, assets: f, profits: f}
+mkEval = \overwrite, Params, PEvals, EnvRs -> {
+  // \f, f, f -> f
+  fnOverwrite = \hist, last, n -> return (hist * n - last) / (n - 1.0);;
+  //
+  fnNew = \hist, new, n -> return hist + (new - hist) / n;;
+
+  pEvalOp = modelEval.get(PEvals, Params);
+  if (!pEvalOp) {
+    return modelEval.new(
+      Params, 2, // to avoid division by 0 the next time.
+      EnvRs.assets, EnvRs.profits, EnvRs.sales,
+      EnvRs.assets, EnvRs.profits, EnvRs.sales
     );
   }
-  n = math.itof(cts.envSteps);
-  R = RResult!;
-  return result.new(R.assets / n, R.profits / n, R.sales / n);
+  pEval = pEvalOp!;
+
+  times = pEval.times;
+  n = math.itof(times);
+  hassets = overwrite
+    ? fnOverwrite(pEval.hassets, pEval.assets, n)
+    : pEval.hassets
+  ;
+  hprofits = overwrite
+    ? fnOverwrite(pEval.hprofits, pEval.profits, n)
+    : pEval.hprofits
+  ;
+  hsales = overwrite
+    ? fnOverwrite(pEval.hsales, pEval.sales, n)
+    : pEval.hsales
+  ;
+  newTimes = times < cts.evalDays ? times + 1 : cts.evalDays;
+
+  return modelEval.new(
+    Params, newTimes,
+    fnNew(hassets, EnvRs.assets, n),
+    fnNew(hprofits, EnvRs.profits, n),
+    fnNew(hsales, EnvRs.sales, n),
+    EnvRs.assets, EnvRs.profits, EnvRs.sales
+  );
 };
 
 // Tests a model with only one parameter.
-// \<model>, <quotes>, [<modelEval>...] -> [<modelEval>...]
-run1 = \md, Qs, pEvals -> {
-  Evals = []; // [<modelEval>...]
-  inc = model.paramBaseIncs(md)[0];
-  V = [model.paramBases(md)[0]];
+// \<model>, <b>, <quotes>, [<modelEval>.] -> [<modelEval>.]
+run1 = \:model md, overwrite, qts, PEvals -> {
+  ParamBase = simParams.paramBases(md.id); // [f]
+  binc = simParams.paramBaseIncs(md.id)[0];
+  einc = simParams.paramEnvIncs(md.id)[0];
+  eStartInc = einc * envSteps2;
+  AllParams = []; // [[f].]
+  Param = [ParamBase[0]];
   for (i = 0:cts.evalSteps) {
-    v = V!;
-    V! += inc;
-    R = runB1(md, Qs, v);
-    Ev = modelEval.get(pEvals, [v]);
-    if (Ev) {
-      E = Ev!;
-      n = E.times >=
-        cts.evalTimes
-        ? cts.evalTimes
-        : E.times + 1
-      ;
-      div = math.itof(n);
-      arr.push(
-        Evals,
-        modelEval.new(
-          [v], n,
-          E.assets + (R.assets - E.assets) / div,
-          E.profits + (R.profits - E.profits) / div,
-          E.sales + (R.sales - E.sales) / div,
-          R.assets, R.profits, R.sales
-        )
-      );
-    } else {
-      arr.push(
-        Evals,
-        modelEval.new(
-          [v], 1,
-          R.assets, R.profits, R.sales,
-          R.assets, R.profits, R.sales
-        )
-      );
+    EnvParam = [Param[0] - eStartInc];
+    for (i = 0:cts.envSteps) {
+      arr.push(AllParams, [EnvParam[0]]);
+      EnvParam[0] += einc;
     }
+    Param[0] += binc;
   }
+
+  StRs = strategy.stGroup2(md, qts, AllParams);
+
+  Evals = []; // [<modelEval>.]
+  Params = [ParamBase[0]]; // [f]
+  for (i = 0:cts.evalSteps*cts.envSteps-1:cts.envSteps) {
+    EnvRs = {sales: 0.0, assets: 0.0, profits: 0.0};
+    for (j = 0:cts.envSteps) {
+      ix = i + j;
+      EnvRs.sales += StRs.Sales[ix];
+      EnvRs.assets += StRs.Assets[ix];
+      EnvRs.profits += StRs.Profits[ix];
+    }
+    EnvRs.sales /= fEnvSteps;
+    EnvRs.assets /= fEnvSteps;
+    EnvRs.profits /= fEnvSteps;
+    arr.push(Evals, mkEval(overwrite, [Params[0]], PEvals, EnvRs));
+    Params[0] += binc;
+  }
+
   return Evals;
 };
 
 
-// Test a parameter environment
-// \<model>, <quotes>, [f, f] -> <result>
-runB2 = \md, Qs, Ps -> {
-  inc0 = model.paramEnvIncs(md)[0];
-  inc1 = model.paramEnvIncs(md)[1];
-  RResult = [result.new(0.0, 0.0, 0.0)];
-  V0 = [Ps[0]];
-  for (i = 0:envSteps2) V0! -= inc0;
-  V1 = [Ps[1]];
-  for (i = 0:envSteps2) V1! -= inc1;
-  v1Start = V1!;
-  for (i = 0:cts.envSteps) {
-    v0 = V0!;
-    V0! += inc0;
-
-    V1 = [v1Start];
-    for (j = 0:cts.envSteps) {
-      v1 = V1!;
-      V1! += inc1;
-
-      StrRs = strategy.run(md, Qs, [v0, v1], cts.daysWin, cts.daysLoss);
-      Hassets = StrRs.hassets;
-      Profits = StrRs.profits;
-      R = RResult!;
-      RResult! = result.new(
-        R.assets + Hassets[arr.size(Hassets)-1],
-        R.profits +
-          arr.reduce(Profits, 0.0, \r, e -> return r + e;) /
-              math.itof(arr.size(Profits)),
-        R.sales + math.itof(order.sales(StrRs.orders))
-      );
-    }
-  }
-
-  n = math.itof(cts.envSteps * cts.envSteps);
-  R = RResult!;
-
-  return result.new(R.assets / n, R.profits / n, R.sales / n);
-};
-
 // Tests a model with two parameters.
-// \<model>, <quotes>, [<modelEval>...] -> [<modelEval>...]
-run2 = \md, Qs, pEvals -> {
-  Evals = []; // [<modelEval>...]
-  inc0 = model.paramBaseIncs(md)[0];
-  inc1 = model.paramBaseIncs(md)[1];
-  V0 = [model.paramBases(md)[0]];
-  v1Start = model.paramBases(md)[1];
+// \<model>, <b>, <quotes>, [<modelEval>.] -> [<modelEval>.]
+run2 = \:model md, overwrite, qts, PEvals -> {
+  ParamsBase = simParams.paramBases(md.id); // [f, f]
+  binc0 = simParams.paramBaseIncs(md.id)[0];
+  binc1 = simParams.paramBaseIncs(md.id)[1];
+  einc0 = simParams.paramEnvIncs(md.id)[0];
+  einc1 = simParams.paramEnvIncs(md.id)[1];
+  eStartInc0 = einc0 * envSteps2;
+  eStartInc1 = einc1 * envSteps2;
+  AllParams = []; // [[f, f].]
+  Params = [ParamsBase[0], 0.0];
   for (i = 0:cts.evalSteps) {
-    v0 = V0!;
-    V0! += inc0;
-    V1 = [v1Start];
-    for (j = 0:cts.evalSteps) {
-      v1 = V1!;
-      V1! += inc1;
-
-      Ps = [v0, v1];
-      R = runB2(md, Qs, Ps);
-      Ev = modelEval.get(pEvals, Ps);
-      if (Ev) {
-        E = Ev!;
-        n = E.times >=
-          cts.evalTimes
-          ? cts.evalTimes
-          : E.times + 1
-        ;
-        div = math.itof(n);
-        arr.push(
-          Evals,
-          modelEval.new(
-            Ps, n,
-            E.assets + (R.assets - E.assets) / div,
-            E.profits + (R.profits - E.profits) / div,
-            E.sales + (R.sales - E.sales) / div,
-            R.assets, R.profits, R.sales
-          )
-        );
-      } else {
-        arr.push(
-          Evals,
-          modelEval.new(
-            Ps, 1,
-            R.assets, R.profits, R.sales,
-            R.assets, R.profits, R.sales
-          )
-        );
+    Params[1] = ParamsBase[1];
+    for (i = 0:cts.evalSteps) {
+      EnvParams = [Params[0] - eStartInc0, 0.0];
+      for (i = 0:cts.envSteps) {
+        EnvParams[1] = Params[1] - eStartInc1;
+        for (i = 0:cts.envSteps) {
+          arr.push(AllParams, [EnvParams[0], EnvParams[1]]);
+          EnvParams[1] += einc1;
+        }
+        EnvParams[0] += einc0;
       }
+      Params[1] += binc1;
+    }
+    Params[0] += binc0;
+  }
+
+  StRs = strategy.stGroup2(md, qts, AllParams);
+
+  Evals = []; // [<modelEval>.]
+  RParams = [ParamsBase[0], ParamsBase[1]]; // [f, f]
+  i1V = [0];
+  for (i = 0:evalStepsSquare*envStepsSquare-1:envStepsSquare) {
+    EnvRs = {sales: 0.0, assets: 0.0, profits: 0.0};
+    for (j = 0:envStepsSquare) {
+      ix = i + j;
+      EnvRs.sales += StRs.Sales[ix];
+      EnvRs.assets += StRs.Assets[ix];
+      EnvRs.profits += StRs.Profits[ix];
+    }
+    EnvRs.sales /= fEnvStepsSquare;
+    EnvRs.assets /= fEnvStepsSquare;
+    EnvRs.profits /= fEnvStepsSquare;
+    arr.push(Evals, mkEval(overwrite, [RParams[0], RParams[1]], PEvals, EnvRs));
+    i1V! += 1;
+    if (i1V! == cts.evalSteps) {
+      i1V! = 0;
+      RParams[1] = ParamsBase[1];
+      RParams[0] += binc0;
+    } else {
+      RParams[1] += binc1;
     }
   }
+
   return Evals;
 };
 
 /// Returns evaluations for a model, generating parameters using data of
 /// Md.paramBases, Md.paramBaseIncs and Md.paramEnvIncs.
-///   md          : Model to test.
-///   quotes      : Market quotes.
-///   prevousEvals: Current modelEvals.
+///   md           : Model to test.
+///   overwrite    : 'true' if date of 'qts' is equals to dates of 'previousEvals'.
+///   qts          : Market quotes.
+///   PreviousEvals: Current modelEvals.
 /// \<model>, <quotes>, [<modelEval>...] -> [<modelEval>...]
-run = \md, Qs, previousEvals -> {
-  return arr.size(model.paramBases(md)) == 1
-    ? run1(md, Qs, previousEvals)
-    : run2(md, Qs, previousEvals)
+run = \:model md, overwrite, qts, PreviousEvals -> {
+  return arr.size(simParams.paramBases(md.id)) == 1
+    ? run1(md, overwrite, qts, PreviousEvals)
+    : run2(md, overwrite, qts, PreviousEvals)
   ;
 };

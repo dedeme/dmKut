@@ -1,4 +1,4 @@
-// Copyright 04-Nov-2022 ºDeme
+// Copyright 13-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main page.
@@ -6,22 +6,23 @@
 import "libdm/cgi";
 import "KtWeb/rp";
 import "KtWeb/global";
-import "db";
+import "data/conf";
+import "db/confTb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "lang": {
-      ConfTb = db.getConfTb();
-      sys.print(rp.mkJs({
-        "lang": js.ws(ConfTb.read()["lang"])
-      }));
+      :conf cf = confTb.read();
+      return rp.mk({
+        "lang": cf.lang
+      });
     }
     "close": {
       cgi.init(global.cgiRoot, global.texpiration);
       cgi.connect(Rq.sessionId);
       cgi.delSession(Rq.sessionId);
-      sys.print(rp.mkEmpty());
+      return (rp.mkEmpty());
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

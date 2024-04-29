@@ -1,0 +1,55 @@
+// Copyright 01-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "KtWeb/rp";
+import "data/alarm";
+import "cts";
+import "db/alarmTb";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      dbKey = db.readKey();
+      :alarm Alarms = alarmTb.read();
+      Alarms.update();
+      alarmTb.write(Alarms);
+      return rp.mk({
+          dbKey,
+          Alarms
+        });
+    }
+    "add": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :alarm As = alarmTb.read();
+      isDup = !As.add(alarm.mk(Rq.key, math.ftoi(Rq.tm)));
+      if (!isDup) {
+        alarmTb.write(As);
+        ppath = path.cat([file.wd(), sys.mainPath()[:-4]]);
+        thread.run(
+          \ -> sys.cmd2("kut2", [ppath, "alarm!", Rq.key]);
+        );
+        sys.sleep(200);
+      }
+      return rp.mk({
+          dbKey,
+          isDup
+        });
+    }
+    "del": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :alarm As = alarmTb.read();
+      As.del(alarm.fromJs(Rq.alarm));
+      alarmTb.write(As);
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

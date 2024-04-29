@@ -1,0 +1,26 @@
+// Copyright 30-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions
+
+import "cts";
+
+/// Returns abs(n).
+/// \f | i -> f | i
+abs = \n -> return n > -n ? n : -n;;
+
+/// Returns the parameter that matchs the result index 'ix'.
+///   mdId: Model identifier.
+///   ix  : Result index.
+/// \s, i -> [f.]
+ixToParams = \mdId, ix -> {
+  :arr B = cts.ParamBases[mdId];
+  Binc = cts.ParamBaseIncs[mdId];
+  if (B.size() == 1) {
+    return [B[0] + Binc[0] * math.itof(ix)];
+  }
+  steps = cts.evalSteps;
+  r = ix / steps;
+  c = ix - r * steps;
+  return [B[0] + Binc[0] * math.itof(r), B[1] + Binc[1] * math.itof(c)];
+};

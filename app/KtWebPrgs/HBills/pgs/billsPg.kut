@@ -1,0 +1,44 @@
+// Copyright 15-Nov-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Bills page.
+
+import "KtWeb/rp";
+import "data/monthAnn";
+import "db/placesTb";
+import "db";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      :dic Places = placesTb.read();
+      Bills = arr.map(
+        db.readBills(),
+        \:monthAnn b -> {
+          b.placeOp = Places.get(b.month);
+          return b;
+        }
+      );
+      return rp.mk({
+        Bills,
+        dbKey: db.readKey()
+      });
+    }
+    "setPlace": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      placeOp, month : Rq;
+
+      place = !placeOp ? "" : placeOp!;
+      :dic Places = placesTb.read();
+      Places.put(Places, month, place);
+      placesTb.write(Places);
+
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+

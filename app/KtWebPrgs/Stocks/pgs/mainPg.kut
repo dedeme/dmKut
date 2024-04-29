@@ -1,29 +1,28 @@
-// Copyright 08-Aug-2023 ºDeme
+// Copyright 26-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main page.
 
 import "KtWeb/rp";
-import "data/cts";
+import "db";
+import "db/allTb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "read": {
-      fpath = path.cat([cts.dataPath, "all.tb"]);
-      if (file.exists(fpath))
-        sys.print(rp.mk({data: [js.r(file.read(fpath))]}));
-      else {
-        file.mkdir(path.parent(fpath));
-        sys.print(rp.mk({data: []}));
-      }
+      return rp.mkJs({
+        dbKey: js.w(db.readKey()),
+        Data: allTb.readJs()
+      });
     }
     "write": {
-      fpath = path.cat([cts.dataPath, "all.tb"]);
-      file.write(fpath, js.w(Rq.data));
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      allTb.writeJs(js.w(Rq.Data));
+      return rp.mk({ dbKey });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
-

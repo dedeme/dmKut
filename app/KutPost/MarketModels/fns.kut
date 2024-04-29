@@ -1,0 +1,24 @@
+// Copyright 21-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions.
+
+import "cts";
+
+/// Calculates statistis.
+/// Returns one value for each investor (col).
+///   tp: Type of statistics ("average", "crrAverage", "deviation")
+///   Rss: Values to make calculations. (days (rows) x invs (cols))
+/// NOTE: When in a calculus, some historic value is -1, the final result is
+///       also -1.
+/// \s, [[i.]] -> [i.]
+stats = \tp, Rss -> {
+  fn = arr.index(cts.Stats, \s -> return s == tp;) - 1;
+  rRs = sys.cmd(
+    path.cat([path.parent(sys.mainPath()), "chelper"]),
+    [math.itos(fn), js.w(Rss)]
+  );
+  if (rRs[1]) return arr.map(js.r(rRs!), math.ftoi);
+  sys.throw(rRs!);
+};
+

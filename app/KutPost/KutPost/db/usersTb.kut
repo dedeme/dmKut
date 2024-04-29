@@ -1,0 +1,29 @@
+// Copyright 17-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Users table
+
+import "cts";
+import "data/user";
+
+:file fpath = path.cat([cts.dataPath, "users.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> {
+  if (!fpath.exists())
+    write([user.new("admin", cryp.key(cts.demeKey, cts.klen), "0")]);
+};
+
+/// Read users
+/// \ -> [<user>.]
+read = \ -> return js.r(cryp.decode(
+    cryp.key(cts.demeKey, cts.klen),
+    fpath.read()
+  ));;
+
+/// Write users.
+/// \[<user>.] -> ()
+write = \users -> fpath.write(
+    cryp.encode(cryp.key(cts.demeKey, cts.klen), js.w(users))
+  );;

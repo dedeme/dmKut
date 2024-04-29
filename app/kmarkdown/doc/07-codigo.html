@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="lang" content="es" />
+<meta name="author" content="ºDeme." />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" href="styles.css" type="text/css" />
+<title>kmarkdown doc</title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    macros: {
+      DS: "\\displaystyle",
+      EX: "{\\times 10}"
+    }
+  }
+};
+</script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  function aceConf (ed, mode) {
+    const editor = ace.edit(ed);
+    editor.setTheme("ace/theme/deme");
+    editor.session.setMode("ace/mode/" + mode);
+    editor.getSession().setTabSize(2);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setOptions({
+      readOnly: true,
+      maxLines: 100000
+    });
+  }
+</script>
+</head>
+
+<body>
+<div id='hp:START_PAGE'></div>
+<table class="kmd-main"><tr><td style="text-align:left">
+  <span class="kmd-title">Código</span>
+  </td><td style="text-align:right">
+  <span class="kmd-title">Documentación de Kmarkdown</span>
+</td></tr></table>
+<hr>
+<p style="text-indent: 0px"><a href='06-formulas.html'>Anterior (Formulas)</a> · <a href="index.html">Índice</a> · <a href='08-encabezados.html'>Posterior (Encabezados)</a></p>
+<hr>
+<p style='text-indent:0px'>
+<a href='#Creación'>Creación</a><br>
+<a href='#Requisitos'>Requisitos</a>
+</p>
+<hr>
+<a name="Creación"></a>
+<h3>Creación</h3>
+<p>Se pueden presentar recuadros con código utilizando la siguiente sintaxis:</p>
+
+<pre>
+&#x0060;&#x0060;lenguage
+<i>código</i>
+&#x0060;&#x0060;
+</pre>
+<div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Código en javascript:
+
+&#x0060;&#x0060;javascript
+function sum3(a) {
+  return a + 3;
+}
+&#x0060;&#x0060;</div>
+<script>aceConf("aceEditor-0", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Código en javascript:</p>
+<div id="aceEditor-1" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">function sum3(a) {
+  return a + 3;
+}</div>
+<script>aceConf("aceEditor-1", "javascript");</script>
+</div><p><i>NOTA:</i></p>
+<p><i>Escribir texto en la misma línea detrás de las marcas de cierre &#x0060;&#x0060;
+es un error; pero escribirlo en la siguiente línea no.</i></p>
+<p>Esto es un error:</p>
+<div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Código en javascript:
+
+&#x0060;&#x0060;javascript
+function sum3(a) {
+  return a + 3;
+}
+&#x0060;&#x0060; Esto es un error</div>
+<script>aceConf("aceEditor-2", "kmd");</script>
+<p>Esto no es un error:</p>
+<div id="aceEditor-3" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Código en javascript:
+
+&#x0060;&#x0060;javascript
+function sum3(a) {
+  return a + 3;
+}
+&#x0060;&#x0060;
+Esto no es un error</div>
+<script>aceConf("aceEditor-3", "kmd");</script>
+<p>Produce:</p>
+<div style="color:#404080"><div id="aceEditor-4" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">function sum3(a) {
+  return a + 3;
+}</div>
+<script>aceConf("aceEditor-4", "javascript");</script>
+<p>Esto no es un error</p>
+</div><a name="Requisitos"></a>
+<h3>Requisitos</h3>
+<p>Para que los cuadros de código funciones es necesario:</p>
+<ol>
+<li>
+<p>Tener instalado el editor <a href="https://ace.c9.io">Ace</a>.</p>
+</li>
+<li>
+<p> Que el editor tenga el módulo del lenguage correspondiente.</p>
+</li>
+</ol>
+<h4>Instalación</h4>
+<p>Es conveniente descargar la versión <i>src-noconflict</i> o <i>src-min-noconflict</i> de
+<a href="https://github.com/ajaxorg/ace-builds">https://github.com/ajaxorg/ace-builds</a>.</p>
+<p>Por defecto este directorio se debe renombrar como <code>"ace"</code> y debe estar en el
+mismo directorio que los archivos <code>.kmd</code>. Para ello se pueden usar enlaces
+simbólicos.</p>
+<p>Es posible cambiar la ubicación del directorio manipulando el archivo
+generado automáticamente por kmarkdown
+<a href="09-config.html#El archivo <i>000header.html</i>">000header.html</a>.</p>
+<h4>Lenguaje</h4>
+<p>Los lenguajes disponibles se encuentra en el dírectorio <code>"ace"</code> con nombres
+tipo <code>mode-<i>lenguaje</i>.js</code>. Por ejemplo <code>mode-c_cpp.js</code>
+se corresponde con los lenguajes 'c' y 'c++', <code>mode-javascript-js</code> con el
+lenguaje 'javascript', etc.</p>
+<hr>
+<p style="text-indent: 0px"><a href='06-formulas.html'>Anterior (Formulas)</a> · <a href="index.html">Índice</a> · <a href='08-encabezados.html'>Posterior (Encabezados)</a></p>
+<div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
+  <span onclick="location.assign('#hp:START_PAGE');">
+    <img border="0" src="img/up.png" alt="" />
+  </span>
+</div>
+<div id='hp:END_PAGE'></div>
+
+</body>
+</html>

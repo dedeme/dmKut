@@ -1,0 +1,86 @@
+=
+title = Formulas
+=
+
+## Creación
+
+Las fórmulas se introducen y finalizan con ``&#x0060;``
+
+Las fórmulas que aparecen al inicio de párrafo se colocan en párrafo aparte.
+
+``kmd
+Fórmula dentro de un párrafo: &#x0060;3+2=5&#x0060;.
+
+&#x0060;3+2=5&#x0060; También es una fórmula dentro de un párrafo.
+
+Fórmula en párrafo propio:
+
+&#x0060;3+2=5&#x0060;
+
+La siguiente también está en párrafo propio
+
+&#x0060;3+2=5&#x0060;
+como se ve.
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Fórmula dentro de un párrafo: `3+2=5`.
+
+Fórmula en párrafo propio:
+
+`3+2=5`
+
+La siguiente también está en párrafo propio
+
+`3+2=5`
+como se ve.
+
+``</div>``
+
+Al igual que en el caso de las imágenes la expresión siguiente es un error:
+
+``kmd
+`3+2=5` Esto es un error.
+``
+
+Si se quiere empezar el párrafo con una fórmula se puede colocar delante un
+espacio.
+
+``kmd
+ `3+2=5` Esto no es un error.
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+ `3+2=5` Esto no es un error.
+
+``</div>``
+
+## Recuadrado
+
+Las fórmulas se pueden recuadrar las fórmulas que se encuentra en su propio
+párrafo, añadiendo en la línea siguiente a la marca ``&#x0060;`` de cierre
+otra línea con el único caracter '='.
+
+``kmd
+La siguiente fórmula está recuadrada.
+
+`3+2=5`
+=
+``
+
+Produce:
+
+``<div style="color:#404080">``
+
+La siguiente fórmula está recuadrada.
+
+`3+2=5`
+=
+
+``</div>``

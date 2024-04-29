@@ -1,0 +1,41 @@
+// Copyright 05-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Server to client channel.
+
+/// States enumeration.
+end, error, readingSource, readingTarget, selecting, copying, deleting :;
+
+/// Constructor.
+///   state       : One of "end, error, readingSource, readingTarget, copying".
+///   errorMsg    : Short message if 'state' is "error". The complete message
+///               : is on top of warnings.
+///   Warnings    : Warn messages.
+///   totalCount  : When "copying", number of files in source plus target.
+///   currentCount: When "copying", number of files (source + target) processed.
+/// \s,s,[s.],i,i -> <fromServer>
+new : state, errorMsg, Warnings, totalCount, currentCount;
+
+/// Equals to new(end, "", [], 0, 0);
+newDefault = \ -> return new(end, "", [], 0, 0);;
+
+/// \<fromServer>, s -> ()
+setState = \O, v -> O[state] = v;;
+
+/// \<fromServer>, s -> ()
+setError = \O, v -> O[error] = v;;
+
+/// \<fromServer>, [s.] -> ()
+setWarnings = \O, v -> O[Warnings] = v;;
+
+/// \<fromServer>, i -> ()
+setCurrentCount = \O, v -> O[currentCount] = v;;
+
+/// \JS -> <fromServer>
+fromJs = \A -> return [
+    A[state],
+    A[errorMsg],
+    A[Warnings],
+    math.ftoi(A[totalCount]),
+    math.ftoi(A[currentCount])
+  ];;

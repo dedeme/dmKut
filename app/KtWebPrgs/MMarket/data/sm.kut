@@ -1,0 +1,12 @@
+// Copyright 30-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Summary data.
+
+/// Constructor.
+///   pts : Points summary,
+///   real: Summary of assets calculated with current prices
+///   acc : Summary of assets calculated with buy prices.
+///   prof: Profits summary.
+/// \[<smE>.],[<smE>.],[<smE>.],[<smE>.] -> <sm>
+new : Pon, Real, Acc, Prof;

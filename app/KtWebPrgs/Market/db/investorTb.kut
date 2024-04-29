@@ -1,0 +1,77 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <investor> table.
+
+import "cts";
+import "libmkt/models";
+import "libmkt/model";
+import "libmkt/quotes";
+import "data/co/cos";
+import "data/co/co";
+import "data/investor/investor";
+import "data/investor/istrategy";
+import "cosTb";
+import "quotesDb";
+
+fpath = path.cat([cts.dataPath, "investor.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) {
+  :cos cs = cosTb.read();
+  write(investor.newDefault(arr.map(cs.Cos, \:co c -> return c.nick;)));
+};
+
+/// Reads table.
+/// \ -> <investor>
+read = \ -> return js.r(file.read(fpath));;
+
+/// Writes table.
+/// \<investor> -> ()
+write = \o -> file.write(fpath, js.w(o));;
+
+/// Synchronizes investor strategy with its base, returning "" or
+/// an error if the function fails.
+/// \ -> s
+update = \ -> {
+  :cos cs = cosTb.read();
+  mainNick = cs.mainNick;
+  Nicks = arr.map(cs.Cos, \:co c -> return c.nick;);
+  :investor inv = read();
+  :istrategy base = inv.base;
+  baseMdOp = models.get(base.modelId);
+  if (!baseMdOp) return "Model " + base.modelId + " not found";
+  :model baseMd = baseMdOp!;
+
+  :dic NickStr = inv.Nicks;
+  NewNickStr = {}; // {<strategy>.}
+  errV = [""];
+  for (nk = Nicks) {
+    nkStrategyOp = NickStr.get(nk);
+    if (!!nkStrategyOp & !base.eq(nkStrategyOp!)) {
+      :istrategy nkStrategy = nkStrategyOp!;
+      :quotes qts, ok = quotesDb.readQuotes(mainNick, nk);
+      if (!ok) {
+        errV! = qts;
+        break;
+      }
+      nkMdOp = models.get(nkStrategy.modelId);
+      if (!!nkMdOp) {
+        :model nkMd = nkMdOp!;
+        cl = arr.peek(qts.Closes)[0];
+        baseRf = arr.peek(baseMd.calc(qts.Closes, base.Params))[0];
+        nkRf = arr.peek(nkMd.calc(qts.Closes, nkStrategy.Params))[0];
+        if ((baseRf < cl & nkRf > cl) | (baseRf > cl & nkRf < cl)){
+          NewNickStr.put(nk, nkStrategy);
+          continue;
+        }
+      }
+    }
+    NewNickStr.put(nk, base);
+  }
+
+  if (errV! != "") return errV!;
+  write(investor.new(base, NewNickStr));
+  return "";
+};

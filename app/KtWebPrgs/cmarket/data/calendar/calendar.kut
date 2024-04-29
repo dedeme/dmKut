@@ -9,37 +9,36 @@ import "data/cts";
 
 /// Constructor.
 ///   general     : Default timetable of a market day.
-///   holidays    : Holiday dates.
-///   specialDays : Days with special timetable.
-/// \<timetable>, [s...], [<marketDay>...] -> d<calendar>
-new = \general, holidays, specialDays ->
-  return {general, holidays, specialDays};;
+///   Holidays    : Holiday dates.
+///   SpecialDays : Days with special timetable.
+/// \<timetable>, [s...], [<marketDay>...] -> <calendar>
+new : general, Holidays, SpecialDays;
 
 /// Constructor from other <calendar> modifiyng a field.
 ///   C      : Previous calendar.
 ///   general: Default timetable of a market day.
-/// \<calendar>, <timetable> -> calendar
-mkGeneral = \C, general -> return new(general, C.holidays, C.specialDays);;
+/// \<calendar>, <timetable> -> <calendar>
+mkGeneral = \C, general -> return new(general, C[Holidays], C[SpecialDays]);;
 
 /// Constructor from other <calendar> modifiyng a field.
 ///   C       : Previous calendar.
-///   holidays: Holiday dates.
-/// \<calendar>, [s...] -> calendar
-mkHolidays = \C, holidays -> return new(C.general, holidays, C.specialDays);;
+///   Holidays: Holiday dates.
+/// \<calendar>, [s...] -> <calendar>
+mkHolidays = \C, Holidays -> return new(C[general], Holidays, C[SpecialDays]);;
 
 
 /// Constructor from other <calendar> modifiyng a field.
 ///   C          : Previous calendar.
-///   specialDays: Days with special timetable.
-/// \<calendar>, [<marketDay>...] -> calendar
-mkSpecialDays = \C, specialDays ->
-  return new(C.general, C.holidays, specialDays);;
+///   SpecialDays: Days with special timetable.
+/// \<calendar>, [<marketDay>...] -> <calendar>
+mkSpecialDays = \C, SpecialDays ->
+  return new(C[general], C[Holidays], SpecialDays);;
 
 /// \<calendar> -> [JS...]
 toJs = \C -> return [
-    timetable.toJs(C.general),
-    C.holidays,
-    arr.map(C.specialDays, marketDay.toJs)
+    timetable.toJs(C[general]),
+    C[Holidays],
+    arr.map(C[SpecialDays], marketDay.toJs)
   ];;
 
 /// \[JS...] -> <calendar>
@@ -55,10 +54,10 @@ fromJs = \A -> return new(
 ///   calendar: Calendar.
 ///   tm      : Date to test.
 /// \<calendar>, i -> b
-isMarketDay = \Cal, tm -> {
+isMarketDay = \C, tm -> {
   wd = time.weekday(tm);
   d = time.toStr(tm);
-  return wd > 0 & wd < 6 & !arr.any(Cal.holidays, \h -> return h == d;);
+  return wd > 0 & wd < 6 & !arr.any(C[Holidays], \h -> return h == d;);
 };
 
 /// Returns true if is time to Watch market.
@@ -67,13 +66,21 @@ isMarketDay = \Cal, tm -> {
 ///   calendar: Calendar.
 ///   tm      : Time to test.
 /// \<calendar>, i -> b
-isTimeToWatch = \Cal, tm -> {
+isTimeToWatch = \C, tm -> {
   tm = tm - cts.serverDelay * 1000;
   d = time.toStr(tm);
-  if (isMarketDay(Cal, tm)) {
-    SpecialDay = arr.find(Cal.specialDays, \D -> return D.date == d;);
-    o = SpecialDay ? SpecialDay!.hopen - 1 : Cal.general.hopen - 1;
-    c = SpecialDay ? SpecialDay!.hclose + 1 : Cal.general.hclose + 1;
+  if (isMarketDay(C, tm)) {
+    specialDayOp = arr.find(
+      C[SpecialDays], \:marketDay D -> return D.date == d;
+    );
+    o = !specialDayOp
+      ? C[general][timetable.hopen] - 1
+      : specialDayOp![marketDay.hopen] - 1
+    ;
+    c = !specialDayOp
+      ? C[general][timetable.hclose] + 1
+      : specialDayOp![marketDay.hclose] + 1
+    ;
 
     h = time.hour(tm);
     return h >= o & h <= c;
@@ -87,21 +94,24 @@ isTimeToWatch = \Cal, tm -> {
 ///   calendar: Calendar.
 ///   tm      : Time to test.
 /// \<calendar>, i -> b
-isOpen =  \Cal, tm -> {
+isOpen =  \C, tm -> {
   tm = tm - cts.serverDelay * 1000;
   d = time.toStr(tm);
-  if (isMarketDay(Cal, tm)) {
+  if (isMarketDay(C, tm)) {
     h = time.hour(tm);
     m = time.minute(tm);
-    // \<timetable>|<marketDay> -> bool
-    inLimits = \tt -> return (h > tt.hopen | (h == tt.hopen & m >= tt.mopen)) &
+    // \<timetable> -> bool
+    inLimits = \:timetable tt -> return
+      (h > tt.hopen | (h == tt.hopen & m >= tt.mopen)) &
 			(h < tt.hclose | (h == tt.hclose & m <= tt.mclose))
     ;;
 
-    SpecialDay = arr.find(Cal.specialDays, \D -> return D.date == d;);
-    return SpecialDay
-      ? inLimits(SpecialDay!)
-      : inLimits(Cal.general)
+    specialDayOp = arr.find(
+      C[SpecialDays], \:marketDay D -> return D.date == d;
+    );
+    return !specialDayOp
+      ? inLimits(C[general])
+      : inLimits(marketDay.toTimetable(specialDayOp!))
     ;
   }
   return false;

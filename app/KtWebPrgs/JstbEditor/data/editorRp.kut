@@ -39,5 +39,5 @@ mkOk = \data -> return new("", [data]);;
 /// \<editorRp> -> [*(JS)...]
 toJs = \E -> return [
   E.error,
-  E.jdata ? [jsData.toJs(E.jdata!)] : []
+  !!E.jdata ? [jsData.toJs(E.jdata!)] : []
 ];;

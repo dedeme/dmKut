@@ -4,6 +4,7 @@
 /// Constants.
 
 import "libmkt/strategy";
+import "libmkt/cts";
 
 //Application ----------------------------------------------------------------
 
@@ -11,7 +12,7 @@ import "libmkt/strategy";
 appName = "cmmarket";
 
 /// Data version
-version = "202309";
+version = "202401";
 
 /// Data directory.
 dataPath = "/dm/KtWeb/dmcgi/CMMarket";
@@ -19,19 +20,16 @@ dataPath = "/dm/KtWeb/dmcgi/CMMarket";
 /// cmarket data directory.
 cmarketDataPath = "/dm/KtWeb/dmcgi/CMarket";
 
-/// Number of quotes in historic tables
-historicQuotes = 610;
+/// Number of quotes of a year. (52 * 5)
+yearQuotes = 260;
 
 // market ----------------------------------------------------------------------
-
-/// Investors initial capital for each cycle
-initialCapital = strategy.initialCapital;
 
 /// Assets ratio for evaluation.
 assetsRatio = 0.6;
 
 /// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
-maxAssets = initialCapital * maxProfitsAvgRatio;
+maxAssets = cts.initialCapital * maxProfitsAvgRatio;
 
 /// Profits ratio for evaluation.
 profitsAvgRatio = 1.0 - assetsRatio;
@@ -39,17 +37,11 @@ profitsAvgRatio = 1.0 - assetsRatio;
 /// Maximum ratio for profits evaluation. (1€ generates 3€)
 maxProfitsAvgRatio = 3.0;
 
-/// Weeks for geometrical results average
-evalTimes = 50;
+/// Days for geometrical results average
+evalDays = 80;
 
 /// Number of steps for evaluation
 evalSteps = 20;
 
-/// Number for step environmet.
+/// Number for step environmet. (Must be even).
 envSteps = 5;
-
-/// Delay days after a sale with profits (in 5 days per week).
-daysWin = 0;
-
-/// Delay days after a sale with losses (in 5 days per week).
-daysLoss = 45;

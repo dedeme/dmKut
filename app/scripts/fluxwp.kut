@@ -134,19 +134,19 @@ syncGr = \Picts, group -> {
 
 //  Synchronize all the pictures.
 sync = \-> {
-  psTb = pictsTb();
-  Picts = psTb.read();
+  :jstb psTb = pictsTb();
+  Picts = psTb.read#();
   NewPicts = [];
   for (i = 0:10) {
     Ps = syncGr(arr.filter(Picts, \p -> return pictGroup(p) == i;), i);
     for (p = Ps) arr.push(NewPicts, p);
   }
-  psTb.write(NewPicts);
+  psTb.write#(NewPicts);
 };
 
 //  Show a new current picture.
 show = \-> {
-  Picts = pictsTb().read();
+  Picts = pictsTb()[jstb.read]();
   lim = arr.reduce(Picts, 0, \r, e -> return r + pictPonderation(e););
   More = [true];
   while (More!) {
@@ -159,7 +159,7 @@ show = \-> {
         pname = pictName(P);
         sourcePict = path.cat([sourceDir(pgroup), pname]);
         if (file.exists(sourcePict)) {
-          currentTb().write(P);
+          currentTb()[jstb.write](P);
           imgConversion(pgroup, pname);
           sys.cmd("fbsetbg", [pictDir]);
           More! = false;
@@ -174,7 +174,7 @@ show = \-> {
 //  Process a rejection of picture.
 //  \->()
 reject = \-> {
-  P = currentTb().read();
+  P = currentTb()[jstb.read]();
   oldPonderation = pictPonderation(P);
   dif = maxPonderation - oldPonderation;
   newPonderation = oldPonderation == 0
@@ -185,11 +185,11 @@ reject = \-> {
   ;
   NewP = newPict(pictGroup(P), pictName(P), newPonderation);
 
-  PictsTb = pictsTb();
-  Picts = PictsTb.read();
+  :jstb PictsTb = pictsTb();
+  Picts = PictsTb.read#();
   arr.filterIn(Picts, \P -> return !pictEq(NewP, P););
   arr.push(Picts, NewP);
-  PictsTb.write(Picts);
+  PictsTb.write#(Picts);
 
   show();
 };
@@ -197,17 +197,17 @@ reject = \-> {
 //  Process a change of picture.
 //  \->()
 change = \-> {
-  P = currentTb().read();
+  P = currentTb()[jstb.read]();
   oldPonderation = pictPonderation(P);
   dif = maxPonderation - oldPonderation;
   newPonderation = maxPonderation - dif / 2;
   NewP = newPict(pictGroup(P), pictName(P), newPonderation);
 
-  PictsTb = pictsTb();
-  Picts = PictsTb.read();
+  :jstb PictsTb = pictsTb();
+  Picts = PictsTb.read#();
   arr.filterIn(Picts, \P -> return !pictEq(NewP, P););
   arr.push(Picts, NewP);
-  PictsTb.write(Picts);
+  PictsTb.write#(Picts);
 
   show();
 };
@@ -218,7 +218,7 @@ initDb();
 
 Args = sys.args();
 
-if (Args) {
+if (!!Args) {
   switch (Args[0]) {
     "reject": reject();
     "change": change();

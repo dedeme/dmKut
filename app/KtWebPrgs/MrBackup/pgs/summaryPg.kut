@@ -1,0 +1,52 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Summary page
+
+import "KtWeb/rp";
+import "libdm/log";
+import "cts";
+import "fns";
+import "poolDb/testDirs";
+import "poolDb/testFiles";
+import "poolDb/update";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "getLog": return rp.mkJs({
+        Log: log.readJs()
+      });
+    "resetLog": {
+        log.reset();
+        return rp.mkEmpty();
+      }
+    "dirs": {
+      isBusy = fns.isBusy();
+      if (isBusy) return rp.mk({isBusy});
+
+      pools, badPools, dirs, badDirs : testDirs.run();
+      return rp.mk({ isBusy, pools, badPools, dirs, badDirs });
+    }
+    "files": {
+      isBusy = fns.isBusy();
+      if (isBusy) return rp.mk({isBusy});
+
+      files, outdatedDirs, outdatedFiles : testFiles.run();
+      return rp.mk({ isBusy, files, outdatedDirs, outdatedFiles });
+    }
+    "update": {
+      if (!fns.isBusy()) {
+        thread.run(
+          \ -> sys.cmd("kut2", cts.terminalCommand);
+        );
+        sys.sleep(1000);
+      }
+      return rp.mkEmpty();
+    }
+    "isBusy":
+      return rp.mk({isBusy: fns.isBusy()});
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

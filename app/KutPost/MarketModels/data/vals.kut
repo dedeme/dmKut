@@ -1,0 +1,10 @@
+// Copyright 22-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Result group values.
+
+/// Constructor.
+///   date: Date of group values.
+///   Vals: Values of several dates sorted from 'date' (after) to before.
+/// \s,[[i.].] -> <vals>
+new : date, Vals;

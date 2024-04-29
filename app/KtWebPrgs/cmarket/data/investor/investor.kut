@@ -9,16 +9,19 @@ import "istrategy";
 
 /// Constructor
 ///   base: Strategy by default.
-///   nicks: Dictionary nick-strategy.
+///   Nicks: Dictionary nick-strategy.
 /// \<istrategy>, {<istrategy>...} -> <investor>
-new = \base, nicks -> return {base, nicks};;
+new : base, Nicks;
 
 /// Create a default investor.
 ///   nicks: Array of company nicks.
 /// \[s...] -> <investor>
 mk = \nicks -> {
-  md = models.list()[0];
-  st = istrategy.new(model.id(md), model.paramBases(md));
+  :model md = models.list()[0];
+  st = istrategy.new(
+    md.id,
+    arr.map(md.ParamTypes, \p -> return p == model.dayParam ? 10 : 0.5;)
+  );
   nks = {}; // {<istrategy>...}
   for (nk = nicks) dic.put(nks, nk, st);
   return new(st, nks);
@@ -26,8 +29,8 @@ mk = \nicks -> {
 
 /// \<investor> -> JS
 toJs = \I -> return [
-    istrategy.toJs(I.base),
-    arr.map(dic.toArr(I.nicks), \Tp -> return [Tp[0], istrategy.toJs(Tp[1])];)
+    istrategy.toJs(I[base]),
+    arr.map(dic.toArr(I[Nicks]), \Tp -> return [Tp[0], istrategy.toJs(Tp[1])];)
   ];;
 
 /// \JS -> <investor>

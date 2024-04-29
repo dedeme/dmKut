@@ -1,4 +1,4 @@
-// Copyright 07-Sep-2023 ºDeme
+// Copyright 12-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Module page.
@@ -12,12 +12,10 @@ import "data/doc";
 process = \Rq -> {
   switch (Rq.rq) {
     "doc": {
-      Doc = mdReader.read(Rq.pack, Rq.path);
-      sys.println(rp.mk({
-        "doc": Doc
-          ? [doc.toJs(Doc!)]
-          : []
-      }));
+      docOp = mdReader.read(Rq.pack, Rq.path);
+      return rp.mk({
+        docOp
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

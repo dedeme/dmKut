@@ -1,0 +1,32 @@
+// Copyright 29-Sep-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Dance selector page
+
+import "KtWeb/rp";
+import "data/danceSong";
+import "db/danceSongs";
+import "db/sels";
+
+/// \{*.} -> ()
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      Groups = danceSongs.getGroups();
+      group0 = sels.getDanceSelectorGroup();
+      group = group0 == "" ? Groups[0] : group0;
+      sys.print(rp.mkJs({
+        groups: js.w(Groups),
+        group: js.w(group),
+        songs: danceSongs.readJs(group)
+      }));
+    }
+    "changeGroup": {
+      sels.setDanceSelectorGroup(Rq.group);
+      sys.print(rp.mkEmpty());
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+

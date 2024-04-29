@@ -1,0 +1,21 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Directory test result.
+
+/// Constructor.
+/// Mutable object.
+///   isBig: 'true' if backup directory is 'big'.
+///   withBackups: 'true' if backup directory contains backup files.
+///   withPathTxt: 'true' if backup directory contains the file 'path.txt'.
+///   dpath: Path of directory in file system.
+///   pathOk: 'true' if 'dpath' is a valid path.
+///   notInBase: 'true' if directory is not in backup base.
+///   isMissing: 'true' if directory is not in another backup that 'base'.
+///   synchronized: 'true' if backup directory is synchronized.
+/// \b,b,b,s,b,b,b,b -> <testRs>
+new : isBig, withBackups, withPathTxt, dpath, pathOk, notInBase, isMissing,
+  synchronized;
+
+/// \ -> <testRs>
+newDefault = \ -> return new(false, false, false, "", false, false, false, true);;

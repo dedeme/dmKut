@@ -1,29 +1,30 @@
-// Copyright 25-Nov-2022 ºDeme
+// Copyright 02-Mar-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Show an alarm.
 
+import "data/alarm";
+import "db/alarmTb";
 import "db";
 
 /// Show the alarm with key 'id' if it exists.
 /// \s -> ()
 run = \id -> {
-  AlarmsTb = db.alarmsTb();
-  As = AlarmsTb.read();
-  ix = arr.index(As, \A -> return A[0] == id;);
-  if (ix != -1) {
-    tm = math.ftoi(As[ix][1]);
-    sys.sleep(tm - time.now());
-    As = AlarmsTb.read();
-    ix2 = arr.index(As, \A -> return A[0] == id;);
-    if (ix2 != 1) {
-      arr.remove(As, ix2);
-      AlarmsTb.write(As);
+  :arr As = alarmTb.read();
+  aOp = As.find(\:alarm a -> return a.id == id;);
+  if (!!aOp) {
+    :alarm a = aOp!;
+    sys.sleep(a.tm - time.now());
+    :arr As = alarmTb.read();
+    ix = As.index(\:alarm a -> return a.id == id;);
+    if (ix != -1) {
+      As.remove(ix);
+      alarmTb.write(As);
       sys.cmd2("zenity", [
         "--info",
         "--width=400",
         '--title=alarmClock',
-        '--text=Alarma de las ' + time.fmt("%t", tm)[:5]
+        '--text=Alarma de las ' + time.format(a.tm, "%t")[:5]
       ]);
     }
   }

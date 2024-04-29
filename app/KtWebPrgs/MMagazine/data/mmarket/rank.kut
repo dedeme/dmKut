@@ -8,4 +8,4 @@
 ///   assets : Pairs [model-value] sorted by value.
 ///   profits: Pairs [model-value] sorted by value.
 /// \[[s, f]...], [[s, f]...], [[s, f]...] -> d<rank>
-new = \points, assets, profits -> return { points, assets, profits };;
+new : Points, Assets, Profits;

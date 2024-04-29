@@ -1,0 +1,76 @@
+// Copyright 09-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes data base
+
+import "libmkt/qs";
+import "libmkt/volumes";
+import "libmkt/quotes";
+import "libmkt/cts" : mcts;
+import "cts";
+
+dpath = path.cat([cts.dataPath, "quotes"]);
+
+// \s -> s
+fpath = \nick -> return path.cat([dpath, nick + ".tb"]);;
+
+/// Initializes data base.
+/// Tables must be created manually.
+/// \ -> ()
+init = \ ->  file.mkdir(dpath);;
+
+/// Retrurns registered nicks.
+/// \ -> [s.]
+nicks = \ -> return arr.map(
+    arr.filter(
+      file.dir(dpath),
+      \f -> return str.ends(f, ".tb");
+    ),
+    \f -> return f[:-3];
+  );;
+
+/// Return quotes a company file (from after to before).
+/// \s -> s
+read = \nick -> return file.read(fpath(nick));;
+
+/// Returns [quotes([<quote>.])|error, ok] of a company file (from after to before).
+/// \s -> [[<quote>.]|s, b]
+readQs = \nick -> return qs.fromStr(mcts.historicQuotes, read(nick));;
+
+/// Write content of a company file.
+/// \s, s -> ()
+write = \nick, data -> file.write(fpath(nick), data);;
+
+/// Returns [quotes(<quotes>)|error, ok] of a company file (from before to after).
+///   mainNick: Nick of the main company. (To extract dates)
+///   nick: Nick to make <quotes>.
+/// \s -> [<quotes>|s, b]
+readQuotes = \mainNick, nick -> {
+  MainQs, ok = readQs(mainNick);
+  if (!ok) return [MainQs, ok];
+  Dates = qs.dates(MainQs);
+
+  NickQs, ok2 = readQs(nick);
+  if (!ok2) return [NickQs, ok2];
+
+  return [
+    quotes.new(
+      [nick],
+      Dates,
+      arr.map(qs.opens(NickQs), \q -> return [q];),
+      arr.map(qs.closes(NickQs), \q -> return [q];),
+      arr.map(qs.maxs(NickQs), \q -> return [q];),
+      arr.map(qs.mins(NickQs), \q -> return [q];)
+    ),
+    true
+  ];
+};
+
+/// Read volume average (in €) of serveral companies.
+/// Returns one value for each company. If data can not be read, the company
+/// value is set to 0.
+///   Cos    : Nicks of companies to read.
+/// [s.] -> [f.]
+readVolumes = \Cos -> {
+  return volumes.read(dpath, cts.quotesVolume, Cos);
+};

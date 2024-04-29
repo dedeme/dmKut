@@ -8,16 +8,11 @@ import "data/paramsEval";
 /// Returns a dic with the following values.
 ///   date: Date of data.
 ///   entries: Parameters-Evaluations of a model.
-/// \s, a[<paramsEval>...] -> d<HotMap>
-new = \date, entries -> {
-  return {
-    date,
-    entries
-  };
-};
+/// \s, a[<paramsEval>.] -> <HotMap>
+new : date, Entries;
 
 /// \d[*(JS)...] -> <HotMap>
 fromJs = \D -> return new(
-    D.date,
-    arr.map(D.entries, \e -> return paramsEval.fromJs(e);)
+    D[date],
+    arr.map(D[Entries], \e -> return paramsEval.fromJs(e);)
   );;

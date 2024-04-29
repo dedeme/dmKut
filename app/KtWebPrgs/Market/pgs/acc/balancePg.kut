@@ -1,0 +1,54 @@
+// Copyright 15-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Accounting balance page.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "cts";
+import "data/acc/ann";
+import "data/acc/settlement";
+import "data/acc/pf";
+import "data/invOperation";
+import "db/acc/diariesDb";
+import "db/trading/closesTb";
+import "db/trading/refsTb";
+import "db/invOperationsTb";
+
+/// \m -> ()
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      okV = [true];
+      :arr Oprs = invOperationsTb.read();
+
+      :arr Ys = diariesDb.investorYears();
+      :arr Anns = !Ys ? [] : diariesDb.investorAnns(Ys[0]);
+      :settlement set = ann.mkSettlement(Anns);
+      if (!!set.Errors) {
+        okV! = false;
+        for (e = set.Errors) log.error(e);
+      }
+
+      // {f.}
+      Refs = dic.fromArr(arr.map(
+        dic.toArr(refsTb.read()), \Kv -> return [Kv[0], Kv[1][1]];
+      ));
+      // [s.]
+      Jails = arr.map(
+        Oprs.filter(\:invOperation o -> return o.stocks > 0;),
+        \:invOperation o -> return o.nick;
+      );
+
+      return rp.mk({
+        ok: okV!,
+        ledger: set.ledger,
+        Portfolio: set.Portfolio,
+        Jails,
+        Closes: closesTb.readOnlyCloses(), // {f.} :: {nick -> close}
+        Refs // {f.} :: (nick -> ref).
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

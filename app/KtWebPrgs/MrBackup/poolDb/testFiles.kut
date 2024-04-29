@@ -1,0 +1,67 @@
+// Copyright 29-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Directories testing.
+
+import "libdm/log";
+import "cts";
+import "poolDb";
+
+/// Testing pool files.
+/// \ -> {i, i, i} :: {files, outdatedDirs, outdatedFiles}
+run = \ -> {
+  :: R = {files: 0, outdatedDirs: 0, outdatedFiles: 0};
+
+	pool = cts.mrBackupTargets[0];
+	for (dir = file.dir(pool)) {
+		pdirOp = poolDb.readPathTxt(pool, dir);
+		if (!pdirOp) continue;
+    pdir = pdirOp!;
+
+    Tgzs = arr.filter(
+        file.dir(path.cat([pool, dir])),
+        \f -> return str.ends(f, ".tgz");
+      );
+
+    name = !Tgzs
+      ? ""
+      : Tgzs.reduce(Tgzs[0], \r, e -> return e > r ? e : r;)
+    ;
+    lastTime = name != ""
+      ? file.tm(path.cat([pool, dir, name]))
+      : 0
+    ;
+
+		all, outdated : findOutdated(pdir, lastTime);
+		R.files += all;
+		if (outdated > 0) {
+			log.error(str.fmt(
+				"El directorio (%v) esta obsoleto.", [dir]
+			));
+			R.outdatedDirs += 1;
+			R.outdatedFiles += outdated;
+		}
+	}
+
+  return R;
+};
+
+// \s, i -> {i, i} :: {all, outdated}
+findOutdated = \dir, tm -> {
+  :: R = {all: 0, outdated: 0};
+
+	for (fname = file.dir(dir)) {
+		p = path.cat([dir, fname]);
+		if (file.isDirectory(p)) {
+      all, outdated : findOutdated(p, tm);
+			R.all += all;
+			R.outdated += outdated;
+			continue;
+		}
+		if (file.isRegular(p)) {
+			R.all += 1;
+			if (file.tm(p) > tm) R.outdated += 1;
+		}
+	}
+	return R;
+};

@@ -1,0 +1,92 @@
+// Copyright 23-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Daily page.
+
+import "libdm/log";
+import "libmkt/cts" : mcts;
+import "KtWeb/rp";
+import "data/chart/dailyChart";
+import "data/acc/ann";
+import "data/acc/settlement";
+import "data/acc/ldg";
+import "data/qsvs";
+import "data/qsv";
+import "data/activity";
+import "db/daily/dailyChartsTb";
+import "db/daily/cosSelTb";
+import "db/acc/diariesDb";
+import "db/activityTb";
+import "db";
+import "sch";
+import "cts";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      CosData = []; // [<dailyChart>.]
+      IxsData = []; // [<dailyChart>.]
+      for (:dailyChart ch = dailyChartsTb.read()) {
+        if (arr.any([cts.meNick] + cts.IxNicks, \n -> return ch.nick == n;))
+          IxsData.push(ch);
+        else CosData.push(ch);
+      }
+      IxsData.sort(\:dailyChart d1, :dailyChart d2 -> return
+        d1.nick == cts.meNick
+          ? true
+          : d1.nick == cts.ibexNick
+              ? d2.nick != cts.meNick
+              : false
+      ;);
+
+      DicRebuys = {}; // {s.} :: {nick: date}
+      Ys = diariesDb.investorYears();
+      for (y = Ys[:2]) ann.rebuys(DicRebuys, diariesDb.investorAnns(y));
+
+      :qsv sv = qsvs.currentDiary();
+      serverName = sv.name;
+      :activity act = activityTb.read();
+      actId = act.activity;
+
+      Anns = !!Ys ? diariesDb.investorAnns(Ys[0]) : [];
+      :settlement set = ann.mkSettlement(Anns);
+      maxCosV = [20];
+      if (!!set.Errors) {
+        for (e = set.Errors) log.error(e);
+      } else {
+        :ldg l = set.ledger;
+        cash = l.cash - mcts.minToBet + mcts.bet;
+        maxCosV! = math.ftoi(cash) / math.ftoi(mcts.bet);
+      }
+
+      return rp.mk({
+        dbKey: db.readKey(),
+        CosData,
+        IxsData,
+        CosSel: cosSelTb.read(),
+        Rebuys: DicRebuys.keys(),
+        serverName,
+        "activity": actId,
+        maxCos: maxCosV!
+      });
+    }
+    "reactivate": {
+      sch.dailyActivate();
+      return rp.mkEmpty();
+    }
+    "setSelected": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      nick, isSel : Rq;
+      :arr CosSel = cosSelTb.read();
+      if (isSel) CosSel.push(nick);
+      else CosSel.filterIn(\n -> return n != nick;);
+
+      cosSelTb.write(CosSel);
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

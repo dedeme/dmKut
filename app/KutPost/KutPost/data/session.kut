@@ -1,0 +1,28 @@
+// Copyright 17-Jan-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+// Copyright 15-Mar-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Session data
+
+/// Constructor.
+///   id    : Identifier.
+///   key   : Comunication key.
+///   userId: Owner user identifier.
+///   level : User level.
+///   tm    : Last connection time (Seconds).
+///   lapse : Seconds to expiration.
+/// \s,s,s,s,i,i -> <session>
+new : id, key, userId, level, tm, lapse;
+
+/// \JS -> <session>
+fromJs = \A -> return [
+    A[id],
+    A[key],
+    A[userId],
+    A[level],
+    math.ftoi(A[tm]),
+    math.ftoi(A[lapse])
+  ];;
+

@@ -4,9 +4,11 @@
 /// Approximations (2) model.
 
 import "../model";
+import "../cts";
 import "doc/appr3Doc";
 
 /// Returns a new 'appr2' model.
+/// \-><model>
 new = \ -> return model.new(
     "APRX3",
     "Aproximaciones sucesivas (3)",
@@ -14,3 +16,53 @@ new = \ -> return model.new(
     ["Inicio", "Aprox."],
     [model.percParam, model.percParam]
   );;
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  start = Params[0];
+  upStart = 1.0 + start;
+  downStart = 1.0 - start;
+  incr = Params[1];
+
+  Refs = arr.new(0.0, size);
+  IsSolds = arr.new(0, ncos);
+  for (i = 0:ncos) Refs[i] = Closes[i] * downStart;
+
+  for (idate = ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iprevious = previousIdate + ico;
+
+      c = Closes[icurrent];
+      prvC = Closes[iprevious];
+      rf = Refs[iprevious];
+      if (IsSolds[ico] == 1) {
+        if (c > rf) {
+          IsSolds[ico] = 0;
+          Refs[icurrent] = c * downStart;
+        } else {
+          r1 = rf - (rf - c) * incr;
+          r2 = c * rf / prvC;
+          if (r1 < r2) Refs[icurrent] = r1;
+          else Refs[icurrent] = r2;
+        }
+      } else {
+        if (c < rf) {
+          IsSolds[ico] = 1;
+          Refs[icurrent] = c * upStart;
+        } else {
+          r1 = rf + (c - rf) * incr;
+          r2 = c * rf / prvC;
+          if (r1 > r2) Refs[icurrent] = r1;
+          else Refs[icurrent] = r2;
+        }
+      }
+    }
+  }
+  return Refs;
+};

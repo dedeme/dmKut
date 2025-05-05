@@ -19,18 +19,18 @@ run = \ -> {
 updateDir = \pool, dir -> {
 	pdirOp = poolDb.readPathTxt(pool, dir);
 	if (!pdirOp) {
-		f = path.cat([pool, dir]);
+		f = file.cat([pool, dir]);
 		if (!file.isDirectory(f)) {
 			file.del(f);
 			log.error(str.fmt("Deleted %v\n", [f]));
 		}
 
-		return; // skip directory without 'path.txt'
+		return; // skip directory without 'file.txt'
 	}
   pdir = pdirOp!;
 
   Tgzs = arr.filter(
-      file.dir(path.cat([pool, dir])),
+      file.dir(file.cat([pool, dir])),
       \f -> return str.ends(f, ".tgz");
     );
 
@@ -39,7 +39,7 @@ updateDir = \pool, dir -> {
     : ""
   ;
   lastTime = name != ""
-    ? file.tm(path.cat([pool, dir, name]))
+    ? file.tm(file.cat([pool, dir, name]))
     : 0
   ;
 
@@ -55,7 +55,7 @@ updateDir = \pool, dir -> {
 // \s, i -> b
 shouldUpdate = \dir, tm -> {
 	for (fname = file.dir(dir)) {
-		p = path.cat([dir, fname]);
+		p = file.cat([dir, fname]);
 		if (file.isDirectory(p)) {
 			if (shouldUpdate(p, tm)) return true;
 			continue;
@@ -71,7 +71,7 @@ backup = \source, target -> {
 	tmpDir = file.tmp("", "MrBackup");
 	file.mkdir(tmpDir);
 
-	tmpFile = path.cat([tmpDir, fileName]);
+	tmpFile = file.cat([tmpDir, fileName]);
   error = tar(source, tmpFile);
   if (error != "") {
     log.error(error);
@@ -80,7 +80,7 @@ backup = \source, target -> {
 	}
 
 	for (pool = cts.mrBackupTargets) {
-		poolDir = path.cat([pool, target]);
+		poolDir = file.cat([pool, target]);
 		file.copy(tmpFile, poolDir);
 		clean(poolDir);
 	}
@@ -93,10 +93,10 @@ backup = \source, target -> {
 // \s, s -> s
 tar = \source, target -> {
 	cwd = file.wd();
-  file.cd(path.parent(source));
+  file.cd(file.parent(source));
 
   try {
-    OE = sys.cmd2("tar", ["-czf", target, path.base(source)]);
+    OE = sys.cmd2("tar", ["-czf", target, file.base(source)]);
     file.cd(cwd);
     if (OE[0] != "" | OE[1] != "") return OE[0] != "" ? OE[0] : OE[1];
     return "";
@@ -113,7 +113,7 @@ clean = \dir -> {
 
 	All = []; // [s.]
 	for (fname = file.dir(dir)) {
-		p = path.cat([dir, fname]);
+		p = file.cat([dir, fname]);
 		if (file.isDirectory(p)) {
 			file.del(p);
 			log.error(str.fmt("Deleted %v\n", [p]));
@@ -131,7 +131,7 @@ clean = \dir -> {
 			continue;
 		}
 		if (!str.ends(e, ".tgz")) {
-			f = path.cat([dir, e]);
+			f = file.cat([dir, e]);
 			file.del(f);
 			log.error(str.fmt("Deleted %v\n", f));
 			continue;
@@ -139,13 +139,13 @@ clean = \dir -> {
 		date = e[:-4];
 		Rs = time.fromStr(date);
 		if (!Rs) {
-			f = path.cat([dir, e]);
+			f = file.cat([dir, e]);
 			file.del(f);
 			log.error(str.fmt("Deleted %v\n", f));
 			continue;
 		}
 		if (date < "20190101" | date > now) {
-			f = path.cat([dir, e]);
+			f = file.cat([dir, e]);
 			file.del(f);
 			log.error(str.fmt("Deleted %v\n", f));
 			continue;
@@ -194,7 +194,7 @@ clean = \dir -> {
       for (i = 0 : 3 - savedV!) arr.shift(ToDelete);
 
 			for (tgz = ToDelete) {
-				f = path.cat([dir, tgz + ".tgz"]);
+				f = file.cat([dir, tgz + ".tgz"]);
 				file.del(f);
 			}
 		}
@@ -217,7 +217,7 @@ clean = \dir -> {
 				lastYV! = eY;
 				continue;
 			}
-			f = path.cat([dir, e + ".tgz"]);
+			f = file.cat([dir, e + ".tgz"]);
 			file.del(f);
 		}
 	}

@@ -1,0 +1,25 @@
+// Copyright 30-Jul-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// [<tableCheck>.] table.
+
+import "cts";
+import "data/tableCheck";
+
+fpath = file.cat([cts.dataPath, "tableCheck.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<tableCheck>.]
+read = \ -> return js.r(file.read(fpath));;
+
+/// Reads table as JSON string.
+/// \ -> s
+readJs = \ -> return file.read(fpath);;
+
+/// Writes table.
+/// \[<tableCheck>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;

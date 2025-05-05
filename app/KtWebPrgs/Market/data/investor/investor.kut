@@ -26,13 +26,3 @@ newDefault = \Nicks -> {
   for (nk = Nicks) Nks.put(nk, st);
   return new(st, Nks);
 };
-
-/*
-///
-fromJs = \A -> {
-  return new(
-    A[0],
-    dic.fromArr(A[1])
-  );
-};
-*/

@@ -1,12 +1,12 @@
 // Copyright 09-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// [<closes>.] table.
+/// References table of selected companies.
 
 import "../tradingDb";
 import "cts";
 
-fpath = path.cat([tradingDb.dpath, "refs.tb"]);
+fpath = file.cat([tradingDb.dpath, "refs.tb"]);
 
 /// Initializes table.
 /// \ -> ()

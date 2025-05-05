@@ -4,9 +4,11 @@
 /// Model Mobil Quantum.
 
 import "../model";
+import "../cts";
 import "doc/qmobDoc";
 
-/// Returns a new 'appr2' model.
+/// Returns a new 'qmob' model.
+/// \-><model>
 new = \ -> return model.new(
     "QMOV",
     "Quantum móvil",
@@ -14,3 +16,48 @@ new = \ -> return model.new(
     ["Salto"],
     [model.percParam]
   );;
+
+/// Caculate references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  gap = Params[0];
+  upGap = 1.0 + gap;
+  downGap = 1.0 - gap;
+
+  Refs = arr.new(0.0, size);
+  IsSolds = arr.new(0, ncos);
+  for (i = 0:ncos) Refs[i] = Closes[i] * downGap;
+
+  for (idate = ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iprevious = previousIdate + ico;
+
+      c = Closes[icurrent];
+      rf = Refs[iprevious];
+      if (IsSolds[ico] == 1) {
+        if (c > rf) {
+          IsSolds[ico] = 0;
+          Refs[icurrent] = c * downGap;
+        } else {
+          newRf = c * upGap;
+          Refs[icurrent] = newRf > rf ? rf : newRf;
+        }
+      } else {
+        if (c < rf) {
+          IsSolds[ico] = 1;
+          Refs[icurrent] = c * upGap;
+        } else {
+          newRf = c * downGap;
+          Refs[icurrent] = newRf < rf ? rf : newRf;
+        }
+      }
+    }
+  }
+  return Refs;
+};
+

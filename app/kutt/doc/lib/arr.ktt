@@ -1,0 +1,247 @@
+// Copyright 10-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Array functions.
+///
+/// Beside the functions described below, array also allows:
+///
+/// Subindex-get (v = A[ix])
+///   - Returns the element in position 'ix'.
+///   - If 'ix >= arr.len(A)' or 'ix < 0' an exception is thrown.
+///
+/// Subindex-set (A[ix] = v)
+///   - Sets the element in position 'ix'.
+///   - If 'ix >= arr.len(A)' or 'ix < 0' an exception is thrown.
+///
+/// Subarrays at left (A[:ix]), at right (A[ix:]) and between limits (A[i:j]).
+///   These subarrays are shallow copies of the original.
+///     - Values ix in 'right' and 'i' are inclusive, while 'ix' in 'left' and
+///       'j' are exclusive.
+///     - If subindices are '< 0', they are converted en 'len(A) + i'.
+///     - If the final value is '< 0' or '>= len(A)', it is adjusted to limits.
+///     - In case of 'A[i:j]', if 'j < i', returns an empty array.
+///     - The expresion 'A[:]' returns a shallow copy of 'A' (althoug 'arr.copy'
+///       is more efficient).
+///
+/// Boolean value (used with 'if', 'while', '? :', '!', '&' and '|'):
+///   - An empty array is valued as 'false'.
+///
+/// Addition
+///   - The symbol '+' can be used to concatenate arrays in a new array.
+///
+/// 'for' blocks.
+///   Next constructions are allowed:
+///     for (e = A)... Returns in 'e' in order each element of 'A'.
+///     for (i, e = A) ... Returns in 'e' and 'i' in order each element of 'A'
+///                        and its index.
+
+/// Returns 'true' if 'fn' returns true with every element of 'A'.
+//: [[A][A|b]|b]
+all = \A, fn -> {throw "fake for doc";};
+
+/// Returns 'true' if 'fn' returns true with at least one element of 'A'.
+//: [[A][A|b]|b]
+any = \A, fn -> {throw "fake for doc";};
+
+/// Adds in place elements of 'A2' to 'A1'. 'A2' can be the same 'A1'.
+//: [[A][A]|]
+cat = \A1, A2 -> {throw "fake for doc";};
+
+/// Removes every element of 'A'.
+//: [[A]|]
+clear = \A -> {throw "fake for doc";};
+
+/// Returns a shallow copy of 'A'
+//: [[A]|[A]]
+copy = \A -> {throw "fake for doc";};
+
+/// Returns the remains elements of 'A' after making an 'arr.take' operation
+//: [[A]i|[A]]
+drop = \A, n -> {throw "fake for doc";};
+
+/// Returns the remains elements of 'A' after making an 'arr.takeWhile' operation
+//: [[A][A|b]|[A]]
+dropWhile = \A, fn -> {throw "fake for doc";};
+
+/// Returns two arrays:
+///   The first, with elements of 'A' without duplicates.
+///   The second, with duplicates of 'A'. There is only one copy of each duplicate.
+/// Parameters:
+///   A  : Array to split.
+///   feq: Function 'equals to". (e.g. \e1, e2 -> return e1 == e2;)
+//: [[A][AA|b]|[.[A][A]]]
+duplicates = \A, fn -> {throw "fake for doc";};
+
+/// Executes 'fn' with each element of 'A'.
+//: [[A][A|]|]
+each = \A, fn -> {throw "fake for doc";};
+
+/// Executes 'fn' with each element of 'A' and its index.
+//: [[A][Ai|]|]
+eachIx = \A, fn -> {throw "fake for doc";};
+
+/// Returns an array with elements which produce 'true' with 'fn'.
+//: [[A][A|b]|[A]]
+filter = \A, fn -> {throw "fake for doc";};
+
+/// Removes in place elements of 'A' which produce 'false' with 'fn'.
+//: [[A][A|b]|]
+filterIn = \A, fn -> {throw "fake for doc";};
+
+/// Returns an array with the first element which produces 'true' with 'fn' or
+/// an empty list if there is not such element.
+//: [[A][A|b]|[A]]
+find = \A, fn -> {throw "fake for doc";};
+
+/// Returns an array with elements of 'it' en the same order.
+//: [[! A]|[A]]
+fromIter = \it -> {throw "fake for doc";};
+
+/// Returns the index of the first element which produce 'true' with 'fn',
+/// or -1 if such element does not exist.
+//: [[A][A|b]|i]
+index = \A, fn -> {throw "fake for doc";};
+
+/// Inserts the element 'e' at position 'ix'.
+/// Throws exception if 'ix' is out of limits.
+//: [[A]iA|]
+insert = \A, ix, e -> {throw "fake for doc";};
+
+/// Inserts the array 'A2' at position 'ix' in 'A'.
+/// Throws exception if 'ix' is out of limits.
+//: [[A]i[A]|]
+insertArr = \A, ix, A2 -> {throw "fake for doc";};
+
+/// Inserts the array 'A2', from begin (inclusive) to end (exclusive),
+/// at position 'ix' in 'A'.
+/// Throws exception if 'ix', 'begin' or 'end' are out of limits.
+//: [[A]i[A]ii|]
+insertRange = \A, ix, A2, begin, end -> {throw "fake for doc";};
+
+/// Returns a string with elements of A (which are strings) joined with 'sep'.
+//: [[s]s|s]
+join = \A, sep -> {throw "fake for doc";};
+
+/// Returns a new array, restult of applying 'fn' to each element of 'A'.
+//: [[A][A|B]|[B]]
+map = \A, fn -> {throw "fake for doc";};
+
+/// Returns a new array with 'n' elements equals to 'e'.
+/// If 'n' < 0, it is set to '0'.
+//: [Ai|[A]]
+new = \e, n -> {throw "fake for doc";};
+
+/// Returns the last element of 'A'.
+/// If 'A' is empty, throws an exception.
+//: [[A]|A]
+peek = \A -> {throw "fake for doc";};
+
+/// Removes and returns the last element of 'A'.
+/// If 'A' is empty, throws an exception.
+//: [[A]|A]
+pop = \A -> {throw "fake for doc";};
+
+/// Append an element at the end of 'A'.
+//: [[A]A|]
+push = \A, element -> {throw "fake for doc";};
+
+/// Returns the result of calculate 'seed = fn(seed, e)' with every element
+/// of 'A'.
+/// For example:
+///   sys.test(arr.reduce([1, 2, 3], 0, \seed, e -> return seed + e;), 6);
+//: [[A]B[BA|B]|B]
+reduce = \A, seed, fn -> {throw "fake for doc";};
+
+/// Removes and returns the element at index 'ix'.
+/// Throws exception if 'ix' is out of range.
+//: [[A]i|A]
+remove = \A, ix -> {throw "fake for doc";};
+
+/// Removes and returns array with elements at between 'begin' (inclusive) and
+/// 'end' (exclusive).
+/// Throws exception if 'begin' or 'end' are out of range.
+//: [[A]ii|[A]]
+removeRange = \A, begin, end -> {throw "fake for doc";};
+
+/// Returns elements of 'A' in reversed order.
+//: [[A]|[A]]
+reverse = \A -> {throw "fake for doc";};
+
+/// Reverses elements of 'A' in place.
+//: [[A]|]
+reverseIn = \A -> {throw "fake for doc";};
+
+/// Sets elements from 'ix' (inclusive) with elements of 'A2'.
+/// Throws exception if 'ix' or 'ix + arr_size(A2)' is out of limits.
+//: [[A]i[A]|]
+setArr = \A, ix, A2 -> {throw "fake for doc";};
+
+/// Sets elements from 'ix' (inclusive) with elements of 'A2', from
+/// begin (inclusive) to end (exclusive).
+/// Throws exceptionif 'ix', 'begin', 'end' or 'ix + begin - end' are out of
+/// limits.
+//: [[A]i[A]ii|]
+setRange = \A, ix, A2, begin, end -> {throw "fake for doc";};
+
+/// Removes and returns the first element of 'A'.
+/// If 'A' is empty, throws an exception.
+//: [[A]|A]
+shift = \A -> {throw "fake for doc";};
+
+/// Reorders randomly elements of 'A' in place.
+//: [[A]|]
+shuffle = \A  -> {throw "fake for doc";};
+
+/// Returns the elements number of 'A'.
+//: [[A]|i]
+size = \A -> {throw "fake for doc";};
+
+/// Sorts elements of 'A' from less to greater.
+/// 'less' is a function which returns 'true' if the first paramenter is
+/// less than the second one.
+/// NOTE: If 'less' returns 'true' when the first parameter is greater than the
+///       second one, then the order is from greater to less.
+//: [[A][AA|b]|]
+sort = \A, less -> {throw "fake for doc";};
+
+/// Returns a shallow copy of 'A' with its 'n' first elements.
+///   -If 'n <= 0' returns an empty array.
+///   -if 'n >= len(A)' returns the complete array.
+//: [[A]i|[A]]
+take = \A, n -> {throw "fake for doc";};
+
+/// Returns the first elements of 'A' while they produce 'true' with fn.
+//: [[A][A|b]|[A]]
+takeWhile = \A, fn -> {throw "fake for doc";};
+
+/// Returns an iterator with elements of 'A' in the same order.
+//: [[A]|[! A]]
+toIter = \A -> {throw "fake for doc";};
+
+/// Preppend an element at the beginning of 'A'.
+//: [[A]A|]
+unshift = \A, element -> {throw "fake for doc";};
+
+/// Converts [[. a1, a2], [. b1, b2], ...] in
+///          [[a1, b1, ...], [a2, b2, ...], ...]
+//: [[[. AB]]|[. [A][B]]]
+unzip = \A -> {throw "fake for doc";};
+
+/// Converts [[. a1, a2, a3], [. b1, b2, b3], ...] in
+///          [[a1, b1, ...], [a2, b2, ...], [a3, b3, ...], ...]
+//: [[[. ABC]]|[. [A][B][C]]]
+unzip3 = \A -> {throw "fake for doc";};
+
+/// Converts [[a1, b1, ...], [a2, b2, ...], ...] in
+///          [[. a1, a2], [. b1, b2], ...]
+/// The elements number of the returned array is the elements number of the
+/// lesser array 'A', 'B'.
+//: [[A][B]|[[. AB]]]
+zip = \A, B -> {throw "fake for doc";};
+
+/// Converts [[a1, b1, ...], [a2, b2, ...], [a3, b3, ...], ...] in
+///          [[. a1, a2, a3], [. b1, b2, b3], ...]
+/// The elements number of the returned array is the elements number of the
+/// lesser array 'A', 'B', 'C'.
+//: [[A][B][C]|[[. ABC]]]
+zip3 = \A, B, C -> {throw "fake for doc";};

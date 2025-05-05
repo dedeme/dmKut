@@ -1,0 +1,201 @@
+// Copyright 06-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/doc";
+import "data/docEntry";
+import "data/dpath";
+import "db/pathsTb";
+
+/// Module reader.
+
+// \s -> [s, s] | []
+takeId = \s -> {
+  ix = str.index(s, "=");
+  if (ix == -1) {
+    ix = str.index(s, ":");
+    if (ix == -1) return [];
+    return [str.rtrim(s[:ix]) + ":", str.ltrim(s[ix + 1:])];
+  }
+  return [str.rtrim(s[:ix]), str.ltrim(s[ix + 1:])];
+};
+
+/// \s, s -> ([<doc>]|[])
+read = \pack, pt -> {
+  ppathOp = arr.find(pathsTb.read(), \:dpath p -> return p.id == pack;);
+  if (!ppathOp) return [];
+  :dpath ppath = ppathOp!;
+
+  fpath = file.cat([ppath.spath, pt + ".nkut"]);
+  if (!file.exists(fpath)) return [];
+
+  docV = [""];
+  indsOp = [];
+  funcsOp = [];
+  valsOp = [];
+
+  f = file.ropen(fpath);
+  stV = ["init0"]; // states are "init0", "init", "doc", "code0", "code"
+  firstDocV = [true];
+  docBfV = [""];
+  idV = [""];
+  codeV = [""];
+  codeLinesV = [0];
+  lV = [""];
+  while () {
+    if (lV! == "") {
+      lfOp = file.readLine(f);
+      if (!lfOp) break;
+      else lV! = lfOp!;
+    }
+
+    l = str.trim(lV!);
+    lV! = "";
+    switch (stV!) {
+    "init0":
+      if (str.starts(l, "import ")) {
+        firstDocV! = false;
+        stV! = "init";
+      } else if (str.starts(l, "///")) {
+        if (l == "///") docBfV! = "\n";
+        else {
+          tx = l[4:];
+          docBfV! = tx;
+        }
+        stV! = "doc";
+      }
+    "init":
+      if (str.starts(l, "///")) {
+        if (l == "///") docBfV! = "\n";
+        else {
+          tx = l[4:];
+          docBfV! = tx;
+        }
+        stV! = "doc";
+      }
+    "doc":
+      if (str.starts(l, "///")) {
+        if (l == "///") docBfV! += "\n";
+        else docBfV! += "\n" + l[4:];
+      } else {
+        if (firstDocV!) {
+          docV! = docBfV!;
+          firstDocV! = false;
+        }
+        IdRest = takeId(l);
+        if (arr.size(IdRest) == 2)  {
+          idV! = IdRest[0];
+          lV! = IdRest[1];
+          stV! = "code0";
+        } else {
+          stV! = "init";
+        }
+      }
+    "code0":
+      if (l != "") {
+        if (!str.starts(l, "\\") & !str.starts(l, "async ")) {
+          if (str.ends(idV!, ":")) {
+            idV! = idV![:-1];
+            ix = str.index(l, ";");
+            if (ix != -1) {
+              indsOp.push(
+                docEntry.new(
+                  idV!,
+                  docBfV!,
+                  idV! + " : " + l[:ix + 1],
+                  idV!)
+              );
+              stV! = "init";
+            } else {
+              codeV! = idV! + " : " + l + "\n";
+              codeLinesV! = 1;
+              stV! = "code2";
+            }
+          } else {
+            valsOp.push(docEntry.new(idV!, docBfV!, idV!, idV!));
+            stV! = "init";
+          }
+        } else {
+          ix = str.index(l, "->");
+          if (ix != -1) {
+            funcsOp.push(
+              docEntry.new(
+                idV!,
+                docBfV!,
+                idV! + " = " + l[:ix + 2],
+                idV!
+              )
+            );
+            stV! = "init";
+          } else {
+            codeV! = idV! + " = " + l + "\n";
+            codeLinesV! = 1;
+            stV! = "code";
+          }
+        }
+      }
+    "code":
+      if (codeLinesV! > 5) {
+        funcsOp.push(
+          docEntry.new(
+            idV!,
+            docBfV!,
+            codeV! + " ...",
+            idV!
+          )
+        );
+        stV! = "init";
+      } else {
+        if (l != "") {
+          ix = str.index(l, "->");
+          if (ix != -1) {
+            funcsOp.push(
+              docEntry.new(
+                idV!,
+                docBfV!,
+                codeV! + "  " +  l[:ix + 2],
+                idV!
+              )
+            );
+            stV! = "init";
+          } else {
+            codeV! += "  " + l + "\n";
+            codeLinesV! += 1;
+          }
+        }
+      }
+    "code2":
+      if (codeLinesV! > 5) {
+        indsOp.push(
+          docEntry.new(
+            idV!,
+            docBfV!,
+            codeV! + " ...",
+            idV!
+          )
+        );
+        stV! = "init";
+      } else {
+        if (l != "") {
+          ix = str.index(l, ";");
+          if (ix != -1) {
+            indsOp.push(
+              docEntry.new(
+                idV!,
+                docBfV!,
+                codeV! + "  " +  l[:ix + 1],
+                idV!
+              )
+            );
+            stV! = "init";
+          } else {
+            codeV! += "  " + l + "\n";
+            codeLinesV! += 1;
+          }
+        }
+      }
+    }
+  }
+  file.close(f);
+
+  return [doc.new(docV!, indsOp, funcsOp, valsOp)];
+};

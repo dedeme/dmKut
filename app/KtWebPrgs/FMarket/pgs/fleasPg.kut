@@ -10,12 +10,12 @@ import "cts";
 import "data/flea";
 import "db";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       , modelId : Rq;
-      Models = arr.map(db.modelsList(), \:model md -> return md.id;);
+      :arr Models = arr.map(db.modelsList(), \:model md -> return md.id;);
       mdId = Models.any(\m -> return m == modelId;)
         ? modelId
         : cts.mainModel

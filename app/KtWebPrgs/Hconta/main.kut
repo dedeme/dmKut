@@ -35,7 +35,7 @@ if (Args.size() != 2) {
 key = Args[0];
 rp.init(key);
 
-:: Rq = js.r(Args[1]);
+Rq = js.r(Args[1]);
 sys.print(switch(Rq.source) {
   "Main": mainPg.process(Rq);
   default: sys.throw("Value of source (" + Rq.source + ") is not valid");

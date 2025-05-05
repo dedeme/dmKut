@@ -7,11 +7,12 @@ import "KtWeb/rp";
 import "libdm/log";
 import "libmkt/quote";
 import "data/qsvs";
-import "data/qsv";
+import "data/qsv/qsv";
 import "db/quotesDb";
 import "db/svCodesTb";
 import "db";
 import "qspr";
+import "net/readHistoric";
 
 /// \{*.} -> s
 process = \Rq -> {
@@ -48,7 +49,10 @@ process = \Rq -> {
               Rp.ok = false;
               break;
             } else {
-              arr.push(Rp.SvIdCodes, [id, sv.withHistoric, codeOp!]);
+              arr.push(
+                Rp.SvIdCodes,
+                [id, sv.withHistoric == qsv.active, codeOp!]
+              );
             }
           }
         } else {
@@ -78,7 +82,7 @@ process = \Rq -> {
       if (withError) {
         Rp.result = "error";
       } else {
-        err = qspr.updateClosesAndRefs(nick);
+        err = qspr.updateClosesAndRefs(nick, false);
         if (err != "") {
           log.error(err);
           Rp.result = "error";
@@ -116,31 +120,20 @@ process = \Rq -> {
       return rp.mk({ dbKey, ok });
     }
     "serverTest": {
-      server, nick, code : Rq;
+      server, nick : Rq;
       withErrorsV = [false];
       withWarningsV = [false];
 
-      svOp = arr.find(qsvs.list(), \:qsv s -> return s.id == server;);
-      if (!svOp) {
-        log.error(str.fmt("Server '%s' not found", [server]));
-        withErrorsV! = true;
-      } else {
-        :qsv sv = svOp!;
-        // [[<quote>.],[s.]]
-        Qs, Errs = sv.readHistoric(code);
-        if (!Qs) {
-          for (err = Errs)
-            log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
-          withWarningsV! = true;
-          withErrorsV! = true;
-        } else {
-          if (!!Errs) {
-            for (err = Errs)
-              log.error(str.fmt("(Test in %s:%s) %s", [server, nick, err]));
-            withWarningsV! = true;
-          }
-        }
+      Qs, Ws = readHistoric.oneServer(server, nick);
+      if (!!Ws) {
+        for (w = Ws) log.warning(w);
+        withWarningsV! = true;
       }
+      if (!Qs) {
+        log.error("Quotes can no be read");
+        withErrorsV! = true;
+      }
+
       return rp.mk({
         withErrors: withErrorsV!,
         withWarnings: withWarningsV!

@@ -19,14 +19,14 @@ import "pf";
 /// \i,s,<opr> -> <ann>
 new : id, date, op;
 
-/// \<ann> -> JS
+/// \<ann> -> [*.]
 toJs = \An -> {
   R = [An[id], An[date]];
   arr.cat(R, opr.toJs(An[op]));
   return R;
 };
 
-/// \JS -> <ann>
+/// \[*.] -> <ann>
 fromJs = \A -> return new(math.ftoi(A[0]), A[1], opr.fromJs(A[2:]));;
 
 /// Returns a ledger from 'As'.

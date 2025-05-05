@@ -1,0 +1,12 @@
+// Copyright 11-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data IBERV ("Iberbolsa").
+
+import "../qsv";
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+  "IBERB", "Iberbolsa", qsv.inactive, qsv.active, qsv.undef
+);;

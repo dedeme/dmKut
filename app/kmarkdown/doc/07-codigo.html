@@ -66,11 +66,11 @@ window.MathJax = {
 </pre>
 <div id="aceEditor-0" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Código en javascript:
 
-&#x0060;&#x0060;javascript
+``javascript
 function sum3(a) {
   return a + 3;
 }
-&#x0060;&#x0060;</div>
+``   </div>
 <script>aceConf("aceEditor-0", "kmd");</script>
 <p>Produce:</p>
 <div style="color:#404080"><p>Código en javascript:</p>
@@ -80,33 +80,17 @@ function sum3(a) {
 <script>aceConf("aceEditor-1", "javascript");</script>
 </div><p><i>NOTA:</i></p>
 <p><i>Escribir texto en la misma línea detrás de las marcas de cierre &#x0060;&#x0060;
-es un error; pero escribirlo en la siguiente línea no.</i></p>
+es un error.</i></p>
 <p>Esto es un error:</p>
 <div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Código en javascript:
 
-&#x0060;&#x0060;javascript
+``javascript
 function sum3(a) {
   return a + 3;
 }
-&#x0060;&#x0060; Esto es un error</div>
+`` Esto es un error</div>
 <script>aceConf("aceEditor-2", "kmd");</script>
-<p>Esto no es un error:</p>
-<div id="aceEditor-3" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Código en javascript:
-
-&#x0060;&#x0060;javascript
-function sum3(a) {
-  return a + 3;
-}
-&#x0060;&#x0060;
-Esto no es un error</div>
-<script>aceConf("aceEditor-3", "kmd");</script>
-<p>Produce:</p>
-<div style="color:#404080"><div id="aceEditor-4" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">function sum3(a) {
-  return a + 3;
-}</div>
-<script>aceConf("aceEditor-4", "javascript");</script>
-<p>Esto no es un error</p>
-</div><a name="Requisitos"></a>
+<a name="Requisitos"></a>
 <h3>Requisitos</h3>
 <p>Para que los cuadros de código funciones es necesario:</p>
 <ol>

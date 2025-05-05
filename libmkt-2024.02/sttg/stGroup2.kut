@@ -1,0 +1,51 @@
+// Copyright 11-Sep-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "../model";
+import "../tquotes";
+import "openSimple2";
+
+/// Returns the result of a simulation with several parameters.
+/// Returns the following values succesively added.
+///   - Sales    : Number of sales.
+///                One entry for each Parameter in the same order.
+///   - Assets   : cash + withdrawals + portfolio evaluated with closes.
+///                One entry for each Parameter in the same order.
+///   - Accs     : cash + withdrawals + portfolio evaluated with prices.
+///                One entry for each Parameter in the same order.
+///   - RfAssets : cash + withdrawals + portfolio evaluated with references.
+///                One entry for each Parameter in the same order.
+///   - Profits  : Profits ratio average. Portfolio evaluated with Closes.
+///                       One entry for each Parameter in the same order.
+///   - RfProfits: Profits ratio average. Portfolio evaluated with references.
+///                       One entry for each Parameter in the same order.
+///   mdId    : Model identifier.
+///   npars   : Number of model parameters.
+///   Qts     : Quotes returned by 'tquotes.new'.
+///   Params  : Array of model parameters.
+/// \s, i, <tquotes>, [f.] -> [f.]
+run = \(siFF|F) mdId, npars, :tquotes qts, :arr Params -> {
+  paramsN = Params.size() / npars;
+  Sales = arr.new(0.0, paramsN);
+  Assets = arr.new(0.0, paramsN);
+  Accs = arr.new(0.0, paramsN);
+  RfAssets = arr.new(0.0, paramsN);
+  Profits = arr.new(0.0, paramsN);
+  RfProfits = arr.new(0.0, paramsN);
+  ipV = [0];
+  for (i = 0:paramsN) {
+    ip = ipV!;
+    ipV! += npars;
+
+    Rs = openSimple2.run(mdId, qts, Params[ip:ipV!]);
+
+    Sales[i] = Rs[0];
+    Assets[i] = Rs[1];
+    Accs[i] = Rs[2];
+    RfAssets[i] = Rs[3];
+    Profits[i] = Rs[4];
+    RfProfits[i] = Rs[5];
+  }
+
+  return Sales + Assets + Accs + RfAssets + Profits + RfProfits;
+};

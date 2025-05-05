@@ -1,30 +1,20 @@
-// Copyright 27-Mar-2022 ºDeme
+// Copyright 03-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base initializer
+/// Data base management.
 
-import "libdm/jstb";
 import "libdm/log";
-import "data/ibexSundays";
-import "data/cts";
-import "fns";
+import "cts";
 
-///
-init = \-> {
-  if (!file.exists(cts.dbPath)) {
-    file.mkdir(cts.dbPath);
-    file.mkdir(path.cat([cts.dbPath, "evals"]));
-    file.mkdir(path.cat([cts.dbPath, "ranks"]));
-    file.mkdir(path.cat([cts.dbPath, "yevals"]));
-    file.mkdir(path.cat([cts.dbPath, "yranks"]));
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+
+    log.reset();
+    return;
   }
+  sys.throw("Data base already is initialized");
 };
-
-/// Returns a table with sunday ibex values.
-/// \-> <Jstb> of <IbexSundays>
-ibexTb = \-> return jstb.new(
-  path.cat([cts.dbPath, "ibex.tb"]),
-  \-> return ibexSundays.toJs(ibexSundays.new([]));,
-  ibexSundays.toJs,
-  ibexSundays.fromJs
-);;

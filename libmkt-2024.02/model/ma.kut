@@ -4,9 +4,11 @@
 /// Mobil average.
 
 import "../model";
+import "../cts";
 import "doc/maDoc";
 
 /// Returns a new 'appr' model.
+/// \-><model>
 new = \ -> return model.new(
     "MM",
     "Media móvil",
@@ -14,3 +16,88 @@ new = \ -> return model.new(
     ["Días", "Banda"],
     [model.dayParam, model.percParam]
   );;
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  daysf = Params[0];
+  days = math.ftoi(daysf);
+  idateStep = days * ncos;
+  strip = Params[1];
+  stripUp = 1.0 + strip;
+  stripDown = 1.0 - strip;
+
+  Refs = arr.new(0.0, size);
+  IsSolds = arr.new(0, ncos);
+  Sums = arr.new(0.0, ncos);
+
+  for (idate = 0:days*ncos-1:ncos) {
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      c = Closes[icurrent];
+      Refs[icurrent] = c * stripDown;
+      Sums[ico] += c;
+    }
+  }
+
+  idate = days * ncos;
+  oldIdate = idate - idateStep;
+  for (ico = 0:ncos) {
+    icurrent = idate + ico;
+    iold = oldIdate + ico;
+
+    c = Closes[icurrent];
+    oldC = Closes[iold];
+    Sums[ico] += c - oldC;
+    avg = Sums[ico] / daysf;
+
+    if (c <= avg) {
+      IsSolds[ico] = 1;
+      Refs[icurrent] = avg * stripUp;
+    } else {
+      Refs[icurrent] = avg * stripDown;
+    }
+  }
+
+  for (idate = (days+1)*ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    oldIdate = idate - idateStep;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iold = oldIdate + ico;
+      iprevious = previousIdate + ico;
+
+      c = Closes[icurrent];
+      oldC = Closes[iold];
+      rf = Refs[iprevious];
+
+      Sums[ico] += c - oldC;
+      avg = Sums[ico] / daysf;
+
+      if (IsSolds[ico] == 1) {
+        if (c > rf) {
+          IsSolds[ico] = 0;
+          Refs[icurrent] = avg * stripDown;
+        } else {
+          newRf = avg * stripUp;
+          if (newRf < rf) Refs[icurrent] = newRf;
+          else Refs[icurrent] = rf;
+        }
+      } else {
+        if (c < rf) {
+          IsSolds[ico] = 1;
+          Refs[icurrent] = avg * stripUp;
+        } else {
+          newRf = avg * stripDown;
+          if (newRf > rf) Refs[icurrent] = newRf;
+          else Refs[icurrent] = rf;
+        }
+      }
+    }
+  }
+
+  return Refs;
+};

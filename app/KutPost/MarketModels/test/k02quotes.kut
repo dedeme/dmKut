@@ -3,13 +3,18 @@
 
 /// Test quotes.
 
-import "extDb/quotesDb";
+import "cts";
+import "extDb/cosTb";
+import "libmkt/quotes";
 
 /// Returns
 ///   {
 ///     q: <quotes>
 ///   }
-/// \{*.} -> {*.}
-run = \Rq -> return {
-  q: quotesDb.read()
-};;
+/// \ -> {*.}
+run = \ -> {
+  Cos = << cosTb.read();
+  return {
+      q: quotes.read(cts.quotesPath, Cos)
+  };
+};

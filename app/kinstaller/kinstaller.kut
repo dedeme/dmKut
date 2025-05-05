@@ -106,29 +106,29 @@ read = \prgName, Args, fn -> {
 
 // \s, s, s, s -> s ------------------------------------------------------- PACK
 pack = \prgName, kpath, dpath, wpath , tmpd -> {
-  pkpath0 = path.parent(kpath);
+  pkpath0 = file.parent(kpath);
   pkpath = pkpath0 == "" ? "./" : pkpath0;
-  pdpath0 = path.parent(dpath);
+  pdpath0 = file.parent(dpath);
   pdpath = pdpath0 == "" ? "./" : pdpath0;
-  pwpath0 = path.parent(wpath);
+  pwpath0 = file.parent(wpath);
   pwpath = pwpath0 == "" ? "./" : pwpath0;
   wd = file.wd();
 
-  root = path.cat([tmpd, "root"]);
+  root = file.cat([tmpd, "root"]);
   file.mkdir(root);
 
   if (kpath == "") return "kut path is missing.";
   if (!file.exists(kpath)) return "'" + kpath + "' not found.";
   file.cd(pkpath);
   c1Rs = sys.cmd("tar",
-    ["-czhf", path.cat([root, "kut.tgz"]), path.base(kpath)]);
+    ["-czhf", file.cat([root, "kut.tgz"]), file.base(kpath)]);
   if (!c1Rs[1]) return c1Rs!;
   file.cd(wd);
 
   if (dpath != "") {
     file.cd(pdpath);
     c1Rs = sys.cmd("tar",
-      ["-czhf", path.cat([root, "data.tgz"]), path.base(dpath)]);
+      ["-czhf", file.cat([root, "data.tgz"]), file.base(dpath)]);
     if (!c1Rs[1]) return c1Rs!;
     file.cd(wd);
   }
@@ -136,14 +136,14 @@ pack = \prgName, kpath, dpath, wpath , tmpd -> {
   if (wpath != "") {
     file.cd(pwpath);
     c1Rs = sys.cmd("tar",
-      ["-czhf", path.cat([root, "www.tgz"]), path.base(wpath)]);
+      ["-czhf", file.cat([root, "www.tgz"]), file.base(wpath)]);
     if (!c1Rs[1]) return c1Rs!;
     file.cd(wd);
   }
 
-  file.cd(path.parent(root));
+  file.cd(file.parent(root));
   c4Rs = sys.cmd("tar", [
-    "-czf", path.cat([wd, prgName + ".tgz"]), path.base(root)]);
+    "-czf", file.cat([wd, prgName + ".tgz"]), file.base(root)]);
   if (!c4Rs[1]) return c4Rs!;
   file.cd(wd);
 
@@ -154,7 +154,7 @@ pack = \prgName, kpath, dpath, wpath , tmpd -> {
 unpack = \prgName, kpath, dpath, wpath, tmpd -> {
   // \s -> s
   targetCheck = \t -> {
-    parent = path.parent(t);
+    parent = file.parent(t);
     if (parent != "" & !file.exists(parent))
       return "'" + parent + "' not found.";
     if (file.exists(t))
@@ -185,19 +185,19 @@ unpack = \prgName, kpath, dpath, wpath, tmpd -> {
   if (!file.exists(tgz)) {
     return "'" + tgz + "' not found";
   }
-  file.copy(tgz, path.cat([tmpd, tgz]));
+  file.copy(tgz, file.cat([tmpd, tgz]));
   file.cd(tmpd);
   c1Rs = sys.cmd("tar", ["-xf", tgz]);
   if (!c1Rs[1]) return c1Rs!;
 
-  root = path.cat([tmpd, "root"]);
+  root = file.cat([tmpd, "root"]);
   if (!file.exists(root)) return "Root directory can not be extracted,";
 
   // Extracts directories. -------------
 
   // \s, s, s -> s
   extract = \type, root, targetPath -> {
-    dtmp = path.cat([root, "tmp"]);
+    dtmp = file.cat([root, "tmp"]);
     file.del(dtmp);
     file.mkdir(dtmp);
     file.cd(dtmp);
@@ -206,7 +206,7 @@ unpack = \prgName, kpath, dpath, wpath, tmpd -> {
     files = file.dir(dtmp);
     if (arr.size(files) != 1)
       return "(" + type + ") directory can not be extracted,";
-    dtmp2 = path.cat([dtmp, files[0]]);
+    dtmp2 = file.cat([dtmp, files[0]]);
     if (!file.isDirectory(dtmp2))
       return "(" + type  + ") extracted file is not a directory.";
     file.cd(wd);
@@ -233,7 +233,7 @@ unpack = \prgName, kpath, dpath, wpath, tmpd -> {
   // \[s.], s -> ()
   makefileDirs = \R, d -> {
     for (f = file.dir(d)) {
-      pth = path.cat([d, f]);
+      pth = file.cat([d, f]);
       if (file.isDirectory(pth)) makefileDirs(R, pth);
       if (f == "Makefile") arr.push(R, d);
     }
@@ -252,9 +252,9 @@ unpack = \prgName, kpath, dpath, wpath, tmpd -> {
     cRs = sys.cmd("make", []);
     if (!cRs[1]) return cRs!;
     for (b = file.dir("bin")) {
-      target = path.cat([wd, kpath, b]);
+      target = file.cat([wd, kpath, b]);
       file.del(target);
-      file.mklink(path.cat(["bin", b]), target);
+      file.mklink(file.cat(["bin", b]), target);
     }
     file.cd(wd);
   }

@@ -1,0 +1,222 @@
+// Copyright 12-Apr-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image handling.
+/// This module requires imagemagick version 6.9, using the following programs:
+///   - convert
+///   - identify
+///   - composite
+
+// \s, [s.] -> s
+cmd = \c, Ps -> {
+  R = sys.cmd(c, Ps);
+  if (R[1]) return R!;
+  sys.throw(R!);
+};
+
+/// Returns [width, height] of the image 'im'
+/// \s -> [i, i]
+dim = \im -> return arr.map(
+  str.split(
+    str.split(
+      cmd("identify", [im]),
+      " "
+    )[2],
+    "x"
+  ),
+  \n -> return math.stoi(n)!;
+);;
+
+/// Copy a imgSource in a new imgTarget
+/// \s, s -> ()
+copy = \imgSource, imgTarget -> cmd("convert", [imgSource, imgTarget]);;
+
+/// Blurs a imgSource in a new imgTarget.
+///   imgSource: Old image.
+///   imgTarget: New image.
+///   ratio: (0.0 - 1.0, both inclusive).
+/// \s, s, f -> ()
+blur = \imgSource, imgTarget, ratio -> {
+  tmp = file.tmp("/tmp", "img") + ".png";
+  WH = dim(imgSource);
+  bl = ratio > 1.0 ? 0.015 : ratio < 0.01 ? 1.5 : (1.0 - ratio) * 1.5;
+  toStr = \n, p -> {
+    n0 = math.ftoi(math.itof(n) * p);
+    n2 = (n0 < 10) ? 10 : n0;
+    return math.itos(n2);
+  };
+  dm = toStr(WH[0], bl) + "x" + toStr(WH[1], bl) + "!";
+  dm2 = math.itos(WH[0]) + "x" + math.itos(WH[1]) + "!";
+  cmd("convert", ["-resize", dm, imgSource, tmp]);
+  cmd("convert", ["-resize", dm2, tmp, imgTarget]);
+  file.del(tmp);
+};
+
+/// Crops a imgSource in imgTarget.
+/// If left < 0 or left >= width -> left = 0
+/// If top < 0 or top >= height -> top = 0
+/// If width < 0 or left + width > img-width -> width = img-width
+/// If height < 0 or top + height > img-height -> height = img-height
+/// Example:
+///   noise(0.5, 0.3, "#66aaff", 300, 300, "img2.png");
+/// \s, s, i, i, i, i -> ()
+crop = \imgSource, imgTarget, left, top, width, height -> {
+  dm = dim(imgSource);
+  l = (left < 0 | left >= dm[0]) ? 0 : left;
+  t = (top < 0 | top >= dm[1]) ? 0 : top;
+  w = (width < 0 | left + width > dm[0]) ? dm[0] : width;
+  h = (height < 0 | top + height > dm[1]) ? dm[1] : height;
+  params = math.itos(w) + "x" + math.itos(h) + "+" +
+    math.itos(l) + "+" + math.itos(t) + "!"
+  ;
+  cmd("convert", ["-crop", params, imgSource, imgTarget]);
+};
+
+/// Fits imgSource in imgTarget without deformation.
+/// imgTarget will be less or equals to imgSource.
+/// \s, s, i, i -> ()
+fit = \imgSource, imgTarget, width, height -> {
+  w = width < 1 ? 1 : width;
+  h = height < 1 ? 1 : height;
+  params = math.itos(w) + "x" + math.itos(h);
+  cmd("convert", ["-resize", params, imgSource, imgTarget]);
+};
+
+/// Fills imgTarget with imgFile without deformation
+/// imgTarget will be greater or equals to imgSource.
+/// \s, s, i, i -> ()
+fill = \imgSource, imgTarget, width, height -> {
+  params = math.itos(width) + "x" + math.itos(height) + "^";
+  cmd("convert", ["-resize", params, imgSource, imgTarget]);
+};
+
+/// Changes imgSource size in imgTarget.
+/// imgSource will be deformed is its dimension is different to the
+/// imgTarget one.
+/// \s, s, i, i -> ()
+resize = \imgSource, imgTarget, width, height -> {
+  w = width < 1 ? 1 : width;
+  h = height < 1 ? 1 : height;
+  params = math.itos(w) + "x" + math.itos(h) + "+" + "!";
+  cmd("convert", ["-resize", params, imgSource, imgTarget]);
+};
+
+/// Creates a new empty image.
+///   color : RGB color or an empty string for a transparent image,
+///   width : Image width.
+///   heigth: Image heigth.
+///   img   : Image file path. If 'img' already exists, it is overwrite.
+/// \s, i, i, s -> ()
+new = \color, width, height, img -> {
+  dm = math.itos(width) + "x" + math.itos(height);
+  if (color == "") {
+    cmd("convert", ["-size", dm, "-type", "TrueColor", "xc:transparent", img]);
+  } else {
+    cmd(
+      "convert",
+      [ "-size", dm, "-type", "TrueColor",
+        "xc:white", "-fill", color, "-opaque", "white", img]
+    );
+  }
+};
+
+/// Creates a new image with noise.
+///   blur  : (0.0 - 1.0, both inclusive) Granularity blur.
+///   light : (0.0 - 1.0, both inclusive) Brightness,
+///           If 'light==0.5' there is not noise.
+///   color : RGB color in format '#ffffff'
+///   width : Image width.
+///   height: Image height.
+///   img   : Image file path. If 'img' already exists, it is overwrite.
+/// \f, f, s, i, i, s -> ()
+noise = \blur, light, color, width, height, img -> {
+  color2 = \ -> {
+    toHex = \n -> {
+      i0 = math.ftoi(n);
+      i = i0 > 255 ? 255 : i0 < 0 ? 0 : i0;
+      r = math.itoh(i);
+      return str.len(r) == 1 ? "0" + r : r;
+    };
+    more = \-> {
+      lg = light >= 1.0 ? 1.0 : light * 2.0 - 1.0;
+      Cs = arr.map(
+        [color[1:3], color[3:5], color[5:]],
+        \hx -> return math.itof(math.fromHex(hx)!);
+      );
+      for (i, c = Cs) Cs[i] = c + (255.0 - c) * lg;
+      return "#" + toHex(Cs[0]) + toHex(Cs[1]) + toHex(Cs[2]);
+    };
+    less = \-> {
+      lg = light >= 0.5 ? 1.0 : light * 2.0;
+      Cs = arr.map(
+        [color[1:3], color[3:5], color[5:]],
+        \hx -> return math.itof(math.fromHex(hx)!);
+      );
+      for (i, c = Cs) Cs[i] = c * lg;
+      return "#" + toHex(Cs[0]) + toHex(Cs[1]) + toHex(Cs[2]);
+    };
+
+    return light > 0.5 ? more() : less();
+  };
+  toStr = \n, p -> return math.itos(
+    math.ftoi(math.itof(n) * p)
+  );;
+  bl = blur > 1.0 ? 0.015 : blur < 0.01 ? 1.5 : (1.0 - blur) * 1.5;
+  dm = toStr(width, bl) + "x" + toStr(height, bl);
+  dm2 = toStr(width, 1.0) + "x" + toStr(height, 1.0);
+  ff = file.tmp("/tmp", "img-f") + ".png";
+  fb = file.tmp("/tmp", "img-b") + ".png";
+  fn1 = file.tmp("/tmp", "img-n1") + ".png";
+  fn2 = file.tmp("/tmp", "img-n3") + ".png";
+  cmd(
+    "convert",
+    [ "-size", dm, "-type", "TrueColor",
+      "xc:white", "-fill", color, "-opaque", "white", ff]
+  );
+  cmd(
+    "convert",
+    ["-size", dm, "-type", "TrueColor",
+      "xc:white", "-fill", color2(), "-opaque", "white", fb]
+  );
+  cmd(
+    "convert",
+    ["-size", dm, "-type", "TrueColor", "xc:", "+noise", "Random", fn1]
+  );
+  cmd(
+    "convert",
+    [ fn1, "-virtual-pixel", "tile", "-gaussian-blur", "0x0",
+      "-fx", "intensity", "-normalize", "-type", "TrueColor", fn2
+    ]
+  );
+  cmd(
+    "convert",
+    [ff, fb, fn2, "-composite", "-type", "TrueColor", img]
+  );
+  cmd(
+    "convert",
+    [img, "-resize", dm2, "-type", "TrueColor", img]
+  );
+
+  file.del(ff);
+  file.del(fb);
+  file.del(fn1);
+  file.del(fn2);
+};
+
+/// Overwrite 'img1' over 'img2' creating a new image 'imgTarget'.
+/// Position can be:
+///   center,
+///   northWest, north, northEast, east, southEast, south, southWest, west
+/// \s, s, s, s -> ()
+over = \img1, img2, imgTarget, position ->
+  cmd("composite", ["-gravity", position, img1, img2, imgTarget]);;
+
+/// Overwrite 'img1' over 'img2' creating a new image 'imgTarget'.
+/// Img2 is placed at 'left', 'top'.
+/// \s, s, s, i, i -> ()
+overAt = \img1, img2, imgTarget, left, top -> {
+  l = left >= 0 ? "+" + math.itos(left) : math.itos(left);
+  t = top >= 0 ? "+" + math.itos(top) : math.itos(top);
+  cmd("composite", ["-geometry", l + t, img1, img2, imgTarget]);
+};
+

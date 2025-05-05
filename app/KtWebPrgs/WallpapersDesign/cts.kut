@@ -1,0 +1,38 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Progam constants
+
+import "KtWeb/global";
+
+/// s
+appName = "WallpapersDesign";
+/// Application version.
+/// s
+version = "2024.05";
+/// Data version.
+/// s
+dataVersion = "2024.05";
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
+
+/// Images source file.
+/// s
+sourcePath = "/dm/KtWeb/prgs/WallpapersDesign/www/source";
+
+/// Images target file.
+/// s
+targetPath = "/dm/KtWeb/prgs/WallpapersDesign/www/target";
+
+/// Path of achived original images
+/// s
+originalAchivePath = "/dm/fondosEscritorio/originales";
+
+/// Path root of adjusted images
+/// s
+adjustedArchivePath = "/dm/fondosEscritorio/jpg";
+
+/// Data base wallpapers.
+/// s
+wallpapersDataPath = "/dm/KtWeb/dmcgi/Wallpapers";

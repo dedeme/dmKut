@@ -17,20 +17,19 @@
 ///   disconnect(id);
 
 /// Start Web Driver.
+/// Returns "" or error message.
 ///   fpath: Driver path. (p.e. /bin/geckodriver)
-/// \s -> error
+/// \s -> s
 start = \fpath -> {
-  rRsV = [["", true]];
-  rRsV! = sys.cmd(fpath, []);
-  rRs = rRsV!;
-  if (rRs[1]) return "";
-  for (l = str.splitTrim(rRs[0], "\n"))
+  err, ok = sys.cmd(fpath, []);
+  if (ok) return "";
+  for (l = str.splitTrim(err, "\n"))
     if (!str.starts(l, "***")) return l;
   return "";
 };
 
-/// Create a session and returns [sessionId|error, ok?]
-/// \ -> [s|s, b] (Result)
+/// Create a session and returns [(sessionId|error), ok]
+/// \ -> [(s|s), b]
 connect = \ -> {
   R = sys.cmd2("curl", [
       '-H', 'Content-Type: application/json',
@@ -47,12 +46,12 @@ connect = \ -> {
     ]);
   rp = R[0];
   if (rp == "") return ["curl call failed (Server stopped?)", false];
-  json = js.r(rp);
-  if (dic.hasKey(json, "value")){
-    if (dic.hasKey(json.value, "sessionId"))
-      return [json.value.sessionId, true];
-    if (dic.hasKey(json.value, "error"))
-      return [json.value.error + "\n" + json.value.message, false];
+  Json = js.r(rp);
+  if (dic.hasKey(Json, "value")){
+    if (dic.hasKey(Json.value, "sessionId"))
+      return [Json.value.sessionId, true];
+    if (dic.hasKey(Json.value, "error"))
+      return [Json.value.error + "\n" + Json.value.message, false];
     return ["Field error is missing", false];
   }
   return ["Field value is missing", false];
@@ -69,7 +68,8 @@ disconnect = \id -> {
 ///   tm : Wait time in seconds (between 0 and 30, both inclusive).
 ///   id : Session identifier retrieved with 'connect'.
 ///   url: Page url.
-/// \i, s, s -> [s|s, b] (Result)
+///   RETURNS: [(html|error), ok]
+/// \i, s, s -> [(s|s), b]
 page = \tm, id, url -> {
   tmSleep = tm <= 0 ? 0 : tm >= 30 ? 30000 : tm * 1000;
 
@@ -80,13 +80,13 @@ page = \tm, id, url -> {
     ]);
   rp = R[0];
   if (rp == "") return ["curl call failed (Server stopped?)", false];
-  ob = js.ro(rp);
-  if (!dic.hasKey(ob, "value")) return ["Field value is missing", false];
-  valJs = ob.value;
+  Ob = js.ro(rp);
+  if (!dic.hasKey(Ob, "value")) return ["Field value is missing", false];
+  valJs = Ob.value;
   if (!js.isNull(valJs)) {
-    val = js.r(valJs);
-    if (dic.hasKey(val, "error"))
-      return [val.error + "\n" + val.message, false];
+    Val = js.r(valJs);
+    if (dic.hasKey(Val, "error"))
+      return [Val.error + "\n" + Val.message, false];
     return ["Field error is missing", false];
   }
 
@@ -95,9 +95,9 @@ page = \tm, id, url -> {
   R2 = sys.cmd2("curl", ["http://localhost:4444/session/" + id + "/source"]);
   rp2 = R2[0];
   if (rp2 == "") return ["curl(2) call failed", false];
-  json = js.r(rp2);
-  if (dic.hasKey(json, "value")){
-    return [json.value, true];
+  Json = js.r(rp2);
+  if (dic.hasKey(Json, "value")){
+    return [Json.value, true];
   }
   return ["Field value is missing", false];
 };
@@ -106,14 +106,14 @@ page = \tm, id, url -> {
 /// \ -> b
 active = \ -> {
   rRs = sys.cmd("ps", ["-x"]);
-  ps = arr.filter(
+  :arr ps = arr.filter(
     str.split(rRs[0], "\n"),
     \l -> return
         str.index(l, "geckodriver") != -1 |
         str.index(l, "firefox-esr --marionette -headless") != -1
       ;
   );
-  return arr.size(ps) > 0;
+  return ps.size() > 0;
 };
 
 /// Stop web driver.
@@ -132,4 +132,5 @@ stop = \ -> {
     pid = p[:str.index(p, " ")];
     sys.cmd("kill", [pid]);
   }
+  sys.sleep(1000); // Makes time to delete temporal file created in 'start'.
 };

@@ -1,0 +1,446 @@
+// Copyright 13-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Token reader.
+
+import "charRd";
+import "data/token";
+import "../char";
+
+// Valid operator characters.
+//: s
+opChs = ";=,.()+-*/!<>[]{}%&|?:\\#_";
+
+
+
+// Constructor.
+//    chr  : Character reader.
+//    tkF  : Current token.
+//: \<charRd>,<token> -> <tokenRd>
+new : chr, tkF;
+
+/// Constructor.
+///   tx   : Text to read.
+/// \s -> <tokenRd>
+mk = \tx -> {
+  chr = charRd.new(tx, 0, 1);
+  // Use a fake 'tk' (it must be != token.end)
+  r = new(chr, token.new(0, token.int, 0));
+  tk = read(r);
+  return new(chr, tk);
+};
+
+/*
+/// Returns a new <tokenRd> copy of 'tkr'.
+/// Both readers share its text.
+/// \<tokenRd> -> <tokenRd>
+copy = \tkr -> return [charRd.copy(tkr[chr]), tkr[tk]];;
+
+/// Sets values of 'tkrTarget' with those of 'tkrSource'.
+/// NOTE: 'chrSource' and 'chrTarget' must have the same 'tx',
+/// \<tokenRd>, <tokenRd> -> ()
+set = \tkrTarget, tkrSource -> {
+  charRd.set(tkrTarget[chr], tkrSource[chr]);
+  tkrTarget[tk] = tkrSource[tk];
+};
+*/
+
+//  Returns an error token.
+//: \i, s -> <token>
+fail = \ln, msg -> return token.new(ln, token.error, msg);;
+
+/// Returns the current token without avancing the character reader.
+/// \<tokenRd> -> <token>
+peek = \tkr -> return tkr[tkF];;
+
+/// Returns the current token and advances the character reader.
+/// \<charRd> -> <token>
+next = \tkr -> {
+  r = tkr[tkF];
+  tkr[tkF] = read(tkr);
+  return r;
+};
+
+// Read next token. 'tkr[chr]' is modified if it is not at end of text.
+//: \<tokenRd> -> <token>
+read = \tkr -> {
+  :charRd chr = tkr[chr];
+
+  :token tk = tkr[tkF];
+  if (tk.tp == token.eof) return tk;
+  while () {
+    ch = chr.next();
+    switch (ch) {
+      "": return token.new(chr.ln, token.eof, "");
+      "/": {
+        :token tk = readCommentType(chr);
+        switch (tk.tp) {
+          token.ktype, token.operator: return tk;
+          default: return read(tkr);  // skip comment.
+        }
+      }
+      "'", '"': return readString(chr, ch);
+      default: {
+        if (ch <= ' ') continue; // Skip blank
+        if ((ch >= 'a' & ch <= 'z') | (ch >= 'A' & ch <= 'Z'))
+          return readSymbol(chr, ch);
+        if ((ch >= '0' & ch <= '9'))
+          return readNumber(chr, ch);
+        if (str.index(opChs, ch) != -1)
+          return readOperator(chr, ch);
+
+        return fail(chr.ln, "Unexpected character '" + ch + "'.");
+      }
+    }
+  }
+};
+
+// Read comment or operator starting with '/'.
+// NOTE: The first 'i' already has been read.
+//: \<charRd> -> <token>
+readCommentType = \:charRd chr -> {
+  ln = chr.ln;
+
+  //: \ -> <token>
+  readLineComment = \ -> {
+    chr.next(); // skip the second '/'.
+
+    ch = chr.peek();
+    if (ch == ":") {
+      chr.next();
+      Bf = [];
+      while () {
+        ch = chr.next();
+        switch (ch) {
+          "": return fail(ln, "Reached unexpected end of line");
+          '\n': {
+            while () {
+              ch = chr.peek();
+              if (ch <= ' ') {
+                chr.next();
+                continue;
+              }
+              if (ch == "")
+                return fail (ln, "Unexpected type declaration at end of file");
+              break;
+            }
+            ch = chr.peek();
+
+            if (ch == "/") {
+              if (ch != "/")
+                return fail (chr.ln, "Expected char '/', but found '" + ch + "'");
+              continue; // more ktype text.
+            }
+
+            return token.new(
+                ln,
+                token.ktype,
+                Bf.join("")
+              );
+          }
+          default: Bf.push(ch);
+        }
+      }
+    }
+
+    Bf = [];
+    while () {
+      ch = chr.next();
+      switch (ch) {
+        "", '\n': return token.new(
+            ln,
+            token.lineComment,
+            Bf.join("")
+          );
+        default: Bf.push(ch);
+      }
+    }
+  };
+
+  //: \ -> <token>
+  readLongComment = \ -> {
+    chr.next(); // skip '*'.
+    Bf = [];
+    while () {
+      ch = chr.next();
+      switch (ch) {
+        "": return fail(ln, "Unclosed commentary.");
+        "*":
+          if (chr.peek() == "/") {
+            chr.next();
+            return token.new(ln, token.comment, Bf.join(""));
+          } else {
+            Bf.push(ch);
+          }
+        default: Bf.push(ch);
+      }
+    }
+  };
+
+  ch = chr.peek();
+
+  switch (ch) {
+    "" :  return fail(chr.ln, "Unexpected end of file.");
+    "/": return readLineComment();
+    "*": return readLongComment();
+    default: return readOperator(chr, "/");
+  }
+
+};
+
+//: \<charRd>, s -> <token>
+readString = \:charRd chr, ch -> {
+  ln = chr.ln;
+
+  //: \s -> <token>
+  readSingle = \ch -> {
+
+    // \ -> [s, b]
+    readUnicode = \ -> {
+      // \s -> b
+      isHex = \ch ->
+        return (ch >= '0' & ch <= '9') |
+               (ch >= 'a' & ch <= 'f') |
+               (ch >= 'A' & ch <= 'F')
+      ;;
+
+      Bf = [];
+      for (i = 0:4) {
+        ch = chr.next();
+        if (!isHex(ch)) return ["Bad unicode sequence '" + ch + "'.", false];
+        Bf.push(ch);
+      }
+      return [js.rs('"\\u' + Bf.join("") + '"'), true];
+    };
+
+    // \s -> [s, b]
+    readEscape = \close -> {
+      ch = chr.next();
+      return switch (ch) {
+        "": ["Unclosed quotes.", false];
+        close, "\\": [ch, true];
+        "n": ["\n", true];
+        "t": ["\t", true];
+        "b": ["\b", true];
+        "f": ["\f", true];
+        "r": ["\r", true];
+        "u": readUnicode();
+        default: ["Bad escape sequence '" + ch + "'.", false];
+      };
+    };
+
+    Bf = [];
+    close = ch;
+    while () {
+      ch = chr.next();
+      switch (ch) {
+        "", "\n": return fail(ln, "Unclosed quotes.");
+        close: return token.new(ln, token.string, Bf.join(""));
+        "\\": {
+          ln = chr.ln;
+          rs, ok = readEscape(close);
+          if (ok) Bf.push(rs);
+          else return token.new(ln, token.error, rs);
+        }
+        default: Bf.push(ch);
+      }
+    }
+  };
+
+  // \s -> <token>
+  readMulti = \ -> {
+    // \s -> s
+    format = \:str s -> {
+      if (s.starts("\n")) s = s[1:];
+      // [s.]
+      :arr Ss = s.split("\n");
+      cutV = [-1];
+      for (l = Ss) {
+        lV = [l];
+        while (str.starts(lV!, " ")) lV! = lV![1:];
+        len2 = str.len(lV!);
+        if (len2 == 0) continue;
+        n = str.len(l) - len2;
+        if (cutV! < 0 | n < cutV!) cutV! = n;
+      }
+      cut = cutV!;
+      if (cut > 0)
+        for (i, l = Ss) Ss[i] = l[cut:];
+      return Ss.join("\n");
+    };
+
+    Bf = [];
+    while () {
+      ch = chr.next();
+      switch (ch) {
+        "":
+          fail(ln, "Unclosed quotes.");
+        '"': {
+          ch2 = chr.next();
+          switch (ch2) {
+            "": return fail(ln, "Unclosed quotes.");
+            '"': {
+              ch3 = chr.next();
+              switch (ch3) {
+                "": return fail(ln, "Unclosed quotes.");
+                '"':
+                  return token.new(ln, token.string, format(Bf.join("")));
+                default: {
+                  Bf.push('"');
+                  Bf.push('"');
+                  Bf.push(ch);
+                }
+              }
+            }
+            default: {
+              Bf.push('"');
+              Bf.push(ch);
+            }
+          }
+        }
+        default:
+          Bf.push(ch);
+      }
+    }
+  };
+
+  if (ch == "'") return readSingle("'");
+
+  ch2 = chr.peek();
+  if (ch2 != '"') return readSingle('"');
+
+  chr.next();
+  ch3 = chr.peek();
+  if (ch3 != '"') return token.new(ln, token.string, "");
+
+  chr.next();
+  return readMulti();
+};
+
+// Read symbol.
+//: \<charRd>, s -> <token>
+readSymbol = \:charRd chr, ch -> {
+  ln = chr.ln;
+  Bf = [];
+  Bf.push(ch);
+  while () {
+    ch = chr.peek();
+    if (char.isLetterOrDigit(ch)) {
+      chr.next();
+      Bf.push(ch);
+    } else {
+      break;
+    }
+  }
+  sym = Bf.join("");
+  return switch (sym) {
+    "true", "false": token.new(ln, token.bool, sym);
+    default: token.new(ln, token.symbol, sym);
+  };
+};
+
+// Read Number.
+//: \<charRd>, s -> <token>
+readNumber = \:charRd chr, ch -> {
+  ln = chr.ln;
+  Bf = [];
+
+  // \ -> <token>
+  readExponent = \ -> {
+    ch = chr.peek();
+    switch (ch){
+      "+", "-": {
+        Bf.push(ch);
+        chr.next();
+      }
+    }
+
+    ch2 = chr.next();
+    if (ch2 < '0' | ch2 > "9")
+      return fail(ln, "Exponent has no digits.");
+    Bf.push(ch2);
+
+    while () {
+      ch = chr.peek();
+      if (ch >= "0" & ch <= "9") {
+        chr.next();
+        Bf.push(ch);
+        continue;
+      }
+      break;
+    }
+    return token.new(ln, token.float, Bf.join(""));
+  };
+
+  // \ -> <token>
+  readFloat = \ -> {
+    while () {
+      ch = chr.peek();
+      switch (ch) {
+        "e", "E": {
+          chr.next();
+          Bf.push(ch);
+          return readExponent();
+        }
+        default: {
+          if (ch >= "0" & ch <= "9") {
+            chr.next();
+            Bf.push(ch);
+          } else {
+            return token.new(ln, token.float, Bf.join(""));
+          }
+        }
+      }
+    }
+  };
+
+  Bf.push(ch);
+  while () {
+    ch = chr.peek();
+    switch (ch) {
+      "_": {
+        chr.next();
+        continue;
+      }
+      ".": {
+        chr.next();
+        Bf.push(ch);
+        return readFloat();
+      }
+      default: {
+        if (ch >= "0" & ch <= "9") {
+          chr.next();
+          Bf.push(ch);
+        } else {
+          return token.new(ln, token.int, Bf.join(""));
+        }
+      }
+    }
+  }
+};
+
+// Read an operator.
+//: \<charRd>, s -> <token>
+readOperator = \:charRd chr, ch -> {
+  ln = chr.ln;
+
+  switch (ch) {
+    "=", "!", ">", "<", "+", "*", "/", "%", "|", "&":
+      if (chr.peek() == "=") {
+        chr.next();
+        return token.new(ln, token.operator, ch + "=");
+      } else {
+        return token.new(ln, token.operator, ch);
+      }
+    "-": {
+      ch2 = chr.peek();
+      if (ch2 == "=" | ch2 == ">") {
+        chr.next();
+        return token.new(ln, token.operator, ch + ch2);
+      } else {
+        return token.new(ln, token.operator, ch);
+      }
+    }
+    default: return token.new(ln, token.operator, ch);
+  }
+};

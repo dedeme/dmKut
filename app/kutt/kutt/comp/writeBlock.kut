@@ -1,0 +1,844 @@
+// Copyright 06-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Write C code of a block.
+
+import "data/wrERs";
+import "data/wrSRs";
+import "data/stat";
+import "data/exp";
+import "data/wrCtx";
+import "data/type";
+import "data/typedSym";
+import "data/dicLayer";
+import "writeExp";
+import "fns";
+
+/// Kind of block.
+/// i
+top, function, inner =;
+
+/// Write code and returns its result.
+///   tpOp    : Expected type or '[]'
+///   kind    : One of 'top', 'function' or 'inner'.
+///   isLoop  : 'true' if it is a loop block. (To allow break and continue).
+///   isTry   : 'true' if it is a try block.
+///   ctx     : Writer context.
+///   ln      : Line number.
+///   Sts     : Block statements.
+/// \([<type>]|[]), i, b, i, <wrCtx>, i, [<stat>.] -> <wrSRs>
+run = \tpOp, kind, isLoop, isTry, :wrCtx ctx, ln, :arr Sts -> {
+  withBlockV = [false];
+  stoppedV = [wrSRs.no];
+  Bf = []; // [s.]
+  if (kind != top) dicLayer.addLayer(ctx.symTypes);
+  for (iSt, :stat st = Sts) {
+    ln = st.ln;
+    tp = st.tp;
+    v = st.value;
+    if (stoppedV! != wrSRs.no) {
+      warn(ctx, ln, "Statement after break-return-throw");
+      stoppedV! = wrSRs.no;
+    }
+
+    if (kind == top) {
+      if ( st.tp != stat.error &
+        st.tp != stat.assign &
+        st.tp != stat.block
+      )
+        return wrSRs.fail(ctx, ln, "Only assignations are allowed in top code");
+      if (st.tp == stat.block) {
+        if (ctx.mdIsMain) {
+          if (withBlockV!)
+            return wrSRs.fail(ctx, ln,
+              "Only one block is allowed in the top code of Main module"
+            );
+          withBlockV! = true;
+        } else {
+          return wrSRs.fail(ctx, ln,
+            "Blocks only are allowed in top code when it is in the Main module"
+          );
+        }
+      }
+    }
+
+    switch (tp) {
+      stat.error: return wrSRs.fail(ctx, ln, v);
+      stat.assign: {
+        :exp symSq = v[0];
+        :exp e = v[1];
+
+        if (kind == top) {
+          :wrERs rs = writeExp.run(ctx, e);
+          if (rs.isError) return wrSRs.fromWrERsFail(rs);
+          :type t = rs.tp;
+
+          if (symSq.tp != exp.symbol)
+            return wrSRs.failE(ctx, symSq.ln, "symbol", symSq.toStr());
+          sym = symSq.value;
+          switch (t.id[0]) {
+            "b", "i", "f", "s": {
+              :typedSym ts, = ctx.getSymbol(sym);
+              Bf.push("Val " + ctx.mdId + "_" + sym +
+                "=(Val)" + ts.cvalOp! + ";");
+            }
+            "a": {
+              vId = fns.nextId(ctx.mdId);
+              fId = fns.nextId(ctx.mdId);
+              Bf.push("Varr *" + vId + " = NULL;");
+              Bf.push("Val " + fId + "(void) {\n" +
+                "if (" + vId + ") return (Val)" + vId + ";\n" +
+                vId + " = __arr_new().a;\n" +
+                "return (Val)" + vId + ";\n" +
+                "};"
+              );
+              Bf.push("Val " +  ctx.mdId + "_" + sym +
+                "=(Val)(void*)" + fId + ";");
+            }
+            "0", "1", "(": {
+              :str id = rs.code;
+              :str funCode = rs.funCode;
+              ix = funCode.index("Val " + id + "=");
+              ix2 = funCode.indexFrom("=", ix);
+              :str code = funCode[:ix] + "Val " + ctx.mdId + "_" + sym +
+                funCode[ix2:];
+              ix3 = id.lastIndex("_");
+              Bf.push(code.replace(id, id[:ix3] + "_" + sym + id[ix3:]));
+            }
+            default:
+              return wrSRs.failE(
+                ctx, ln, "constant, empty array or function", e.toStr()
+              );
+          }
+        } else {
+          switch (symSq.tp) {
+            exp.symbol: {
+              sym = symSq.value;
+              :dicLayer symTypes = ctx.symTypes;
+              :dic layer = symTypes.peekLayer();
+              tpsOp = layer.get(sym);
+              if (!!tpsOp) {
+                :typedSym tps = tpsOp!;
+                return wrSRs.fail(
+                  ctx, symSq.ln,
+                  "Symbol '" + sym + "' is duplicated (first assigned in line " +
+                  math.itos(tps.ln) + ")"
+                );
+              }
+
+              litOp = switch (e.tp) {
+                exp.boolean, exp.integer, exp.float: [e.value];
+                exp.string: [js.ws(e.value)];
+                default: [];
+              };
+
+              if (e.tp == exp.function) {
+                symTypes.putElement(
+                  sym, typedSym.new(symSq.ln, sym, e.value[0], litOp, false)
+                );
+                :wrERs rs = writeExp.run(ctx, e);
+                if (rs.isError) return wrSRs.fromWrERsFail(rs);
+
+                :str id = rs.code;
+                :str funCode = rs.funCode;
+                ix = funCode.index(id);
+                ix2 = funCode.indexFrom("Val " + id + "=", ix);
+                :str code = funCode[:ix] + sym +
+                  funCode[ix + id.len():ix2]
+                ;
+                Bf.push("Val " + sym + ";");
+                Bf.push(code);
+                Bf.push(sym + "=(Val)(void*)" + sym + "_f;");
+              } else {
+                :wrERs rs = writeExp.run(ctx, e);
+                if (rs.isError) return wrSRs.fromWrERsFail(rs);
+                :type t = rs.tp;
+                symTypes.putElement(
+                  sym, typedSym.new(symSq.ln, sym, t, litOp, false)
+                );
+
+                if (rs.funCode != "") Bf.push(rs.funCode);
+                Bf.push("Val " + sym + " = " + rs.code + ";");
+              }
+            }
+            exp.square: {
+              :wrERs rs = writeExp.run(ctx, e);
+              if (rs.isError) return wrSRs.fromWrERsFail(rs);
+              :type t = rs.tp;
+
+              :exp e1 = symSq.value[0];
+              :exp e2 = symSq.value[1];
+
+              :wrERs rs1 = writeExp.run(ctx, e1);
+              if (rs1.isError) return wrSRs.fromWrERsFail(rs1);
+              :type t1, ok = ctx.expand(rs1.tp);
+              if (!ok) return wrSRs.fail(ctx, e1.ln, t1);
+
+              :wrERs rs2 = writeExp.run(ctx, e2);
+              if (rs2.isError) return wrSRs.fromWrERsFail(rs2);
+              :type t2 = rs2.tp;
+              if (rs.funCode != "") Bf.push(rs.funCode);
+              if (rs1.funCode != "") Bf.push(rs1.funCode);
+              if (rs2.funCode != "") Bf.push(rs2.funCode);
+              :type etp = rs.tp;
+              if ((etp.id == "0" | etp.id == "1") & (
+                e.tp != exp.symbol | ctx.isInnerSymbol(e)
+              ))
+                return wrSRs.fail(ctx, ln,
+                  symSq.toStr() + ": Inner functions can not be in container"
+                );
+              switch (t1.id[0]) {
+                "a": {
+                  if (t2.id[0] != "i")
+                    return wrSRs.failE(ctx, e2.ln, "integer", e2.toStr());
+                  subt = t1.SubTypes[0];
+                  eqOk, ok = type.allow(ctx, {}, subt, t);
+                  if (!ok) return wrSRs.fail(ctx, e.ln, eqOk);
+                  if (!eqOk) return wrSRs.failT(ctx, e.ln, subt, e, t);
+                  Bf.push("__arr_set(" +
+                    fns.mkPos(ctx.mdId, ln) + "," + rs1.code + "," + rs2.code +
+                    "," + rs.code +
+                  ");");
+                }
+                "t": {
+                  if (t2.id[0] != "i")
+                    return wrSRs.failE(ctx, e2.ln, "integer", e2.toStr());
+                  ixOp = [];
+                  switch (e2.tp) {
+                    exp.integer: ixOp.push(e2.value);
+                    exp.symbol: {
+                      tsOp = ctx.getSymbol(e2.value);
+                      if (!!tsOp) {
+                        :typedSym ts = tsOp!;
+                        if (!!ts.cvalOp) ixOp.push(ts.cvalOp!);
+                      }
+                    }
+                    exp.point: {
+                      :wrERs rs = writeExp.run(ctx, e2);
+                      if (rs.isError) wrSRs.fromWrERsFail(rs);
+                      :str code = rs.code;
+                      ixOp.push(code[code.index(")")+1:-1]);
+                    }
+                  }
+                  if (!ixOp) return wrSRs.failE(ctx, ln, "Constant integer", e1.toStr());
+
+                  ix = math.stoi(ixOp!)!;
+                  if (ix >= arr.size(t1.SubTypes))
+                    return wrSRs.fail(ctx, ln,
+                      str.fmt("index %d out of [0,%d]", [ix, arr.size(t1.SubTypes) - 1])
+                    );
+                  subt = t1.SubTypes[ix];
+                  eqOk, ok = type.allow(ctx, {}, t, subt);
+                  if (!ok) return wrSRs.fail(ctx, e.ln, eqOk);
+                  if (!eqOk) return wrSRs.failT(ctx, e.ln, subt, e, t);
+                  Bf.push("__arr_set(" +
+                    fns.mkPos(ctx.mdId, ln) + "," + rs1.code + "," + rs2.code +
+                    "," + rs.code +
+                  ");");
+                }
+              "d": {
+                if (t2.id[0] != "s")
+                  return wrSRs.failE(ctx, e2.ln, "string", e2.toStr());
+                subt = t1.SubTypes[0];
+                eqOk, ok = type.allow(ctx, {}, subt, t);
+                if (!ok) return wrSRs.fail(ctx, e.ln, eqOk);
+                if (!eqOk) return wrSRs.failT(ctx, e.ln, subt, e, t);
+                Bf.push(
+                  "__dic_put(" + rs1.code + "," + rs2.code +
+                  "," + rs.code + ");"
+                );
+              }
+              default:
+                return wrSRs.failE(ctx, e1.ln,
+                  "Expression of type Array, tuple or dictionary",
+                  e1.toStr() + " (of type " + type.toStr(rs1.tp) + ")"
+                );
+              }
+            }
+            default:
+              return wrSRs.failE(ctx, symSq.ln,
+                "symbol",
+                symSq.toStr()
+              );
+          }
+        }
+      }
+      stat.multiAssign: {
+        :arr syms = v[0];
+        :exp tuple = v[1];
+        :wrERs rs = writeExp.run(ctx, tuple);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        :type tt, ok = ctx.expand(rs.tp);
+        if (!ok) return wrSRs.fail(ctx, tuple.ln, tt);
+        if (tt.id != "t")
+          return wrSRs.failE(ctx, tuple.ln,
+            "Expression of type tuple",
+             tuple.toStr() + " (of type " + tt.toStr() + ")"
+          );
+        if (arr.size(tt.SubTypes) < syms.size())
+          return wrSRs.fail(ctx, tuple.ln,
+            "Tuple with number of elements < " + math.itos(syms.size())
+          );
+
+        if (rs.funCode != "") Bf.push(rs.funCode);
+
+        :dicLayer symTypes = ctx.symTypes;
+        :dic layer = symTypes.peekLayer();
+
+        for (i, sym = syms) {
+          if (sym == "") continue;
+
+          tpsOp = layer.get(sym);
+          if (!!tpsOp) {
+            :typedSym tps = tpsOp!;
+            return wrSRs.fail(
+              ctx, ln,
+              "Symbol '" + sym + "' is duplicated (first assigned in line " +
+              math.itos(tps.ln) + ")"
+            );
+          }
+          Bf.push("Val " + sym + ";");
+        }
+
+        Bf.push("{");
+        Bf.push("Val *_ptuple = ((" + rs.code + ").a)->begin;");
+        for (i, sym = syms) {
+          if (sym == "") continue;
+
+          :type t = tt.SubTypes[i];
+          symTypes.putElement(sym, typedSym.new(ln, sym, t, [], false));
+          Bf.push(sym + ' = _ptuple[' + math.itos(i) + "];");
+        }
+        Bf.push("}");
+      }
+      stat.addAs, stat.subAs, stat.mulAs, stat.divAs, stat.modAs,
+      stat.andAs, stat.orAs: {
+        sym, tps, msg = switch (tp) {
+          stat.addAs: ["+", "ifsa", "integer, float, string or array"];
+          stat.subAs: ["-", "if", "integer or float"];
+          stat.mulAs: ["*", "if", "integer or float"];
+          stat.divAs: ["/", "if", "integer or float"];
+          stat.modAs: ["%", "i", "integer"];
+          stat.andAs: ["&", "b", "boolean"];
+          default: ["|", "b", "boolean"];
+        };
+
+        :exp e1 = v[0];
+        :exp e2 = v[1];
+        :wrERs rs1 = writeExp.run(ctx, e1);
+        if (rs1.isError) return wrSRs.fromWrERsFail(rs1);
+        :type t1, ok = ctx.expand(rs1.tp);
+        if (!ok) return wrSRs.fail(ctx, e1.ln, t1);
+
+        :wrERs rs2 = writeExp.run(ctx, e2);
+        if (rs2.isError) return wrSRs.fromWrERsFail(rs2);
+        :type t2 = rs2.tp;
+
+        if (str.index(tps, t1.id) == -1)
+          return wrSRs.failE(ctx, e1.ln,
+            "Expression of type " + msg,
+            e1.toStr() + " (of type " + t1.toStr() + ")"
+          );
+
+        if (t1.id != t2.id)
+          return wrSRs.failT(ctx, e2.ln, t1, e2, t2);
+
+        if (rs1.funCode != "") Bf.push(rs1.funCode);
+        if (rs2.funCode != "") Bf.push(rs2.funCode);
+
+        :exp ct = e1.value[0];
+        :wrERs rsCt = writeExp.run(ctx, ct);
+        :type tCt = rsCt.tp;
+        :exp ix = e1.value[1];
+        :wrERs rsIx = writeExp.run(ctx, ix);
+        pos = fns.mkPos(ctx.mdId, ln);
+
+        switch (tCt.id[0]) {
+          "a", "t": {
+            Bf.push("{");
+            Bf.push("Val _ct = " + rsCt.code + ";");
+            Bf.push("Val _ix = " + rsIx.code + ";");
+            oldValue = "__arr_get(" + pos + ",_ct,_ix)";
+            newValue = "(" + rs2.code + ")";
+            op = switch (t1.id) {
+              "i": "(Val)(" + oldValue + ".i " + sym + newValue + ".i" + ")";
+              "f": "(Val)(" + oldValue + ".f " + sym + newValue + ".f" + ")";
+              "b": "(Val)(" + oldValue + ".b " + sym + newValue + ".b" + ")";
+              "s": '(Val)str_f("%s%s",' + oldValue + ".s," + newValue + ".s)";
+              "a": "__arr_cat2(" + oldValue + "," + newValue + ")";
+              default: sys.throw("Unexpected type");
+            };
+            Bf.push(
+              "__arr_set(" + pos + ",_ct,_ix," + op + ");"
+            );
+            Bf.push("}");
+          }
+          default:
+            return wrSRs.failE(ctx, e1.ln,
+              "Expression of type array or tuple",
+              e1.toStr() + " (of type " + type.toStr(rs1.tp) + ")"
+            );
+        }
+      }
+      stat.function: {
+        :wrERs rs = writeExp.parenthesis(ctx, v, true);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        if (rs.funCode != "") Bf.push(rs.funCode);
+        Bf.push(rs.code + ";");
+      }
+      stat.block: {
+        :wrSRs rs = run(tpOp, inner, isLoop, isTry, ctx, ln, v);
+        if (rs.isError) return rs;
+
+        if (rs.stopped != wrSRs.no & iSt < Sts.size() - 1)
+          warn(ctx, ln, "There are spare statements after block-breaker");
+        Bf.push((kind == top & ctx.mdIsMain
+            ? "void " + ctx.mdId + "_main() "
+            : ""
+          ) + rs.code);
+      }
+      stat.bbreak, stat.ccontinue: {
+        tx = tp == stat.bbreak ? "break" : "continue";
+        if (!isLoop) return wrSRs.fail(ctx, ln, "'" + tx + "' out of loop");
+
+        if (isTry) {
+          Bf.push(
+            "___built_jump(" +  math.itos(tp == stat.bbreak ? 2 : 3) + ");"
+          );
+        } else {
+          Bf.push(tx + ";");
+        }
+
+        if (iSt < Sts.size() - 1)
+          warn(
+            ctx, ln, "There are spare statements after '" + tx + "'"
+          );
+        stoppedV! = wrSRs.byBreak;
+      }
+      stat.rreturn: {
+        eOp = v;
+        if (!eOp) {
+          if (!!tpOp) {
+            :type t = tpOp!;
+            return wrSRs.failE(ctx, ln,
+              "return type " + t.toStr(),
+              "no return"
+            );
+          }
+          if (isTry)
+            Bf.push("___built_jump(4);");
+          else
+            Bf.push("return;");
+        } else {
+          :exp e0 = eOp!;
+          if (kind == top | !tpOp)
+            return wrSRs.failE(ctx, ln, "return nothing", e0.toStr());
+
+          :type t = tpOp!;
+          if (e0.tp != exp.point & (e0.tp != exp.symbol | ctx.isInnerSymbol(e0))) {
+            if (t.id == "0" | t.id == "1")
+              return wrSRs.fail(ctx, ln, "Inner functions can not be returned");
+          }
+
+          :exp e = switch (e0.tp) {
+            exp.array00: (t.id[0] == "a" & !e0.value)
+              ? exp.mkArray00(e0.ln, t.SubTypes[0])
+              : e0
+            ;
+            exp.dictionary00: (t.id[0] == "d" & !e0.value)
+              ? exp.mkDictionary00(e0.ln, t.SubTypes[0])
+              : e0
+            ;
+            default: e0;
+          };
+
+          :wrERs rs = writeExp.run(ctx, e);
+          if (rs.isError) return wrSRs.fromWrERsFail(rs);
+          eqOk, ok = type.allowReturn(ctx, t, rs.tp);
+          if (!ok) return wrSRs.fail(ctx, ln, eqOk);
+          if (!eqOk) return wrSRs.failT(ctx, ln, t, e, rs.tp);
+          tpOp! = rs.tp;
+
+          if (rs.funCode != "") Bf.push(rs.funCode);
+          if (isTry) {
+            Bf.push("__arr_push(__TRY_return, " + rs.code + ");");
+            Bf.push("___built_jump(4);");
+          } else {
+            Bf.push("return " + rs.code + ";");
+          }
+        }
+        if (iSt < Sts.size() - 1)
+          warn(ctx, ln, "There are spare statements after 'return'");
+        stoppedV! = wrSRs.byReturn;
+      }
+      stat.tthrow: {
+        :wrERs rs = writeExp.run(ctx, v);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        :type t = rs.tp;
+        if (t.id != "s")
+          return wrSRs.failT(ctx, v[exp.ln], type.string, v, rs.tp);
+
+        if (rs.funCode != "") Bf.push(rs.funCode);
+        Bf.push(
+          "___built_throw(" + fns.mkPos(ctx.mdId, ln) + "," + rs.code + ");"
+        );
+        stoppedV! = wrSRs.byReturn;
+      }
+      stat.ttrace: {
+        :wrERs rs = writeExp.run(ctx, v[1]);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        :type t = rs.tp;
+
+        if (rs.funCode != "") Bf.push(rs.funCode);
+        Bf.push(
+          "___built_trace((Val)" + (v[0] ? "1" : "0") + "," +
+          fns.mkPos(ctx.mdId, ln) + "," +
+          t.toC(ctx) + ", " +
+          rs.code + ");"
+        );
+      }
+      stat.wwhile: {
+        eOp = v[0];
+        :stat st = v[1]; // stat type block
+        condV = ["(Val)1"];
+        if (!!eOp) {
+          :exp e = eOp!;
+          :wrERs rs = writeExp.run(ctx, e);
+          if (rs.isError) return wrSRs.fromWrERsFail(rs);
+          :type t = rs.tp;
+          if (t.id != "b") return wrSRs.failT(ctx, e.ln, type.bool, e, t);
+          if (rs.funCode != "") Bf.push(rs.funCode);
+          condV! = rs.code;
+        }
+        :wrSRs stRs = run(tpOp, inner, true, isTry, ctx, st.ln, st.value);
+        if (stRs.isError) return stRs;
+        Bf.push("while ((" + condV! + ").b)\n" + stRs.code);
+      }
+      stat.iif: { // Statements are block ones.
+        :exp e = v[0];
+        :stat st1 = v[1]; // stat type block
+        :stat st2 = v[2]; // stat type block
+        :wrERs rs = writeExp.run(ctx, e);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        :type t = rs.tp;
+        if (t.id != "b") return wrSRs.failT(ctx, e.ln, type.bool, e, t);
+        if (rs.funCode != "") Bf.push(rs.funCode);
+
+        :wrSRs st1Rs = run(tpOp, inner, isLoop, isTry, ctx, st1.ln, st1.value);
+        if (st1Rs.isError) return st1Rs;
+        code1 = "if ((" + rs.code + ").b)\n" + st1Rs.code;
+        if (!st2.value) {
+          Bf.push(code1);
+        } else {
+          :wrSRs st2Rs = run(tpOp, inner, isLoop, isTry, ctx, st2.ln, st2.value);
+          if (st2Rs.isError) return st2Rs;
+          code2 = code1 + "\nelse " + st2Rs.code;
+          stoppedV! = switch(st1Rs.stopped){
+              wrSRs.no: wrSRs.no;
+              wrSRs.byBreak: st2Rs.stopped == wrSRs.no
+                ? wrSRs.no
+                : wrSRs.byBreak
+                ;
+              default: st2Rs.stopped;
+            };
+          Bf.push(code2);
+        }
+      }
+      stat.ffor: {
+        ixOp = v[0];
+        ix = !ixOp ? fns.nextId(ctx.mdId) : ixOp!;
+        e = v[1];
+        :exp ct = v[2];
+        :stat st = v[3]; // stat type block
+
+        :wrERs rs = writeExp.run(ctx, ct);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        :type tCt = rs.tp;
+        switch (tCt.id) {
+          "a", "d", "r": {} // Ok
+          default: return wrSRs.failE(ctx, ct.ln,
+            "Array, dictionary or iterator",
+             ct.toStr() + " (of type " + tCt.toStr() + ")"
+          );
+        }
+        :type t = tCt.SubTypes[0];
+
+        :dicLayer symTypes = ctx.symTypes;
+        symTypes.addLayer();
+        if (!!ixOp)
+          symTypes.putElement(
+            ix, typedSym.new(ln, ix,
+            tCt.id == "d" ? type.string : type.int,
+            [], true
+          ));
+        symTypes.putElement(e, typedSym.new(ln, e, t, [], true));
+        :wrSRs stRs = run(tpOp, inner, true, isTry, ctx, st.ln, st.value);
+        if (stRs.isError) return stRs;
+        symTypes.removeLayer();
+
+        if (rs.funCode != "") Bf.push(rs.funCode);
+        switch (tCt.id) {
+          "a": {
+            Bf.push("{\nint64_t _i = 0;");
+            Bf.push("Varr *_a = (" + rs.code + ").a;");
+            Bf.push("Val *_p = _a->begin;");
+            Bf.push("Val *_end = _a->end;");
+            Bf.push("while (_p < _end) {");
+            Bf.push("Val " + e + ' = *_p++;');
+            if (!!ixOp) Bf.push("Val " + ix + " = (Val)_i++;");
+            Bf.push(stRs.code);
+            Bf.push("}}");
+          }
+          "d": {
+            Bf.push("{\nint64_t _i = 0;");
+            Bf.push("Varr *_a = (" + rs.code + ").a;");
+            Bf.push("Val *_p = _a->begin;");
+            Bf.push("Val *_end = _a->end;");
+            Bf.push("while (_p < _end) {");
+            Bf.push("Varr *_kv = (*_p++).a;");
+            Bf.push("Val " + e + ' = _kv->begin[1];');
+            if (!!ixOp) Bf.push("Val " + ix + " = *_kv->begin;");
+            Bf.push(stRs.code);
+            Bf.push("}}");
+          }
+          "r": sys.throw("Unimplemented");
+        }
+      }
+      stat.forRange: {
+        var = v[0];
+        :exp start = v[1];
+        :exp end = v[2];
+        stepOp = v[3];
+        :stat st = v[4];
+
+        :wrERs rsStart = writeExp.run(ctx, start);
+        if (rsStart.isError) return wrSRs.fromWrERsFail(rsStart);
+        if (rsStart.tp != type.int)
+          return wrSRs.failT(ctx, start.ln, type.int, start, rsStart.tp);
+        if (rsStart.funCode != "") Bf.push(rsStart.funCode);
+
+        :wrERs rsEnd = writeExp.run(ctx, end);
+        if (rsEnd.isError) return wrSRs.fromWrERsFail(rsEnd);
+        if (rsEnd.tp != type.int)
+          return wrSRs.failT(ctx, end.ln, type.int, end, rsEnd.tp);
+        if (rsEnd.funCode != "") Bf.push(rsEnd.funCode);
+
+        rsStepOp = [];
+        if (!!stepOp) {
+          :exp step = stepOp!;
+          :wrERs rsStep = writeExp.run(ctx, step);
+          if (rsStep.isError) return wrSRs.fromWrERsFail(rsStep);
+          if (rsStep.tp != type.int)
+            return wrSRs.failT(ctx, step.ln, type.int, step, rsStep.tp);
+          if (rsStep.funCode != "") Bf.push(rsStep.funCode);
+
+          rsStepOp.push(rsStep);
+        }
+
+        :dicLayer symTypes = ctx.symTypes;
+        symTypes.addLayer();
+        symTypes.putElement(var, typedSym.new(ln, var, type.int, [], true));
+        :wrSRs stRs = run(tpOp, inner, true, isTry, ctx, st.ln, st.value);
+        if (stRs.isError) return stRs;
+        symTypes.removeLayer();
+
+        Bf.push("{");
+        Bf.push("int64_t _start = (" + rsStart.code + ").i;");
+        Bf.push("int64_t _end = (" + rsEnd.code + ").i;");
+        if (!rsStepOp) {
+          Bf.push("for (int64_t _i = _start; _i < _end; ++_i){");
+        } else {
+          pos = fns.mkPos(ctx.mdId, ln);
+          :wrERs rsStep = rsStepOp!;
+          Bf.push("int64_t _step = (" + rsStep.code + ").i;");
+          Bf.push("if (_step == 0) ___built_throw(" + pos +
+            ", (Val) \"'for' step is 0\");");
+          Bf.push("for (int64_t _i = _start; " +
+            "_step > 0 ? _i <= _end : _i >= _end" +
+            "; _i += _step){"
+          );
+        }
+
+        Bf.push("Val " + var + " = (Val)_i;");
+        Bf.push(stRs.code);
+        Bf.push("}}");
+      }
+      stat.ttry: {
+        :stat st = v[0];
+        var = v[1];
+        :stat stCatch = v[2];
+        :stat stFinally = v[3];
+
+        :wrSRs stRs = run(tpOp, inner, isLoop, true, ctx, st.ln, st.value);
+        if (stRs.isError) return stRs;
+        stC = stRs.code;
+
+        :dicLayer symTypes = ctx.symTypes;
+        symTypes.addLayer();
+        symTypes.putElement(var, typedSym.new(ln, var, type.string, [], true));
+        :wrSRs stCatchRs = run(
+          tpOp, inner, isLoop, isTry, ctx, stCatch.ln, stCatch.value
+        );
+        symTypes.removeLayer();
+
+        if (stCatchRs.isError) return stCatchRs;
+        stCatchC = stCatchRs.code;
+
+        stoppedV! =
+          stRs.stopped == wrSRs.no | stCatchRs.stopped == wrSRs.no
+          ? wrSRs.no
+          : stRs.stopped == wrSRs.byBreak | stCatchRs.stopped == wrSRs.byBreak
+            ? wrSRs.byBreak
+            : wrSRs.byReturn
+        ;
+
+        stFinallyCV = [""];
+        if (!!stFinally.value) {
+          :wrSRs stFinallyRs = run(
+            tpOp, inner, isLoop, isTry, ctx, stFinally.ln, stFinally.value
+          );
+          if (stFinallyRs.isError) return stFinallyRs;
+          stoppedV! = stFinallyRs.stopped;
+          stFinallyCV! = stFinallyRs.code;
+        }
+
+        Bf.push("{");
+        if (!!tpOp & !isTry) // !isTry prevents double __TRY_return's
+          Bf.push("Val __TRY_return = __arr_new();");
+
+        Bf.push("""
+            jmp_buf *__TRY_buf = MALLOC(jmp_buf);
+            exc_add(__TRY_buf);
+            int __TRY_r = setjmp(*__TRY_buf);
+            if (__TRY_r == 0) {
+        """);
+        Bf.push(stC);
+        Bf.push("""
+              exc_remove();
+            }
+            if (__TRY_r == 1) {
+        """);
+        Bf.push("Val " + var + " = (Val)exc_msg(exc_get());");
+        Bf.push(stCatchC);
+        Bf.push("}");
+        if (stFinallyCV! != "") Bf.push(stFinallyCV!);
+
+        if (isLoop) {
+          Bf.push("if (__TRY_r == 2) {");
+          if (isTry) Bf.push("___built_jump(2);\n}");
+          else Bf.push("break;\n}");
+
+          Bf.push("if (__TRY_r == 3) {");
+          if (isTry) Bf.push("___built_jump(3);\n}");
+          else Bf.push("continue;\n}");
+        }
+
+        Bf.push("if (__TRY_r == 4) {");
+        if (isTry) Bf.push("___built_jump(4);\n}");
+        else Bf.push(!tpOp
+            ? "return;\n}"
+            : 'return __arr_get((Val)"", __TRY_return, (Val)0);\n}'
+          );
+
+        Bf.push("}");
+      }
+      stat.sswitch: {
+        :exp var = v[0];
+        :arr Entries = v[1];
+
+        :wrERs rs = writeExp.run(ctx, var);
+        if (rs.isError) return wrSRs.fromWrERsFail(rs);
+        :type tc = rs.tp;
+        tmp = fns.nextId(ctx.mdId);
+
+        defaultCodeV = [false]; // <stat>
+        LastEntry = Entries.peek();
+        :stat lastS = LastEntry[1];
+
+        :arr lastCs = LastEntry[0];
+        if (lastCs.size() == 1) {
+          :exp c = lastCs[0];
+          if (c.tp == exp.symbol & c.value == "default") {
+            Entries.pop();
+            defaultCodeV! = true;
+          }
+        }
+
+        Funs = []; // [s.]
+        if (rs.funCode != "") Funs.push(rs.funCode);
+        Funs.push("Val " + tmp + " = " + rs.code + ";");
+        Code = []; // [s.]
+        stoppedV! = wrSRs.byReturn;
+        for (i, Entry = Entries) {
+          :arr Cs = Entry[0];
+          CsCode = []; // [s.]
+          for (:exp c = Cs) {
+            :wrERs crs = writeExp.run(ctx, c);
+            if (crs.isError) return wrSRs.fromWrERsFail(crs);
+            if (crs.funCode != "") Funs.push(crs.funCode);
+            eqOk, ok = type.eq(ctx, tc, crs.tp);
+            if (!ok) return wrSRs.fail(ctx, c.ln, eqOk);
+            if (!eqOk) return wrSRs.failT(ctx, c.ln, tc, c, crs.tp);
+
+            CsCode.push("___built_eq(" +
+                tc.toC(ctx) + "," + tmp + "," + crs.code +
+              ").b"
+            );
+          }
+          :stat st = Entry[1];
+          :wrSRs srs = run(tpOp, inner, isLoop, isTry, ctx, st.ln, st.value);
+          if (srs.isError) return srs;
+          stoppedV! =
+            stoppedV! == wrSRs.no | srs.stopped == wrSRs.no
+            ? wrSRs.no
+            : stoppedV! == wrSRs.byBreak | srs.stopped == wrSRs.byBreak
+              ? wrSRs.byBreak
+              : wrSRs.byReturn
+          ;
+          Code.push("if (" + CsCode.join("||") + ") " + srs.code);
+        }
+
+        if (defaultCodeV!) {
+          :wrSRs srs = run(tpOp, inner, isLoop, isTry, ctx, lastS.ln, lastS.value);
+          if (srs.isError) return srs;
+          stoppedV! =
+            stoppedV! == wrSRs.no | srs.stopped == wrSRs.no
+            ? wrSRs.no
+            : stoppedV! == wrSRs.byBreak | srs.stopped == wrSRs.byBreak
+              ? wrSRs.byBreak
+              : wrSRs.byReturn
+          ;
+          Code.push(srs.code);
+        } else {
+          stoppedV! = wrSRs.no;
+        }
+
+        Bf.push((!Funs ? "" : Funs.join("\n") + "\n") + Code.join("else\n"));
+      }
+      default: sys.throw("Unexpected statement:\n" + st.toStr());
+    }
+  }
+
+  if (kind != top) {
+    for (:typedSym v = dicLayer.peekLayer(ctx.symTypes))
+      if (!v.used) warn(ctx, v.ln, "Symbol '" + v.id + "' not used");
+    dicLayer.removeLayer(ctx.symTypes);
+    :arr Bf = ["{"] + Bf + ["}\n"];
+
+    if (stoppedV! != wrSRs.byReturn & kind == function & !!tpOp)
+      return wrSRs.failE(ctx, ln,
+        "Return of type " + type.toStr(tpOp!),
+        "Possible no return at end of block"
+      );
+    return wrSRs.mk(false, stoppedV!, Bf.join("\n"));
+  }
+
+  return wrSRs.mk(withBlockV! & ctx.mdIsMain, stoppedV!, Bf.join("\n"));
+};
+
+// Shows a warning.
+//: \<wrCtx>, i, s -> ()
+warn = \:wrCtx ctx, ln, msg -> sys.println(
+    ctx.mdPath + ":" + math.itos(ln) + ":\n" +
+      arr.join(arr.map(str.split(msg, "\n"), \l -> return "  " + l;), "\n")
+  );;

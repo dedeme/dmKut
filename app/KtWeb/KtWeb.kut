@@ -8,7 +8,7 @@ import "libdm/websv";
 import "libdm/cgi";
 import "global";
 
-log.setPath(global.logPath);
+log.init(global.logPath, 100);
 
 :arr Args = sys.args();
 
@@ -67,7 +67,7 @@ response = \rqBs -> {
 
   // POST
 
-  rqUnix = str.replace(rq, "\r", "");
+  :str rqUnix = str.replace(rq, "\r", "");
   ix0 = str.index(rq, "\n");
 
   if (ix0 == -1)
@@ -84,7 +84,7 @@ response = \rqBs -> {
   if (ix1 == -1)
     return websv.mkRpBytes(bytes.fromStr(websv.badRequestRp(rq)));
 
-  rqUnix0 = str.trim(rqUnix[ix1+2:]);
+  :str rqUnix0 = str.trim(rqUnix[ix1+2:]);
   ix3 = rqUnix0.index(":");
   if (ix3 == -1)
     return websv.mkRpBytes(bytes.fromStr(websv.badRequestRp(rq)));
@@ -144,29 +144,27 @@ processHub = \ssk, rq -> {
   prg = js.r(rq).prg;
 
   return switch(prg) {
-    "AlarmClock": sys.cmd("kut2", ["prgs/AlarmClock/kut/main", ssk, rq])!;
-    "BrutalBackup": sys.cmd("kut2", ["prgs/BrutalBackup/kut/main", ssk, rq])!;
-    "CashFlow": sys.cmd("kut2", ["prgs/CashFlow/kut/main", ssk, rq])!;
-    "CDoc": sys.cmd("kut2", ["prgs/CDoc/kut/main", ssk, rq])!;
-    "CMarket": sys.cmd("kut", ["prgs/CMarket/kut/main", ssk, rq])!;
-    "CMMarket": sys.cmd("kut", ["prgs/CMMarket/kut/main", ssk, rq])!;
-    "Fluxwp": sys.cmd("kut", ["prgs/Fluxwp/kut/main", ssk, rq])!;
-    "FMarket": sys.cmd("kut2", ["prgs/FMarket/kut/main", ssk, rq])!;
-    "HBills": sys.cmd("kut2", ["prgs/HBills/kut/main", ssk, rq])!;
-    "Hconta": sys.cmd("kut2", ["prgs/Hconta/kut/main", ssk, rq])!;
-    "Ibex": sys.cmd("kut", ["prgs/Ibex/kut/main", ssk, rq])!;
+    "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ssk, rq])!;
+    "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ssk, rq])!;
+    "CashFlow": sys.cmd("kut", ["prgs/CashFlow/kut/main", ssk, rq])!;
+    "CDoc": sys.cmd("kut", ["prgs/CDoc/kut/main", ssk, rq])!;
+    "FMarket": sys.cmd("kut", ["prgs/FMarket/kut/main", ssk, rq])!;
+    "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ssk, rq])!;
+    "Hconta": sys.cmd("kut", ["prgs/Hconta/kut/main", ssk, rq])!;
     "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ssk, rq])!;
-    "JstbEditor": sys.cmd("kut", ["prgs/JstbEditor/kut/main", ssk, rq])!;
-    "Kron": sys.cmd("kut2", ["prgs/Kron/kut/main", ssk, rq])!;
-    "KTemplate": sys.cmd("kut2", ["prgs/Ktemplate/kut/main", ssk, rq])!;
+    "Kron": sys.cmd("kut", ["prgs/Kron/kut/main", ssk, rq])!;
+    "KTemplate": sys.cmd("kut", ["prgs/Ktemplate/kut/main", ssk, rq])!;
+    "KutCInterface": sys.cmd("kut", ["prgs/KutCInterface/kut/main", ssk, rq])!;
     "KutDoc": sys.cmd("kut", ["prgs/KutDoc/kut/main", ssk, rq])!;
-    "Main": sys.cmd("kut2", ["prgs/Main/kut/main", ssk, rq])!;
-    "Market": sys.cmd("kut2", ["prgs/Market/kut/main", ssk, rq])!;
+    "KuttDoc": sys.cmd("prgs/KuttDoc/kutt/bin/KuttDoc", [ssk, rq])!;
+    "Main": sys.cmd("kut", ["prgs/Main/kut/main", ssk, rq])!;
+    "Market": sys.cmd("kut", ["prgs/Market/kut/main", ssk, rq])!;
     "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ssk, rq])!;
-    "MMarket": sys.cmd("kut2", ["prgs/MMarket/kut/main", ssk, rq])!;
-    "MrBackup": sys.cmd("kut2", ["prgs/MrBackup/kut/main", ssk, rq])!;
+    "MMarket": sys.cmd("kut", ["prgs/MMarket/kut/main", ssk, rq])!;
+    "MrBackup": sys.cmd("kut", ["prgs/MrBackup/kut/main", ssk, rq])!;
+    "NkutDoc": sys.cmd("kut", ["prgs/NkutDoc/kut/main", ssk, rq])!;
     "Notes": sys.cmd("kut", ["prgs/Notes/kut/main", ssk, rq])!;
-    "Stocks": sys.cmd("kut2", ["prgs/Stocks/kut/main", ssk, rq])!;
+    "Stocks": sys.cmd("kut", ["prgs/Stocks/kut/main", ssk, rq])!;
     "Wallpapers": sys.cmd("kut", ["prgs/Wallpapers/kut/main", ssk, rq])!;
     "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ssk, rq])!;
     default: sys.throw("Value of prg (" + prg + ") is not valid");

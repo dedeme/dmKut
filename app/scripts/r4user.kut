@@ -1,0 +1,24 @@
+// Copyright 04-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+k, ok = sys.cmd("echo", ["`zenity --title=r4user[58] --password`"]);
+if (!ok) return;
+kTrim = str.trim(k);
+if (kTrim == "") return;
+
+kkey = cryp.key(kTrim, 30);
+id = "vXaqd4GHu8CxpZyP";
+key = "lc6i44DRkn4=";
+
+if (!sys.args())
+  sys.cmd("zenity", [
+    '--info',
+    '--title=R4 user',
+    '--text=' + cryp.decode(kkey, id) + "\n" + cryp.decode(kkey, key)
+  ]);
+else
+  sys.cmd("zenity", [
+    '--info',
+    '--title=R4 user',
+    '--text=' + cryp.encode(kkey, sys.args()[0])
+  ]);

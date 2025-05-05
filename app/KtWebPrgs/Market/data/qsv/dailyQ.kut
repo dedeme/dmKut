@@ -1,0 +1,15 @@
+// Copyright 07-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Daily quote.
+
+/// Constructor.
+/// Values <= 0 are not valid ones.
+///   code : Company server code.
+///   open : Open value.
+///   close: Close value.
+///   max  : Maximum value.
+///   min  : Minimum value.
+///   vol  : Volume value.
+/// \s,f,f,f,f,f -> <dailyQ>
+new : code, open, close, max, min, vol;

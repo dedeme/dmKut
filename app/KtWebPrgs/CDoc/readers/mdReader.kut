@@ -25,7 +25,7 @@ readDoc = \:file f, l -> {
   lV = [l];
   while () {
     Bf = []; // [s.]
-    ltrim = str.ltrim(lV!);
+    :str ltrim = str.ltrim(lV!);
 
     if (ltrim.starts("///")) {
       lOp = [];
@@ -97,7 +97,7 @@ mkLink = \s -> {
     ix2 = str.index(s[ix0 + 1:], "(");
     ixV! = ix2 == -1 ? ixV! : ix2 + 2;
   }
-  r = str.replace(s[:ixV!], "#", "_");
+  :str r = str.replace(s[:ixV!], "#", "_");
 
   Bf = []; //[s.];
   for (i = 0:r.len()) if (r[i] > " ") Bf.push(r[i]);
@@ -141,7 +141,7 @@ readNameBk = \tx, i -> {
 
 // \<file>, s, b -> s
 readCode = \:file f, line, isFirst -> {
-  l = str.ltrim(line);
+  :str l = str.ltrim(line);
 
   if (isFirst & l.starts("#ifndef ")) return "overview";
 
@@ -214,7 +214,7 @@ readCode = \:file f, line, isFirst -> {
   return "";
 };
 
-/// \s, s -> [<doc>] | []
+/// \s, s -> ([<doc>] | [])
 read = \pack, pt -> {
   ppathOp = arr.find(
     pathsTb.read(), \:dpath p -> return p.id == pack;
@@ -222,7 +222,7 @@ read = \pack, pt -> {
   if (!ppathOp) return [];
   :dpath ppath = ppathOp!;
 
-  fpath = path.cat([ppath.spath, "include", pt + ".h"]);
+  fpath = file.cat([ppath.spath, "include", pt + ".h"]);
   if (!file.exists(fpath)) return [];
 
   :doc dc = doc.new("", [], [], [], [], [], [], []);
@@ -238,7 +238,7 @@ read = \pack, pt -> {
       docRs = readDoc(f, l);
       if (!!docRs & docRs[1] != "") {
         cd = readCode(f, docRs[1], isFirstV!);
-        cdTrim = str.trim(cd);
+        :str cdTrim = str.trim(cd);
         d = docRs[0];
 
         isFirstV! = false;

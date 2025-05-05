@@ -142,39 +142,6 @@ verbatim = \:reader rd, start, terminator -> {
   return str.fromRunes(Rs);
 };
 
-// \<reader> -> s
-codeEmbeded = \:reader rd -> {
-  Rs = []; // [s.]
-  while () {
-    rn = rd.peek();
-
-    if (rn == "") {
-      err.show("Terminator of '```' not found");
-      break;
-    }
-    if (rn == terminator[0]) {
-      if (len == 1) {
-       rd.next();
-       break;
-      } else if (len == 2 & terminator[1] == rd.peekn(1)) {
-       rd.next();
-       rd.next();
-       break;
-      } else if (
-        len == 3 & terminator[1] == rd.peekn(1) & terminator[2] == rd.peekn(2)
-      ) {
-       rd.next();
-       rd.next();
-       rd.next();
-       break;
-      }
-    }
-    arr.push(Rs, rn);
-    rd.next();
-  }
-  return str.fromRunes(Rs);
-};
-
 // \[<rune>.], <reader>-> ()
 par = \:arr Html, :reader rd -> {
   Html.cat(str.toRunes("<p>"));
@@ -203,58 +170,100 @@ par = \:arr Html, :reader rd -> {
     switch(rn) {
       '<': Html.cat(str.toRunes("&lt;"));
       '&': Html.cat(str.toRunes("&amp;"));
-      '·': Html.cat(str.toRunes("&nbsp;"));
+      '·': {
+        if (rd.peek() == ".") {
+          Html.push(rn);
+          rd.next();
+        } else {
+          Html.cat(str.toRunes("&nbsp;"));
+        }
+      }
       '\\': {
         if (rd.peek() == "\n") {
-          rd.next();
           Html.cat(str.toRunes("<br>"));
+          rd.next();
+        } else if (rd.peek() == "[") {
+          if (rd.peekn(2) == "]") {
+            Html.push(rd.peekn(1));
+            rd.next();
+            rd.next();
+            rd.next();
+          } else {
+            Html.cat(str.toRunes("["));
+            rd.next();
+          }
         } else {
           Html.push(rn);
         }
       }
       '_': {
-        if (
-          isItalicV! & Html.peek()  > " " &
-          (rd.peek() <= " " |
-            str.index(".,;:()[]{}!¡¿?", rd.peek()) != -1
-          )
-        ) {
-          isItalicV! = false;
-          Html.cat(str.toRunes("</i>"));
-        } else if (
-          !isItalicV! & Html.peek()  <= " " &
-          rd.peek() > " " & rd.peek() != "_"
-        ) {
-          isItalicV! = true;
-          Html.cat(str.toRunes("<i>"));
+        if (isItalicV!) {
+          if (rd.peek() == "_") {
+            if (rd.peekn(1) == "_") {
+              isItalicV! = false;
+              Html.cat(str.toRunes("</i>_"));
+              rd.next();
+              rd.next();
+            } else {
+              Html.push(rn);
+              rd.next();
+            }
+          } else {
+            isItalicV! = false;
+            Html.cat(str.toRunes("</i>"));
+          }
         } else {
-          Html.push(rn);
+          if (rd.peek() == "_") {
+            if (rd.peekn(1) == "_") {
+              isItalicV! = true;
+              Html.cat(str.toRunes("<i>_"));
+              rd.next();
+              rd.next();
+            } else {
+              Html.push(rn);
+              rd.next();
+            }
+          } else {
+            isItalicV! = true;
+            Html.cat(str.toRunes("<i>"));
+          }
         }
       }
       '*': {
-        if (
-          isMonoV! & Html.peek()  > " " &
-          (rd.peek() <= " " |
-            str.index(".,;:()[]{}!¡¿?", rd.peek()) != -1
-          )
-        ) {
-          isMonoV! = false;
-          Html.cat(str.toRunes("</code>"));
-        } else if (
-          !isMonoV! & Html.peek()  <= " " &
-          rd.peek() > " " & rd.peek() != "*"
-        ) {
-          isMonoV! = true;
-          Html.cat(str.toRunes("<code>"));
+        if (isMonoV!) {
+          if (rd.peek() == "*") {
+            if (rd.peekn(1) == "*") {
+              isMonoV! = false;
+              Html.cat(str.toRunes("</code>*"));
+              rd.next();
+              rd.next();
+            } else {
+              Html.push(rn);
+              rd.next();
+            }
+          } else {
+            isMonoV! = false;
+            Html.cat(str.toRunes("</code>"));
+          }
         } else {
-          Html.push(rn);
+          if (rd.peek() == "*") {
+            if (rd.peekn(1) == "*") {
+              isMonoV! = true;
+              Html.cat(str.toRunes("<code>*"));
+              rd.next();
+              rd.next();
+            } else {
+              Html.push(rn);
+              rd.next();
+            }
+          } else {
+            isMonoV! = true;
+            Html.cat(str.toRunes("<code>"));
+          }
         }
       }
       '[': {
-        if (!!Html & Html.peek()  == "\\") {
-          arr.pop(Html);
-          Html.push("[");
-        } else if (!!Html & Html.peek()  == "!") {
+        if (!!Html & Html.peek()  == "!") {
           arr.pop(Html);
           Html.cat(str.toRunes('<img src="'));
           Html.cat(str.toRunes(verbatim(rd, "![", "]")));

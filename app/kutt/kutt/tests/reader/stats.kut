@@ -1,0 +1,179 @@
+// Copyright 25-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test statements.
+
+import "readers/stRd";
+import "data/token";
+import "data/stat";
+import "data/rdCtx";
+
+/// \ -> ()
+run = \ -> {
+  :stRd rd1 = mkRd(" { } \n a = 13 \n; :md c = 'abc' ; j = c.test();");
+  sys.test(stat.toStr(rd1.next()), "{\n\n}");
+  sys.test(stat.toStr(rd1.next()), "a=13");
+  sys.test(stat.toStr(rd1.next()), "c=\"abc\"");
+  sys.test(stat.toStr(rd1.next()), "j=md.test(c)");
+  sys.test(stat.toStr(rd1.next()), "Unexpected end of file");
+  sys.test(stat.toStr(rd1.next()), "Unexpected end of file");
+
+  :stRd rd011 = mkRd("""
+    A = []/i/;
+    D = {}/<file>/;
+  """);
+  sys.test(stat.toStr(rd011.next()), "A=[]/i/");
+  sys.test(stat.toStr(rd011.next()), "D={}/<file>/");
+
+  :stRd rd2 = mkRd(" { a = 13; :md c = true \n;} , a = fc(); ");
+  sys.test(stat.toStr(rd2.next()), "{\na=13\nc=true\n}");
+  sys.test(stat.toStr(rd2.next()), ",a=fc()");
+
+  :stRd rd3 = mkRd(" //:[. iii] \n a : bb, dd, cc; a :; z = b() ");
+  sys.test(stat.toStr(rd3.next()), "a:[.iii]bb,dd,cc");
+  sys.test(stat.toStr(rd3.next()), "Expected: symbol\n  Actual: Operator: ;");
+
+  :stRd rd4 = mkRd(" a[1]=z; a [ 1 ] += z ; a[1]-=z;a[1]*=z;a[1]/=z;a[1]%=z;");
+  sys.test(stat.toStr(rd4.next()), "a[1]=z");
+  sys.test(stat.toStr(rd4.next()), "a[1]+=z");
+  sys.test(stat.toStr(rd4.next()), "a[1]-=z");
+  sys.test(stat.toStr(rd4.next()), "a[1]*=z");
+  sys.test(stat.toStr(rd4.next()), "a[1]/=z");
+  sys.test(stat.toStr(rd4.next()), "a[1]%=z");
+
+  :stRd rd5 = mkRd(" a[1]&=z; a [ 1 ] |= z ; f(ab)()[2] -= 11;;");
+  sys.test(stat.toStr(rd5.next()), "a[1]&=z");
+  sys.test(stat.toStr(rd5.next()), "a[1]|=z");
+  sys.test(stat.toStr(rd5.next()), "f(ab)()[2]-=11");
+  sys.test(stat.toStr(rd5.next()), "Unexpected 'Operator: ;'");
+
+  :stRd rd6 = mkRd(" fn( ); fn ( a , b); md.fn(); md.fn(a,b,c);");
+  sys.test(stat.toStr(rd6.next()), "fn()");
+  sys.test(stat.toStr(rd6.next()), "fn(a,b)");
+  sys.test(stat.toStr(rd6.next()), "md.fn()");
+  sys.test(stat.toStr(rd6.next()), "md.fn(a,b,c)");
+
+  :stRd rd7 = mkRd(" v[3]( ); v[3] ( a , b); md.v[2](); md.v[4](a,b,c);");
+  sys.test(stat.toStr(rd7.next()), "v[3]()");
+  sys.test(stat.toStr(rd7.next()), "v[3](a,b)");
+  sys.test(stat.toStr(rd7.next()), "md.v[2]()");
+  sys.test(stat.toStr(rd7.next()), "md.v[4](a,b,c)");
+
+  :stRd rd8 = mkRd(" break ; continue; return  ;  return fn(a.b);");
+  sys.test(stat.toStr(rd8.next()), "break");
+  sys.test(stat.toStr(rd8.next()), "continue");
+  sys.test(stat.toStr(rd8.next()), "return");
+  sys.test(stat.toStr(rd8.next()), "return fn(a.b)");
+
+  :stRd rd9 = mkRd("  while () {} while (a) return; while (true) {return;} ;");
+  sys.test(stat.toStr(rd9.next()), "while(){\n\n}");
+  sys.test(stat.toStr(rd9.next()), "while(a){\nreturn\n}");
+  sys.test(stat.toStr(rd9.next()), "while(true){\nreturn\n}");
+  sys.test(stat.toStr(rd9.next()), "Unexpected 'Operator: ;'");
+
+  :stRd rd10 = mkRd("  while () {a = b + 5; c = 3; return a+c;}");
+  sys.test(stat.toStr(rd10.next()), "while(){\na=(b+5)\nc=3\nreturn (a+c)\n}");
+
+  :stRd rd11 = mkRd("  if (x) a(); if (x){a=2;return a; } if (true){}");
+  sys.test(stat.toStr(rd11.next()), "if(x){\na()\n}");
+  sys.test(stat.toStr(rd11.next()), "if(x){\na=2\nreturn a\n}");
+  sys.test(stat.toStr(rd11.next()), "if(true){\n\n}");
+
+  :stRd rd12 = mkRd("  if (x) a(); else b(); if(x){}else{} if (x){a();} else {b() += 2;}");
+  sys.test(stat.toStr(rd12.next()), "if(x){\na()\n}else {\nb()\n}");
+  sys.test(stat.toStr(rd12.next()), "if(x){\n\n}");
+  sys.test(stat.toStr(rd12.next()), "if(x){\na()\n}else {\nb()+=2\n}");
+
+  :stRd rd120 = mkRd("""
+    switch (a) {
+      1: println(1);
+      2: println(2);
+      default: println(3);
+    }
+    """);
+  sys.test(stat.toStr(rd120.next()),
+    "switch(a){1:{\nprintln(1)\n};\n2:{\nprintln(2)\n};\ndefault:{\nprintln(3)\n}}");
+  :stRd rd121 = mkRd("""
+    switch (a) {
+      1: println(1);
+      2: println(2);
+    }
+    """);
+  sys.test(stat.toStr(rd121.next()),
+    "switch(a){1:{\nprintln(1)\n};\n2:{\nprintln(2)\n}}");
+
+  :stRd rd13 = mkRd(" for (e = ct) a() ; for(:md e = ct) e.fn(a); for (e = ct){}");
+  sys.test(stat.toStr(rd13.next()), "for(e=ct){\na()\n}");
+  sys.test(stat.toStr(rd13.next()), "for(e=ct){\nmd.fn(e,a)\n}");
+  sys.test(stat.toStr(rd13.next()), "for(e=ct){\n\n}");
+
+  :stRd rd14 = mkRd("i = 2;for (:md1 i, :md2 e = ct) e.fn([i.g])()[2](); ri(i);");
+  sys.test(stat.toStr(rd14.next()), "i=2");
+  sys.test(stat.toStr(rd14.next()), "for(i,e=ct){\nmd2.fn(e,[i[md1.g]])()[2]()\n}");
+  sys.test(stat.toStr(rd14.next()), "ri(i)");
+
+  :stRd rd15 = mkRd(" for (i = 1 : 2) a() ; for(:md i = 1:2) i.fn(a); for (i = 1:2){}");
+  sys.test(stat.toStr(rd15.next()), "for(i=1:2){\na()\n}");
+  sys.test(stat.toStr(rd15.next()), "for(i=1:2){\nmd.fn(i,a)\n}");
+  sys.test(stat.toStr(rd15.next()), "for(i=1:2){\n\n}");
+
+  :stRd rd16 = mkRd("i = 2; for (:mod i = 1 : 2 : b()) {i.fn(a);} i.fn(a);");
+  sys.test(stat.toStr(rd16.next()), "i=2");
+  sys.test(stat.toStr(rd16.next()), "for(i=1:2:b()){\nmod.fn(i,a)\n}");
+  sys.test(stat.toStr(rd16.next()), "i.fn(a)");
+
+  :stRd rd17 = mkRd(":md a = 3; x=a.fn; a.fn(b); a.fn#(b) ; a.fn(b, c); a.fn( );a.fn#();");
+  sys.test(stat.toStr(rd17.next()), "a=3");
+  sys.test(stat.toStr(rd17.next()), "x=a[md.fn]");
+  sys.test(stat.toStr(rd17.next()), "md.fn(a,b)");
+  sys.test(stat.toStr(rd17.next()), "a[md.fn](b)");
+  sys.test(stat.toStr(rd17.next()), "md.fn(a,b,c)");
+  sys.test(stat.toStr(rd17.next()), "md.fn(a)");
+  sys.test(stat.toStr(rd17.next()), "a[md.fn]()");
+
+  :stRd rd18 = mkRd(":mdA a=1;:mdB b=2;c=3;//:[iii|]\nfx=\\a,:mdX b, :mdC c -> { a1=a.fn; b1=b.fn; c1=c.fn;};" +
+    "a1=a.fn; b1=b.fn; c1=c.fn;");
+  sys.test(stat.toStr(rd18.next()), "a=1");
+  sys.test(stat.toStr(rd18.next()), "b=2");
+  sys.test(stat.toStr(rd18.next()), "c=3");
+  sys.test(stat.toStr(rd18.next()), "fx=\\[iii|]a,b,c->{\na1=a.fn\nb1=b[mdX.fn]\nc1=c[mdC.fn]\n}");
+  sys.test(stat.toStr(rd18.next()), "a1=a[mdA.fn]");
+  sys.test(stat.toStr(rd18.next()), "b1=b[mdB.fn]");
+  sys.test(stat.toStr(rd18.next()), "c1=c.fn");
+
+  :stRd rd180 = mkRd("""
+    //: [ii|]
+    fn0 = \a, b -> {};
+    //: [i|]
+    fn1 = \:md a ->{};
+    //: [|]
+    fn2 = \ ->{};
+  """);
+  sys.test(stat.toStr(rd180.next()), "fn0=\\[ii|]a,b->{\n\n}");
+  sys.test(stat.toStr(rd180.next()), "fn1=\\[i|]a->{\n\n}");
+  sys.test(stat.toStr(rd180.next()), "fn2=\\[|]->{\n\n}");
+
+  :stRd rd19 = mkRd("try a=2;catch(e)a=3; try{a=2;}catch(:md e){e.fn(b);};");
+  sys.test(stat.toStr(rd19.next()), "try {\na=2\n}catch(e){\na=3\n}");
+  sys.test(stat.toStr(rd19.next()), "try {\na=2\n}catch(e){\nmd.fn(e,b)\n}");
+  sys.test(stat.toStr(rd19.next()), "Unexpected 'Operator: ;'");
+
+  :stRd rd20 = mkRd(":md e=4;try a=2;catch(e)e.fn();");
+  sys.test(stat.toStr(rd20.next()), "e=4");
+  sys.test(stat.toStr(rd20.next()), "try {\na=2\n}catch(e){\nstr.fn(e)\n}");
+
+  :stRd rd21 = mkRd("import 'abc'; import  \"abc\" : xx;");
+  sys.test(stat.toStr(rd21.next()), "import \"abc\"");
+  sys.test(stat.toStr(rd21.next()), "import \"abc\":xx");
+
+  :stRd rd22 = mkRd("""
+    //: [. is]
+    rc : age, name;
+  """);
+
+};
+
+mkRd = \tx -> {
+  :mdCtx ctx = rdCtx.new("a/b", "md12");
+  return stRd.new(ctx, tx);
+};

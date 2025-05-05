@@ -1,0 +1,109 @@
+// Copyright 13-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Token data (Immutable object).
+/// NOTE: There are token.error (+ message) and token.eof.
+
+/// Types
+/// i
+error, eof, bool, int, float, string, lineComment, comment, symbol, operator,
+ktype =;
+
+/// Constructor
+///   nline: Number of line.
+///   type : One of end, bool, int, float, string, lineComment, comment, symbol
+///          or operator.
+///   value: Token value.
+/// \i, i, s -> <token>
+new : ln, tp, value;
+
+/// Returns 'true' if 'tk' is binary operator.
+/// \<token> -> b
+isBinary = \tk -> return
+  tk[tp] == operator &
+  switch (tk[value]) {
+    "*", "/", "%",
+    "+", "-",
+    "==", "!=", ">", ">=", "<", "<=",
+    "&", "|" : true;
+    default: false;
+  };;
+
+/// Returns 'true' if 'tk' is binary operator "*", "/" or "%".
+/// \<token> -> b
+isBinary1 = \tk -> return
+  tk[tp] == operator &
+  switch (tk[value]) {
+    "*", "/", "%": true;
+    default: false;
+  };;
+
+/// Returns 'true' if 'tk' is binary operator "+" or "-".
+/// \<token> -> b
+isBinary2 = \tk -> return
+  tk[tp] == operator &
+  switch (tk[value]) {
+    "+", "-": true;
+    default: false;
+  };;
+
+/// Returns 'true' if 'tk' is binary operator "==", "!=", ">", ">=", "<" or "<=".
+/// \<token> -> b
+isBinary3 = \tk -> return
+  tk[tp] == operator &
+  switch (tk[value]) {
+    "==", "!=", ">", ">=", "<", "<=": true;
+    default: false;
+  };;
+
+/// Returns 'true' if 'tk' is binary operator "&" or "|".
+/// \<token> -> b
+isBinary4 = \tk -> return
+  tk[tp] == operator &
+  switch (tk[value]) {
+    "&", "|": true;
+    default: false;
+  };;
+
+/// Returns 'true' if 'tk' is symbol with value 'v'.
+/// \<token> -> b
+isSym = \tk, v -> return tk[tp] == symbol & tk[value] == v;;
+
+/// Returns 'true' if 'tk' is operator with value 'v'.
+/// \<token> -> b
+isOp = \tk, v -> return tk[tp] == operator & tk[value] == v;;
+
+/// \<token> -> s
+typeToStr = \tk -> {
+  return switch (tk[tp]) {
+    eof: "End_of_file";
+    bool: "Bool";
+    int: "Int";
+    float: "Float";
+    string: "String";
+    lineComment: "Line_comment";
+    comment: "Comment";
+    symbol: "Symbol";
+    operator: "Operator";
+    ktype: "Type";
+    default: sys.throw(str.fmt("Bad token type identifier %v", [tk[tp]]));
+  };
+};
+
+/// \<token> -> s
+toStr = \tk -> {
+  v =tk[value];
+  return switch (tk[tp]) {
+    eof: "End of file";
+    bool: str.fmt("Bool: %v", [v]);
+    int: str.fmt("Int: %v", [v]);
+    float: str.fmt("Float: %v", [v]);
+    string: str.fmt("String: %v", [js.ws(v)]);
+    lineComment: "Line_comment: " + v;
+    comment: "Comment: " + v;
+    symbol: "Symbol: " + v;
+    operator: "Operator: " + v;
+    ktype: "Type: " + v;
+    default: sys.throw(str.fmt("Bad token type identifier %v", [tk[tp]]));
+  };
+};

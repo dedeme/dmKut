@@ -1,0 +1,36 @@
+// Copyright 23-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions.
+
+import "data/exp";
+import "data/type";
+
+//: [i.]
+newIdV = [0];
+/// Returns a new unique identifier type "'mod'_xxx" where xxx is an integer.
+/// \s -> s
+nextId = \mod -> {
+  r = math.itos(newIdV!);
+  newIdV! += 1;
+  return mod + "_" + r;
+};
+
+/// Generate a function head.
+///   withReturn: 'true' if function retuns something.
+///   Pars      : Param names.
+///   id        : Function name.
+/// \b, [s.], s -> s
+mkFnHead = \withReturn, :arr Pars, id -> {
+  return
+    (withReturn ? "Val " : "void ") + id + " (" +
+    (!Pars ? "void" : arr.join(Pars.map(\p -> return "Val " + p;), ",")) +
+    ")"
+  ;
+};
+
+/// Returns C code of a file position.
+/// \s, i -> s
+mkPos = \moduleId, line ->
+  return "((Val)___built_mpos(" + js.ws(moduleId) + "," + math.itos(line) + "))";;
+

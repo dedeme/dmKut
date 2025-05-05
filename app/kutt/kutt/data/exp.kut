@@ -1,0 +1,219 @@
+// Copyright 19-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Expression data (Immutable object).
+/// NOTE: There is exp_error (+ message).
+
+import "type";
+import "stat";
+
+/// Expression types
+/// i
+error, boolean, integer, float, string,
+array, array00, dictionary, dictionary00,
+tuple, function, symbol, range,
+point, square, slice, parenthesis,
+group, unary, binary, ternary, switcht =;
+
+/// Constructor. Do not use directly. Use mk... functions.
+///   ln   : Line number.
+///   tp   : type
+///   value: C or auxiliar values
+/// \i, i, * -> <exp>
+XnewX : ln, tp, value;
+
+/// Expression constuctor
+/// \i, s -> <exp>
+mkError = \ln, msg -> return [ln, error, msg];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   v : "true" or "false".
+/// \i, s -> <exp>
+mkBoolean = \ln, v -> return [ln, boolean, v == "true" ? "1" : "0"];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   v : An integer.
+/// \i, s -> <exp>
+mkInteger = \ln, v -> return [ln, integer, v];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   v : A float.
+/// \i, s -> <exp>
+mkFloat = \ln, v -> return [ln, float, v];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   v : A String.
+/// \i, s -> <exp>
+mkString = \ln, v -> return [ln, string, v];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   V : Non empty array.
+/// \i, [<exp>.] -> <exp>
+mkArray = \ln, V -> return [ln, array, V];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   tOp: Element type or empty if it was not defined.
+/// \i, [<type>] -> <exp>
+mkArray00 = \ln, tOp -> return [ln, array00, tOp];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   V : Pairs [[symbolOrString, value].].
+/// \i, [[<exp>, <exp>].] -> <exp>
+mkDictionary = \ln, V -> return [ln, dictionary, V];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   tOp: Element type or empty if it was not defined.
+/// \i, [<type>] -> <exp>
+mkDictionary00 = \ln, tOp -> return [ln, dictionary00, tOp];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   V : Non empty array.
+/// \i, [<exp>.] -> <exp>
+mkTuple = \ln, V -> return [ln, tuple, V];;
+
+/// Function constuctor
+/// Correction of type an match number parameteres checked.
+///   ln  : Line number.
+///   t   : Function type.
+///   Pars: Parameters list.
+///   code: Function code.
+/// \i, <type>, [s.], <stat> -> <exp>
+mkFunction = \ln, t, Pars, code -> return [ln, function, [t, Pars, code]];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   v : A String.
+/// \i, s -> <exp>
+mkSymbol = \ln, v -> return [ln, symbol, v];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   V : Array with numeric expressions (1, 2 or 3 integers).
+/// \i, ([<exp>] | [<exp>,<exp>] | [<exp>,<exp>,<exp>]) -> <exp>
+mkRange = \ln, V -> return [ln, range, V];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   md: Module identifier.
+///   fn: Function name.
+/// \i, s, s -> <exp>
+mkPoint = \ln, md, fn -> return [ln, point, [md, fn]];;
+
+/// Expression constuctor
+///   ln: Line number.
+///   ct: Container.
+///   ix: Index.
+/// \i, <exp>, <exp> -> <exp>
+mkSquare = \ln, ct, ix -> return [ln, square, [ct, ix]];;
+
+/// Expression constuctor
+///   ln     : Line number.
+///   ct     : Container.
+///   startOp: Start ndex.
+///   endOp  : End index.
+/// \i, <exp>, ([<exp>]|[]), ([<exp>]|[]) -> <exp>
+mkSlice = \ln, ct, startOp, endOp -> return [ln, slice, [ct, startOp, endOp]];;
+
+/// Expression constuctor
+///   ln  : Line number.
+///   fn  : Function.
+///   Pars: Parameters.
+/// \i, <exp>, [<exp>.] -> <exp>
+mkParenthesis = \ln, fn, Pars -> return [ln, parenthesis, [fn, Pars]];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   v  : Expression between parentheses.
+/// \i, <exp> -> <exp>
+mkGroup = \ln, v -> return [ln, group, v];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   sym: Unary function symbol (! or -).
+///   v  : Expression to apply the function.
+/// \i, s, <exp> -> <exp>
+mkUnary = \ln, sym, v -> return [ln, unary, [sym, v]];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   sym: Binary function symbol.
+///   v1 : Left expression to apply the function.
+///   v2 : Right expression to apply the function.
+/// \i, s, <exp> , <exp> -> <exp>
+mkBinary = \ln, sym, v1, v2 -> return [ln, binary, [sym, v1, v2]];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   v1 : Condition expression to apply the function.
+///   v2 : 'true' expression.
+///   v2 : 'false' expression.
+/// \i, <exp>, <exp>, <exp> -> <exp>
+mkTernary = \ln, v1, v2, v3 -> return [ln, ternary, [v1, v2, v3]];;
+
+/// Expression constuctor
+///   ln : Line number.
+///   ex : Expression to compare.
+///   Es : switch entries.
+/// \i, <exp>, [[[<exp>.], <exp>].] -> <exp>
+mkSwitch = \ln, ex, Es -> return [ln, switcht, [ex, Es]];;
+
+/// \<exp> -> s
+typeToStr = \e -> return [
+    "error", "boolean", "integer", "float", "string",
+    "array", "array0", "dictionary", "dictionary0",
+    "tuple", "function", "symbol", "range",
+    "point", "subindex", "slice", "function call",
+    "group", "unary", "binary", "ternary", "switcht"
+  ][e[tp]]
+;;
+
+/// \<exp> -> s
+toStr = \e -> return switch (e[tp]) {
+  boolean: e[value] == "1" ? "true" : "false";
+  string: js.ws(e[value]);
+  array: "[" + arr.join(arr.map(e[value], \v -> return toStr(v);), ",") + "]";
+  array00: "[]/" + (!e[value] ? "?" : type.toStr(e[value]!)) + "/";
+  tuple: "[. " + arr.join(arr.map(e[value], \v -> return toStr(v);), ",") + "]";
+  range: "[! " + arr.join(arr.map(e[value], \v -> return toStr(v);), ",") + "]";
+
+  dictionary: "{" + arr.join(arr.map(e[value],
+      \Kv -> return toStr(Kv[0]) + ":" + toStr(Kv[1]);
+    ), ",") + "}";
+  dictionary00: "{}/" + (!e[value] ? "?" : type.toStr(e[value]!)) + "/";
+  switcht: "switch(" + toStr(e[value][0]) + "){" +
+    arr.join(arr.map(e[value][1],
+      \CsV -> return arr.join(arr.map(CsV[0],
+          \e -> return toStr(e);), ","
+        ) + ":" + toStr(CsV[1]);
+     ), ";") +
+    "}";
+  unary: e[value][0] + toStr(e[value][1]);
+  group: "(" + toStr(e[value]) + ")";
+  point: e[value][0] + "." + e[value][1];
+  square: toStr(e[value][0]) + "[" + toStr(e[value][1]) + "]";
+  slice: toStr(e[value][0]) + "[" +
+    (!e[value][1] ? "" : toStr(e[value][1]!)) + ":" +
+    (!e[value][2] ? "" : toStr(e[value][2]!)) + "]";
+  parenthesis: toStr(e[value][0]) + "(" +
+                 arr.join(arr.map(e[value][1], \p -> return toStr(p);), ",") +
+                 ")";
+  function: "\\" + type.toStr(e[value][0]) +
+                arr.join(e[value][1], ",") + "->" + stat.toStr(e[value][2]);
+  ternary: toStr(e[value][0]) + "?" +
+             toStr(e[value][1]) + ":" +
+             toStr(e[value][2]);
+  binary: "(" + toStr(e[value][1]) + e[value][0] +
+            toStr(e[value][2]) + ")";
+  default: sys.toStr(e[value]);
+};;
+
+

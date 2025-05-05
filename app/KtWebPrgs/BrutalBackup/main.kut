@@ -47,7 +47,7 @@ if (key == "start") {
 
 rp.init(key);
 
-:: Rq = js.r(Args[1]);
+Rq = js.r(Args[1]);
 sys.print(switch(Rq.source) {
   "ListEditor": listEditorPg.process(Rq);
   "Report": reportPg.process(Rq);

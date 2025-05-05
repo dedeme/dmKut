@@ -10,7 +10,7 @@ import "cts";
 import "data/flea";
 import "db";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {

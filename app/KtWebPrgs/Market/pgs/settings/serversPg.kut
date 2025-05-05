@@ -6,9 +6,13 @@
 import "KtWeb/rp";
 import "libdm/log";
 import "data/qsvs";
-import "data/qsv";
+import "data/qsv/qsv";
 import "db/svCodesTb";
 import "db";
+
+import "net/readCurrent";
+import "net/readDaily";
+import "net/readHistoric";
 
 /// \{*.} -> s
 process = \Rq -> {
@@ -19,10 +23,8 @@ process = \Rq -> {
       return rp.mk({
         dbKey: db.readKey(),
         Svs: arr.map(qsvs.list(), \:qsv sv -> return [
-            sv.id, sv.name, sv.withDaily, sv.withHistoric
+            sv.id, sv.name, sv.withCurrent, sv.withDaily, sv.withHistoric
           ];),
-        dailySv: qsvs.currentDiary()[qsv.id],
-        historicSv: qsvs.currentHistoric()[qsv.id],
         Codes: selected == "" ? {} : svCodesTb.read(selected)
       });
     }
@@ -35,28 +37,35 @@ process = \Rq -> {
       svCodesTb.write(svId, Codes);
       return rp.mk({ dbKey });
     }
+    "testCurrent": {
+      , svId : Rq;
+      withErrorsV = [false];
+      withWarningsV = [false];
+
+      Qs, ok = readCurrent.runServer(svId);
+      if (!ok) {
+        log.error(Qs);
+        withErrorsV! = true;
+      }
+
+      return rp.mk({
+        withErrors: withErrorsV!,
+        withWarnings: withWarningsV!
+      });
+    }
     "testDaily": {
       , svId : Rq;
       withErrorsV = [false];
       withWarningsV = [false];
 
-      svOp = arr.find(qsvs.list(), \:qsv s -> return s.id == svId;);
-      if (!svOp) {
-        log.error(str.fmt("Daily test: Server '%v' not found", [svId]));
+      Qs, Ws = readDaily.runServer(svId);
+      if (!!Ws) {
+        for (w = Ws) log.warning(w);
+        withWarningsV! = true;
+      }
+      if (!Qs) {
+        log.error("Quotes of " + svId + " can not be read");
         withErrorsV! = true;
-      } else {
-        :qsv sv = svOp!;
-        // [<quotes>.], [s.]
-        Qs, Errs = sv.readDaily();
-        if (!Qs) {
-          withErrorsV! = true;
-          for (err = Errs)
-            log.error(str.fmt("(Daily test in %s) %s", [svId, err]));
-        } else if (!!Errs) {
-          withWarningsV! = true;
-          for (err = Errs)
-            log.warning(str.fmt("(Daily test in %s) %s", [svId, err]));
-        }
       }
 
       return rp.mk({
@@ -65,27 +74,18 @@ process = \Rq -> {
       });
     }
     "testCo": {
-      svId, nick, code : Rq;
+      svId, nick : Rq;
       withErrorsV = [false];
       withWarningsV = [false];
 
-      svOp = arr.find(qsvs.list(), \:qsv s -> return s.id == svId;);
-      if (!svOp) {
-        log.error(str.fmt("Historic test: Server '%v' not found", [svId]));
+      Qs, Ws = readHistoric.oneServer(svId, nick);
+      if (!!Ws) {
+        for (w = Ws) log.warning(w);
+        withWarningsV! = true;
+      }
+      if (!Qs) {
+        log.error("Quotes can no be read");
         withErrorsV! = true;
-      } else {
-        :qsv sv = svOp!;
-        // [<quotes>.], [s.]
-        Qs, Errs = sv.readHistoric(code);
-        if (!Qs) {
-          withErrorsV! = true;
-          for (err = Errs)
-            log.error(str.fmt("(Historic test in %s:%s) %s", [svId, nick, err]));
-        } else if (!!Errs) {
-          withWarningsV! = true;
-          for (err = Errs)
-            log.warning(str.fmt("(Historic test in %s:%s) %s", [svId, nick, err]));
-        }
       }
 
       return rp.mk({

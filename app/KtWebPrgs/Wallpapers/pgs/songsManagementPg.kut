@@ -1,0 +1,67 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures page
+
+import "KtWeb/rp";
+import "data/song";
+import "db";
+import "db/songsTb";
+import "db/selsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      Groups = songsTb.getGroups();
+      group0 = selsTb.getSongsGroup();
+      group = group0 == "" ? Groups[0] : group0;
+      return rp.mkJs({
+        dbKey: js.ws(db.readKey()),
+        Groups: js.w(Groups),
+        group: js.w(group),
+        Songs: songsTb.readJs(group),
+        songGroup: js.w(selsTb.getSongGroup()),
+        ssong: js.w(selsTb.getSong())
+      });
+    }
+    "changeGroup": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group = Rq.group;
+      for (g = songsTb.getGroups()) if (group == g) selsTb.setSongsGroup(group);
+      return rp.mk({ dbKey });
+    }
+    "setLevel": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, ssong, level : Rq;
+      songsTb.setLevel(group, ssong, math.ftoi(level));
+      return rp.mk({ dbKey });
+    }
+    "setLapse": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, ssong, lapse : Rq;
+      songsTb.setLapse(group, ssong, math.ftoi(lapse));
+      return rp.mk({ dbKey });
+    }
+    "setSel": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, songId : Rq;
+      for (g = songsTb.getGroups()) if (group == g)
+        for(:song s = songsTb.read(g)) if (s.id == songId) {
+          selsTb.setSongGroup(group);
+          selsTb.setSong(songId);
+        }
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};

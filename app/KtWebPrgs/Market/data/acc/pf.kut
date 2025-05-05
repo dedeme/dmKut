@@ -11,7 +11,7 @@
 ///   nick     : Company nick.
 ///   stocks   : Stocks to add.
 ///   price    : Price of each stock.
-/// \{[i, f]...}, s, i, f -> ()
+/// \{[i, f].}, s, i, f -> ()
 add = \:dic portfolio, nick, stocks, price -> {
   EOp = portfolio.get(nick);
   if (!!EOp) {
@@ -32,7 +32,7 @@ add = \:dic portfolio, nick, stocks, price -> {
 ///   portfolio: Stocks portfolio.
 ///   nick     : Company nick.
 ///   stocks   : Stocks to add.
-/// \{[i, f]...}, s, i -> [f, s]
+/// \{[i, f].}, s, i -> [f, s]
 remove = \:dic portfolio, nick, stocks -> {
   EOp = portfolio.get(nick);
   if (!EOp) return [0.0, nick + " has not stocks", false];

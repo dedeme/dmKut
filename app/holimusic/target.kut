@@ -1,0 +1,71 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Target data checker.
+
+import "data/dirs";
+import "db/dirsTb";
+import "ui/alert";
+import "ui/confirm";
+import "ui/filesel";
+import "cts";
+
+/// Check target directory and returns 'true' if the process should
+/// continue. Otherwise returns 'false'.
+/// \ -> b
+check = \ -> while () {
+    :dirs ds = dirsTb.read();
+    :file dpath = ds.dtarget;
+    if (dpath == "" | !dpath.isDirectory()) {
+      if (confirm.show(dpath == ""
+        ? "No se ha indicado el directorio de destino.\n¿Indicarlo ahora?"
+        : "El destino '" + dpath + "'\nno es un directorio.\n¿Cambiar la ruta?"
+      )) {
+        dOp = filesel.show();
+        if (!dOp) return false;
+        ds.setTarget(dOp!);
+        dirsTb.write(ds);
+        continue;
+      } else {
+        return false;
+      }
+    }
+
+    :file fcontrol = file.cat([dpath, cts.holimusicControlTg]);
+    errOp = [fcontrol.exists()
+      ? ""
+      : "no contiene el archivo '" + cts.holimusicControlTg + "'."
+    ];
+    for (f = dpath.dir())
+      if (
+        f != cts.holimusicControlTg &
+        (file.isDirectory(file.cat([dpath, f])) | !str.ends(f, ".mp3"))
+      )
+        errOp! = "'" + f + "' no es un archivo .mp3";
+
+    err = errOp!;
+    if (err != "") {
+      if (confirm.show(
+        "El destino '" + dpath + "'\n" +
+        err + "\n¿Cambiar la ruta?"
+      )) {
+        dOp = filesel.show();
+        if (!dOp) return [];
+        ds.setTarget(dOp!);
+        dirsTb.write(ds);
+        continue;
+      } else {
+        if (confirm.show(
+          "¿Crear automáticamente el archivo " + cts.holimusicControlTg + "\n" +
+          "en " + dpath + "?"
+        )) {
+          file.write(fcontrol, "");
+          continue;
+        } else {
+          return [];
+        }
+      }
+    }
+
+    return true;
+  };

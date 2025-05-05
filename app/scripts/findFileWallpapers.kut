@@ -1,0 +1,55 @@
+// Copyright 12-Jan-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+// Use 'kut findFile text'
+// Finds every file name which contains 'text'.
+// Use 'kut findFile -up tex' for search in uppercase.
+
+// s, s, b -> [s...]
+searchDir = \d, target, upcase -> {
+  Rs = [];
+  for (f0 = file.dir(d)){
+    f = upcase ? str.toUpper(f0) : f0;
+    p = file.cat([d, f0]);
+    if (file.isDirectory(p))
+      for (f2 = searchDir(p, target, upcase)) arr.push(Rs, f2);
+    else if (str.index(f, target) != -1)
+      arr.push(Rs, p);
+  }
+  return Rs;
+};
+
+if (!file.exists("findFile.kut"))
+  sys.throw("El programa no se ha lanzado desde el directorio de 'findFile.kut'");
+
+if (!file.isDirectory("originales"))
+  sys.throw("El directorio 'originales' no se encuentra");
+
+Upcase = [false];
+Args = sys.args();
+if (arr.size(Args) == 2 & Args[0] == "-up") {
+  Upcase! = true;
+  arr.shift(Args);
+}
+if (arr.size(Args) != 1)
+  sys.println("""
+    Use:
+    kut find text
+      for search 'text'
+    kut find -up text
+      for seach 'text' in upercase
+  """);
+
+target = Upcase! ? str.toUpper(Args[0]) : Args[0];
+
+Rs1 = searchDir("originales", target, Upcase!);
+Rs2 = [[]];
+for (i = 0:10) {
+  Rs2! = Rs2! + searchDir("jpg/" + math.itos(i), target, Upcase!);
+}
+Rs = Rs1 + Rs2!;
+if (arr.size(Rs) == 0)
+  sys.println("'" + target + "' no encontrado");
+else
+  for (f = Rs) sys.println(f);
+

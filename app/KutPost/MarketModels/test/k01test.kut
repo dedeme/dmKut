@@ -3,5 +3,5 @@
 
 /// Test test-system.
 
-/// \{*.} -> {*.}
-run = \Rq -> return {ok: true};;
+/// \ -> {*.}
+run = \ -> return {ok: true};;

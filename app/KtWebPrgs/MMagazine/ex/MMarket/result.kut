@@ -1,0 +1,126 @@
+// Copyright 05-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Read data from MMarket.
+
+import "data/stRs";
+import "cts";
+
+dirBase = "/dm/KtWeb/dmcgi/MMaket/daily";
+
+// Last results directory
+//: \ -> s
+dir = \ -> {
+  maxV = ["000000"];
+  for (fname = file.dir(dirBase)) if (fname > maxV!) maxV! = fname;
+  return file.cat([dirBase, maxV!]);
+};
+
+// Returns average points of entry 'ix' in the data table saved in 'path'.
+//: \s, i -> f
+getPoints = \path, ix -> {
+  :arr Es = js.r(file.read(path));
+  Ev = Es[ix][2];
+  // real * 0.4 + acc * 0.4 + prof * 0.2
+  return Ev[1] * 0.4 + Ev[2] * 0.4 + Ev[3] * 0.2;
+};
+
+// Returns [index, points] of the best result in the data table saved in 'path'.
+//: \s -> [i, f]
+getBestPoints = \path -> {
+  R = [0, 0.0];
+  :arr Es = js.r(file.read(path));
+  for (i, E = Es) {
+    Ev = E[2];
+    e = Ev[1] * 0.4 + Ev[2] * 0.4 + Ev[3] * 0.2;
+    if (e > R[1]) {
+      R[0] = i;
+      R[1] = e;
+    }
+  }
+  return R;
+};
+
+// Returns the index of a param value.
+//: \f, f, f -> i
+getParamIndex = \base, inc, param -> {
+  ixV = [0];
+  dataParV = [base];
+  while (dataParV! < param) {
+    dataParV! += inc;
+    ixV! += 1;
+  }
+  return ixV! > cts.evalSteps ? cts.evalSteps : ixV!;
+};
+
+// Returns the value of a param value index.
+//: \f, f, i -> f
+getParamValue = \base, inc, ix -> {
+  rV = [base];
+  for (i = 0:ix) rV! += inc;
+  return rV!;
+};
+
+/// Read the investor strategy.
+///   imd: Identifier of investor model.
+///   Ips: Investor strategy parameters.
+/// \s, [f.] -> <stRs>
+investor = \imd, :arr Ips -> {
+  Base = cts.ParamBases[imd];
+  Inc =  cts.ParamBaseIncs[imd];
+  ix = Ips.size() == 1
+    ? getParamIndex(Base[0], Inc[0], Ips[0])
+    : getParamIndex(Base[0], Inc[0], Ips[0]) * cts.evalSteps +
+      getParamIndex(Base[1], Inc[1], Ips[1])
+  ;
+
+  return stRs.new(imd, Ips, getPoints(file.cat([dir(), imd]), ix) * 1000.0);
+};
+
+/// Read the best model strategy.
+///   imd: Identifier of investor model.
+/// \s -> <stRs>
+model = \imd -> {
+  ix, val = getBestPoints(file.cat([dir(), imd]));
+  :arr Base = cts.ParamBases[imd];
+  Inc =  cts.ParamBaseIncs[imd];
+  Params = Base.size() == 1
+    ? [getParamValue(Base[0], Inc[0], ix)]
+    : [ getParamValue(Base[0], Inc[0], ix / 20),
+        getParamValue(Base[1], Inc[1], ix % 20)
+      ]
+  ;
+  return stRs.new(imd, Params, val * 1000.0);
+};
+
+/// Read the best strategy.
+/// \ -> <stRs>
+best = \ -> {
+  mdV = [""];
+  ixV = [0];
+  valV = [0.0];
+
+  d = dir();
+  for (md = file.dir(d)) {
+    ix, val = getBestPoints(file.cat([d, md]));
+    if (val > valV!) {
+      mdV! = md;
+      ixV! = ix;
+      valV! = val;
+    }
+  }
+  md = mdV!;
+  ix = ixV!;
+  val = valV!;
+
+  :arr Base = cts.ParamBases[md];
+  Inc =  cts.ParamBaseIncs[md];
+  Params = Base.size() == 1
+    ? [getParamValue(Base[0], Inc[0], ix)]
+    : [ getParamValue(Base[0], Inc[0], ix / 20),
+        getParamValue(Base[1], Inc[1], ix % 20)
+      ]
+  ;
+  return stRs.new(md, Params, val * 1000.0);
+};
+

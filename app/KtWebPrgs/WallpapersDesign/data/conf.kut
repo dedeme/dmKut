@@ -1,18 +1,20 @@
-// Copyright 31-Dic-2022 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Creates a new configuration.
+/// Configuration data.
+
+/// Constructor.
 ///   width: Traget image width.
 ///   height: Target image height.
-/// \i, i-> d<conf>
-new = \width, height -> return { width, height };;
+/// \i,i -> <conf>
+new : width, height;
 
 /// Creates a default confituration.
-/// \-> d<conf>
-mk = \-> return new(1920, 1080);;
+/// \-> <conf>
+newDefault = \-> return new(1920, 1080);;
 
-/// \<conf> -> [*(JS)...]
-toJs = \C -> return [math.itof(C.width), math.itof(C.height)];;
-
-/// \[*(JS)...] -> <conf>
-fromJs = \A -> return new(math.ftoi(A[0]), math.ftoi(A[1]));;
+/// \[*.] -> <conf>
+fromJs = \A -> return [
+    math.ftoi(A[width]),
+    math.ftoi(A[height])
+  ];;

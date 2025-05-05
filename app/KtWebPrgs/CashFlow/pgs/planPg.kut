@@ -6,6 +6,7 @@
 import "KtWeb/rp";
 import "db/yearsDb";
 import "db/planTb";
+import "db/budgetTb";
 import "db/diaryTb";
 import "db";
 
@@ -17,6 +18,7 @@ process = \Rq -> {
       ypath = yearsDb.yearPath(year);
       return rp.mkJs({
           Plan: planTb.readJs(ypath),
+          Budget: budgetTb.readJs(ypath),
           CDiary: diaryTb.readJs(ypath),
           dbKey: js.w(db.readKey())
         });
@@ -27,6 +29,7 @@ process = \Rq -> {
         year = Rq.year;
         ypath = yearsDb.yearPath(year);
         planTb.writeJs(ypath, js.w(Rq.plan));
+        budgetTb.writeJs(ypath, js.w(Rq.budget));
       }
       return rp.mk({ dbKey });
     }
@@ -36,6 +39,7 @@ process = \Rq -> {
         year = Rq.year;
         ypath = yearsDb.yearPath(year);
         planTb.writeJs(ypath, js.w(Rq.plan));
+        budgetTb.writeJs(ypath, js.w(Rq.budget));
         diaryTb.writeJs(ypath, js.w(Rq.diary));
       }
       return rp.mk({ dbKey });

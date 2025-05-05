@@ -1,0 +1,89 @@
+// Copyright 08-Jun-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Connection with C server.
+
+import "port";
+
+// \<tcpConn>, i, i -> <bytes>
+readAllBs = \conn, nbytes, secs -> {
+  rp = bytes.new(0);
+  while (rp.size() < nbytes) {
+    :bytes rp0, err = tcp.read(conn, nbytes, secs);
+    if (err != "") sys.throw(err);
+    rp.add(rp0);
+  }
+  return rp;
+};
+
+// \<tcpConn>, i, i -> s
+read = \conn, nbytes, secs -> {
+  :bytes rp, err = tcp.read(conn, nbytes, secs);
+  if (err != "") sys.throw(err);
+  return rp.toStr();
+};
+
+// \<tcpConn> -> ()
+readOk = \conn -> {
+  msg = read(conn, 10, 1);
+  if (msg != "ok.")
+    sys.throw("Unexpected request '" + msg + "'. Expected 'ok.'");
+};
+
+// \<tcpConn>, <bytes> -> ()
+writeBs = \conn, msg -> {
+  err = tcp.write(conn, msg);
+  if (err != "") sys.throw(err);
+};
+
+// \<tcpConn>, s -> ()
+write = \conn, msg -> writeBs(conn, bytes.fromStr(msg));;
+
+/// Send a request to C server an returns an Result with the response.
+/// The value returned has been 'de-JSONized' with 'js.r'.
+///   rq : JSONizable request. 'send' call 'js.w(rq)' before send the request.
+///   len: Maximun bytes length of the response.
+///   tm : Seconds to wait the response.
+/// \*(JS), i -> [*(JS)|s, b]
+sendTm = \rq, tm -> {
+  rqBsV = [bytes.fromStr(js.w(rq))];
+  conn, err0 = tcp.dial("localhost:" + port.number);
+  try {
+    if (err0 != "") sys.throw(err0);
+
+    while (bytes.size(rqBsV!) > 0) {
+      toSend = bytes.take(rqBsV!, 100000);
+      rqBsV! = bytes.drop(rqBsV!, 100000);
+
+      write(conn, js.wi(toSend.size()));
+      readOk(conn);
+
+      writeBs(conn, toSend);
+      readOk(conn);
+    }
+    write(conn, js.wi(0));
+
+
+    rp = bytes.new(0);
+    len = js.ri(read(conn, 100, tm));
+    if (len > 0) while () {
+      write(conn, "ok.");
+
+      rp.add(readAllBs(conn, len, 10));
+      write(conn, "ok.");
+
+      len = js.ri(read(conn, 100, 1));
+      if (len == 0) break;
+    }
+
+    tcp.closeConnection(conn);
+    return js.r(bytes.toStr(rp));
+  } catch (e) {
+    tcp.closeConnection(conn);
+    return [e, false];
+  }
+};
+
+/// Equals to 'sentTm(rq, 10)'.
+/// \*(JS) -> *(JS)
+send = \rq -> return sendTm(rq, 10);;

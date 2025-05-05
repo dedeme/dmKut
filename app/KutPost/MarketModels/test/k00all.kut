@@ -15,17 +15,17 @@ import "k09stOpen";
 
 /// \s -> s
 process = \rq -> {
-  :: Rq = js.r(rq);
+  Rq = js.r(rq);
   return js.w(switch (Rq.type) {
-    "test": k01test.run(Rq);
-    "quotes": k02quotes.run(Rq);
-    "volume": k03volume.run(Rq);
+    "test": k01test.run();
+    "quotes": k02quotes.run();
+    "volume": k03volume.run();
     "refs": k04refs.run(Rq);
     "stSimple": k05stSimple.run(Rq);
     "stSimple2": k06stSimple2.run(Rq);
     "stGroup": k07stGroup.run(Rq);
     "stGroup2": k08stGroup2.run(Rq);
-    "stOpen": k09stOpen.run(Rq);
+    "stOpen": k09stOpen.run();
     default: sys.throw("Test type '" + Rq.type + "' is not valid.");
   });
 };

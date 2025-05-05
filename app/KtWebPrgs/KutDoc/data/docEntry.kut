@@ -1,12 +1,12 @@
-// Copyright 08-May-2023 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Module entry documentation data.
 
 /// Documentation entry constructor.
-///   name: Entry name.
-///   doc : Entry documentation.
-///   code: Entry code.
-///   link: Entry code page link.
-/// \s, s, s, s -> <docEntry>
-mk : name, doc, code, link;
+///   name : Entry name.
+///   docTx: Entry documentation.
+///   code : Entry code.
+///   link : Entry code page link.
+/// \s,s,s,s -> <docEntry>
+new : name, docTx, code, link;

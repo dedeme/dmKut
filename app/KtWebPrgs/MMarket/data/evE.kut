@@ -44,7 +44,7 @@ newUpdate = \previous, :upRs lst -> {
 
   :upRs a = previous[avg];
   :upRs d = previous[dev];
-  navg = upRs.new(
+  :upRs navg = upRs.new(
     (a.sales * t + lst.sales) / t1,
     (a.real * t + lst.real) / t1,
     (a.acc * t + lst.acc) / t1,
@@ -69,7 +69,7 @@ newReplace = \previous, :upRs lst -> {
   :upRs e = previous[eval];
   :upRs a = previous[avg];
   :upRs d = previous[dev];
-  navg = upRs.new(
+  :upRs navg = upRs.new(
     (a.sales * t - e.sales + lst.sales) / t,
     (a.real * t - e.real + lst.real) / t,
     (a.acc * t - e.acc + lst.acc) / t,
@@ -92,7 +92,7 @@ newReplace = \previous, :upRs lst -> {
   return new(t, lst, navg, ndev);
 };
 
-/// \<evE> -> JS
+/// \<evE> -> [*.]
 toJs = \o -> return [
     o[times],
     upRs.toJs(o[eval]),
@@ -100,7 +100,7 @@ toJs = \o -> return [
     upRs.toJs(o[dev])
   ];;
 
-/// \JS -> <evE>
+/// \[*.] -> <evE>
 fromJs = \A -> return new(
     math.ftoi(A[times]),
     upRs.fromJs(A[eval]),

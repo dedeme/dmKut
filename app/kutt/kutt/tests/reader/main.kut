@@ -1,0 +1,22 @@
+// Copyright 07-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Reader tests.
+
+import "types";
+import "tokens";
+import "exps";
+import "stats";
+import "oGroup";
+
+/// \ -> ()
+run = \ -> {
+  types.run();
+  tokens.run();
+  exps.run();
+  stats.run();
+  oGroup.run();
+
+  sys.println("Reader ok.");
+};
+

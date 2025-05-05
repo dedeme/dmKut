@@ -8,17 +8,24 @@ import "KtWeb/global";
 /// s
 appName = "HBills";
 /// Application version.
+/// s
 version = "202404";
 /// Data version.
+/// s
 dataVersion = "2024.04";
-/// Data path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
 
 /// HConta data directory path
+/// s
 accPath = "/dm/KtWeb/dmcgi/Hconta";
 /// HConta holidays account number
+/// s
 billsAcc = "60013";
 /// HConta expenses account number
+/// s
 staysAcc = "62904";
 /// HConta reservations account number of 2022 year
+/// s
 staysAcc22 = "44001";

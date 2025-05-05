@@ -6,19 +6,24 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "CashFlow";
 /// Application version.
-version = "2024.03";
-/// Application path.
-appPath = path.cat([global.root, "prgs", appName, "kut"]);
-/// Data version.
-dataVersion = "2024.03";
-/// Application path.
-dataPath = path.cat([global.cgiRoot, appName, "data"]);
-
-/// Hconta data path.
 /// s
-hcontaPath = path.cat([global.cgiRoot, "Hconta", ""]);
+version = "2024.03";
+/// Application file.
+/// s
+appPath = file.cat([global.root, "prgs", appName, "kut"]);
+/// Data version.
+/// s
+dataVersion = "2024.03";
+/// Application file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName, "data"]);
+
+/// Hconta data file.
+/// s
+hcontaPath = file.cat([global.cgiRoot, "Hconta", ""]);
 /// Hconta cash account number.
 /// s
 cashAcc = "57200";

@@ -1,0 +1,118 @@
+// Copyright 05-Oct-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Mix 'uudd0 - qfix'  model.
+
+import "../model";
+import "../cts";
+import "doc/uuqfDoc";
+
+/// Returns a new 'uufq' model.
+/// \-><model>
+new = \ -> return model.new(
+    "SSQF",
+    "Mix SSBB0 - QFIX",
+    uuqfDoc.text,
+    ["Inicio", "Cut"],
+    [model.percParam, model.percParam]
+  );;
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  start = Params[0];
+  upStart = 1.0 + start;
+  downStart = 1.0 - start;
+  gap = Params[0] * Params[1];
+  upGap = 1.0 + gap;
+
+  RefUs = arr.new(0.0, size);
+  RefQs = arr.new(0.0, size);
+  TopQs = arr.new(0.0, size);
+  for (i = 0:ncos) {
+    c = Closes[i];
+    RefUs[i] = c * downStart;
+    RefQs[i] = c / upGap;
+    TopQs[i] = c * (1.0 + upGap) / 2.0;
+  }
+
+  Refs = arr.copy(RefQs);
+  IsSolds = arr.new(0, ncos);
+
+  for (idate = ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iprevious = previousIdate + ico;
+
+      c = Closes[icurrent];
+      prvC = Closes[iprevious];
+      rfU = RefUs[iprevious];
+      rfQ = RefQs[iprevious];
+      topQ = TopQs[iprevious];
+
+      if (IsSolds[ico] == 1) {
+        dif = c - prvC;
+        rfU0 = rfU * (prvC + dif) / prvC;
+        rfU2 = rfU < rfU0 ? rfU : rfU0;
+        if (c > rfU2 | c > rfQ) {
+          IsSolds[ico] = 0;
+          RefUs[icurrent] = c * downStart;
+          rQ = c / upGap;
+          RefQs[icurrent] = rQ;
+          TopQs[icurrent] = c * (1.0 + upGap) / 2.0;
+          Refs[icurrent] = rQ;
+        } else {
+          RefUs[icurrent] = rfU2;
+
+          rfQV = [rfQ];
+          topQV = [topQ];
+          while (c < topQV!) {
+            r0 = rfQV! / upGap;
+            rfQV! = r0;
+            r = r0 / upGap;
+            topQV! = (r + r / upGap) / 2.0;
+          }
+          newRfQ = rfQV!;
+          RefQs[icurrent] = newRfQ;
+          TopQs[icurrent] = topQV!;
+
+          Refs[icurrent] = rfU2 < newRfQ ? rfU2 : newRfQ;
+        }
+      } else {
+        dif = c - prvC;
+        rfU0 = rfU * (prvC + dif) / prvC;
+        rfU2 = rfU > rfU0 ? rfU : rfU0;
+        if (c < rfU2 | c < rfQ) {
+          IsSolds[ico] = 1;
+          RefUs[icurrent] = c * upStart;
+          rQ = c * upGap;
+          RefQs[icurrent] = rQ;
+          TopQs[icurrent] = (c + c / upGap) / 2.0;
+          Refs[icurrent] = rQ;
+        } else {
+          RefUs[icurrent] = rfU2;
+
+          rfQV = [rfQ];
+          topQV = [topQ];
+          while (c > topQV!) {
+            r0 = rfQV! * upGap;
+            rfQV! = r0;
+            r = r0 * upGap;
+            topQV! = r * (1.0 + upGap) / 2.0;
+          }
+          newRfQ = rfQV!;
+          RefQs[icurrent] = newRfQ;
+          TopQs[icurrent] = topQV!;
+
+          Refs[icurrent] = rfU2 > newRfQ ? rfU2 : newRfQ;
+        }
+      }
+    }
+  }
+  return Refs;
+};
+

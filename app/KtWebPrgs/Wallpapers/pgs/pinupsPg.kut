@@ -1,0 +1,61 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Radio page
+
+import "KtWeb/rp";
+import "cts";
+import "data/pict";
+import "db";
+import "db/selsTb";
+import "db/pinupsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      picture = getPinup();
+      radioIx = selsTb.getRadioIx();
+      radioData = cts.Radios[radioIx];
+      return rp.mk({
+        dbKey: db.readKey(),
+        picture,
+        radioName: radioData[0],
+        radioUrl: radioData[1]
+      });
+    }
+    "pictData": {
+      picture = getPinup();
+      return rp.mk({
+        dbKey: db.readKey(),
+        picture
+      });
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+
+//: \ -> <pict>
+getPinup = \ -> {
+  pinupId = selsTb.getPinup();
+
+  :arr Pinups = pinupsTb.read();
+  pinupOp = pinupId != ""
+    ? arr.find(Pinups, \:pict p -> return pinupId == p.id;)
+    : []
+  ;
+
+  now = time.now();
+  pinupDate = selsTb.getPinupDate();
+  changeLapse = selsTb.getPinupTime() * 60_000;
+  timeEnd = pinupDate + changeLapse;
+  if (!pinupOp | now < pinupDate | now > timeEnd) {
+    :pict pinup = pinupsTb.next();
+    selsTb.setPinup(pinup.id);
+    selsTb.setPinupDate(now);
+    return pinup;
+  }
+
+  return pinupOp!;
+};

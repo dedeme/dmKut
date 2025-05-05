@@ -1,0 +1,26 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "add": built.mkRs("[<bytes><bytes>|<bytes>]", md, sym);
+    "drop": built.mkRs("[<bytes>i|<bytes>]", md, sym);
+    "fromArr": built.mkRs("[[i]|<bytes>]", md, sym);
+    "fromStr": built.mkRs("[s|<bytes>]", md, sym);
+    "get": built.mkRsEx("[<bytes>i|i]", ctx, ln, md, sym);
+    "new": built.mkRs("[i|<bytes>]", md, sym);
+    "set": built.mkRsEx("[<bytes>ii|]", ctx, ln, md, sym);
+    "size": built.mkRs("[<bytes>|i]", md, sym);
+    "take": built.mkRs("[<bytes>i|<bytes>]", md, sym);
+    "toArr": built.mkRs("[<bytes>|[i]]", md, sym);
+    "toStr": built.mkRs("[<bytes>|s]", md, sym);
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};

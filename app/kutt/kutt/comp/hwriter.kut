@@ -1,0 +1,17 @@
+// Copyright 05-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Header writer.
+
+import "data/module";
+import "data/typedSym";
+import "data/type";
+
+/// Returns C header code
+/// \<module> -> s
+write = \:module md -> {
+  Bf = []; //[s.]
+  for (:typedSym tsym = md.TopSyms)
+    Bf.push("extern Val " + md.id + "_" + tsym.id + ";");
+  return Bf.join("\n");
+};

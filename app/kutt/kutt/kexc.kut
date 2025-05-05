@@ -1,0 +1,20 @@
+// Copyright 07-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Kutt exceptions.
+
+/// Makes a 'kexc' message.
+///   message: Message to convert.
+///   RETURN : "<kexc>" + message + "</kexc>".
+/// \s -> s
+new = \message -> return "<kexc>" + message + "</kexc>";;
+
+/// Returns 'true' if "message" is a 'kexc' one.
+///   message: Message to test.
+/// \s -> b
+is = \message -> return str.starts(message, "<kexc>");;
+
+/// Returns the text between '<kexc>' and '</kexc>'
+///   message: Message to read.
+/// \s -> s
+read = \message -> return message[6:str.index(message, "</kexc>")];;

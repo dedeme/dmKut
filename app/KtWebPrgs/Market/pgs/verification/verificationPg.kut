@@ -44,7 +44,7 @@ marketData = \lastDate -> {
 // \ -> {[[s, f, f, f].], f} :: {entries, cash}
 stocksData = \ -> {
   :arr All = js.r(file.read("/dm/KtWeb/dmcgi/Stocks/all.tb"));
-  y = time.format(time.now(), "%Y");
+  y = time.fmt(time.now(), "%Y");
   Year = All.find(\E -> return E[0] == y;)!;
   Anns = Year[1][1];
   :dic Pf = {}; //{[f, f].} :: {nick -> [stocks, price]}
@@ -98,7 +98,7 @@ hcontaData = \ -> {
   accStocks = "54000";
   cashV = [0.0];
   stocksV = [0.0];
-  y = time.format(time.now(), "%Y");
+  y = time.fmt(time.now(), "%Y");
   Data = js.r(file.read("/dm/KtWeb/dmcgi/Hconta/" + y + ".db"));
   Anns = Data[3];
   for (A = Anns) {
@@ -124,13 +124,13 @@ hcontaData = \ -> {
   return {cash: cashV!, stocks: stocksV!};
 };
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       lastDate = Rq.lastDate;
 
-      :: MarketD = marketData(lastDate);
+      MarketD = marketData(lastDate);
       ok = MarketD.ok;
 
       StocksD = stocksData();

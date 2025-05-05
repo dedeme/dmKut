@@ -1,0 +1,21 @@
+// Copyright 22-Jul-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// [<initRef>.] table.
+
+import "cts";
+import "data/initRef";
+
+fpath = file.cat([cts.dataPath, "initRef.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<initRef>.]
+read = \ -> return js.r(file.read(fpath));;
+
+/// Writes table.
+/// \[<initRef>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;

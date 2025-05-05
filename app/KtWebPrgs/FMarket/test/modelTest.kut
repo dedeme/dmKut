@@ -5,6 +5,7 @@
 
 import "libmkt/models";
 import "libmkt/model";
+import "libmkt/tquotes";
 import "libmkt/quotes";
 import "db";
 
@@ -20,7 +21,7 @@ run = \ -> {
 // \s, [f] | [f, f], s -> s
 process = \modelId, Params, co -> {
   md = models.get(modelId)!;
-  :quotes qts = db.readQuotes();
+  :quotes qts = tquotes.toQuotes(db.readQuotes());
   coIx = arr.index(qts.Cos, \c -> return c == co;);
   Dates = qts.Dates;
   Closes = quotes.getSingle(qts.Closes, coIx);

@@ -46,7 +46,7 @@ if (key == "alarm!") {
 
 rp.init(key);
 
-:: Rq = js.r(Args[1]);
+Rq = js.r(Args[1]);
 r = switch(Rq.source) {
     "Home": homePg.process(Rq);
     default: sys.throw("Value of source (" + Rq.source + ") is not valid");

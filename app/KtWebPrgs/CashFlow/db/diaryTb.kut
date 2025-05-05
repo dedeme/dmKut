@@ -8,7 +8,7 @@
 mk = \ypath -> writeJs(ypath, js.w([]));;
 
 /// \s -> s
-readJs = \ypath -> return file.read(path.cat([ypath, "diary.tb"]));;
+readJs = \ypath -> return file.read(file.cat([ypath, "diary.tb"]));;
 
 /// \s, s -> ()
-writeJs = \ypath, jsStr -> file.write(path.cat([ypath, "diary.tb"]), jsStr);;
+writeJs = \ypath, jsStr -> file.write(file.cat([ypath, "diary.tb"]), jsStr);;

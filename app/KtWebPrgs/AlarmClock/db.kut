@@ -7,15 +7,15 @@ import "cts";
 import "db/alarmTb";
 
 klen = 20;
-dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+:file dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
-    file.write(dbStateKeyTb, cryp.genK(klen));
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    dbStateKeyTb.write(cryp.genK(klen));
 
     alarmTb.init();
 
@@ -25,17 +25,17 @@ init = \ -> {
 };
 
 /// Returns the state identifier.
-/// \ -> ();
-readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+/// \ -> ()
+readKey = \ -> return str.trim(dbStateKeyTb.read());;
 
 /// Checks the state identifier 'key' and returns:
 ///   - If 'key' is valid, a new identifier.
 ///   - If 'key' is not valid, an empty string.
 /// \s -> s
 checkKey = \key -> {
-  if (str.trim(file.read(dbStateKeyTb)) == key) {
+  if (str.trim(dbStateKeyTb.read()) == key) {
     newKey = cryp.genK(klen);
-    file.write(dbStateKeyTb, newKey);
+    dbStateKeyTb.write(newKey);
     return newKey;
   }
   return "";

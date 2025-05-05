@@ -1,0 +1,16 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Alert message.
+
+import "cts";
+
+/// Show alert message.
+/// \s -> ()
+show = \msg -> {
+  :file fsh = file.cat([cts.dataPath, "cmd.sh"]);
+  fsh.write(
+    "zenity --warning --text=\"" + msg + "\""
+  );
+  sys.cmd("bash", [fsh]);
+};

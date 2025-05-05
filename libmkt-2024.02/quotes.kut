@@ -3,7 +3,7 @@
 
 /// Quotes table data
 
-import "libmktHelper";
+import "tquotes";
 
 /// Constructor
 ///   Cos   : Company nicks.
@@ -16,8 +16,8 @@ import "libmktHelper";
 ///           Its rows match 'dates' and its columns 'cos'.
 ///   Mins  : Array of normalized minimum quotes (without -1).
 ///           Its rows match 'dates' and its columns 'cos'.
-/// [s.], [s.], [[f.].], [[f.].],
-///                 [[f.].], [[f.].] -> <quotes>
+/// \[s.], [s.], [[f.].], [[f.].],
+///-  [[f.].], [[f.].] -> <quotes>
 new : Cos, Dates, Opens, Closes, Maxs, Mins;
 
 /// Returns the index of one company from its nick, or -1 if nick is not found.
@@ -37,10 +37,10 @@ getSingle = \qs, coIx -> {
   AllMaxs = qs[Maxs];
   AllMins = qs[Mins];
 
-  Opens = arr.new(rows, 0);
-  Closes = arr.new(rows, 0);
-  Maxs = arr.new(rows, 0);
-  Mins = arr.new(rows, 0);
+  Opens = arr.new(0, rows);
+  Closes = arr.new(0, rows);
+  Maxs = arr.new(0, rows);
+  Mins = arr.new(0, rows);
   for (r = 0:rows) {
     Opens[r] = [AllOpens[r][coIx]];
     Closes[r] = [AllCloses[r][coIx]];
@@ -55,14 +55,5 @@ getSingle = \qs, coIx -> {
 ///   Cos   : Nicks of companies to read.
 /// \s, [s.] -> <quotes>
 read = \dpath, Cos -> {
-  Rq = {
-    "command": "readQuotes",
-    "path"   : dpath,
-    "nquotes": 4,
-    "Cos"    : Cos
-  };
-
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return new(R.Cos, R.Dates, R.Opens, R.Closes, R.Maxs, R.Mins);
+  return tquotes.toQuotes(tquotes.read(dpath, Cos, true), Cos);
 };

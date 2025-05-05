@@ -1,12 +1,14 @@
 // Copyright 04-Jul-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Approximations (2) model.
+/// up-up, down-down (0) model.
 
 import "../model";
+import "../cts";
 import "doc/uudd0Doc";
 
 /// Returns a new 'appr2' model.
+/// \-><model>
 new = \ -> return model.new(
     "SSBB0",
     "Sube-Sube/Baja-Baja (0)",
@@ -14,3 +16,125 @@ new = \ -> return model.new(
     ["Inicio"],
     [model.percParam]
   );;
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  start = Params[0];
+  upStart = 1.0 + start;
+  downStart = 1.0 - start;
+
+  Refs = arr.new(0.0, size);
+  IsSolds = arr.new(0, ncos);
+  for (i = 0:ncos) Refs[i] = Closes[i] * downStart;
+
+  for (idate = ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iprevious = previousIdate + ico;
+
+      c = Closes[icurrent];
+      prvC = Closes[iprevious];
+      rf = Refs[iprevious];
+      if (IsSolds[ico] == 1) {
+        dif = c - prvC;
+        rf0 = rf * (prvC + dif) / prvC;
+        rf2 = rf < rf0 ? rf : rf0;
+        if (c > rf2) {
+          IsSolds[ico] = 0;
+          Refs[icurrent] = c * downStart;
+        } else {
+          Refs[icurrent] = rf2;
+        }
+      } else {
+        dif = c - prvC;
+        rf0 = rf * (prvC + dif) / prvC;
+        rf2 = rf > rf0 ? rf : rf0;
+        if (c < rf2) {
+          IsSolds[ico] = 1;
+          Refs[icurrent] = c * upStart;
+        } else {
+          Refs[icurrent] = rf2;
+        }
+      }
+    }
+  }
+  return Refs;
+};
+
+/// Returns real references of a model-Company.
+///   dateIx: Firts real reference date index or -1 if it is missing.
+///   rref  : Real reference value or -1.0 if it is missing.
+///   Closes: Company closes.
+///            These closes must be regularized (without -1.0 values).
+///   Params: Parameter values.
+///   RETURN: Flat array with the following values:
+///            - dateIx: New date to calculate new real references.
+///            - rref  : New reference to calculate new real references.
+///            - Refs  : Real references.
+/// \i, f, [f.], [f.] -> [f.]
+realRefs = \(ifFF|F) datexIx, rref, Closes, Params -> {
+  start = Params[0];
+  upStart = 1.0 + start;
+  downStart = 1.0 - start;
+
+  closesSize = arr.size(Closes);
+
+  dateIxV = [datexIx];
+  rrefV = [rref];
+  if (datexIx == -1) {
+    dateIxV! = 0;
+    rrefV! = Closes[0] * downStart;
+  }
+  dtIx = dateIxV!;
+  rf = rrefV!;
+
+  :arr Refs = arr.new(0.0, closesSize);
+  Refs.setRange(0, Closes, 0, dtIx);
+  Refs[dtIx] = rf;
+
+  cl = Closes[dtIx];
+  isSoldV = [rf > cl ? 1 : 0];
+
+  changeFirstV = [dtIx > cts.realReferenceDateIx ? 0 : 1];
+  for (i = dtIx+1:closesSize) {
+    cl = Closes[i];
+    prvCl = Closes[i - 1];
+    rf = Refs[i - 1];
+    if (isSoldV! == 1) {
+      rf0 = rf * cl / prvCl;
+      rf2 = rf < rf0 ? rf : rf0;
+      if (cl > rf2) {
+        isSoldV! = 0;
+        Refs[i] = cl * downStart;
+        if (changeFirstV! == 1 & i > cts.realReferenceDateIx) {
+          dateIxV! = i;
+          rrefV! = Refs[i];
+          changeFirstV! = 0;
+        }
+      } else {
+        Refs[i] = rf2;
+      }
+    } else {
+      rf0 = rf * cl / prvCl;
+      rf2 = rf > rf0 ? rf : rf0;
+      if (cl < rf2) {
+        isSoldV! = 1;
+        Refs[i] = cl * upStart;
+        if (changeFirstV! == 1 & i > cts.realReferenceDateIx) {
+          dateIxV! = i;
+          rrefV! = Refs[i];
+          changeFirstV! = 0;
+        }
+      } else {
+        Refs[i] = rf2;
+      }
+    }
+  }
+
+  return [math.itof(dateIxV!)] + rrefV + Refs;
+};

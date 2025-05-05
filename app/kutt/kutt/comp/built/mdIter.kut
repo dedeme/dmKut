@@ -1,0 +1,27 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "all": built.mkRs("[[!A][A|b]|b]", md, sym);
+    "any": built.mkRs("[[!A][A|b]|b]", md, sym);
+    "cat": built.mkRs("[[!A][!A]|[!A]]", md, sym);
+    "count": built.mkRs("[[!A]|i]", md, sym);
+    "drop": built.mkRs("[[!A]i|[!A]]", md, sym);
+    "empty": built.mkRs("[[A]|[!A]]", md, sym);
+    "hasNext": built.mkRs("[[!A]|b]", md, sym);
+    "next": built.mkRs("[[!A]|A]", md, sym);
+    "new": built.mkRs("[[.O[O|[E]]]|[!E]]", md, sym);
+    "take": built.mkRs("[[!A]i|[!A]]", md, sym);
+    "unary": built.mkRs("[A|[!A]]", md, sym);
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};
+

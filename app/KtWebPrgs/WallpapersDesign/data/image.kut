@@ -1,54 +1,48 @@
-// Copyright 22-Dic-2022 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Image data.
 
 import "imgCut";
-import "imgAdjustment";
+import "imgAdj";
 import "imgBlur";
 
-/// \s, [<imgCut>]|[], [<imgAdjustment>]|[], [<imgBlur>]|[] -> d<image>
-new = \id, cut, adjustment, blur -> return {id, cut, adjustment, blur};;
+/// Constructor.
+///   id    : Image identifier.
+///   cutOp : Image 'cut' modification data.
+///   adjOp : Image 'adjustment' modification data.
+///   blurOp: Image 'blur' modification data.
+/// \s,([<imgCut>]|[]),([<imgAdj>]|[]),([<imgBlur>]|[]) -> <image>
+new : id, cutOp, adjOp, blurOp;
 
 /// Default constructor: A image without modications.
+/// \s -> <image>
 newDefault = \id -> return new(id, [], [], []);;
 
-/// \<image> -> [*(JS)...]
-toJs = \I -> return [
-    I.id,
-    !!I.cut ? [imgCut.toJs(I.cut!)] : [],
-    !!I.adjustment ? [imgAdjustment.toJs(I.adjustment!)] : [],
-    !!I.blur ? [imgBlur.toJs(I.blur!)] : []
-  ];;
-
-/// \[*(JS)...] -> <image>
+/// \[*.] -> <image>
 fromJs = \A -> {
   return new(
-    A[0],
-    !!A[1] ? [imgCut.fromJs(A[1]!)]: [],
-    !!A[2] ? [imgAdjustment.fromJs(A[2]!)] : [],
-    !!A[3] ? [imgBlur.fromJs(A[3]!)] : []
+    A[id],
+    !A[cutOp] ? [] : [imgCut.fromJs(A[cutOp]!)],
+    !A[adjOp] ? [] : [imgAdj.fromJs(A[adjOp]!)],
+    !A[blurOp] ? [] : [imgBlur.fromJs(A[blurOp]!)]
   );
 };
 
 /// Updates image data list from image source list in a new image data list.
-/// \[<image>,...], [s,...] -> [<image>,...]
-update = \Data, Source -> {
-  R = arr.filter(
-    Data,
-    \I -> return arr.any(
-        Source,
-        \id -> return id == I.id;
-      );
+///   Data  : Old image list. If some of them is not en 'Source', it will be
+///           deleted.
+///   Source: Current images identifiers. If some of then is not in 'Data', it
+///           will be created.
+/// \[<image>.], [s.] -> [<image>.]
+update = \:arr Data, :arr Source -> {
+  :arr R = Data.filter(
+    \:image i -> return Source.any(\idf -> return idf == i[id];);
   );
-  News = arr.filter(
-    Source,
-    \id -> return !arr.any(
-        Data,
-        \I -> return id == I.id;
-      );
+  :arr News = Source.filter(
+    \idf -> return !Data.any(\:image i -> return idf == i[id];);
   );
-  for (id = News) arr.push(R, newDefault(id));
+  for (idf = News) R.push(newDefault(idf));
 
   return R;
 };

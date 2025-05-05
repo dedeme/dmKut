@@ -1,0 +1,39 @@
+// Copyright 26-Oct-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Table of all the ibex companies.
+
+import "cts";
+import "data/ibex";
+import "data/co/ibexCo";
+import "ibexTb";
+
+fpath = file.cat([cts.dataPath, "ibexCos.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<ibexCo>.]
+read = \ -> {
+  :arr TbCos = arr.map(js.r(file.read(fpath)), ibexCo.fromJs);
+  NewCos = []; // [<ibexCo>.]
+  :ibex i = ibexTb.read();
+  writeV = [arr.size(i.Cos) != TbCos.size()];
+  for (c = i.Cos) {
+    cOp = TbCos.find(\:ibexCo ic -> return ic.nick == c;);
+    if (!cOp) {
+      NewCos.push(ibexCo.new(c, false, 0, 0.0));
+      writeV! = true;
+    } else {
+      NewCos.push(cOp!);
+    }
+  }
+  if (writeV!) write(NewCos);
+  return NewCos;
+};
+
+/// Writes table.
+/// \[<ibexCo>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;

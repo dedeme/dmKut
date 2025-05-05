@@ -13,7 +13,7 @@ import "pgs/directoriesPg";
 import "wgs/dirRowWg";
 import "poolDb/update";
 
-// \ -> s
+//: \ -> s
 help = \ -> return """
   Use MrBakup [help | version | init | test | update | key rq]
   where
@@ -26,7 +26,7 @@ help = \ -> return """
     key rq : Requests 'rq' with 'key'. (Sent by browser)
   """;;
 
-log.setPath(path.cat([cts.dataPath, "log.tb"]));
+log.init(file.cat([cts.dataPath, "log.tb"]), 100);
 
 :arr Args = sys.args();
 
@@ -54,7 +54,7 @@ if (Args.size() != 2) {
 key = Args[0];
 rp.init(key);
 
-:: Rq = js.r(Args[1]);
+Rq = js.r(Args[1]);
 sys.print(switch(Rq.source) {
   "SummaryPg": summaryPg.process(Rq);
   "DirectoriesPg": directoriesPg.process(Rq);

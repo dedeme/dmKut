@@ -20,8 +20,8 @@
 ///   Sales: Sales dates. One array for each company (from before to after).
 ///   Profits: Profits ratios. One for each company.
 /// \[[f.].], [<order>.],
-///   [f.], [f.], [f.], [f.],
-///   f, [[s.].], [[s.].], [f.] -> <strRs>
+///-  [f.], [f.], [f.], [f.],
+///-  f, [[s.].], [[s.].], [f.] -> <strRs>
 new : Refs, Orders,
       Hreals, Haccs, Hrefs, Hwithdrawals,
       cash, Buys, Sales, Profits;

@@ -1,12 +1,12 @@
 // Copyright 09-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Closes table.
+/// Closes table of selected companies.
 
 import "../tradingDb";
 import "cts";
 
-fpath = path.cat([tradingDb.dpath, "closes.tb"]);
+fpath = file.cat([tradingDb.dpath, "closes.tb"]);
 
 /// Initializes table.
 /// \ -> ()
@@ -15,7 +15,7 @@ init = \ -> if (!file.exists(fpath)) write({});;
 /// Reads table. Closes table is a dictionary:
 ///   For companies and 'cts.meNick' -> {nick->[isFromHistoric, close]}
 ///   For indexes -> {nick->[isFromHistoric, [currentValue, yesterdayValue]]}
-/// \ -> {[b,f].}
+/// \ -> ({[b,f].}|{[b,[f,f]].})
 read = \ -> return js.r(file.read(fpath));;
 
 /// For companies and 'cts.meNick' reads table with only closes. {nick: close}
@@ -35,5 +35,5 @@ readOnlyCloses = \ -> {
 ///   Closes: Dictionary:
 ///     For companies and 'cts.meNick' -> {nick->[isFromHistoric, close]}
 ///     For indexes -> {nick->[isFromHistoric, [currentValue, yesterdayValue]]}
-/// \{[b,f]...} -> ()
+/// \({[b,f].}|{[b,[f,f]].}) -> ()
 write = \Closes -> file.write(fpath, js.w(Closes));;

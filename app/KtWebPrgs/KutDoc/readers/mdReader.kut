@@ -1,11 +1,11 @@
-// Copyright 14-May-2022 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-import "libdm/jstb";
 import "data/doc";
 import "data/docEntry";
 import "data/dpath";
 import "db";
+import "db/pathsTb";
 
 /// Module reader.
 
@@ -20,185 +20,183 @@ takeId = \s -> {
   return [str.rtrim(s[:ix]), str.ltrim(s[ix + 1:])];
 };
 
-/// \s, s -> [m]
+/// \s, s -> ([<doc>]|[])
 read = \pack, pt -> {
-  :jstb pathsTb = db.pathsTb();
+  ppathOp = arr.find(pathsTb.read(), \:dpath p -> return p.id == pack;);
+  if (!ppathOp) return [];
 
-  PpathOp = arr.find(pathsTb.read#(), \:dpath P -> return P.id == pack;);
-  if (!PpathOp) return [];
-
-  :dpath Ppath = PpathOp!;
-  fpath = path.cat([Ppath.spath, pt + ".kut"]);
+  :dpath Ppath = ppathOp!;
+  fpath = file.cat([Ppath.spath, pt + ".kut"]);
   if (!file.exists(fpath)) return [];
 
-  Doc = [""];
-  Inds = [];
-  Funcs = [];
-  Vals = [];
+  docV = [""];
+  indsV = [];
+  funcsV = [];
+  valsV = [];
 
   f = file.ropen(fpath);
-  St = ["init0"]; // states are "init0", "init", "doc", "code0", "code"
-  FirstDoc = [true];
-  DocBf = [""];
-  Id = [""];
-  Code = [""];
-  CodeLines = [0];
-  L = [""];
+  stV = ["init0"]; // states are "init0", "init", "doc", "code0", "code"
+  firstDocV = [true];
+  docBfV = [""];
+  idV = [""];
+  codeV = [""];
+  codeLinesV = [0];
+  lV = [""];
   while () {
-    if (L! == "") {
-      Lf = file.readLine(f);
-      if (arr.size(Lf) == 0) break;
-      else L! = Lf!;
+    if (lV! == "") {
+      lfOp = file.readLine(f);
+      if (!lfOp) break;
+      else lV! = lfOp!;
     }
 
-    l = str.trim(L!);
-    L! = "";
-    switch (St!) {
+    l = str.trim(lV!);
+    lV! = "";
+    switch (stV!) {
     "init0":
       if (str.starts(l, "import ")) {
-        FirstDoc! = false;
-        St! = "init";
+        firstDocV! = false;
+        stV! = "init";
       } else if (str.starts(l, "///")) {
-        if (l == "///") DocBf! = "\n";
+        if (l == "///") docBfV! = "\n";
         else {
           tx = l[4:];
-          DocBf! = tx;
+          docBfV! = tx;
         }
-        St! = "doc";
+        stV! = "doc";
       }
     "init":
       if (str.starts(l, "///")) {
-        if (l == "///") DocBf! = "\n";
+        if (l == "///") docBfV! = "\n";
         else {
           tx = l[4:];
-          DocBf! = tx;
+          docBfV! = tx;
         }
-        St! = "doc";
+        stV! = "doc";
       }
     "doc":
       if (str.starts(l, "///")) {
-        if (l == "///") DocBf! += "\n";
-        else DocBf! += "\n" + l[4:];
+        if (l == "///") docBfV! += "\n";
+        else docBfV! += "\n" + l[4:];
       } else {
-        if (FirstDoc!) {
-          Doc! = DocBf!;
-          FirstDoc! = false;
+        if (firstDocV!) {
+          docV! = docBfV!;
+          firstDocV! = false;
         }
         IdRest = takeId(l);
         if (arr.size(IdRest) == 2)  {
-          Id! = IdRest[0];
-          L! = IdRest[1];
-          St! = "code0";
+          idV! = IdRest[0];
+          lV! = IdRest[1];
+          stV! = "code0";
         } else {
-          St! = "init";
+          stV! = "init";
         }
       }
     "code0":
       if (l != "") {
         if (!str.starts(l, "\\")) {
-          if (str.ends(Id!, ":")) {
-            Id! = Id![:-1];
+          if (str.ends(idV!, ":")) {
+            idV! = idV![:-1];
             ix = str.index(l, ";");
             if (ix != -1) {
               arr.push(
-                Inds,
-                docEntry.mk(
-                  Id!,
-                  DocBf!,
-                  Id! + " : " + l[:ix + 1],
-                  Id!)
+                indsV,
+                docEntry.new(
+                  idV!,
+                  docBfV!,
+                  idV! + " : " + l[:ix + 1],
+                  idV!)
               );
-              St! = "init";
+              stV! = "init";
             } else {
-              Code! = Id! + " : " + l + "\n";
-              CodeLines! = 1;
-              St! = "code2";
+              codeV! = idV! + " : " + l + "\n";
+              codeLinesV! = 1;
+              stV! = "code2";
             }
           } else {
-            arr.push(Vals, docEntry.mk(Id!, DocBf!, Id!, Id!));
-            St! = "init";
+            arr.push(valsV, docEntry.new(idV!, docBfV!, idV!, idV!));
+            stV! = "init";
           }
         } else {
           ix = str.index(l, "->");
           if (ix != -1) {
             arr.push(
-              Funcs,
-              docEntry.mk(
-                Id!,
-                DocBf!,
-                Id! + " = " + l[:ix + 2],
-                Id!
+              funcsV,
+              docEntry.new(
+                idV!,
+                docBfV!,
+                idV! + " = " + l[:ix + 2],
+                idV!
               )
             );
-            St! = "init";
+            stV! = "init";
           } else {
-            Code! = Id! + " = " + l + "\n";
-            CodeLines! = 1;
-            St! = "code";
+            codeV! = idV! + " = " + l + "\n";
+            codeLinesV! = 1;
+            stV! = "code";
           }
         }
       }
     "code":
-      if (CodeLines! > 5) {
+      if (codeLinesV! > 5) {
         arr.push(
-          Funcs,
-          docEntry.mk(
-            Id!,
-            DocBf!,
-            Code! + " ...",
-            Id!
+          funcsV,
+          docEntry.new(
+            idV!,
+            docBfV!,
+            codeV! + " ...",
+            idV!
           )
         );
-        St! = "init";
+        stV! = "init";
       } else {
         if (l != "") {
           ix = str.index(l, "->");
           if (ix != -1) {
             arr.push(
-              Funcs,
-              docEntry.mk(
-                Id!,
-                DocBf!,
-                Code! + "  " +  l[:ix + 2],
-                Id!
+              funcsV,
+              docEntry.new(
+                idV!,
+                docBfV!,
+                codeV! + "  " +  l[:ix + 2],
+                idV!
               )
             );
-            St! = "init";
+            stV! = "init";
           } else {
-            Code! += "  " + l + "\n";
-            CodeLines! += 1;
+            codeV! += "  " + l + "\n";
+            codeLinesV! += 1;
           }
         }
       }
     "code2":
-      if (CodeLines! > 5) {
+      if (codeLinesV! > 5) {
         arr.push(
-          Inds,
-          docEntry.mk(
-            Id!,
-            DocBf!,
-            Code! + " ...",
-            Id!
+          indsV,
+          docEntry.new(
+            idV!,
+            docBfV!,
+            codeV! + " ...",
+            idV!
           )
         );
-        St! = "init";
+        stV! = "init";
       } else {
         if (l != "") {
           ix = str.index(l, ";");
           if (ix != -1) {
             arr.push(
-              Inds,
-              docEntry.mk(
-                Id!,
-                DocBf!,
-                Code! + "  " +  l[:ix + 1],
-                Id!
+              indsV,
+              docEntry.new(
+                idV!,
+                docBfV!,
+                codeV! + "  " +  l[:ix + 1],
+                idV!
               )
             );
-            St! = "init";
+            stV! = "init";
           } else {
-            Code! += "  " + l + "\n";
-            CodeLines! += 1;
+            codeV! += "  " + l + "\n";
+            codeLinesV! += 1;
           }
         }
       }
@@ -206,5 +204,5 @@ read = \pack, pt -> {
   }
   file.close(f);
 
-  return [doc.mk(Doc!, Inds, Funcs, Vals)];
+  return [doc.new(docV!, indsV, funcsV, valsV)];
 };

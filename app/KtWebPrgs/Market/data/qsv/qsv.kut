@@ -1,0 +1,29 @@
+// Copyright 07-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server.
+
+/// Server states
+/// Values for 'withCurrent', 'withDaily' and 'withHistoric'.
+/// [i.]
+active, inactive, undef =;
+
+/// Constructor.
+///   id           : Server identifier.
+///   name         : Server name.
+///   withFile     : If server can read current 'ticks'.
+///                  ('active', 'inactive' or 'undef')
+///   withDaily    : If server can read daily quotes.
+///                  ('active', 'inactive' or 'undef')
+///   withHistoric : If server can read historic quotes.
+///                  ('active', 'inactive' or 'undef')
+/// \s,s,i,i,i -> <qsv>
+new : id, name, withCurrent, withDaily, withHistoric;
+
+/// Read Rq from 'ppmarket'.
+/// Returns a Result<JSONized object>.
+/// \{*.} -> [s, b]
+rq = \Rq -> {
+  r, ok = sys.cmd("ppmarket", [b64.encode(js.w(Rq))]);
+  return [str.rtrim(r), ok];
+};

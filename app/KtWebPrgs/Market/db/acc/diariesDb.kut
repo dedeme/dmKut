@@ -8,16 +8,16 @@ import "data/acc/anns";
 import "cts";
 
 // s
-dpath = path.cat([accDb.dpath, "diaries"]);
+dpath = file.cat([accDb.dpath, "diaries"]);
 
 // \i, i -> s
-fpath = \year -> return path.cat([dpath, str.fmt("%v.tb", [year])]);;
+fpath = \year -> return file.cat([dpath, str.fmt("%v.tb", [year])]);;
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   file.mkdir(dpath);
-  year = time.format(time.now(), "%Y");
+  year = time.fmt(time.now(), "%Y");
   write(year, anns.new());
 };
 
@@ -43,7 +43,7 @@ write = \year, :anns table ->
 /// investor.
 /// \ -> [s.]
 investorYears = \ -> {
-  Years = arr.map(file.dir(dpath), \f -> return f[:-3];);
+  :arr Years = arr.map(file.dir(dpath), \f -> return f[:-3];);
   Years.sort(\y1, y2 -> return y1 > y2;);
   return Years;
 };

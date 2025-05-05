@@ -6,10 +6,13 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "Hconta";
 
 /// Data version
+/// s
 version = "202404";
 
 /// Data directory.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);

@@ -6,12 +6,17 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "Kron";
 /// Application version.
+/// s
 version = "2024.04";
-/// Application path.
-appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Application file.
+/// s
+appPath = file.cat([global.root, "prgs", appName, "kut"]);
 /// Data version.
+/// s
 dataVersion = "2024.04";
-/// Data path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);

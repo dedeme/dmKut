@@ -3,12 +3,16 @@
 
 /// Company nicks reader.
 
-:file fpath = "/dm/KtWeb/dmcgi/CMarket/ibex.tb";
+:file fpath = "/dm/KtWeb/dmcgi/Market/cos.tb";
 
-/// Returns ibex companies sorted by ascendent alphabetic order.
+/// Returns selected companies sorted by ascendent alphabetic order.
 /// \ -> [s.]
-read = \ -> {
-  :arr Cos = js.r(fpath.read())[0];
-  Cos.sort(\c1, c2 -> return c1 < c2;);
+read = \(|S) -> {
+  Cos = [];
+  for (e = js.ra(js.ra(fpath.read())[1])) {
+    E = js.ra(e);
+    if (js.rb(E[1])) Cos.push(js.rs(E[0]));
+  }
+  Cos.sort(true);
   return Cos;
 };

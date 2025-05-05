@@ -7,8 +7,9 @@ import "daily/cosSelTb";
 import "daily/dailyChartsTb";
 import "cts";
 
-/// Data base path.
-dpath = path.cat([cts.dataPath, "daily"]);
+/// Data base file.
+/// s
+dpath = file.cat([cts.dataPath, "daily"]);
 
 /// Initializes data base.
 /// \ -> ()

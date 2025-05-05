@@ -4,35 +4,53 @@
 /// Constants.
 
 /// Application name.
+/// s
 appName = "MarketModels";
 /// Application version.
+/// s
 version = "2024.03";
 /// Data version.
+/// s
 dataVersion = "2024.03";
-/// Data path.
-dataPath = path.cat([sys.home(), ".dmKutApp", "KutPost", appName]);
+/// Data file.
+/// s
+dataPath = file.cat([sys.home(), ".dmKutApp", "KutPost", appName]);
 /// Results directory.
-resultsDir = path.cat([dataPath, "results"]);
+/// s
+resultsDir = file.cat([dataPath, "results"]);
+/// Ranks directory.
+/// s
+ranksDir = file.cat([dataPath, "ranks"]);
 /// Directory of historic quotes tables type 'NICK.tb'.
+/// s
 quotesPath = "/dm/KtWeb/dmcgi/Market/quotes";
 /// Steps number to calculate simulations
+/// i
 simulationSteps = 20;
 /// Minimum sales to compute results.
-minSales = 80;
+/// i
+minSales = 40;
 
 // -----------------------------------------------------------------------------
 
 /// Number of global ranks.
+/// i
 globalRanks = 5;
 /// Number of dates to calculate statistics.
+/// i
 statDates = 24;
 /// Number of dates to save.
+/// i
 historicDates = (statDates + 1) * 2;
 /// Period names.
+/// [s.]
 Periods = ["daily", "weekly", "monthly"];
 /// Values types.
+/// [s.]
 Types = ["prices", "accs", "refs"];
 /// Statistics names.
+/// [s.]
 Stats = ["price", "average", "crrAverage", "deviation"];
 /// Investor model base.
-modelBase = "APRX";
+/// s
+modelBase = "SSBB0";

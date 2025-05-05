@@ -6,14 +6,19 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "CDoc";
 /// Application version.
+/// s
 version = "2024.03";
-/// Application path.
-appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Application file.
+/// s
+appPath = file.cat([global.root, "prgs", appName, "kut"]);
 /// Data version.
+/// s
 dataVersion = "2024.03";
-/// Application path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Application file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
 
 

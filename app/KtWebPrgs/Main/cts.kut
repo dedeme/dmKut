@@ -6,6 +6,8 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "Main";
-/// Application path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Application file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);

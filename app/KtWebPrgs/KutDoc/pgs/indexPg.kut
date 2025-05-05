@@ -1,26 +1,21 @@
-// Copyright 14-May-2022 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Package index page.
 
 import "KtWeb/rp";
 import "readers/ixReader";
-import "data/indexTree";
 
 /// Process request.
-/// \m -> s
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "index": {
-      IxT = ixReader.read(Rq.pack);
-      sys.println(rp.mk({
-        "index": !!IxT
-          ? [indexTree.toJs(IxT!)]
-          : []
-      }));
+      return rp.mk({
+        treeOp: ixReader.read(Rq.pack)
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }
 };
-
 

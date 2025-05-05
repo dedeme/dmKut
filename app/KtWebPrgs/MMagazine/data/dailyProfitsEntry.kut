@@ -1,4 +1,4 @@
-// Copyright 28-Mar-2022 ºDeme
+// Copyright 03-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Daily profits data.
@@ -11,18 +11,18 @@ import "data/profitsEntry";
 ///   profits: Profits on date (amount)
 ///   cash: Cash on date (amount)
 ///   risk: Minimum future profits on date (amount)
-/// \s, f, f, f -> a<DailyProfitsEntry>
+/// \s, f, f, f -> <dailyProfitsEntry>
 new : date, profits, cash, risk;
 
 /// Calculate weekly profits of investors.
 ///   invPs: Daily profits of investors.
-/// \[<DailyProfitsEntry>.] -> [<ProfitsEntry>.]
+/// \[<dailyProfitsEntry>.] -> [<profitsEntry>.]
 mkProfits = \InvP -> {
-  // [<ProfitsEntry>...]
+  // [<ProfitsEntry>.]
   R = [];
 
   now = time.now();
-  Date = [time.newDate(1, 1, time.year(now))];
+  Date = [time.newDate(31, 12, time.year(now) - 1)];
   ixV = [0];
   isFirstV = [true];
   while (time.dfDays(Date!, now) <= 0) {

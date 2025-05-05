@@ -8,14 +8,14 @@ import "cts";
 import "db/annsTb";
 
 klen = 20;
-dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
     file.write(dbStateKeyTb, cryp.genK(klen));
 
     annsTb.init();
@@ -26,7 +26,7 @@ init = \ -> {
 };
 
 /// Returns the state identifier.
-/// \ -> ();
+/// \ -> ()
 readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
 
 /// Checks the state identifier 'key' and returns:
@@ -41,50 +41,3 @@ checkKey = \key -> {
   }
   return "";
 };
-
-/*
-
-import "libdm/dbchk";
-
-import "cts";
-import "data/ann";
-
-dbPathV = [""];
-dbCheckerV = [""];
-
-/// Initializes data base.
-/// \-> ()
-init = \ -> {
-  dbPathV! = cts.dbPath;
-  if (!file.exists(dbPathV!)) file.mkdir(dbPathV!);
-  dbCheckerV! = dbPathV! + "/checker.tb";
-  dbchk.init(dbCheckerV!);
-};
-
-/// Returns the table of 's' in 'sessionId.tb'
-/// \-> s<jstb>
-sessionIdTb = \-> return jstb.new(
-  dbPathV! + "/sessionId.tb",
-  \-> return "";,
-  \v -> return v;,
-  \v -> return v;
-);;
-
-/// Returns the table of [<Ann>, ...] in "anns.tb"
-/// \-> a[<Ann>]<jstb>
-annsTb = \-> return jstb.newArr(
-  dbPathV! + "/anns.tb",
-  \-> return [];,
-  ann.toJs,
-  ann.fromJs
-);;
-
-/// Returns the data base checker key.
-/// \ -> s
-chkKey = \ -> return dbchk.get(dbCheckerV!);;
-
-/// Checks 'id' and if it is correct, run task.
-/// It returns a new 'id' or an empty string if 'id' is not valid.
-/// \s, \->() -> s
-check = \id, task -> return dbchk.check(dbCheckerV!, id, task);;
-*/

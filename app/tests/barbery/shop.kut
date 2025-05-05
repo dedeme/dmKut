@@ -7,15 +7,15 @@ IsPreopen = [true];
 IsOpen = [false];
 
 Clients = [];
-Sits = arr.new(4, "");
+Sits = arr.new("", 4);
 
-///
+/// \ -> b
 isFull = \ -> return arr.size(Clients) == 4;;
 
-///
+/// \ -> b
 isEmpty = \ -> return arr.size(Clients) == 0;;
 
-///
+/// \ -> s
 showSits = \ -> {
   B = [""];
   for (cl = Sits)
@@ -25,16 +25,16 @@ showSits = \ -> {
   return arr.join(B, "|");
 };
 
-///
+/// \ -> ()
 open = \ -> {
   IsOpen! = true;
   IsPreopen! = false;
 };
 
-///
+/// \ -> ()
 close = \ -> IsOpen! = false;;
 
-///
+/// \s -> ()
 takeASit = \cl -> {
   nClients = arr.size(Clients);
   if (nClients >= 4) sys.throw("Barbery is full");
@@ -59,7 +59,7 @@ takeASit = \cl -> {
   sys.println(str.fmt("Shop: %s", [showSits()]));
 };
 
-///
+/// \ -> s
 takeAClient = \ -> {
   if (!Clients) sys.throw("Barbery is empty");
 

@@ -7,8 +7,9 @@ import "acc/diariesDb";
 import "acc/profitsDb";
 import "cts";
 
-/// Data base path.
-dpath = path.cat([cts.dataPath, "acc"]);
+/// Data base file.
+/// s
+dpath = file.cat([cts.dataPath, "acc"]);
 
 /// Initializes data base.
 /// \ -> ()

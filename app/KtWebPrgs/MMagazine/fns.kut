@@ -1,4 +1,4 @@
-// Copyright 27-Mar-2022 ºDeme
+// Copyright 03-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Global functions.
@@ -20,7 +20,7 @@ lastSunday = \-> {
 
 /// Returns dates spare for historic data base.
 ///   Dates: Unsorted list of dates
-/// \[s...] -> [s...]
+/// \[s.] -> [s.]
 datesSpare = \Dates -> {
   // [s...]
   R = [];
@@ -38,19 +38,19 @@ datesSpare = \Dates -> {
     time.newDate(1, time.month(topMonthly), time.year(topMonthly) - 1)
   );
 
-  SortDates = arr.copy(Dates);
+  :arr SortDates = arr.copy(Dates);
   // Sorted from after to before.
-  arr.sort(SortDates, \d1, d2 -> return d1 > d2;);
-  Last = [""];
+  SortDates.sort(\d1, d2 -> return d1 > d2;);
+  lastV = [""];
   for (d = SortDates) {
     if (d <= tMonthly) {
       if (d < tYearly) {
-        if (eqYear(d, Last!)) arr.push(R, d);
+        if (eqYear(d, lastV!)) R.push(d);
       } else {
-        if (eqMonth(d, Last!)) arr.push(R, d);
+        if (eqMonth(d, lastV!)) R.push(d);
       }
     }
-    Last! = d;
+    lastV! = d;
   }
 
   return R;

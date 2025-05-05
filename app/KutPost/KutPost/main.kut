@@ -12,8 +12,8 @@ import "pgs/homePg";
 import "pgs/settingsPg";
 import "pgs/changePassPg";
 
-// \ -> s
-help = \ -> return """
+//: s
+help = """
   Use KutPost [help | version | init | start | rq]
   where
     help: Shows this message.
@@ -22,9 +22,9 @@ help = \ -> return """
           Must be called only the first time that the program is called.
     start: Starts server.
     key rq: Requests 'rq' with 'key'. (Sent by browser)
-  """;;
+  """;
 
-log.setPath(path.cat([cts.dataPath, "log.tb"]));
+log.init(file.cat([cts.dataPath, "log.tb"]), 100);
 
 :arr Args = sys.args();
 
@@ -38,9 +38,9 @@ switch (rq) {
   "version": sys.println(cts.version);
   "init": db.init();
   "start": server.run();
-  "help": sys.println(help());
+  "help": sys.println(help);
   default: try {
-    :: Rq = js.r(rq);
+    Rq = js.r(rq);
     sys.print(switch (Rq.source) {
       "Main": mainPg.process(Rq);
       "Home": homePg.process(Rq);

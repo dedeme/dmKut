@@ -1,0 +1,243 @@
+// Copyright 08-Sep-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes table data
+
+import "quotes";
+import "cts";
+
+/// Constructor of <tquotes> (alias of [f.]).
+/// It adds every field succesively in an 'F' array.
+///   Dates : Quotes dates in format math.stof(YYYYMMDD), from before to after.
+///           Its size is 'cts.historicQuotes'.
+///   Opens : Matrix of normalized open quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Closes: Matrix of normalized close quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Maxs  : Matrix of normalized maximum quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+///   Mins  : Matrix of normalized minimum quotes (without -1).
+///           Its rows match 'dates' and its columns 'cos'.
+/// \[f.], [f.], [f.], [f.], [f.] -> <tquotes>
+new = \(FFFFF|F) Dates, Opens, Closes, Maxs, Mins -> {
+  sizeQs = arr.size(Opens);
+  size = cts.historicQuotes + sizeQs * 4;
+  :arr This = arr.new(0.0, size);
+  This.setArr(0, Dates);
+  ixV = [arr.size(Dates)];
+  This.setArr(ixV!, Opens);
+  ixV! += sizeQs;
+  This.setArr(ixV!, Closes);
+  ixV! += sizeQs;
+  This.setArr(ixV!, Maxs);
+  ixV! += sizeQs;
+  This.setArr(ixV!, Mins);
+  return This;
+};
+
+/// Returns dates in format YYYYMMDD
+/// \<tquotes> -> [s.]
+dates = \(F|S) qts -> {
+  R = [];
+  for (q = qts[0:cts.historicQuotes]) R.push(math.itos(math.ftoi(q)));
+  return R;
+};
+
+/// Returns the number of companies in matrices Opens, Closes, Maxs and Mins.
+/// \<tquotes> -> i
+ncos = \(F|i) qts ->
+  return (arr.size(qts) - cts.historicQuotes) / (4 * cts.historicQuotes);;
+
+/// Returns matrix 'dates x cos' of opens
+/// \<tquotes> -> [f.]
+opens = \(F|F) qts -> {
+  size = (arr.size(qts) - cts.historicQuotes) / 4;
+  start = cts.historicQuotes;
+  return qts[start : start+size];
+};
+
+/// Returns matrix 'dates x cos' of closes
+/// \<tquotes> -> [f.]
+closes = \(F|F) qts -> {
+  size = (arr.size(qts) - cts.historicQuotes) / 4;
+  start = cts.historicQuotes + size;
+  return qts[start : start+size];
+};
+
+/// Returns matrix 'dates x cos' of maxima
+/// \<tquotes> -> [f.]
+maxs = \(F|F) qts -> {
+  size = (arr.size(qts) - cts.historicQuotes) / 4;
+  start = cts.historicQuotes + size * 2;
+  return qts[start : start+size];
+};
+
+/// Returns matrix 'dates x cos' of minima
+/// \<tquotes> -> [f.]
+mins = \(F|F) qts -> {
+  size = (arr.size(qts) - cts.historicQuotes) / 4;
+  start = cts.historicQuotes + size * 3;
+  return qts[start : start+size];
+};
+
+//: \s -> [f.]
+readDates = \(s|F) path -> {
+  base = file.base(path);
+  R = [!1.0];
+  for (:str l = arr.reverse(str.split(file.read(path), "\n"))) {
+    ix = l.index(":");
+    if (ix != 8) sys.throw("Bad date in " + base + ": " + l);
+    dateOp = math.stoi(l[:ix]);
+    if (!dateOp) sys.throw("Bad date in " + base + ": " + l);
+    R.push(math.itof(dateOp!));
+  }
+  if (R.size() != cts.historicQuotes)
+    sys.throw(
+      base + " has " + sys.toStr(R.size()) + "quotes (" +
+        "Expected " + sys.toStr(cts.historicQuotes) + ")"
+    );
+  return R;
+};
+
+//: \s, s, [f.], i -> ()
+normalize = \(ssFi|) base, field, Qs, ix -> {
+  end = ix + cts.historicQuotes;
+  qV = [-1.0];
+  for (i = ix:end)
+    if (Qs[i] > 0.0) qV! = Qs[i];
+    else if (qV! > 0.0) Qs[i] = qV!;
+
+  if (qV! < 0.0) sys.throw("Every " + field + " value is <= 0 in " + base);
+
+  for (i = end-1:ix:-1)
+    if (Qs[i] > 0.0) qV! = Qs[i];
+    else Qs[i] = qV!;
+};
+
+//: \b, s, [f.], [f.], [f.], [f.], i -> ()
+readCo = \(bsFFFFi|) all, path, Opens, Closes, Maxs, Mins, ix -> {
+  base = file.base(path);
+  iV = [ix];
+  for (:str l = arr.reverse(str.split(file.read(path), "\n"))) {
+    i = iV!;
+    iV! += 1;
+    Fields = l.splitTrim(":");
+    if (arr.size(Fields) != 7)
+      sys.throw("Bad field number in " + base + ": " + l);
+    oOp = math.stof(Fields[1]);
+    if (!oOp) sys.throw("Open bad value in " + base + ": " + l);
+    Opens[i] = oOp!;
+    cOp = math.stof(Fields[2]);
+    if (!cOp) sys.throw("Close bad value in " + base + ": " + l);
+    Closes[i] = cOp!;
+    if (all) {
+      xOp = math.stof(Fields[3]);
+      if (!xOp) sys.throw("Maximum bad value in " + base + ": " + l);
+      Maxs[i] = xOp!;
+      nOp = math.stof(Fields[4]);
+      if (!nOp) sys.throw("Minimum bad value in " + base + ": " + l);
+      Mins[i] = nOp!;
+    }
+  }
+  size = iV! - ix;
+  if (size != cts.historicQuotes)
+    sys.throw(
+      base + " has " + sys.toStr(size) + "quotes (" +
+        "Expected " + sys.toStr(cts.historicQuotes) + ")"
+    );
+
+  normalize(base, "open", Opens, ix);
+  normalize(base, "close", Closes, ix);
+  if (all) {
+    normalize(base, "maximum", Maxs, ix);
+    normalize(base, "minimum", Mins, ix);
+  }
+};
+
+/// Reads 'tquotes'.
+/// Columns of Opens, Closes, Maxs and Mins match the 'Cos' order.
+/// Its values are normalized (whith out -1).
+/// When data can not be read, throws exception.
+///   path: Directory path with files 'NICK.tb'.
+///   Cos : Companies nick to read.
+///   all : if true fields 'open', 'close', 'max' and 'min' are read. Otherwise
+///         only fields 'open' and 'close' are.
+/// \s, [s.], b -> <tquotes>
+read = \(sSb|F) path, Cos, all -> {
+  rows = cts.historicQuotes;
+  cols = arr.size(Cos);
+  size = rows * cols;
+  Dates = readDates(file.cat([path, Cos[0] + ".tb"]));
+  Opens = arr.new(-1.0, size);
+  Closes = arr.new(-1.0, size);
+  Maxs = arr.new(-1.0, size);
+  Mins = arr.new(-1.0, size);
+  ixV = [0];
+  for (c = Cos) {
+    readCo(all, file.cat([path, c + ".tb"]), Opens, Closes, Maxs, Mins, ixV!);
+    ixV! += rows;
+  }
+
+  Opens2 = arr.new(-1.0, size);
+  Closes2 = arr.new(-1.0, size);
+  Maxs2 = arr.new(-1.0, size);
+  Mins2 = arr.new(-1.0, size);
+  iV = [0];
+  for (c = 0:rows) for (r = 0:size-1:rows) {
+    Opens2[iV!] = Opens[c + r];
+    Closes2[iV!] = Closes[c + r];
+    iV! += 1;
+  }
+  if (all) {
+    iV = [0];
+    for (c = 0:rows) for (r = 0:size-1:rows) {
+      Maxs2[iV!] = Maxs[c + r];
+      Mins2[iV!] = Mins[c + r];
+      iV! += 1;
+    }
+  }
+
+  return new(Dates, Opens2, Closes2, Maxs2, Mins2);
+};
+
+/// Convert <tquotes> to <quotes>.
+/// \<tquotes>, [s.] -> <quotes>
+toQuotes = \tqts, Cos-> {
+  qts = << tqts;
+  rows = cts.historicQuotes;
+  size = (arr.size(qts) - cts.historicQuotes) / 4;
+  cols = size / rows;
+  if (arr.size(Cos) != cols)
+    sys.throw(str.fmt(
+      "Compnies size (%d) different of 'qts' columns (%d)",
+      arr.size(Cos), cols
+     ));
+
+  Dates = [];
+  for (i = 0:rows) Dates.push(math.itos(math.ftoi(qts[i])));
+  ixV = [rows];
+  Opens = [];
+  for (i = ixV!:ixV!+size-1:cols) Opens.push(qts[i:i+cols]);
+  ixV! += size;
+  Closes = [];
+  for (i = ixV!:ixV!+size-1:cols) Closes.push(qts[i:i+cols]);
+  ixV! += size;
+  Maxs = [];
+  for (i = ixV!:ixV!+size-1:cols) Maxs.push(qts[i:i+cols]);
+  ixV! += size;
+  Mins = [];
+  for (i = ixV!:ixV!+size-1:cols) Mins.push(qts[i:i+cols]);
+
+  return quotes.new(Cos, Dates, Opens, Closes, Maxs, Mins);
+};
+
+/// Convert data of Opens, Closes, Maxs or Mins in 'new' to data of <quotes>
+/// \[f.] -> [[f.].]
+toQs = \:arr Qs -> {
+  size = Qs.size();
+  cols = size / cts.historicQuotes;
+  R = [];
+  for (i = 0:size-1:cols) R.push(Qs[i:i+cols]);
+  return R;
+};
+

@@ -1,13 +1,11 @@
-// Copyright 22-Dic-2022 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base
+/// Data base management.
 
-import "KtWeb/global";
-import "libdm/jstb";
-import "data/image";
-import "data/cts";
-import "data/conf";
+import "cts";
+import "db/confTb";
+import "db/imagesTb";
 
 // EXTERN DATA BASES
 
@@ -23,26 +21,26 @@ target = cts.targetPath;
 /// \s -> ()
 savePictures = \group -> {
   for (f = file.dir(source)) {
-    pt = path.cat([source, f]);
+    pt = file.cat([source, f]);
     file.copy(pt, cts.originalAchivePath);
     file.del(pt);
   }
   for (f = file.dir(target)) {
-    pt = path.cat([target, f]);
-    file.copy(pt, cts.adjustedArchivePath + "/" + group);
+    pt = file.cat([target, f]);
+    file.copy(pt, file.cat([cts.adjustedArchivePath, group]));
     file.del(pt);
   }
 };
 
 /// Returns an array with duplicates of 'list' in archived ".jpg's"
 ///   list: List of .jpg images names.
-/// \[s, ...] -> [s, ...]
-duplicates = \list -> {
+/// \[s.] -> [s.]
+duplicates = \:arr List -> {
   R = [];
   for (i = 0:10) {
-    for (p = file.dir(path.cat([cts.adjustedArchivePath, math.itos(i)])))
-      if (arr.index(list, \im -> return im == p;) != -1)
-        arr.push(R, math.itos(i) + "/" + p);
+    for (p = file.dir(file.cat([cts.adjustedArchivePath, math.itos(i)])))
+      if (List.index(\im -> return im == p;) != -1)
+        R.push(math.itos(i) + "/" + p);
   }
   return R;
 };
@@ -50,38 +48,71 @@ duplicates = \list -> {
 /// Returns the group with less pictures (sights)
 /// \-> s
 lessPicturesGroup = \-> {
-  G = ["0"];
-  N = [2000000];
+  gV = ["0"];
+  nV = [2000000];
   for (i = 0:10) {
     n = arr.reduce(
       js.ra(file.read(
-        path.cat([cts.wallpapersDataPath, "picts" + math.itos(i) + ".db"])
+        file.cat([cts.wallpapersDataPath, "picts" + math.itos(i) + ".db"])
       )),
       0,
       \r, jsField -> return r + js.ri(js.ra(jsField)[0]);
     );
 
-    if (n < N!) {
-      N! = n;
-      G! = math.itos(i);
+    if (n < nV!) {
+      nV! = n;
+      gV! = math.itos(i);
     }
   }
-  return G!;
+  return gV!;
 };
 
-// PROGAM DATA BASE
+// PROGRAM DATA BASE
 
-/// Program data base path.
-/// [s]
-DbPath = [""];
+klen = 20;
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
 /// Path for images cut.
 /// \-> s
-cutPath = \-> return path.cat([DbPath!, "cuts"]);;
+cutPath = \-> return file.cat([cts.dataPath, "cuts"]);;
 
 /// Path for images adjusted.
 /// \-> s
-adjustmentPath = \-> return path.cat([DbPath!, "adjustments"]);;
+adjustmentPath = \-> return file.cat([cts.dataPath, "adjustments"]);;
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    file.mkdir(cutPath());
+    file.mkdir(adjustmentPath());
+    confTb.init();
+    imagesTb.init();
+    return;
+  }
+  sys.throw("Data base already is initialized");
+};
+
+/// Returns the state identifier.
+/// \ -> ()
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};
 
 /// Clears cut and adjustement paths.
 /// \-> ()
@@ -92,33 +123,3 @@ clearIntermediatePaths = \-> {
   file.mkdir(adjustmentPath());
 };
 
-/// Initializes data base.
-/// \-> ()
-init = \ -> {
-  dbPath = path.cat([global.cgiRoot, cts.appName]);
-
-  DbPath! = dbPath;
-  if (!file.exists(dbPath)) {
-    file.mkdir(dbPath);
-    file.mkdir(cutPath());
-    file.mkdir(adjustmentPath());
-  }
-};
-
-/// Configuration data
-/// \-> d[i, i]<jsdb>
-confTb = \-> return jstb.new(
-  path.cat([DbPath!, "conf.tb"]),
-  \-> return conf.toJs(conf.mk());,
-  conf.toJs,
-  conf.fromJs
-);;
-
-/// Returns the table of images in "images.tb"
-/// \-> [s]<jsdb>
-imagesTb = \-> return jstb.newArr(
-  path.cat([DbPath!, "images.tb"]),
-  \-> return [];,
-  image.toJs,
-  image.fromJs
-);;

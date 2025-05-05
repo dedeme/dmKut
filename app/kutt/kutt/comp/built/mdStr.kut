@@ -1,0 +1,42 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "cmp": built.mkRs("[ss|i]", md, sym);
+    "ends": built.mkRs("[ss|b]", md, sym);
+    "fmt":
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +
+        "' only can be used in function call.");
+    "fromIso": built.mkRs("[s|s]", md, sym);
+    "fromRunes": built.mkRs("[[s]|s]", md, sym);
+    "fromUtf16": built.mkRs("[[i]|s]", md, sym);
+    "index": built.mkRs("[ss|i]", md, sym);
+    "indexFrom": built.mkRs("[ssi|i]", md, sym);
+    "lastIndex": built.mkRs("[ss|i]", md, sym);
+    "left": built.mkRs("[si|s]", md, sym);
+    "len": built.mkRs("[s|i]", md, sym);
+    "ltrim": built.mkRs("[s|s]", md, sym);
+    "replace": built.mkRs("[sss|s]", md, sym);
+    "right": built.mkRs("[si|s]", md, sym);
+    "rtrim": built.mkRs("[s|s]", md, sym);
+    "split":  built.mkRs("[ss|[s]]", md, sym);
+    "splitTrim":  built.mkRs("[ss|[s]]", md, sym);
+    "starts": built.mkRs("[ss|b]", md, sym);
+    "sub": built.mkRs("[sii|s]", md, sym);
+    "toLower": built.mkRs("[s|s]", md, sym);
+    "toRunes": built.mkRs("[s|[s]]", md, sym);
+    "toUpper": built.mkRs("[s|s]", md, sym);
+    "toUtf16": built.mkRs("[s|[i]]", md, sym);
+    "trim": built.mkRs("[s|s]", md, sym);
+
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};

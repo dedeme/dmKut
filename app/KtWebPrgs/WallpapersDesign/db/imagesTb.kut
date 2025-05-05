@@ -1,0 +1,21 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Images table.
+
+import "cts";
+import "data/image";
+
+fpath = file.cat([cts.dataPath, "images.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write([]);;
+
+/// Reads table.
+/// \ -> [<image>.]
+read = \ -> return arr.map(js.r(file.read(fpath)), image.fromJs);;
+
+/// Writes table.
+/// \[<image>.] -> ()
+write = \tb -> file.write(fpath, js.w(tb));;

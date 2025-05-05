@@ -1,0 +1,64 @@
+// Copyright 26-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions.
+
+import "data/wrERs";
+import "data/type";
+import "data/wrCtx";
+import "built/mdArr";
+import "built/mdB64";
+import "built/mdBytes";
+import "built/mdIter";
+import "built/mdMath";
+import "built/mdStr";
+import "built/mdSys";
+import "fns";
+
+/// Returns a function.
+///   ctx: Writer context.
+///   nl : Statement line.
+///   md : Function module.
+///   sym: Function identifier.
+/// \<wrCtx>, i , s, s -> <wrERs>
+get = \ctx, ln, md, sym -> {
+  fnOp = switch (md) {
+    "arr": [mdArr.process];
+    "b64": [mdB64.process];
+    "bytes": [mdBytes.process];
+    "iter": [mdIter.process];
+    "math": [mdMath.process];
+    "str": [mdStr.process];
+    "sys": [mdSys.process];
+    default: [];
+  };
+  if (!fnOp)
+    return wrERs.fail(ctx, ln, "Module '" + md  + "' not found.");
+  return fnOp!(ctx, ln, md, sym);
+};
+
+/// Make normal response.
+/// \s, s, s -> <wrERs>
+mkRs = \tp, md, sym ->
+  return wrERs.mk(type.read(tp)!, "", "((Val)(void *)__" + md + "_" + sym + ")");;
+
+/// Make response with execption.
+/// \s, <wrCtx>, i , s, s -> <wrERs>
+mkRsEx = \tp, :wrCtx ctx, ln, md, sym -> {
+  :type t = type.read(tp)!;
+  id = fns.nextId(ctx.mdId);
+  npars = t.fnpars();
+  Pars = []; //[s]
+  for (i = 0:npars) Pars.push("Val v" + math.itos(i));
+
+  Vals = [fns.mkPos(ctx.mdId, ln)];
+  for (i = 0:npars) Vals.push("v" + math.itos(i));
+
+  return wrERs.mk(t,
+    (!t.frtype() ? "void " : "Val ") + id +
+    "(" + Pars.join(",") + "){\n" +
+    "__" + md + "_" + sym + "(" + Vals.join(",") + ");\n" +
+    "}",
+    "((Val)(void *)" + id + ")"
+    );
+};

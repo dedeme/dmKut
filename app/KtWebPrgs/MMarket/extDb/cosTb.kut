@@ -5,10 +5,13 @@
 
 import "cts";
 
-/// Returns ibex companies sorted by ascendent alphabetic order.
+/// Returns selected companies sorted by ascendent alphabetic order.
 /// \ -> [s.]
 read = \ -> {
-  :arr Cos = js.r(file.read(cts.ibexTb))[0];
-  Cos.sort(\c1, c2 -> return c1 < c2;);
+  :arr Cos = arr.map(
+    arr.filter(js.r(file.read(cts.cosPath))[1], \E -> return E[1];),
+    \E -> return E[0];
+  );
+  Cos.sort(\d1, d2 -> return d1 < d2;);
   return Cos;
 };

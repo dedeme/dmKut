@@ -11,7 +11,7 @@ import "data/acc/ann";
 import "data/acc/settlement";
 import "data/acc/ldg";
 import "data/qsvs";
-import "data/qsv";
+import "data/qsv/qsv";
 import "data/activity";
 import "db/daily/dailyChartsTb";
 import "db/daily/cosSelTb";
@@ -39,6 +39,15 @@ process = \Rq -> {
               ? d2.nick != cts.meNick
               : false
       ;);
+
+      for (:dailyChart ch = CosData) if (arr.size(ch.Hours) == 1) {
+        arr.push(ch.Hours, ch.Hours[0]);
+        arr.push(ch.Quotes, ch.Quotes[0]);
+      }
+      for (:dailyChart ch = IxsData) if (arr.size(ch.Hours) == 1) {
+        arr.push(ch.Hours, ch.Hours[0]);
+        arr.push(ch.Quotes, ch.Quotes[0]);
+      }
 
       DicRebuys = {}; // {s.} :: {nick: date}
       Ys = diariesDb.investorYears();

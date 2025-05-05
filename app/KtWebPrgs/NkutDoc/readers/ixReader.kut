@@ -1,0 +1,64 @@
+// Copyright 30-Apr-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Package index reader.
+
+import "db";
+import "data/dpath";
+import "data/indexTree";
+import "db/pathsTb";
+
+// Read module documentation.
+// \s -> s
+docRead = \fpath -> {
+  if (!file.exists(fpath)) return "";
+
+  rV = [""];
+  f = file.ropen(fpath);
+  while () {
+    lOp = file.readLine(f);
+    if (!lOp) break;
+
+    l = str.trim(lOp!);
+    if (str.starts(l, "import ")) break;
+    if (str.starts(l, "///")) {
+      rV! = l[4:];
+      break;
+    }
+  }
+  file.close(f);
+  return rV!;
+};
+
+// Adds trees to node
+// \[<indexTree>.], s -> ()
+completeTrees = \:arr Trees, dir -> {
+  for (fname = file.dir(dir)) {
+    fpath = file.cat([dir, fname]);
+    if (file.isDirectory(fpath)) {
+      :indexTree newTree = indexTree.new(fname, [], []);
+      Trees.push(newTree);
+      completeTrees(newTree.Trees, fpath);
+    } else {
+      if (!str.ends(fname, ".nkut")) continue;
+      Trees.push(indexTree.new(fname[:-5], [docRead(fpath)], []));
+    }
+  }
+};
+
+/// Reads package index tree.
+/// \s -> ([<indexTree>]|[])
+read = \pack -> {
+  ppathOp = arr.find(
+    pathsTb.read(), \:dpath p -> return p.id == pack;
+  );
+  if (!ppathOp) return [];
+  :dpath ppath = ppathOp!;
+
+  root = ppath.spath;
+  if (!file.exists(root)) return [];
+
+  :indexTree r = indexTree.new("", [], []);
+  completeTrees(r.Trees, root);
+  return [r];
+};

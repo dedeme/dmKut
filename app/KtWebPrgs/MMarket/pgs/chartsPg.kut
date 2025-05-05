@@ -6,10 +6,11 @@
 import "libmkt/stRs";
 import "libmkt/models";
 import "libmkt/order";
-import "libmkt/quotes";
+import "libmkt/tquotes";
 import "libmkt/strategy";
 import "libmkt/cts" : mcts;
 import "KtWeb/rp";
+import "extDb/cosTb";
 import "extDb/quotesDb";
 import "data/modelEval";
 import "data/evE";
@@ -31,7 +32,7 @@ process = \Rq -> {
         eV! = Es[0];
         for (i, :evE e = Es) {
           :upRs ecrr = e.crr;
-          if (ecrr.sales < cts.minSales) continue; // Filter sales-
+          if (ecrr.sales < cts.minSales) continue; // Filter sales.
           :evE r = eV!;
           :upRs rcrr = r.crr;
           if (ecrr.pon > rcrr.pon) {
@@ -50,11 +51,12 @@ process = \Rq -> {
       :upRs crr = ev.crr;
       mdEv = modelEval.new(crr.pon, crr.sales, last.pon, last.sales);
       :model md = models.get(mdId)!;
-      :quotes qts = quotesDb.read();
-      :stRs rs = strategy.open(md, qts, Params);
+      Cos = cosTb.read();
+      :tquotes qts = quotesDb.read(Cos);
+      :stRs rs = strategy.open(md, Cos, qts, Params);
 
       // only for calculating ponderation.
-      invRs = upRs.new(
+      :upRs invRs = upRs.new(
         0.0, // fake value
         arr.peek(rs.Hreals) / mcts.initialCapital,
         arr.peek(rs.Haccs) / mcts.initialCapital,
@@ -62,16 +64,17 @@ process = \Rq -> {
             math.itof(arr.size(rs.Profits))
       );
 
-      BuyCos, QuarantineCos : CoStates(qts.Dates, rs.Orders);
+      Dates = << qts.dates();
+      BuyCos, QuarantineCos : CoStates(Dates, rs.Orders);
 
       return rp.mk({
         rs,
         mdEv,
         invIxFinal: ixV!,
         pond: invRs.pon,
-        Closes: qts.Closes,
-        Dates: qts.Dates,
-        Cos: qts.Cos,
+        Closes: tquotes.toQs(<< qts.closes()),
+        Dates,
+        Cos,
         BuyCos,
         QuarantineCos
       });
@@ -86,8 +89,8 @@ CoStates = \:arr Dates, :arr Orders -> {
   oSize = Orders.size();
 
   Pf = {}; // {f.} :: {nick -> price}
-  BuyCos = arr.new(dSize, 0);
-  QuarantineCos = arr.new(dSize, 0);
+  BuyCos = arr.new(0, dSize);
+  QuarantineCos = arr.new(0, dSize);
   if (!!Orders) {
     iOV = [0];
     :order o = Orders[iOV!];

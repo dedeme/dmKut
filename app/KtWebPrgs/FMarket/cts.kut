@@ -15,23 +15,26 @@ version = "202404";
 
 /// Data base path
 /// s
-dbPath = path.cat([global.cgiRoot, appName]);
+dbPath = file.cat([global.cgiRoot, appName]);
 
 /// cmarket data directory.
+/// s
 marketDataPath = "/dm/KtWeb/dmcgi/Market";
 
 /// Log path
 /// s
-logPath = path.cat([dbPath, "log.tb"]);
+logPath = file.cat([dbPath, "log.tb"]);
 
 /// Command to make calculations.
 /// s
 calcCmd = "fmarket";
 
 /// Main model.
-mainModel = "APRX";
+/// s
+mainModel = "SSBB0";
 
 /// Number of fleas per model
+/// i
 fleasPerModel = 1000;
 
 /// Number of steps for evaluation (equals to CMMarket)
@@ -39,17 +42,22 @@ fleasPerModel = 1000;
 evalSteps = 20.0;
 
 /// Assets ratio for evaluation.
+/// f
 assetsRatio = 0.6;
 
 /// Maximum assets to calculate evaluation ratio. (IC € generate IC*MPAR €)
+/// f
 maxAssets = cts.initialCapital * maxProfitsAvgRatio;
 
 /// Profits ratio for evaluation.
+/// f
 profitsAvgRatio = 1.0 - assetsRatio;
 
 /// Maximum ratio for profits evaluation. (1€ generates 3€)
+/// f
 maxProfitsAvgRatio = 3.0;
 
 /// Number of fleas in fleas ranking
+/// i
 fleasInRanking = 40;
 

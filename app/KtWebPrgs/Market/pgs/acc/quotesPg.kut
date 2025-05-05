@@ -1,0 +1,143 @@
+// Copyright 30-Jul-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Page for management of historic qutes.
+
+import "KtWeb/rp";
+import "libdm/log";
+import "libmkt/quote";
+import "data/co/cos";
+import "db";
+import "db/cosTb";
+import "db/tableChecksTb";
+import "db/quotesDb";
+import "data/qsvs";
+import "data/tableCheck";
+import "qspr";
+
+//: \s, s -> ()
+updateNick = \dbKey, nick -> {
+  :arr ChecksTb = tableChecksTb.read();
+  :arr Checks = qspr.checkTable(nick);
+  for (:tableCheck ch = Checks) {
+    chTbOp = ChecksTb.find(\t -> return ch.eqSource(t););
+    if (!!chTbOp) {
+      :tableCheck chTb = chTbOp!;
+      ch.deleted = chTb.deleted;
+    }
+  }
+  ChecksTb.filterIn(\:tableCheck ch -> return ch.nick != nick;);
+  tableChecksTb.write(ChecksTb + Checks);
+};
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mkJs({
+        dbKey: js.w(db.readKey()),
+        Cos: js.w(cosTb.read()[cos.Cos]),
+        Checks: tableChecksTb.readJs()
+      });
+    }
+    "readNick": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+      nick = Rq.nick;
+
+      dbKeyOp = [dbKey];
+      try {
+        :arr ChecksTb = tableChecksTb.read();
+        :arr Checks = qspr.checkTable(nick);
+        for (:tableCheck ch = Checks) {
+          chTbOp = ChecksTb.find(\t -> return ch.eqSource(t););
+          if (!!chTbOp) {
+            :tableCheck chTb = chTbOp!;
+            ch.deleted = chTb.deleted;
+          }
+        }
+        ChecksTb.filterIn(\:tableCheck ch -> return ch.nick != nick;);
+
+        dbKeyOp! = db.checkKey(dbKey);
+        if (dbKeyOp! == "") return rp.mkOutdated();
+        tableChecksTb.write(ChecksTb + Checks);
+      } catch (e) {
+        log.error(e);
+      }
+
+      return rp.mk({ dbKey: dbKeyOp! });
+    }
+    "delNick": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+      :tableCheck tc = Rq.tc;
+
+      :arr Checks = tableChecksTb.read();
+      for (:tableCheck tbTc = Checks)
+        if (
+          tbTc.nick == tc.nick &
+          tbTc.date == tc.date &
+          tbTc.field == tc.field
+        )
+          tbTc.deleted = true;
+      tableChecksTb.write(Checks);
+
+      return rp.mkEmpty();
+    }
+    "undelNick": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+      :tableCheck tc = Rq.tc;
+      :arr Checks = tableChecksTb.read();
+      for (:tableCheck tbTc = Checks)
+        if (tc.eqQuote(tbTc)) tbTc.deleted = false;
+      tableChecksTb.write(Checks);
+
+      return rp.mkEmpty();
+    }
+    "updateNick": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+      :tableCheck tc = Rq.tc;
+
+      :arr Qs, ok = quotesDb.readQs(tc.nick);
+      if (!ok) {
+        log.error("Quotes of " + tc.nick + " not found");
+        return rp.mk({ok: false});
+      }
+      qOp = Qs.find(\:quote q -> return q.date == tc.date;);
+      if (!qOp) {
+        log.error("Quotes of " + tc.nick + " of " + tc.date + " not found");
+        return rp.mk({ok: false});
+      }
+      :quote q = qOp!;
+
+      switch (tc.field) {
+        tableCheck.o: q.open = tc.svValue;
+        tableCheck.c: q.close = tc.svValue;
+        tableCheck.x: q.max = tc.svValue;
+        tableCheck.n: q.min = tc.svValue;
+        tableCheck.v: q.vol = math.ftoi(tc.svValue);
+        default: {
+          log.error("Identifier of field '" + tc.field + "' not valid");
+          return rp.mk({ok: false});
+        }
+      }
+
+      quotesDb.write(tc.nick, arr.join(Qs.map(quote.toStr), "\n"));
+
+      :arr Checks = tableChecksTb.read();
+      for (:tableCheck tbTc = Checks)
+        if (
+          tbTc.nick == tc.nick &
+          tbTc.date == tc.date &
+          tbTc.field == tc.field
+        )
+          tbTc.deleted = true;
+      tableChecksTb.write(Checks);
+
+      return rp.mk({ok: true});
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

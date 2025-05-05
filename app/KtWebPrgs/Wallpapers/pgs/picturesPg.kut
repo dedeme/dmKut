@@ -1,0 +1,56 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures page
+
+import "KtWeb/rp";
+import "cts";
+import "data/pict";
+import "db";
+import "db/pictsTb";
+import "db/selsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      GroupPict = getPicture();
+      return rp.mk({
+        dbKey: db.readKey(),
+        group: GroupPict.group,
+        picture: GroupPict.picture
+      });
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+
+/// \ -> {group:s, picture:<pict>}
+getPicture = \ -> {
+  group = selsTb.getGroup();
+  pictureId = selsTb.getPict();
+
+  :arr Pictures = pictsTb.read(group);
+  pictureOp = pictureId != ""
+    ? arr.find(Pictures, \:pict p -> return pictureId == p.id;)
+    : []
+  ;
+
+  now = time.now();
+  pictDate = selsTb.getPictDate();
+  changeLapse = selsTb.getPictTime() * 60_000;
+  timeEnd = pictDate + changeLapse;
+  if (!pictureOp | now < pictDate | now > timeEnd) {
+    GroupPict = pictsTb.next();
+    group = GroupPict.group;
+    :pict picture = GroupPict.picture;
+    selsTb.setGroup(group);
+    selsTb.setPict(picture.id);
+    selsTb.setPictDate(now);
+    return {group, picture};
+  }
+
+  return {group, picture: pictureOp!};
+};
+

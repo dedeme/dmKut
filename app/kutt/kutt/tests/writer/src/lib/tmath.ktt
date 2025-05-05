@@ -1,0 +1,96 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+{
+  sys.println("tmath ...");
+
+  sys.test(math.abs(3.2), 3.2);
+  sys.test(math.abs(-3.2), 3.2);
+
+  sys.test(math.acos(0.5), 1.0471975511966);
+  sys.test(math.acosh(1.5), 0.962423650119207);
+  sys.test(math.asin(0.5), 0.523598775598299);
+  sys.test(math.asinh(1.5), 1.19476321728711);
+  sys.test(math.atan(0.5), 0.463647609000806);
+  sys.test(math.atanh(0.5), 0.549306144334055);
+
+  sys.test(math.ceil(1.2), 2.0);
+  sys.test(math.ceil(-1.2), -1.0);
+  sys.test(math.cos(1.5), 0.070737201667703);
+  sys.test(math.cosh(1.5), 2.35240961524325);
+
+  sys.test(math.eq(1.52, 1.53, 0.1), true);
+  sys.test(!math.eq(1.52, 1.53, 0.001), true);
+
+  sys.test(math.exp(1.5), 4.48168907033806);
+  sys.test(math.exp2(1.5), 2.82842712474619);
+
+  sys.test(math.floor(1.2), 1.0);
+  sys.test(math.floor(-1.2), -2.0);
+
+  sys.test(math.fromEn("12,520.11")!, 12520.11);
+  sys.test(math.fromHex("f4Abc")!, 1002172);
+  sys.test(math.fromIso("-12.520,11")!, -12520.11);
+  sys.test(math.stof("-12520.11")!, -12520.11);
+  sys.test(math.stoi("-12")!, -12);
+  sys.test(!math.fromEn("12,5f20.11"), true);
+  sys.test(!math.fromHex("12,5f20.11"), true);
+  sys.test(!math.fromIso("12,5f20.11"), true);
+  sys.test(!math.stof("12,5f20.11"), true);
+  sys.test(!math.stoi("12,5f20.11"), true);
+
+  sys.test(math.isDigits("1263422"), true);
+  sys.test(!math.isDigits("-1263422"), true);
+  sys.test(!math.isDigits("1263422."), true);
+
+  sys.test(math.itof(12), 12.0);
+
+  sys.test(math.itoh(16), "10");
+  sys.test(math.itoh(1002172), "f4abc");
+
+  sys.test(math.itos(12), "12");
+
+  sys.test(math.log(1.5), 0.405465108108164);
+  sys.test(math.log10(1.5), 0.176091259055681);
+  sys.test(math.log2(1.5), 0.584962500721);
+
+  sys.test(math.max(1.5, -1.5), 1.5);
+
+  //trace math.maxInt();
+  //trace math.maxFloat();
+
+  sys.test(math.min(1.5, -1.5), -1.5);
+
+  //trace math.minInt();
+
+  sys.test(math.pow(2.0, 1.5), 2.82842712474619);
+  sys.test(math.pow10(-3), 0.001);
+
+  //trace math.rnd();
+  //trace math.rndi(3);
+  //trace math.rndi(-6);
+
+  sys.test(math.round(1.49999, 0), 1.0);
+  sys.test(math.round(1.5, 0), 2.0);
+  sys.test(math.round(1.6149999, 2), 1.61);
+  sys.test(math.round(1.615, 2), 1.62);
+
+  sys.test(math.sin(1.5), 0.997494986604055);
+  sys.test(math.sinh(1.5), 2.12927945509482);
+
+  sys.test(math.sqrt(9.0), 3.0);
+
+  sys.test(math.tan(1.5), 14.1014199471717);
+  sys.test(math.tanh(1.5), 0.905148253644866);
+
+  sys.test(math.ftoi(-12.99), -12);
+  sys.test(math.ftoi(12.99), 12);
+
+  sys.test(math.ftos(12.23), "12.23");
+
+  sys.test(math.trunc(1.2), 1.0);
+  sys.test(math.trunc(-1.2), -1.0);
+
+  sys.println("  finished.");
+}
+

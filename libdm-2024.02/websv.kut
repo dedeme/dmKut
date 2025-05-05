@@ -131,7 +131,7 @@ start = \port, tm, root, handler, ferror -> {
   if (!!Sv) return;
 
   arr.push(Sv, tcp.server(port, 128));
-  arr.push(Root, path.cat([root, "www"]));
+  arr.push(Root, file.cat([root, "www"]));
   file.cd(root);
 
   while () {
@@ -145,11 +145,11 @@ start = \port, tm, root, handler, ferror -> {
     conn = connErr[0];
 
     thread.run(\ -> {
-      bsErr = tcp.read(conn, 1_000_000, tm);
-      if (bsErr[1] != "") {
-        ferror(bsErr[1]);
-      } else {
-        try {
+      try {
+        bsErr = tcp.read(conn, 1_000_000, tm);
+        if (bsErr[1] != "") {
+          ferror(bsErr[1]);
+        } else {
           fRp = handler(bsErr[0]);
           while () {
             bsRp = fRp();
@@ -160,11 +160,11 @@ start = \port, tm, root, handler, ferror -> {
               break;
             }
           }
-        } catch (e) {
-          ferror(e);
         }
+        tcp.closeConnection(conn);
+      } catch (e) {
+        ferror(e);
       }
-      tcp.closeConnection(conn);
     });
   }
 };
@@ -200,24 +200,24 @@ getRq = \rq -> {
   ix3 = str.index(r, "?");
   r2 = ix3 != -1 ? r[:ix3] : r;
 
-  ext = path.extension(r2);
+  ext = file.extension(r2);
   if (ext == "") {
     return [mkRpBytes(
       bytes.fromStr(
         "HTTP/1.1 308 Permanent Redirect\n" +
         "Location: " + (ix3 == -1
-          ? path.cat([r2, "index.html"])
-          : path.cat([r2, "index.html"]) + r[ix3:]) + "\n\n"
+          ? file.cat([r2, "index.html"])
+          : file.cat([r2, "index.html"]) + r[ix3:]) + "\n\n"
       )
     )];
   }
 
-  fpath = unescape(path.clean(path.cat([Root!, r2])));
+  fpath = unescape(file.clean(file.cat([Root!, r2])));
 
   if (!file.exists(fpath))
     return [mkRpBytes(bytes.fromStr(notFoundRp()))];
 
-  ext2 = path.extension(fpath);
+  ext2 = file.extension(fpath);
   type = dic.hasKey(Mimetypes, ext2) ? Mimetypes[ext2] : "text/plain";
 
   len = file.size(fpath);
@@ -294,7 +294,7 @@ dmCgiRq = \rq -> {
   cmd = rqUnix2[:ix3];
   par = rqUnix2[ix3 + 1:];
 
-  rpErr = sys.cmd(path.cat(["bin", cmd]), [par]);
+  rpErr = sys.cmd(file.cat(["bin", cmd]), [par]);
 
   if (rpErr[1] != "") return [
     (rpErr[0] != "") ? rpErr[0] : rpErr[1]

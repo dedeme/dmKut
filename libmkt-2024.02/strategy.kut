@@ -3,67 +3,94 @@
 
 /// Trading strategy
 
+import "cts";
 import "order";
 import "model";
-import "quotes";
+import "tquotes";
 import "stRs";
-import "libmktHelper";
+import "sttg/open" : op;
+import "sttg/openSimple" : os;
+import "sttg/openSimple2" : os2;
+import "sttg/stGroup" : gr;
+import "sttg/stGroup2" : gr2;
 
 /// Returns the result of a simulation.
 ///   md      : Model.
-///   qs      : Quotes to perform the simulation.
+///   Cos     : Companies of 'qts'.
+///   qts     : Quotes to perform the simulation.
 ///   Params  : Model parameters.
-/// \<model>, <quotes>, [f.] -> <stRs>
-open = \:model md, :quotes qs, Params -> {
-  Rq = {
-    "command": "strategy",
-    "type": "open",
-    "modelId": md.id,
-    "Dates": qs.Dates,
-    "Cos": qs.Cos,
-    "Opens": qs.Opens,
-    "Closes": qs.Closes,
-    Params
-  };
+/// \<model>, [s.], <tquotes>, [f.] -> <stRs>
+open = \:model md, :arr Cos, :tquotes qts, Params -> {
+  Dates = << qts.dates();
 
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  R.Orders = arr.map(R.Orders, order.fromJs);
+  R = << op.run(md.id, qts, Params);
+
+  ncos = Cos.size();
+  ndates = cts.historicQuotes;
+  startV = [0]; endV = [ncos * ndates];
+  Refs = [];
+  for (row = 0:endV!-1:ncos) Refs.push(R[row:row+ncos]);
+  startV! = endV!; endV! += ndates;
+  Hreals = R[startV!:endV!];
+  startV! = endV!; endV! += ndates;
+  Haccs = R[startV!:endV!];
+  startV! = endV!; endV! += ndates;
+  Hrefs = R[startV!:endV!];
+  startV! = endV!; endV! += ndates;
+  Hwithdrawals = R[startV!:endV!];
+  startV! = endV!; endV! += 1;
+  cash = R[startV!];
+  startV! = endV!; endV! += ncos;
+  Profits = R[startV!:endV!];
+  startV! = endV!; endV! += 1;
+  nOrders = R[startV!];
+  startV! = endV!; endV! += math.ftoi(nOrders) * 5;
+  Orders = [];
+  for (row = startV!:endV!-1:5)
+    Orders.push(order.new(
+      Dates[math.ftoi(R[row])],
+      Cos[math.ftoi(R[row + 1])],
+      math.ftoi(R[row + 2]),
+      math.ftoi(R[row + 3]),
+      R[row + 4]
+    ));
+  startV! = endV!; endV! += 1;
+  nBuys = R[startV!];
+  startV! = endV!; endV! += math.ftoi(nBuys) * 2;
+  Buys = Cos.map(\c -> return [];);
+  for (row = startV!:endV!-1:2)
+    arr.push(Buys[math.ftoi(R[row])], Dates[math.ftoi(R[row+1])]);
+  startV! = endV!; endV! += 1;
+  nSales = R[startV!];
+  startV! = endV!; endV! += math.ftoi(nSales) * 2;
+  Sales = Cos.map(\c -> return [];);
+  for (row = startV!:endV!-1:2)
+    arr.push(Sales[math.ftoi(R[row])], Dates[math.ftoi(R[row+1])]);
+
   return stRs.new(
-    R.Refs, R.Orders,
-    R.Hreals, R.Haccs, R.Hrefs, R.Hwithdrawals,
-    R.cash, R.Buys, R.Sales, R.Profits
+    Refs, Orders,
+    Hreals, Haccs, Hrefs, Hwithdrawals,
+    cash, Buys, Sales, Profits
   );
 };
 
 /// Returns the result of a simulation.
-/// Returns the the following dic 'JSONized'.
+/// Returns the the following dic:
 ///   - sales (n)   : Number of sales.
 ///   - assets (n)  : cash + withdrawals + portfolio evaluated with closes.
 ///   - accs (n)    : cash + withdrawals + portfolio evaluated with prices.
 ///   - rfAssets (n): cash + withdrawals + portfolio evaluated with references.
 ///   md      : Model.
-///   qs      : Quotes to perform the simulation.
+///   qts     : Quotes returned by 'tquotes.new'.
 ///   Params  : Model parameters.
-/// \<model>, <quotes>, [f.] -> {sales: f, assets: f, accs: f, rfAssets: f}
-openSimple = \:model md, :quotes qs, Params -> {
-  Rq = {
-    "command": "strategy",
-    "type": "openSimple",
-    "modelId": md.id,
-    "Dates": qs.Dates,
-    "Cos": qs.Cos,
-    "Opens": qs.Opens,
-    "Closes": qs.Closes,
-    Params
-  };
-
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return R;
+/// \<model>, <tquotes>, [f.] -> {sales: f, assets: f, accs: f, rfAssets: f}
+openSimple = \:model md, qts, Params -> {
+  sales, assets, accs, rfAssets = << os.run(md.id, qts, Params);
+  return {sales, assets, accs, rfAssets};
 };
 
-/// Returns the the following dic 'JSONized'.
+/// Returns the result of a simulation.
+/// Returns the the following dic:
 ///   - sales (n)    : Number of sales.
 ///   - assets (n)   : cash + withdrawals + portfolio evaluated with closes.
 ///   - accs (n)     : cash + withdrawals + portfolio evaluated with prices.
@@ -71,29 +98,18 @@ openSimple = \:model md, :quotes qs, Params -> {
 ///   - profits (n)  : Profits ratio average. Portfolio evaluated with closes.
 ///   - rfProfits (n): Profits ratio average. Portfolio evaluated with references.
 ///   md      : Model.
-///   qs      : Quotes to perform the simulation.
+///   qts     : Quotes returned by 'tquotes.new'.
 ///   Params  : Model parameters.
-/// \<model>, <quotes>, [f.] ->
-///   {sales: f, assets: f, accs: f, rfAssets: f, profits: f, rfProfits: f}
-openSimple2 = \:model md, :quotes qs, Params -> {
-  Rq = {
-    "command": "strategy",
-    "type": "openSimple2",
-    "modelId": md.id,
-    "Dates": qs.Dates,
-    "Cos": qs.Cos,
-    "Opens": qs.Opens,
-    "Closes": qs.Closes,
-    Params
-  };
-
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return R;
+/// \<model>, <tquotes>, [f.] ->
+///-  {sales: f, assets: f, accs: f, rfAssets: f, profits: f, rfProfits: f}
+openSimple2 = \:model md, qts, Params -> {
+  sales, assets, accs, rfAssets, profits, rfProfits =
+    << os2.run(md.id, qts, Params);
+  return {sales, assets, accs, rfAssets, profits, rfProfits};
 };
 
-/// Returns the result of a simulation.
-/// Returns the the following dic 'JSONized'.
+/// Returns the result of a simulation with several parameters.
+/// Returns the the following dic:
 ///   - Sales ([f.])   : Number of sales.
 ///                      One entry for each Parameter in the same order.
 ///   - Assets ([f.])  : cash + withdrawals + portfolio evaluated with closes.
@@ -102,27 +118,27 @@ openSimple2 = \:model md, :quotes qs, Params -> {
 ///                      One entry for each Parameter in the same order.
 ///   - RfAssets ([f.]): cash + withdrawals + portfolio evaluated with references.
 ///                      One entry for each Parameter in the same order.
-///   md      : Model.
-///   qs      : Quotes to perform the simulation.
+///   mdId    : Model identifier.
+///   qts     : Quotes returned by 'tquotes.new'.
 ///   Params  : Array of model parameters.
-/// \<model>, <quotes>, [[f.].] ->
-///   {Sales: [f.], Assets: [f.], Accs: [f.], RfAssets: [f.]}
-stGroup = \:model md, :quotes qs, Params -> {
-  Rq = {
-    "command": "group",
-    "type": "open",
-    "modelId": md.id,
-    "Opens": qs.Opens,
-    "Closes": qs.Closes,
-    Params
+/// \<model>, <tquotes>, [[f.].] ->
+///-  {Sales: [f.], Assets: [f.], Accs: [f.], RfAssets: [f.]}
+stGroup = \:model md, qts, :arr Params -> {
+  npars = arr.size(md.ParamTypes);
+  ncases = Params.size();
+  R = << gr.run(md.id, npars, qts, Params);
+  ncases2 = ncases + ncases;
+  ncases3 = ncases2 + ncases;
+  ncases4 = ncases3 + ncases;
+  return {
+    Sales: R[0 : ncases],
+    Assets: R[ncases : ncases2],
+    Accs: R[ncases2 : ncases3],
+    RfAssets: R[ncases3 : ncases4]
   };
-
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return R;
 };
 
-/// Returns the result of a simulation.
+/// Returns the result of a simulation with several parameters.
 /// Returns the the following dic 'JSONized'.
 ///   - Sales ([f.])    : Number of sales.
 ///                       One entry for each Parameter in the same order.
@@ -137,23 +153,27 @@ stGroup = \:model md, :quotes qs, Params -> {
 ///   - RfProfits ([f.]): Profits ratio average. Portfolio evaluated with references.
 ///                       One entry for each Parameter in the same order.
 ///   md      : Model.
-///   qs      : Quotes to perform the simulation.
+///   qts     : Quotes to perform the simulation.
 ///   Params  : Array of model parameters.
-/// \<model>, <quotes>, [[f.].] ->
-///   { Sales: [f.], Assets: [f.], Accs: [f.], RfAssets: [f.],
-///     Profits: [f.], RfProfits: [f.]}
-stGroup2 = \:model md, :quotes qs, Params -> {
-  Rq = {
-    "command": "group",
-    "type": "open2",
-    "modelId": md.id,
-    "Opens": qs.Opens,
-    "Closes": qs.Closes,
-    Params
+/// \<model>, <tquotes>, [[f.].] ->
+///-  { Sales: [f.], Assets: [f.], Accs: [f.], RfAssets: [f.],
+///-    Profits: [f.], RfProfits: [f.]}
+stGroup2 = \:model md, qts, :arr Params -> {
+  npars = arr.size(md.ParamTypes);
+  ncases = Params.size();
+  R = << gr2.run(md.id, npars, qts, Params);
+  ncases2 = ncases + ncases;
+  ncases3 = ncases2 + ncases;
+  ncases4 = ncases3 + ncases;
+  ncases5 = ncases4 + ncases;
+  ncases6 = ncases5 + ncases;
+  return {
+    Sales: R[0 : ncases],
+    Assets: R[ncases : ncases2],
+    Accs: R[ncases2 : ncases3],
+    RfAssets: R[ncases3 : ncases4],
+    Profits: R[ncases4 : ncases5],
+    RfProfits: R[ncases5 : ncases6]
   };
-
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return R;
 };
 

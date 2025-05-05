@@ -11,10 +11,10 @@ import "cts";
 ///   type  : order.buy or order.sell.
 ///   stocks: Stocks number.
 ///   price : Price of each stock.
-///   s, s, i, i, f -> <order>
+/// \s, s, i, i, f -> <order>
 new : date, nick, type, stocks, price;
 
-/// \[JS.] -> <order>
+/// \[*.] -> <order>
 fromJs = \A -> return new(
     A[0],
     A[1],

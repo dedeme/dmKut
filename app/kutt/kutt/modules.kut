@@ -1,0 +1,51 @@
+// Copyright 02-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Modules to compile.
+/// There are modules with or without code. Modules with code must be
+/// compiled.
+
+import "data/module";
+import "data/mdRc";
+import "data/imp";
+import "readers/moduleRd";
+import "db";
+
+//: [<module>.]
+Mds = [];
+
+/// Returns the module with identifier 'mdId'.
+/// If a no-existent module is reclamed, an exception is raised.
+/// \s -> <module>
+get = \mdId -> {
+  for (:module m = Mds) if (m.id == mdId) return m;
+  sys.throw("Module '" + mdId + "'not found.");
+};
+
+/// Execute 'fn' with each element of 'modules'.
+/// \(\<module> -> ()) -> ()
+each = \fn -> for (m = Mds) fn(m);;
+
+/// Add to 'modules' a new module and all its imports.
+/// If there is an error, returns it. Otherwise returns "".
+/// \b, s, s -> s
+add = \isMain, :file path, mdId -> {
+  for (:module m = Mds) if (mdId == m.id) return ""; // Module read
+
+  // Push a fake module to prevent recompilations.
+  ix = Mds.size();
+  Mds.push(module.new(isMain, path, mdId, {}, [], [], {}, []));
+  :module md, ok = moduleRd.read(isMain, path, mdId, path.read());
+  if (!ok) return md; // Error
+  Mds[ix] = md;
+  db.writeModule(
+    mdRc.new(
+      path,
+      mdId,
+      md.Imports,
+      md.Exports,
+      md.TypeDefs
+    ), mdId
+  );
+  return "";
+};

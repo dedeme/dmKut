@@ -1,0 +1,178 @@
+// Copyright 01-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+
+/// Main module.
+
+import "cts";
+import "db";
+import "modules";
+import "data/module";
+import "comp/compiler";
+
+{
+  //: \-> ()
+  help = \ -> {
+    sys.println("""
+      Use:
+        kutt -h
+        kutt --clean
+        kutt --delete
+        kutt kttFile
+        kutt -c kttFile
+        kutt -o binFile kttFile
+
+        where
+          'kutt -h' show more command information.
+          'kttFile' is a file with Kutt code.
+            This file must end with '.ktt'. But you can write it
+            with or without the extension.
+    """);
+    sys.exit(0);
+  };
+
+  //: \-> ()
+  help2 = \ -> {
+    sys.println("""
+      Use:
+        kutt -h
+        kutt --clean
+        kutt --delete
+        kutt kttFile args...
+        kutt -c kttFile
+        kutt -o binFile kttFile
+
+        where
+          'kutt -h' show more information about the command.
+          'kttFile' is a file with Kutt code.
+            This file must end with '.ktt'. But you can write it
+            with or without the extension.
+
+      kutt -h
+        Show this message.
+
+      kutt --clean
+        Remove not necessary files in Kutt data base.
+
+      kutt --delete
+        Remove all the files of Kutt data base.
+
+      kutt kttFile args...
+        Compiles and runs 'kttFile'.
+        Examples:
+        kutt myPrg.ktt    -> Compiles and execute myPrg.ktt
+        kutt myPrg        -> Compiles and execute myPrg.ktt
+        kutt myPrg a 12   -> Compiles and execute myPrg.ktt with 'a' and '12
+                             as parameters.
+
+      kutt -c kttFile
+        Only compiles 'kttFile'.
+        Examples:
+        kutt -c myPrg.ktt    -> Compiles myPrg.ktt
+        kutt -c myPrg        -> Compiles myPrg.ktt
+
+      kutt -o binFile kttFile
+        Compiles 'kttFile' and copy the binary as 'binFile'
+        Examples:
+        kutt -o /prgs/myPrg myPrg.ktt -> Compiles myPrg.ktt as /prgs/myPrg
+        kutt -o /prgs/myPrg myPrg     -> Compiles myPrg.ktt as /prgs/myPrg
+    """);
+    sys.exit(0);
+  };
+
+  :arr Args = sys.args();
+
+  if (!Args) help();
+
+  if (Args[0] == "-h") help2();
+
+  onlyCompileV = [false];
+  binaryOp = []; // ([]|[s])
+  if (Args[0][0] == "-") {
+    switch (Args[0]) {
+      "--delete": {
+        db.delete();
+        sys.println("All the files of data base deleted");
+        return;
+      }
+      "--clean": {
+        db.clean();
+        sys.println("Data base cleaned");
+        return;
+      }
+      "-h": help2();
+      "-c": {
+        if (Args.size() != 2) help();
+        onlyCompileV! = true;
+      }
+      "-o": {
+        if (Args.size() != 3) help();
+        binaryOp.push(Args[1]);
+      }
+      default: {
+        sys.println ("Unknown option " + Args[0] + "\n");
+        help();
+      }
+    }
+  }
+
+  :str kttFile = onlyCompileV!
+    ? Args[1]
+    : !binaryOp
+      ? Args[0]
+      : Args[2]
+  ;
+
+  :file rpath = kttFile.ends(".ktt") ? kttFile[:-4] : kttFile;
+
+  path, id = db.init(rpath);
+  if (path == "" & id == "") {
+    sys.println("File '" + rpath + ".ktt' not found");
+    return;
+  }
+
+  err1 = modules.add(true, path, id);
+  if (err1 != "") {
+    sys.println(err1);
+    return;
+  }
+
+  skipV = [false];
+  :file bin = file.cat([cts.compilationPath, id + ".bin"]);
+  if (bin.exists()) {
+    skipV! = true;
+    exeTm = bin.tm();
+    modules.each(\:module m -> {
+      :file f = m.path;
+      if (f.tm() > exeTm) skipV! = false;
+    });
+  }
+
+  if (skipV!) {
+    if (!binaryOp & !onlyCompileV!) {
+      Cargs = Args[1:];
+      rs, = sys.cmd(bin, Cargs);
+      if (rs != "") sys.print(rs);
+      return;
+    }
+    return;
+  }
+
+  err2 = compiler.run(true);
+  if (err2 != "") {
+    sys.println(err2);
+    return;
+  }
+
+  if (onlyCompileV!) return;
+
+  if (!binaryOp) {
+    Cargs = Args[1:];
+    rs, = sys.cmd(bin, Cargs);
+    if (rs != "") sys.print(rs);
+    return;
+  }
+
+  file.copy(bin, binaryOp!);
+}
+

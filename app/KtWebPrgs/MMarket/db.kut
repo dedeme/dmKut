@@ -11,15 +11,16 @@ import "data/evEs";
 import "data/evE";
 import "updater";
 import "cts";
+import "fns";
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
 
-    for (p = cts.Periods) file.mkdir(path.cat([cts.dataPath, p]));
+    for (p = cts.Periods) file.mkdir(file.cat([cts.dataPath, p]));
     updater.run();
 
     return;
@@ -29,15 +30,16 @@ init = \ -> {
 
 /// Returns dates of a period, from before to after.
 /// \s -> [s.]
-dates = \period -> {
-  :arr Ls = file.dir(path.cat([cts.dataPath, period]));
+dates = \ period -> {
+  :arr Ls = file.dir(file.cat([cts.dataPath, period]));
   Ls.sort(\d1, d2 -> return d1 < d2;);
   return Ls;
 };
 
 /// Returns unsorted model identifiers of the last date.
+/// \ -> [s.]
 modelIds = \ -> return file.dir(
-    path.cat([cts.dataPath, "daily", arr.peek(dates("daily"))])
+    file.cat([cts.dataPath, "daily", arr.peek(dates("daily"))])
   );;
 
 /// Writes evaluation table.
@@ -56,36 +58,36 @@ write = \date, mdId, :arr evals -> {
   };
 
   :arr dailyDates = dates("daily");
-  dailyDir = path.cat([cts.dataPath, "daily", date]);
+  dailyDir = file.cat([cts.dataPath, "daily", date]);
   file.mkdir(dailyDir);
-  file.write(path.cat([dailyDir, mdId]), js.w(evals.map(evE.toJs)));
+  file.write(file.cat([dailyDir, mdId]), js.w(evals.map(evE.toJs)));
   for (d = dailyDates.take(dailyDates.size() - cts.datesInPeriod))
-    file.del(path.cat([cts.dataPath, "daily", d]));
+    file.del(file.cat([cts.dataPath, "daily", d]));
 
   :arr weeklyDates = dates("weekly");
-  :file weeklyDir = path.cat([cts.dataPath, "weekly", date]);
+  :file weeklyDir = file.cat([cts.dataPath, "weekly", date]);
   if (
     !weeklyDates |
     weeklyDir.exists() |
     weekInYear(date) != weekInYear(weeklyDates.peek())
   ) {
     file.mkdir(weeklyDir);
-    file.write(path.cat([weeklyDir, mdId]), js.w(evals.map(evE.toJs)));
+    file.write(file.cat([weeklyDir, mdId]), js.w(evals.map(evE.toJs)));
     for (d = weeklyDates.take(weeklyDates.size() - cts.datesInPeriod))
-      file.del(path.cat([cts.dataPath, "weekly", d]));
+      file.del(file.cat([cts.dataPath, "weekly", d]));
   }
 
   :arr monthlyDates = dates("monthly");
-  :file monthlyDir = path.cat([cts.dataPath, "monthly", date]);
+  :file monthlyDir = file.cat([cts.dataPath, "monthly", date]);
   if (
     !monthlyDates |
     monthlyDir.exists() |
     date[:6] != monthlyDates.peek()[:6]
   ) {
     file.mkdir(monthlyDir);
-    file.write(path.cat([monthlyDir, mdId]), js.w(evals.map(evE.toJs)));
+    file.write(file.cat([monthlyDir, mdId]), js.w(evals.map(evE.toJs)));
     for (d = monthlyDates.take(monthlyDates.size() - cts.datesInPeriod))
-      file.del(path.cat([cts.dataPath, "monthly", d]));
+      file.del(file.cat([cts.dataPath, "monthly", d]));
   }
 };
 
@@ -95,7 +97,7 @@ write = \date, mdId, :arr evals -> {
 ///   mdId : Model identifier.
 /// \s, s, s -> [<evE>.]
 read = \period, date, mdId -> {
-  p = path.cat([cts.dataPath, period, date, mdId]);
+  p = file.cat([cts.dataPath, period, date, mdId]);
   return file.exists(p)
     ? arr.map(js.r(file.read(p)), evE.fromJs)
     : []

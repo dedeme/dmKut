@@ -1,4 +1,4 @@
-// Copyright 13-Sep-2023 ºDeme
+// Copyright 02-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Edit page.
@@ -6,30 +6,40 @@
 import "KtWeb/rp";
 import "db";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       isTrash = Rq.isTrash;
-      List = db.list(isTrash); // [{id:s, name:s}.]
-      arr.sort(List, \E1, E2 -> return E1.id > E2.id;);
-      text = !!List ? db.read(List[0].id, isTrash) : "";
-      sys.print(rp.mk({
-        list: List,
+      :arr List = db.list(isTrash); // [{id:s, name:s}.]
+      List.sort(\E1, E2 -> return E1.id > E2.id;);
+      text = !List ? "" : db.read(List[0].id, isTrash);
+      return rp.mk({
+        dbKey: db.readKey(),
+        List,
         text
-      }));
+      });
     }
     "new": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
       db.write(math.itos(time.now()), false, "");
-      sys.print(rp.mkEmpty());
+      return rp.mk({ dbKey });
     }
     "download": {
-      id = Rq.id;
-      name = Rq.name;
+      // s,s
+      id, name : Rq;
       text = db.exists(id, false) ? db.read(id, false) : name + " not found";
-      sys.print(rp.mk({text}));
+      return rp.mk({
+        dbKey: db.readKey(),
+        text
+      });
     }
     "remove": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
       id = Rq.id;
       if (db.exists(id, false)) {
         text = db.read(id, false);
@@ -37,30 +47,40 @@ process = \Rq -> {
         if (text != "") db.write(math.itos(time.now()), true, text);
         db.clean();
       }
-      sys.print(rp.mkEmpty());
+      return rp.mk({ dbKey });
     }
     "rescue": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
       id = Rq.id;
       if (db.exists(id, true)) {
         text = db.read(id, true);
         db.remove(id, true);
         db.write(math.itos(time.now()), false, text);
       }
-      sys.print(rp.mkEmpty());
+      return rp.mk({ dbKey });
     }
     "getText": {
-      isTrash = Rq.isTrash;
-      id = Rq.id;
+      // b,s
+      isTrash, id : Rq;
       text = db.exists(id, isTrash) ? db.read(id, isTrash) : "";
-      sys.print(rp.mk({text}));
+      return rp.mk({
+        dbKey: db.readKey(),
+        text
+      });
     }
     "setText": {
-      id = Rq.id;
-      text = Rq.text;
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      // s, s
+      id , text : Rq;
       db.write(id, false, text);
-      sys.print(rp.mk({
+      return rp.mk({
+        dbKey,
         name: db.mkName(text)
-      }));
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

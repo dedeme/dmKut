@@ -1,0 +1,46 @@
+// Copyright 22-Jul-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Initial real reference.
+
+/// Constructor.
+///   nick  : Company nick.
+///   mdId  : Model identifier.
+///   Params: Model parameters.
+///   date  : First real reference date in format YYYYMMDD.
+///   ref   : Date reference.
+/// \s,s,[f.],s,f -> <initRef>
+new : nick, mdId, Params, date, ref;
+
+/// Reads a reference from 'Rrefs'
+///   Rrefs: Initial real references array.
+///   nk   : Company nick.
+///   mId  : Company model id.
+///   Parms: Model parameters.
+///   RETURN: [
+///             0: date (First real reference date),
+///             1: ref (reference of such date)
+///           ]
+///           If data is missing returns ["", -1.0]
+/// \[<initRef>.], s, s, [f.] -> [s, f]
+getRRef = \:arr Rrefs, nk, mId, Parms -> {
+  rrefOp = Rrefs.find(\e -> return e[:3] == [nk, mId, Parms];);
+  return !rrefOp
+      ? ["", -1.0]
+      : [rrefOp![date], rrefOp![ref]]
+    ;
+};
+
+/// Sets a reference in place in 'Rrefs".
+/// Every other reference of 'nk' is deleted.
+///   Rrefs: Initial real references array.
+///   nk   : Company nick.
+///   mId  : Company model id.
+///   Parms: Model parameters.
+///   rdate: First real reference date.
+///   ref  : Reference of sach date
+/// \[<initRef>.], s, s, [f.], s, f -> ()
+setRRef = \:arr Rrefs, nk, mId, Parms, rdate, ref -> {
+  Rrefs.filterIn(\e -> return e[nick] != nk;);
+  Rrefs.push(new(nk, mId, Parms, rdate, ref));
+};

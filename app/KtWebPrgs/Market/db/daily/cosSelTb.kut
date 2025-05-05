@@ -5,7 +5,7 @@
 
 import "../dailyDb";
 
-fpath = path.cat([dailyDb.dpath, "cosSel.tb"]);
+fpath = file.cat([dailyDb.dpath, "cosSel.tb"]);
 
 /// Initialize table.
 /// \ -> ()

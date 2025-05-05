@@ -1,19 +1,12 @@
-// Copyright 08-May-2023 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Files tree
+/// Files tree.
 
-/// Constructor
+/// Constructor.
 ///   id   : Index entry identifier.
-///   doc  : [Documentation], if the entry is a file path.
+///   docOp: Documentation], if the entry is a file path.
 ///          Otherwise its value is [].
-///   trees: If 'doc' is '[]', entries of directory.
-/// \s, [s]|[], [<indexTree>...] -> <indexTree>
-mk : id, Doc, Trees;
-
-/// \<indexTree> -> a(JS)
-toJs = \I -> return [I[id], I[Doc], arr.map(I[Trees], toJs)];;
-
-/// \a(JS) -> <indexTree>
-fromJs = \A -> return mk(A[0], A[1], arr.map(A[2], fromJs));;
-
+///   Trees: If 'docOp' is '[]', entries of directory.
+/// \s,([s]|[]),[<indexTree>.] -> <indexTree>
+new : id, docOp, Trees;

@@ -8,13 +8,15 @@ import "libmkt/model";
 import "libmkt/quotes";
 import "libmkt/strategy";
 import "extDb/quotesDb";
+import "extDb/cosTb";
 import "data/simParams";
 
 /// Returns
 ///   {{sales: f, cash: f, assets: f, rfAssets: f}.} :: {modelId: Rs}
 /// \{*.} -> {*.}
 run = \Rq -> {
-  qts = quotesDb.read();
+  Cos = cosTb.read();
+  :tquotes qts = quotesDb.read(Cos);
   :arr List = models.list();
 
   mdRs = {}; //{{sales: f, cash: f, assets: f, rfAssets: f}.}

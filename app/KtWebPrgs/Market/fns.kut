@@ -1,0 +1,164 @@
+// Copyright 23-Jul-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions.
+
+import "libmkt/quotes";
+import "libmkt/models";
+import "libmkt/model";
+import "db/acc/diariesDb";
+import "db/cosTb";
+import "db/ibexCosTb";
+import "db/investorTb";
+import "db/quotesDb";
+import "db/trading/closesTb";
+import "db/initRefsTb";
+import "data/co/cos";
+import "data/co/co";
+import "data/co/ibexCo";
+import "data/initRef";
+import "data/acc/ann";
+import "data/acc/settlement";
+import "data/investor/investor";
+import "data/investor/istrategy";
+
+
+/// Returns company quotes, updated with daily quotes if it proceed.
+/// Values of Maxs and Mins are not valid.
+///   nick: Company nick.
+/// \s -> <quotes>
+getOpenCloses = \nick -> {
+  :cos cs = cosTb.read();
+  mainNick = cs.mainNick;
+  // <quotes>|s, b
+  :quotes qts, ok = quotesDb.readQuotes(mainNick, nick);
+  if (!ok) sys.throw(qts);
+  qtsV = [qts];
+
+  ClOp = dic.get(closesTb.read(), nick);
+  if (!!ClOp) { // Add to qtsV! the current daily quote.
+    Cl = ClOp!;
+    isHistoric = Cl[0];
+    cl = Cl[1];
+
+    if (!isHistoric) {
+      :arr Dates = qts.Dates;
+      Dates.shift();
+      Dates.push(time.toStr(time.now()));
+      :arr Opens = qts.Opens;
+      Opens.shift();
+      Opens.push([cl]);
+      :arr Closes = qts.Closes;
+      Closes.shift();
+      Closes.push([cl]);
+      // Maxs and Mins are facke values.
+      qtsV! = quotes.new(qts.Cos, Dates, Opens, Closes, Closes, Closes);
+    }
+  }
+  return qtsV!;
+};
+
+/// Returns 'true' if 'nick' is selected to operate.
+///   nick: Company nick
+/// \s -> b
+isSelected = \nick -> {
+  :cos cs = cosTb.read();
+  for (:co c = cs.Cos) if (c.nick == nick) return c.isSelected;
+  return false;
+};
+
+/// Returns references of a company (one for each close).
+///   nick    : Company nick.
+///   mdId    : Model identifier.
+///   Params  : Model parameters.
+///   qts     : Nick quotes.
+///   isUpdate: If 'true' values of 'initRefsTb' are updated.
+/// \s, s, [f.], <quotes>, b -> [f.]
+getReferences = \nick, mdId, Params, :quotes qts, isUpdate -> {
+  :investor inv = investorTb.read();
+  strgOp = dic.get(inv.Nicks, nick);
+  if (!strgOp) sys.throw(str.fmt("Strategy of %v not found", [nick]));
+  :istrategy strg = strgOp!;
+  mdOp = models.get(strg.modelId);
+  if (!mdOp) sys.throw("Model " + strg.modelId + " not found");
+  :model md = mdOp!;
+  Params = strg.Params;
+
+  if (isSelected(nick)) {
+    Rrefs = initRefsTb.read();
+    date, rref = initRef.getRRef(Rrefs, nick, md.id, Params);
+    dateIxV = [-1];
+    if (date != "") {
+      for (i, d = qts.Dates) if (d >= date) {
+        dateIxV! = i;
+        break;
+      }
+    }
+
+    Closes = arr.map(qts.Closes, \Cs -> return Cs[0];);
+    // Closes is automatically flattened.
+    Refs, newDateIx, newRref =
+      model.realRefs(md, dateIxV!, rref, Closes, Params);
+    if (isUpdate) {
+      initRef.setRRef(
+        Rrefs, nick, md.id, Params, qts.Dates[newDateIx], newRref
+      );
+      initRefsTb.write(Rrefs);
+    }
+    return Refs;
+  } else {
+    //qts.Closes is automatically flattened.
+    return arr.map(
+      << model.calc(md.id, qts.Closes, Params),
+      \q -> return math.round(q, 4);
+    );
+  }
+};
+
+/// Returns ponderations ({nick:pond}) of companies selected to operate in Ibex.
+///   onlySel: If it is 'true' only selected companies are ponderated.
+///            Otherwise all the companies are taken into account.
+/// \ -> {f.}
+getIbexPonderations = \onlySel -> {
+  // \s -> f
+  getClose = \nick -> {
+    :str qts = quotesDb.read(nick);
+    ixV = [0];
+    while() {
+      i1 = qts.indexFrom(":", ixV!);
+      if (i1 != -1) {
+        i2 = qts.indexFrom(":", i1 + 1);
+        if (i2 != -1) {
+          i3 = qts.indexFrom(":", i2 + 1);
+          if (i3 != -1) {
+            q = math.stof(qts[i2 + 1:i3])!;
+            if (q < 0.0) {
+              ixV! = qts.indexFrom("\n", i3);
+              if (ixV! != -1) continue;
+            } else {
+              return q;
+            }
+          }
+        }
+      }
+    }
+    sys.throw("Close of " + nick + " not found");
+  };
+
+  //{f.}
+  R = {};
+  // [<ibexCo>.]
+  Cos = ibexCosTb.read();
+  sumV = [0.0];
+  for (:ibexCo c = Cos) if (!onlySel | c.sel) {
+    amount = math.itof(c.stocks * c.pond) / 100.0 * getClose(c.nick);
+    sumV! += amount;
+    R.put(c.nick, amount);
+  }
+
+  sum = sumV!;
+
+  if (sum > 0.0) for (k = R.keys()) R[k] /= sum;
+
+  return R;
+};

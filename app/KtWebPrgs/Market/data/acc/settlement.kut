@@ -8,5 +8,5 @@
 ///   Portfolio: Settlement portfolio. It is a dictionary {nick -> [stocks, price]},
 ///              where price is the unitary average price of each stock.
 ///   Errors   : Errors when calculating ledger and portfolio.
-/// \<ldg>, {[i, f].}, [s.] -> <settlement>
+/// \<ledger>, {[i, f].}, [s.] -> <settlement>
 new : ledger, Portfolio, Errors;

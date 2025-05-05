@@ -1,0 +1,174 @@
+// Copyright 01-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Kutt database.
+
+import "cts";
+import "data/mdRc";
+import "c/cheader";
+import "c/cbody";
+import "c/interface";
+
+// main file directory.
+//: s
+rootV = [" * "];
+
+/// Initializes data base and returns the canonical path e identifier of
+/// 'fmain'.
+///  If the path of 'fmain' is not found, it returns ["", ""].
+///   fmain: Main file.
+/// \ -> [s, s]
+init = \fmain -> {
+  :file dbRoot = cts.dataPath;
+  :file fversion = file.cat([dbRoot, "version.txt"]);
+  if (
+    !dbRoot.exists() | !fversion.exists() |
+    str.trim(fversion.read()) != cts.version
+  ) {
+    file.mkdir(cts.compilationPath);
+    file.write(fversion, cts.version);
+
+    file.write(cts.hBuiltPath, cheader.code);
+    file.write(cts.cBuiltPath, cbody.code);
+    r1, ok1 = sys.cmd(
+      "gcc", [
+        "-Wall", "-Wno-div-by-zero", "-c", "-rdynamic",
+        "-z", "execstack",
+        cts.cBuiltPath,
+        "-o", cts.oBuiltPath,
+        "-lgc", "-lm", "-lpthread"
+      ]
+    );
+    if (!ok1) sys.throw(r1);
+    r2, ok2 = sys.cmd(
+      "ar", ["rcs", cts.aBuiltPath, cts.oBuiltPath]
+    );
+    if (!ok2) sys.throw(r2);
+    file.del(cts.oBuiltPath);
+    file.del(cts.cBuiltPath);
+
+    writeModuleIndex([]);
+  }
+  R = getPathId(fmain + ".ktt");
+  if (R[0] != "") rootV! = file.parent(R[0]);
+  return R;
+};
+
+/// Parent of the main file path.
+/// \->s
+mainRoot = \ -> return rootV!;;
+
+//  Returns the module index [[canonicalPath, module].]}
+//: \ -> [[s, s].]
+readModuleIndex = \ ->
+  return js.r(file.read(file.cat([cts.dataPath, "index.tb"])));;
+
+//  Writes the module index [[canonicalPath, module].]}
+//: \[[s, s].] -> ()
+writeModuleIndex = \Index ->
+  file.write(file.cat([cts.dataPath, "index.tb"]), js.w(Index));;
+
+/// Returns the canonical path e identifier of a module [path, id]. If the
+/// path is not found returns ["", ""].
+/// The id is of type md_xxxxxxxx.
+/// \s -> [s, s]
+getPathId = \:file path -> {
+  if (!path.exists()) return ["", ""];         // <-- Return error.
+  cpath = path.canonical();
+  :arr List = readModuleIndex();
+  for (E = List) if (E[0] == cpath) return E;  // <-- Return id existent
+  base = path.base()[:-4];
+  while () {
+    id = str.replace(
+      str.replace(base + "_" + cryp.genK(4), "/", "0"),
+      "+", "1"
+    );
+    stopV = [true];
+    for (E = List) if (E[1] == id) {
+      stopV! = false;
+      break;
+    }
+    if (stopV!) {
+      R = [cpath, id];
+      List.push(R);
+      writeModuleIndex(List);
+      return R;                                // <-- Return id new
+    }
+  }
+};
+
+/// Returns the path of an identifier of module or "" if it is not found.
+/// \s -> s
+getPath = \mdId -> {
+  :arr List = readModuleIndex();
+  for (E = List) if (E[1] == mdId) return E[0];
+  return "";
+};
+
+/// Returns the module (<mdRc>) with identifier 'id' or [] if it is not found.
+/// \s -> ([<mdRc>]|[])
+readModule = \id -> {
+  :file path = file.cat([cts.compilationPath, id + ".mod"]);
+  if (path.exists()) return [js.r(path.read())];
+  return [];
+};
+
+/// Writes the module 'mod' (<mdRc>) with the identifier 'id'.
+/// \[<mdRc>], s -> ()
+writeModule = \:mdRc mod, id -> {
+  :file path = file.cat([cts.compilationPath, id + ".mod"]);
+  path.write(js.w(mod));
+};
+
+/// Returns date of the last module 'mod' modification date or '-1' if such
+/// module is not found.
+/// \s -> i
+moduleDate = \mod -> {
+  :file path = file.cat([cts.compilationPath, mod + ".mod"]);
+  if (path.exists()) return path.tm();
+  return -1;
+};
+
+/// Returns date of the last module 'mod' modification date or '-1' if such
+/// module is not found.
+/// \s -> i
+objectDate = \mod -> {
+  :file path = file.cat([cts.compilationPath, mod + ".o"]);
+  if (path.exists()) return path.tm();
+  return -1;
+};
+
+/// Removes spare files in cts.compilationPath
+/// \ -> ()
+clean = \ -> {
+  Index = readModuleIndex();
+  Ids = []; // [s.]
+  NewIndex = []; // [[s,s].]
+  for (E = Index) {
+    if (file.exists(E[0])){
+      Ids.push(E[1]);
+      NewIndex.push(E);
+    }
+  }
+  writeModuleIndex(Index);
+  :file cp = cts.compilationPath;
+  for (:file fname = cp.dir()) {
+    :file path = file.cat([cp, fname]);
+    :str ex = fname.extension();
+    switch (ex) {
+      ".c", ".mod", ".bin", ".o": {
+        name = fname[:-ex.len()];
+        if (Ids.any(\id -> return id == name;)) continue;
+      }
+    }
+    file.del(path);
+  }
+};
+
+/// Removes all the files of cts.compilationPath
+/// \ -> ()
+delete = \ -> {
+  :file cp = cts.compilationPath;
+  cp.del();
+  cp.mkdir();
+};

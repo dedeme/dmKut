@@ -7,9 +7,9 @@ import "cts";
 import "data/cashEntry";
 
 /// Returns {balance, diary}
-/// \s -> [n, [<cashEntry>.]]
+/// \s -> [f, [<cashEntry>.]]
 read = \y -> {
-	:file p = path.cat([cts.hcontaPath, y+".db"]);
+	:file p = file.cat([cts.hcontaPath, y+".db"]);
 	if (!p.exists()) {
 		return [0.0, []];
 	}
@@ -36,7 +36,7 @@ read = \y -> {
   return [balanceV!, Diary];
 };
 
-// \[s, s, {n.}, {n.}] -> [<cashEntry>] | []
+// \[s, s, {f.}, {f.}] -> [<cashEntry>] | []
 readCash = \A -> {
   sumV = [0.0];
   for (k, v = A[2]) if (k == cts.cashAcc) sumV! += v;

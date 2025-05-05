@@ -11,11 +11,11 @@ import "evE";
 /// If model is of two parameter returns a matrix of 'cts.evalSteps' (rows) x
 ///   'cts.evalSteps' (cols), where 'rows' are the first parameter values and
 ///   'cols' are the second paramenter ones.
-/// \<model>, <quotes> -> [<evE>.]
+/// \<model>, <tquotes> -> [<evE>.]
 first = \md, qts -> return arr.map(upRss.read(md, qts), evE.newFirst);;
 
 /// Update results.
-/// \<model>, <quotes>, [<evE>.] -> [<evE>.]
+/// \<model>, <tquotes>, [<evE>.] -> [<evE>.]
 update = \md, qts, :arr Previous -> {
   Evals = upRss.read(md, qts);
   R = []; // [<evE>.]
@@ -25,7 +25,7 @@ update = \md, qts, :arr Previous -> {
 };
 
 /// Replace results.
-/// \<model>, <quotes>, [<evE>.] -> [<evE>.]
+/// \<model>, <tquotes>, [<evE>.] -> [<evE>.]
 replace = \md, qts, :arr Previous -> {
   Evals = upRss.read(md, qts);
   R = []; // [<evE>.]

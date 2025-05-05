@@ -1,0 +1,118 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures management page
+
+import "KtWeb/rp";
+import "cts";
+import "data/pict";
+import "db";
+import "db/pinupsTb";
+import "db/selsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      :arr Pinups = pinupsTb.read();
+      ttPinups = Pinups.size();
+      pinupsPerGroup = cts.pinupsNGrouping * cts.pinupsNGrouping;
+      groups = ttPinups / pinupsPerGroup + 1;
+
+      groupV = [selsTb.getPinupsGroup()];
+      pageV =  [selsTb.getPinupsPage()];
+      startGroupV = [groupV! * pinupsPerGroup];
+      startPage = startGroupV! + pageV! * cts.pinupsNGrouping;
+      if (startGroupV! > ttPinups) {
+        groupV! = 0;
+        pageV! = 0;
+        startGroupV! = 0;
+      } else if (startPage > ttPinups) {
+        pageV! = 0;
+      }
+      totalSights, shownSights : pinupsTb.shownSights();
+
+      return rp.mk({
+        dbKey: db.readKey(),
+        groups,
+        group: groupV!,
+        Picts: Pinups[startGroupV! : startGroupV! + pinupsPerGroup],
+        page: pageV!,
+        totalSights,
+        shownSights
+      });
+    }
+    "setLevel": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      id, level : Rq;
+      pinupsTb.setLevel(id, math.ftoi(level));
+      return rp.mk({ dbKey });
+    }
+    "setPage": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      selsTb.setPinupsPage(math.ftoi(Rq.page));
+      return rp.mk({ dbKey });
+    }
+    "setGroup": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      selsTb.setPinupsGroup(math.ftoi(Rq.group));
+      return rp.mk({ dbKey });
+    }
+    "changePage": {
+      if (!db.readKey() != Rq.dbKey)
+        return rp.mkOutdated();
+
+      ng = cts.pinupsNGrouping;
+      n = arr.size(pinupsTb.read());
+      lastGroup = n / (ng * ng);
+      group = selsTb.getPinupsGroup();
+
+      page = selsTb.getPinupsPage();
+
+      switch (Rq.where) {
+        "up": {
+          gr = group <= 0 ? lastGroup : group - 1;
+          selsTb.setPinupsGroup(gr);
+        }
+        "down": {
+          gr = group >= lastGroup ? 0 : group + 1;
+          selsTb.setPinupsGroup(gr);
+        }
+        "left": {
+          if (page <= 0) {
+            gr = group <= 0 ? lastGroup : group - 1;
+            selsTb.setPinupsGroup(gr);
+            npages0 = ((n - gr * ng * ng) / ng) + 1;
+            npages = npages0 >= ng ? ng : npages0;
+            selsTb.setPinupsPage(npages - 1);
+          } else {
+            selsTb.setPinupsPage(page - 1);
+          }
+        }
+        default: {
+          npages0 = ((n - group * ng * ng) / ng) + 1;
+          npages = npages0 >= ng ? ng : npages0;
+          pg = page + 1;
+          if (pg >= npages) {
+            gr = group >= lastGroup ? 0 : group + 1;
+            selsTb.setPinupsGroup(gr);
+            selsTb.setPinupsPage(0);
+          } else {
+            selsTb.setPinupsPage(pg);
+          }
+        }
+      }
+
+      return rp.mkEmpty();
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+

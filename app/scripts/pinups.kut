@@ -1,0 +1,107 @@
+// Copyright 06-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+// Called from /var/www/html/fondosEscritorio/ajuste/
+
+import "libdm/img";
+
+//: i
+width = 1920;
+//: i
+height = 1080;
+//: f
+deltaBase = math.itof(width) / math.itof(height);
+
+// [s.]
+Exts = [".jpg", ".jpeg", ".png", ".webp"];
+
+//: \s -> ()
+info = \m -> sys.cmd("zenity", ["--info", '--text="' + m + '"']);;
+
+//: \s -> ()
+alert = \m -> sys.cmd("zenity", ["--warning", '--text="' + m + '"']);;
+
+:arr Sources0 = file.dir("original");
+for (:str s = Sources0) {
+  okV = [false];
+  for (e = Exts) if (s.ends(e)) okV! = true;
+  if (!okV) {
+    alert(
+      "Original " + s + "\nno tiene una extensión valida.\n" +
+      '[".jpg", ".jpeg", ".png", ".webp"]'
+    );
+    return;
+  }
+}
+:arr Sources = Sources0.map(\fname -> {
+    ix = str.lastIndex(fname, ".");
+    name = fname[:ix];
+    extension = fname[ix:];
+    :arr Runes = str.toRunes(name);
+    return str.fromRunes(Runes.map(\r ->
+        return (r < "A" | r > "Z") &
+            (r < 'a' | r >'z') &
+            (r < '0' | r >'9')
+          ? "-"
+          : r
+        ;
+      )) + extension;
+  });
+
+for (i, n0 = Sources0) {
+  n = Sources[i];
+  if (n != n0)
+    file.rename(file.cat(["original", n0]), file.cat(["original", n]));
+}
+
+:arr Targets = file.dir("resultado");
+:arr TargetsBase = [];
+for (:str t = Targets) {
+  if (!t.ends(".png")) {
+    alert("Resultado " + t + '\nno tiene una extensión valida (".png").\n');
+    return;
+  }
+  TargetsBase.push(t[:-4]);
+}
+
+Sources.filterIn(\:file s -> {
+  sName = s[:str.lastIndex(s, ".")];
+  return !TargetsBase.any(\t -> return t == sName;);
+});
+
+cV = [0];
+Errs = [];
+for (:file s = Sources) {
+  fs = file.cat(["original", s]);
+
+  t = s[:str.lastIndex(s, ".")] + ".png";
+  ft = file.cat(["resultado", t]);
+  img.new("#000000", width, height, ft);
+
+  w, h = img.dim(fs);
+  delta = math.itof(height) / math.itof(h);
+  newW = math.ftoi(math.itof(w) * delta);
+  if (newW > width) {
+    Errs.push(str.fmt(
+      "'%v':\n  El ancho ha de ser menor de %v.\n",
+      [s, math.ftoi(math.itof(h) * deltaBase)]
+    ));
+  }
+  :file temp = s[:str.lastIndex(s, ".")] + "[(2)].png";
+  img.resize(fs, temp, newW, height);
+
+  img.overAt(temp, ft, ft, (width - newW) / 2, 0);
+  temp.del();
+
+  cV! += 1;
+}
+
+mV = ["Se transformaron " + math.itos(cV!) + " imágenes con éxito."];
+if (!!Errs) {
+  mV! += "\n\nSe encontraron errores en " + math.itos(Errs.size()) + " imágenes.\n";
+  mV! += Errs.join("");
+  alert(mV!);
+} else {
+  info(mV!);
+}
+

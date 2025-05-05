@@ -13,25 +13,53 @@ import "model/ma";
 import "model/mm";
 import "model/qfix";
 import "model/qmob";
+import "model/sprs";
 import "model/uudd";
 import "model/uudd0";
+import "model/uudd2";
+import "model/uuqf";
+
+//: [<model>.]
+models = [
+  appr.new(),
+  appr2.new(),
+  appr3.new(),
+  ea.new(),
+  ea2.new(),
+  ma.new(),
+  mm.new(),
+  qfix.new(),
+  qmob.new(),
+  sprs.new(),
+  uudd.new(),
+  uudd0.new(),
+  uudd2.new(),
+  uuqf.new()
+];
 
 /// Returns all the market models.
 /// \ -> [<model>.]
-list = \ -> return [
-    appr.new(),
-    appr2.new(),
-    appr3.new(),
-    ea.new(),
-    ea2.new(),
-    ma.new(),
-    mm.new(),
-    qfix.new(),
-    qmob.new(),
-    uudd.new(),
-    uudd0.new()
+list = \ -> return models;;
+
+/// Returns sorted identifier models list
+/// \ -> [s.]
+ids = \(|S) -> return [
+    "APRX",
+    "APRX2",
+    "APRX3",
+    "ME",
+    "ME2",
+    "MM",
+    "MX_MN",
+    "QFIJO",
+    "QMOV",
+    "SPRS",
+    "SS_BB",
+    "SSBB0",
+    "SSBB2",
+    "SSQF"
   ];;
 
 /// Returns the model with identifier 'id'.
-/// \s -> [<model>]|[]
+/// \s -> ([<model>]|[])
 get = \id -> return arr.find(list(), \:model md -> return md.id == id;);;

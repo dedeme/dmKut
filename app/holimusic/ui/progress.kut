@@ -1,0 +1,32 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Alert message.
+
+import "cts";
+
+/// Show progress dialog.
+///   process: Lines to excute for Zenity, Each line is of type:
+///            'echo "# message"; cp "A" "B"; echo "10"'
+/// \[s.] -> ()
+show = \:arr Commands -> {
+sys.println( "(\n" +
+    Commands.join("\n") +
+    "\n) |\n" +
+    "zenity --progress " +
+    '--title: "Copiando archivos mp3" ' +
+    "--percentage=0 --auto-close");
+
+  :file fsh = file.cat([cts.dataPath, "cmd.sh"]);
+  fsh.write(
+    "(\n" +
+    Commands.join("\n") +
+    "\n) |\n" +
+    "zenity --progress " +
+    '--title="Copiando archivos mp3" ' +
+    '--text="                                                         ' +
+    '                                                                "' +
+    "--percentage=0 --auto-close"
+  );
+  sys.cmd("bash", [fsh]);
+};

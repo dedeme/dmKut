@@ -1,0 +1,86 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Home page.
+
+import "KtWeb/rp";
+import "db";
+import "art";
+import "cts";
+import "data/conf";
+import "data/image";
+import "db/imagesTb";
+import "db/confTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      for (f = file.dir(cts.targetPath))
+        file.del(file.cat([cts.targetPath, f]));
+      ImgsData = imagesTb.read();
+      ImgsSource = file.dir(cts.sourcePath);
+      for (i, im = ImgsSource) {
+        pt = file.cat([cts.sourcePath, im]);
+        im2 = arr.join(arr.map(
+          str.split(im, ""),
+          \c -> return (
+              (c >= "a" & c <= "z") |
+              (c >= "A" & c <= "Z") |
+              (c >= "0" & c <= "9") |
+              c == "." | c == "@" | c == "_" | c == "+"
+            ) ? c : "-";
+        ), "");
+
+        if (im != im2) {
+          pt2 = file.cat([cts.sourcePath, im2]);
+          file.rename(pt, pt2);
+          ImgsSource[i] = im2;
+        }
+      }
+      :arr Images = image.update(ImgsData, ImgsSource);
+      return rp.mk({
+        dbKey: db.readKey(),
+        Images
+      });
+    }
+    "idata2": {
+      Duplicates = db.duplicates(arr.map(
+        file.dir(cts.sourcePath), art.changeExt
+      ));
+      return rp.mk({
+        dbKey: db.readKey(),
+        Duplicates,
+        group: db.lessPicturesGroup()
+      });
+    }
+    "dim": {
+      :conf cf = confTb.read();
+      return rp.mk({
+        dbKey: db.readKey(),
+        width: cf.width,
+        height: cf.height
+      });
+    }
+    "save": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      db.savePictures(Rq.group);
+      db.clearIntermediatePaths();
+      return rp.mk({ dbKey });
+    }
+    "changeDim": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      width, height : Rq;
+      :conf cf = confTb.read();
+      cf.width = math.ftoi(width);
+      cf.height = math.ftoi(height);
+      confTb.write(cf);
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

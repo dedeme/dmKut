@@ -14,7 +14,7 @@
 ///               *  1: 'source' should be updated.
 ///               *  0: 'source' should be not updated.
 ///               * -1: 'source' < 'target'.
-/// \[*.], [*.], (*,*,i->i) -> {ToUpdates:[*.], ToDeletes:[*.]}
+/// \[*.], [*.], (\*,*,i->i) -> {ToUpdates:[*.], ToDeletes:[*.]}
 run = \:arr Sources, :arr Targets, test -> {
   // [*.]
   ToUpdates = [];

@@ -11,10 +11,10 @@ import "quote";
 /// some quote can not be read, the first error found is returned.
 ///   size: Number of quotes to return.
 ///   s   : Text from a 'NICK.tb' file. It is trimized by this function.
-/// \i, s -> [[<quote>.]|s, b]
+/// \i, s -> [([<quote>.]|s), b]
 fromStr = \size, s -> {
   try {
-    Qs = arr.map(str.split(str.trim(s), "\n"), quote.fromStr);
+    :arr Qs = arr.map(str.split(str.trim(s), "\n"), quote.fromStr);
     if (Qs.size() != size)
       sys.throw(
         str.fmt("Wrong quotes number. Expected %d. Found %d", [size, Qs.size()])

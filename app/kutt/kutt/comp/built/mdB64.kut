@@ -1,0 +1,18 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "decode": built.mkRsEx("[s|s]", ctx, ln, md, sym);
+    "encode": built.mkRs("[s|s]", md, sym);
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};
+

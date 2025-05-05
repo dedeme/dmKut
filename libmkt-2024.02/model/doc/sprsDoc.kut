@@ -1,0 +1,55 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// 'sprs' documentation.
+
+/// s
+text = """
+  <pre>
+  ** Start ***
+
+  ð = Param[0]
+  ð+ = 1 + ð
+  ð- = 1 - ð
+
+  X (Maximum) = c
+  N (Minimum) = cð-
+  Ref = N
+  T (Temporary) = -1;
+  isSold = 0
+
+  ** Process ***
+
+  isSold == 0
+    ? c < N
+      ? isSold = 1
+        N = c
+        T = -1
+        Ref = X
+      : c > X
+        ? X = c
+          T >= 0
+            ? N = T
+              T = -1
+            : -
+        : (T < 0 & c < Xð-) | c < T
+          ? T = c
+          : -
+        Ref = N
+    : c > X
+      ? isSold = 0
+        X = c
+        T = -1
+        Ref = N
+      : c < N
+        ? N = c
+          T >= 0
+            ? X = T
+              T = -1
+            : -
+        : (T < 0 & c > Nð+) | c > T
+          ? T = c
+          : -
+        Ref = X
+  </pre>
+""";

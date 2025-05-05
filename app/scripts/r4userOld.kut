@@ -1,0 +1,19 @@
+// Copyright 04-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+kkey = cryp.key("One key more for friends", 30);
+id = "x7ttisDGrMnEpbqp";
+key = "xs6h05zEf6I=";
+
+if (!sys.args())
+  sys.cmd("zenity", [
+    '--info',
+    '--title=R4 user',
+    '--text=' + cryp.decode(kkey, id) + "\n" + cryp.decode(kkey, key)
+  ]);
+else
+  sys.cmd("zenity", [
+    '--info',
+    '--title=R4 user',
+    '--text=' + cryp.encode(kkey, sys.args()[0])
+  ]);

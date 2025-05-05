@@ -9,7 +9,7 @@ import "libmkt/cts" : mcts;
 import "data/simParams";
 import "data/imodel";
 import "data/vals";
-import "data/rsVec";
+import "fns";
 import "cts";
 import "db";
 
@@ -39,7 +39,7 @@ process = \Rq -> {
         return js.w({
           "rankOp": stats == "price"
             ? [[rss.date, rss.Vals[0]]]
-            : [[rss.date, rsVec.stat(stats, rss.Vals)]]
+            : [[rss.date, fns.stats(stats, rss.Vals)]]
           });
       } else {
         return js.w({"rankOp": []});
@@ -52,7 +52,7 @@ process = \Rq -> {
       );
       :arr Vals = rss.Vals;
       if (Vals.size() > 0) {
-        :arr Vs = stats == "price" ? Vals[0] : rsVec.stat(stats, Vals);
+        :arr Vs = stats == "price" ? Vals[0] : fns.stats(stats, Vals);
         :arr BestsVs = arr.zip([arr.fromIter([0:Vs.size()]), Vs]);
         BestsVs.sort(\E1, E2 -> return E1[1] > E2[1];);
         return js.w({
@@ -74,7 +74,7 @@ process = \Rq -> {
         );
         :arr Vals = rss.Vals;
         if (Vals.size() > 0) {
-          Vs = stats == "price" ? Vals[0] : rsVec.stat(stats, Vals);
+          Vs = stats == "price" ? Vals[0] : fns.stats(stats, Vals);
           e0 = Vs[iRs];
           if (e0 < 0) continue;
           prf = e0 - math.ftoi(mcts.initialCapital);

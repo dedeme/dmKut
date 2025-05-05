@@ -8,7 +8,7 @@ import "db";
 import "data/accAnn";
 import "data/monthAnn";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {

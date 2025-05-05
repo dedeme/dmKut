@@ -4,6 +4,7 @@
 /// Global constants.
 
 /// Initial key.
+/// s
 demeKey =
   "nkXliX8lg2kTuQSS/OoLXCk8eS4Fwmc+N7l6TTNgzM1vdKewO0cjok51vcdl" +
     "OKVXyPu83xYhX6mDeDyzapxL3dIZuzwyemVw+uCNCZ01WDw82oninzp88Hef" +
@@ -13,19 +14,25 @@ demeKey =
 ;
 
 /// Length of user keys.
+/// i
 klen = str.len(demeKey);
 
 /// Application name.
+/// s
 appName = "KutPost";
 
 /// Application version.
+/// s
 version = "2024.03";
 
-/// Data directory path.
-dataPath = path.cat([sys.home(), ".dmKutApp", "KutPost", appName]);
+/// Data directory file.
+/// s
+dataPath = file.cat([sys.home(), ".dmKutApp", "KutPost", appName]);
 
 /// Server port.
+/// i
 port = 8668;
 
 /// Expiration time in seconds. (Equals to 30 days)
+/// i
 expirationTime = 2592000;

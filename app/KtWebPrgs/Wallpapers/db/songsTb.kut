@@ -1,0 +1,97 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Songs data base.
+
+import "cts";
+import "data/song";
+import "data/sighter";
+
+// \s -> s
+fpath = \group -> return file.cat([cts.dataPath, "songs_" + group + ".db"]);;
+
+///Returns groups list
+/// \ -> [s.]
+getGroups = \ -> {
+  Groups = arr.filter(
+    file.dir(cts.songsPath),
+    \f -> return file.isDirectory(file.cat([cts.songsPath, f]));
+  );
+  if (!Groups) sys.throw("Song groups not found");
+  return Groups;
+};
+
+/// \s -> ()
+update = \group -> {
+  p = fpath(group);
+  if (!file.exists(p)) write(group, []);
+
+  :arr OldSongs = arr.map(js.r(file.read(p)), song.fromJs); // FIX: use read
+  NewSongs = []; // [<song>.]
+  saveV = [false];
+  for (songId = readSongsList(group)) {
+    songOp = OldSongs.find(\:song s -> return s.id == songId;);
+    if (!songOp) {
+      NewSongs.push(song.newDefault(songId));
+      saveV! = true;
+    } else {
+      NewSongs.push(songOp!);
+    }
+  }
+  if (saveV! | NewSongs.size() != OldSongs.size())
+    write(group, NewSongs);
+
+};
+
+/// \s -> [s.]
+readSongsList = \group -> {
+  Songs = arr.filter(
+    file.dir(file.cat([cts.songsPath, group])),
+    \f -> return str.ends(f, ".mp3");
+  );
+  if (!Songs) sys.throw("No song found in group " + file.cat([cts.songsPath, group]));
+  return Songs;
+};
+
+/// Returns songs ([<song>.]) of a group serialized with JSON.
+/// \s -> s
+readJs = \group -> return file.read(fpath(group));;
+
+/// Returns group song.
+/// \s -> [<song>.]
+read = \group -> return arr.map(js.r(readJs(group)), song.fromJs);;
+
+/// Write song.
+/// \s, [<song>.] -> ()
+write = \group, Songs ->
+  file.write(fpath(group), js.w(Songs));;
+
+/// Set level of song 'group'-'id'.
+/// \s, s, i -> ()
+setLevel = \group, id, level -> {
+  Songs = read(group);
+  for (:song s = Songs) if (s.id == id) {
+    s.level = level;
+    if (s.sights > level) s.sights = level;
+  }
+  write(group, Songs);
+};
+
+/// Set lapse of song 'group'-'id'.
+/// \s, s, i -> ()
+setLapse = \group, id, lapse -> {
+  Songs = read(group);
+  for (:song s = Songs) if (s.id == id) s.lapse = lapse;
+  write(group, Songs);
+};
+
+/// Returns the next song
+/// \ -> {group:s, s:<song>}
+next = \ -> {
+  // NOTE: sighter,ext returns {s, <sighter>} :: {group, s}
+  return sighter.next(
+    getGroups,
+    \group -> return read(group);,
+    \group, Sighters -> write(group, Sighters);
+  );
+};

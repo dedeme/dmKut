@@ -1,0 +1,15 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "cts";
+import "db/dirsTb";
+
+/// Initializes data base.
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    dirsTb.init();
+  }
+};
+

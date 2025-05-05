@@ -11,7 +11,7 @@ import "poolDb/testDirs";
 import "poolDb/testFiles";
 import "poolDb/update";
 
-/// \{*.} -> ()
+/// \{*.} -> s
 process = \Rq -> {
   rq = Rq.rq;
   switch (rq) {
@@ -39,7 +39,7 @@ process = \Rq -> {
     "update": {
       if (!fns.isBusy()) {
         thread.run(
-          \ -> sys.cmd("kut2", cts.terminalCommand);
+          \ -> sys.cmd("kut", cts.terminalCommand);
         );
         sys.sleep(1000);
       }

@@ -1,0 +1,632 @@
+// Copyright 19-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Expression reader.
+
+import "data/rdCtx";
+import "data/type";
+import "data/token";
+import "data/exp";
+import "data/stat";
+import "data/dicLayer";
+import "stRd";
+import "tokenRd";
+import "charRd";
+
+// Constructor.
+//    ctx   : Context
+//    tkrd  : Token reader.
+//: \<rdCtx>, <tokenRd> -> <expRd>
+new0 : ctx, tkrd;
+
+/// Constructor.
+///   ctx  : Context
+///   tx   : Text to read.
+/// \<rdCtx>, s -> <stRd>
+new = \ctx, tx -> return new0(ctx, tokenRd.mk(tx));;
+
+//  Returns an error expression.
+//: \i, s -> <exp>
+fail = \ln, msg -> return exp.mkError(ln, msg);;
+
+//  Fail of type expected - actual
+//: \i, s, s -> <exp>
+failE = \ln, expected, actual ->
+  return fail(ln, "Expected: " + expected + "\n  Actual: " + actual);;
+
+/// Returns the current no-empty expression and advances the character reader.
+/// \<expRd> -> <exp>
+next = \erd -> {
+  :tokenRd tkr = erd[tkrd];
+
+  :exp e = readSingle(erd);
+  if (e.tp == exp.error) return e;
+  :exp e2 = readContinuation(erd, e);
+  if (e2.tp == exp.error) return e2;
+
+  Es = [e2]; // Sequence [<exp>,<token>, <exp>, <token> ... <token>, <exp>]
+  while() {
+    :token tk = tkr.peek();
+    if (tk.isBinary()) {
+      tkr.next();
+      Es.push(tk);
+      :exp e1 = readSingle(erd);
+      if (e1.tp == exp.error) return e1;
+      :exp e2 = readContinuation(erd, e1);
+      if (e2.tp == exp.error) return e2;
+      Es.push(e2);
+    } else {
+      break;
+    }
+  }
+
+  Es1 = solveBinary(token.isBinary1, Es);
+  Es2 = solveBinary(token.isBinary2, Es1);
+  Es3 = solveBinary(token.isBinary3, Es2);
+  Es4 = solveBinary(token.isBinary4, Es3);
+
+  :token tk = tkr.peek();
+  if (tk.isOp("?")) {
+    tkr.next();
+    :exp eyes = next(erd);
+    if (eyes.tp == exp.error) return eyes;
+    :token tk = tkr.next();
+    if (tk.isOp(":")) {
+      :exp enot = next(erd);
+      if (enot.tp == exp.error) return enot;
+      return exp.mkTernary(e.ln, Es4[0], eyes, enot);
+    }
+    return failE(tk.ln, ":", tk.toStr());
+  }
+
+  return Es4[0];
+};
+
+/// Returns the current token without avancing the character reader.
+/// \<tokenRd> -> <token>
+peekToken = \erd -> return tokenRd.peek(erd[tkrd]);;
+
+/// Returns the current token and advances the character reader.
+/// \<charRd> -> <token>
+nextToken = \erd -> return tokenRd.next(erd[tkrd]);;
+
+// Read next single expression. The token reader is modified.
+//: \<expRd> -> <exp>
+readSingle = \erd -> {
+  :tokenRd tkr = erd[tkrd];
+  :token tk = tkr.next();
+  ln = tk.ln;
+  tp = tk.tp;
+  value = tk.value;
+
+  switch (tp) {
+    token.error: return exp.mkError(ln, value);
+    token.eof: return fail(ln, "Unexpected end of file");
+    token.operator: switch (value) {
+      "!", "-": {
+        :exp e1 = readSingle(erd);
+        if (e1.tp == exp.error) return e1;
+        :exp e2 = readContinuation(erd, e1);
+        if (e2.tp == exp.error) return e2;
+        return exp.mkUnary(ln, value, e2);
+      }
+      "(": {
+        :exp e = next(erd);
+        if (e.tp == exp.error) return e;
+        :token tk2 = tkr.next();
+        return tk2.isOp(")")
+          ? exp.mkGroup(ln, e)
+          : failE(ln, ")", tk2.toStr())
+        ;
+      }
+      "{": {
+        :token tk2 = tkr.peek();
+        if (tk2.isOp("}")) {
+          tkr.next();
+          :token tk = tkr.peek();
+          if (tk.isOp("/")) {
+            t, ok = readEmptyType(erd);
+            if (!ok) return t;
+            return exp.mkDictionary00(ln, [t]);
+          }
+          return exp.mkDictionary00(ln, []);
+        }
+        D = [];
+        E, ok = readDicEntry(erd);
+        if (!ok) return E;
+        D.push(E);
+        while () {
+          :token tk3 = tkr.next();
+          if (tk3.tp == token.operator) {
+            if (tk3.value == "}") return exp.mkDictionary(ln, D);
+            if (tk3.value == ",") {
+              E, ok = readDicEntry(erd);
+              if (!ok) return E;
+              D.push(E);
+              continue;
+            }
+          }
+          return failE(tk3.ln, "} or ,", tk3.toStr());
+        }
+      }
+      "[": {
+        :token tk2 = tkr.peek();
+        tp = tk2.tp;
+        v = tk2.value;
+
+        isArrayV = [true];
+        isRangeV = [false];
+        if (tk2.isOp("]")) {
+          tkr.next();
+          :token tk = tkr.peek();
+          if (tk.isOp("/")) {
+            t, ok = readEmptyType(erd);
+            if (!ok) return t;
+            return exp.mkArray00(ln, [t]);
+          }
+          return exp.mkArray00(ln, []);
+        } else if (tp == token.operator & (v == "." | v == "!")) {
+          if (v == ".") isArrayV! = false;
+          else isRangeV! = true;
+          tkr.next();
+          :token tk3 = tkr.peek();
+          if (tk3.isOp("]"))
+            return fail(tk3.ln, "Unexpected ']'");
+        }
+        :arr A, ok = readArray(erd, "]");
+        if (!ok) return A;
+        if (isRangeV!) {
+          if (A.size() > 3)
+            return fail(ln, "Range with more than 3 values");
+          return exp.mkRange(ln, A);
+        }
+        return isArrayV! ? exp.mkArray(ln, A) : exp.mkTuple(ln, A);
+      }
+      "\\": {
+        :rdCtx ctx = erd[ctx];
+        :dicLayer mds = ctx.symMods;
+        mds.addLayer();
+
+        Pars = [];
+        while () {
+          p, ok = readParam(erd, Pars);
+          if (!ok) return p;
+          if (p == "") break;
+          Pars.push(p);
+        }
+
+        :stRd strd = stRd.new0(ctx, erd);
+        :stat st0 = strd.next();
+        if (st0.tp == stat.error) return fail(st0.ln, st0.value);
+
+        st = st0.tp == stat.block ? st0 : stat.mkBlock(st0.ln, [st0]);
+        mds.removeLayer();
+        // Fake wrong type
+        return exp.mkFunction(ln, type.new("1", []), Pars, st);
+      }
+      default: return fail(ln, "Unexpected '" + value + "'");
+    }
+    token.bool: return exp.mkBoolean(ln, value);
+    token.int: return exp.mkInteger(ln, value);
+    token.float: return exp.mkFloat(ln, value);
+    token.string: return exp.mkString(ln, value);
+    default: {// symbol
+      if (value == "switch") return readSwitch(erd, ln);
+      return readSymbol(erd, exp.mkSymbol(ln, value));
+    }
+  }
+};
+
+/// Read the type of empty dictionary or array.
+/// NOTE: Reading starts just before the operator '/'.
+/// Returns [type, true] or [exp.error, false].
+///   erd: Expression reader.
+/// \<expRd> -> [(<type>|<exp>), b]
+readEmptyType = \erd -> {
+  :tokenRd tkr = erd[tkrd];
+  :token tk = tkr.next();
+  ln = tk.ln;
+  Bf = []; //[s.]
+  while () {
+    :token tk = tkr.next();
+    switch (tk.tp) {
+      token.eof: return [fail(ln, "Unexpected end of file reading type"), false];
+      token.operator: if (tk.value == "/") break;
+                      else Bf.push(tk.value);
+      token.symbol: Bf.push(tk.value);
+      default: return [
+          failE(tk.ln, "Element of type definition", tk.toStr()), false
+        ];
+    }
+  }
+  t = Bf.join("");
+  :type t2, ok = type.read(t);
+  return ok ? [t2, true] : [fail(ln, t2), false];
+};
+
+/// Read a definitions type -- left (type definition) and right (tuple
+/// definition).
+/// NOTE: Reading starts just before the operator '(' or '['.
+/// Returns [type, true] or [exp.error, false].
+///   erd: Expression reader.
+///   isLeftSide: 'true' if is reading the left side of a difinition.
+/// \<expRd>, b -> [(<type>|<exp>), b]
+readDefType = \erd, isLeftSide -> {
+  :tokenRd tkr = erd[tkrd];
+  :token openTk =  tkr.next();
+  ln = openTk.ln;
+
+  if (isLeftSide) {
+    :token id = tkr.next();
+    if (id.tp != token.symbol)
+      return [failE(id.ln, "symbol", id.toStr()), false];
+
+    :token op = tkr.next();
+    if (op.tp == token.operator) {
+      if (op.value == ")") {
+        :type t, = type.read("(" + id.value + ")");
+        return [t, true];  // Ok return
+      }
+
+      if (op.value == "|") {
+        Bf = []; // [s.]
+        while () {
+          :token tk = tkr.next();
+          switch (tk.tp) {
+            token.eof:
+              return [fail(op.ln, "Unexpected end of file reading type"), false];
+            token.operator:
+              if (tk.value == ")") break;
+              else return [failE(tk.ln, "Generic type", tk.toStr()), false];
+            token.symbol:
+              Bf.push(tk.value);
+            default:
+              return [failE(tk.ln, "Generic type", tk.toStr()), false];
+          }
+        }
+        gs = Bf.join("");
+        for (i, ch = gs) {
+          if (ch < "A" | ch > "Z")
+            return [fail(op.ln, "Generics '" + ch + "' is not uppercase"), false];
+          if (str.index(gs[:i], ch) != -1)
+            return [fail(op.ln, "Generic '" + ch + "' is duplicated"), false];
+        }
+        :type t, = type.read("(" + id.value + "|" + gs + ")");
+        return [t, true]; // Ok return
+      }
+    }
+    return [failE(op.ln, "| or )", op.toStr()), false];
+  }
+
+  if (!openTk.isOp("["))
+    return [failE(ln, "[", openTk.toStr()), false];
+  Bf = []; // [s.]
+  while () {
+    :token tk = tkr.next();
+    switch (tk.tp) {
+      token.eof: return [fail(ln, "Unexpected end of file reading type"), false];
+      token.operator: switch (tk.value) {
+        ";": {
+          t = "[" + Bf.join("");
+          :type t2, ok = type.read(t);
+          if (!ok) return [fail(tk.ln, t2), false];
+          if (t2.id != "t" & t2.id != "0" & t2.id != "1")
+            return [failE(tk.ln, "Function or tuple type", t), false];
+          return [t2, true];  // Ok return.
+        }
+        default: Bf.push(tk.value);
+      }
+      token.symbol: Bf.push(tk.value);
+      default: return [
+          failE(tk.ln, "Element of type definition", tk.value), false
+        ];
+    }
+  }
+};
+
+//  Read a type
+//  Returns [Entry, true] or [exp.error, false].
+//: \<expRd> -> [([<exp>, <exp>]|<exp>), b]
+readDicEntry = \erd -> {
+  :tokenRd tkr = erd[tkrd];
+  :exp key = next(erd);
+  if (key.tp != exp.symbol & key.tp != exp.string)
+    return [failE(key.ln, "symbol or string", key.toStr()), false];
+
+  :token tk = tkr.next();
+  if (!tk.isOp(":"))
+    return [failE(tk.ln, ":", tk.toStr()), false];
+
+  :exp e = next(erd);
+  return e.tp == exp.error
+    ? [e, false]
+    : [
+        [key.tp == exp.symbol
+        ? exp.mkString(key.ln, key.value)
+        : key,
+        e
+      ], true]
+  ;
+};
+
+/// Read [(array | error), ok] where:
+///   - array is a non-empty array of expressions
+///   - error is a exp.error.
+///   erd: Expression reader.
+///   end: "]" for array and tuple, ")" for parenthesis and ":" from switch.
+/// \<expRd>, s -> [([<exp>.]|<exp>), b]
+readArray = \erd, end -> {
+  :tokenRd tkr = erd[tkrd];
+  :exp e = next(erd);
+  if (e.tp == exp.error) return [e, false];
+
+  A = [e];
+  while () {
+    :token tk3 = tkr.next();
+    if (tk3.tp == token.operator) {
+      if (tk3.value == end)
+        return [A, true];
+      if (tk3.value == ",") {
+        :exp e = next(erd);
+        if (e.tp == exp.error) return [e, false];
+        A.push(e);
+        continue;
+      }
+    }
+    return [failE(tk3.ln, end + " or ,", tk3.toStr()), false];
+  }
+};
+
+// Read a function parameter, testing that it is not duplicated, and
+// updating erd[ctx].SymMods.
+// Returns [(par | error), ok], where:
+//  - par is the paramenter name or an empty string if there are no more to read.
+//  - error Expression of type exp.error
+//: \<expRd>, [s.] -> [(s|<exp>), b]
+readParam = \erd, :arr Pars -> {
+  :rdCtx ctx = erd[ctx];
+  :dicLayer symMods = ctx.symMods;
+  :tokenRd tkr = erd[tkrd];
+  :token tk1 = tkr.peek();
+  mdV = [""];
+  if (tk1.isOp(":")) {
+    tkr.next();
+    :token tk2 = tkr.next();
+    if (tk2.tp != token.symbol)
+      return [failE(tk2.ln, "symbol", tk2.toStr()), false];
+    mdV! = tk2.value;
+  }
+
+  :token tk2 = tkr.next();
+  if (tk2.isOp("->"))
+    return ["", true];
+  if (tk2.tp != token.symbol)
+    return [failE(tk2.ln, "symbol", tk2.toStr()), false];
+  v = tk2.value;
+  if (Pars.any(\p -> return p == v;))
+    return [fail(tk2.ln, "Symbol '" + v + "' is duplicated"), false];
+  symMods.putElement(tk2.value, mdV!);
+
+  :token tk3 = tkr.peek();
+  if (tk3.tp == token.operator) {
+    if (tk3.value == "," | tk3.value == "->") {
+      if (tk3.value == ",") tkr.next();
+      return [tk2.value, true];
+    }
+    // else below
+  }
+  return failE(tk3.ln, ", or ->", tk3.toStr());
+};
+
+// Read switch expression.
+// \<expRd>, i -> <exp>
+readSwitch = \erd, ln -> {
+  :tokenRd tkr = erd[tkrd];
+
+  :token tk1 = tkr.next();
+  if (!tk1.isOp("("))
+    return failE(tk1.ln, "(", tk1.toStr());
+
+  :exp e = next(erd);
+  if (e.tp == exp.error) return e;
+
+  :token tk2 = tkr.next();
+  if (!tk2.isOp(")"))
+    return failE(tk2.ln, ")", tk2.toStr());
+
+  :token tk3 = tkr.next();
+  if (!tk3.isOp("{"))
+    return failE(tk3.ln, "{", tk3.toStr());
+
+  Es = []; // [[[<exp>.], <exp>].]
+  withDefaultV = [false];
+  while () {
+    :arr A, ok = readArray(erd, ":");
+    if (!ok) return A;
+    if (A.size() > 1) {
+      if (A.any(\:exp e -> return e.tp == exp.symbol & e.value == "default";))
+        return fail(A[0][exp.ln], "'default' in a multiconditional entry");
+    } else {
+      :exp e = A[0];
+      if (e.tp == exp.symbol & e.value == "default")
+        withDefaultV! = true;
+    }
+
+    :exp e = next(erd);
+    if (e.tp == exp.error) return e;
+    Es.push([A, e]);
+
+    :token tk2 = tkr.next();
+    if (!tk2.isOp(";"))
+      return failE(tk2.ln, ";", tk2.toStr());
+
+    :token tk3 = tkr.peek();
+    if (tk3.isOp("}")) {
+      tkr.next();
+      break;
+    }
+
+    if (withDefaultV!) return fail(tk3.ln, "Conditions after 'default'");
+  }
+
+  :arr Cds = Es.peek()[0];
+  if (Cds.size() != 1 | Cds[0][exp.value] != "default")
+    return fail(ln, "Last expresion in switch-expression must be 'default:'");
+
+  return exp.mkSwitch(ln, e, Es);
+};
+
+// Cases when eSym is in symMods: Read a token (tk) and then if
+//    - tk == # -> Reading a field - function or not function:
+//                 remove # -> return md.fn(sym)
+//    - tk == ( -> Reading a module - function with 1 or more arguments:
+//                 Read 'pars)' -> return md.fn(sym, pars)
+//    - Other   -> Reading a field - noFunction:
+//                 return md.fn(sym)
+//    erd : Expression reader.
+//    eSym: Expression of type symbol.
+// \<exp> -> <exp>
+readSymbol = \erd, :exp eSym -> {
+  ln = eSym.ln;
+  :rdCtx ctx= erd[ctx];
+  :tokenRd tkr = erd[tkrd];
+  :token tk = tkr.peek();
+  if (!tk.isOp(".")) return eSym;
+  // Expression 'Point'
+  tkr.next();
+  :token tk2 = tkr.next();
+  if (tk2.tp != token.symbol)
+    return failE(tk.ln, "symbol", tk2.toStr());
+  :dicLayer symMods = ctx.symMods;
+  sym = eSym.value;
+  fn = tk2.value;
+  mdOp = symMods.getElement(sym);
+  if (!mdOp) return exp.mkPoint(ln, sym, fn);
+  md = mdOp!;
+
+  :token tk3 = tkr.peek();
+  if (tk3.tp == token.operator) {
+    if (tk3.value == "#") {
+      tkr.next();
+      // go below
+    } else if (tk3.value == "(") {
+      tkr.next();
+      Es = [eSym];
+      :token tk4 = tkr.peek();
+      if (tk4.isOp(")")) {
+        tkr.next();
+      } else {
+        E2s, ok = readArray(erd, ")");
+        if (!ok) return E2s;
+        Es.cat(E2s);
+      }
+      return exp.mkParenthesis(ln, exp.mkPoint(ln, md, fn), Es);
+    }
+    // else go below
+  }
+  return exp.mkSquare(ln, eSym, exp.mkPoint(ln, md, fn));
+};
+
+// \<expRd>, <exp> -> <exp>
+readContinuation = \erd, :exp e -> {
+  ln = e.ln;
+  :tokenRd tkr = erd[tkrd];
+  :token tk = tkr.peek();
+  tp = tk.tp;
+  v = tk.value;
+
+  if (tp != token.operator) return e;
+  switch (v) {
+    "!": {
+      tkr.next();
+      return readContinuation(erd, exp.mkSquare(ln, e, exp.mkInteger(tk.ln, "0")));
+    }
+    "[": {
+      tkr.next();
+      :token tk0 = tkr.peek();
+      startWithColonV = [false];
+      if (tk0.isOp(":")) {
+        startWithColonV! = true;
+        tkr.next();
+      }
+      sWC = startWithColonV!;
+
+      :token tk1 = tkr.peek();
+      if (tk1.isOp("]") & sWC) {
+        tkr.next();
+        return exp.mkSlice(ln, e, [], []);
+      }
+
+      :exp e1 = next(erd);
+      if (e1.tp == exp.error) return e1;
+      :token tk2 = tkr.next();
+      tp = tk2.tp;
+      v = tk2.value;
+
+      if (sWC) {
+        if (tp == token.operator & v == "]")
+          return exp.mkSlice(ln, e, [], [e1]);
+        return failE(tk.ln, "]", tk2.toStr());
+      }
+
+      if (tp == token.operator) {
+        if (v == "]")
+          return readContinuation(erd, exp.mkSquare(ln, e, e1));
+
+        if (v == ":") {
+          :token tk1 = tkr.peek();
+          if (tk1.isOp("]")) {
+            tkr.next();
+            return exp.mkSlice(ln, e, [e1], []);
+          }
+          :exp e2 = next(erd);
+          if (e2.tp == exp.error) return e2;
+          :token tk2 = tkr.next();
+          if (tk2.isOp("]"))
+            return exp.mkSlice(ln, e, [e1], [e2]);
+          return failE(tk.ln, "]", tk2.toStr());
+        }
+        // continue bellow
+      }
+      return failE(tk.ln, ": or ]", tk2.toStr());
+    }
+    "(": {
+      tkr.next();
+      :token tk = tkr.peek();
+      Es = [];
+      if (tk.isOp(")")) {
+        tkr.next();
+      } else {
+        E2s, ok = readArray(erd, ")");
+        if (!ok) return E2s;
+        Es.cat(E2s);
+      }
+      return readContinuation(erd, exp.mkParenthesis(ln, e, Es));
+    }
+    default:
+      return e;
+  }
+};
+
+ // Es is a sequence [<exp>,<token>, <exp>, <token> ... <token>, <exp>]
+//: \(\<token>->b), [*.] -> [*.]
+solveBinary = \matchLevelFn, :arr Es -> {
+  iV = [1];
+  R = [Es[0]];
+  size = Es.size();
+  while () {
+    i = iV!;
+    iV! += 2;
+    if (i >= size) break;
+    :token tk = Es[i];
+    e2 = Es[i+1];
+    if (matchLevelFn(tk)) {
+      :exp e1 = R.pop();
+      R.push(exp.mkBinary(e1.ln, tk.value, e1, e2));
+    } else {
+      R.push(tk);
+      R.push(e2);
+    }
+  }
+  return R;
+};

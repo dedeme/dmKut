@@ -24,7 +24,7 @@ import "cts";
 /// \i,i,s,[f.],f,f,i,i -> <myType>
 new : id, cycle, mdId, Params, assets, profits, points, sales;
 
-/// \<flea> -> JS
+/// \<flea> -> [*.]
 toJs = \f -> return [
     math.itof(f[id]),
     math.itof(f[cycle]),
@@ -37,7 +37,7 @@ toJs = \f -> return [
 
 
 
-/// \JS -> <myType>
+/// \[*.] -> <flea>
 fromJs = \A -> return [
     math.ftoi(A[id]),
     math.ftoi(A[cycle]),
@@ -56,7 +56,7 @@ generate = \id, cycle, fmodel -> {
   :arr Bases = simParams.paramBases(fmodel);
   Incs = simParams.paramIncrs(fmodel);
   Types = md.ParamTypes;
-  Ps = arr.new(Bases.size(), 0.0);
+  Ps = arr.new(0.0, Bases.size());
   for (i, b = Bases) {
     type = Types[i];
     base = b;
@@ -84,7 +84,7 @@ evaluate = \assets, profits -> return math.ftoi(
 /// Makes a simulation and modifies F.assets, F.profits and F.points with the
 /// results.
 /// All the fleas are of the same model.
-/// \[<flea>.], <quotes> -> ()
+/// \[<flea>.], <tquotes> -> ()
 calculate = \Fs, qts -> {
   md = models.get(Fs[0][mdId])!;
   :: Rs = strategy.stGroup2(md, qts, arr.map(Fs, \f -> return f[Params];));
@@ -110,7 +110,7 @@ mutate = \f, id, cycle -> {
   Bases = simParams.paramBases(f[mdId]);
   Incs = simParams.paramIncrs(f[mdId]);
   Types = md.ParamTypes;
-  Ps = arr.new(arr.size(f[Params]), 0.0);
+  Ps = arr.new(0.0, arr.size(f[Params]));
   for (i, p = f[Params]) {
     type = Types[i];
     base = Bases[i];
@@ -129,7 +129,7 @@ mutate = \f, id, cycle -> {
 /// Makew a mutation cycle.
 /// It returns fleas array sorted by evaluatoin points (descending).
 /// All the fleas are of the same model.
-/// \[<flea>...], <quotes> -> [<fleas>...]
+/// \[<flea>.], <tquotes> -> [<flea>.]
 newCycle = \Fleas, qts -> {
   fleasPerModel = cts.fleasPerModel;
   mdId = Fleas[0][mdId];
@@ -146,7 +146,7 @@ newCycle = \Fleas, qts -> {
     idV! += 1;
     return f2;
   });
-  F3s = arr.new(fleasPerModel, 0);
+  F3s = arr.new(0, fleasPerModel);
   id = idV!;
   for (i = 0:fleasPerModel)
     F3s[i] = generate(id + i, cy, mdId);

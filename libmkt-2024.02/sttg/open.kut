@@ -1,0 +1,199 @@
+// Copyright 10-Sep-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "../cts";
+import "../model";
+import "../broker";
+import "../tquotes";
+
+/// Returns the result of a simulation.
+///   mdId  : Model identifier.
+///   qts   : Quotes to perform the simulation.
+///   Params: Model parameters.
+///   RETURN: Rest fields of <stRs> in the
+///           next order:
+///             Refs, Hreals, Haccs, Hrefs, Hwithdrawals, cash, Profits,
+///             nOrders, Orders, nBuys, Buys, nSales, Sales.
+///           where
+///             Refs is a flat array days x cos.
+///             nOrders is the orders number.
+///             Order is a flat array of orders.
+///               Each order is [f,f,f,f,f] :: [date, nick, type, stocks, price],
+///                 - type is cts.orderBuy or cts.orderSell.
+///             nBuys is the buys number.
+///             Buys is a flat array of buys.
+///               Each buy is [f,f] :: [nick, date].
+///             nSales is the sales number.
+///             Sales is a flat array of sales.
+///               Each sale is [f,f] :: [nick, date].
+/// \s, <tquotes>, [f.] -> [f.]
+run = \(sFF|F) mdId, :tquotes qts, :arr Params -> {
+  ndates = cts.historicQuotes;
+  ncos = qts.ncos();
+  size = ndates * ncos;
+
+  Opens = qts.opens();
+  Closes = qts.closes();
+  References = model.calc(mdId, Closes, Params);
+  Orders = [!0.0];
+  Buys = [!0.0];
+  Sales = [!0.0];
+
+  // Global simulation.
+
+  cashV = [cts.initialCapital];
+  withdrawalsV = [0.0];
+
+  Hreals = arr.new(0.0, ndates);
+  Haccs = arr.new(0.0, ndates);
+  Hrefs = arr.new(0.0, ndates);
+  Hwithdrawals = arr.new(0.0, ndates);
+
+  Stocks = arr.new(0.0, ncos);
+  Prices = arr.new(0.0, ncos);
+  ToDos = arr.new(0, ncos);
+  ToSells = arr.new(1, ncos);
+  DaysTraps = arr.new(0, ncos);
+
+  // Profits simulation.
+
+  PrfCashes = arr.new(cts.bet, ncos);
+  PrfStocks = arr.new(0.0, ncos);
+  PrfPrices = arr.new(0.0, ncos);
+  PrfDaysTraps = arr.new(0, ncos);
+  Profits = arr.new(0.0, ncos);
+
+  // START -----------------------------
+
+  for (idate = 0:ndates) {
+    iMxDate = idate * ncos;
+    dayCashV = [cashV!];
+    realV = [0.0];
+    accV = [0.0];
+    refV = [0.0];
+    for (ico = 0:ncos) {
+      iq = iMxDate + ico;
+      op = Opens[iq];
+      cl = Closes[iq];
+      rf = References[iq];
+
+      DaysTraps[ico] -= 1;
+      PrfDaysTraps[ico] -= 1;
+
+      if (ToDos[ico] == 1) {
+        if (ToSells[ico] == 1) { // there is buy order.
+          // Global simulation.
+          if (DaysTraps[ico] < 1) {
+            if (dayCashV! > cts.minToBet) {
+              stocks = math.trunc(cts.bet / op);
+              Stocks[ico] = stocks;
+              Prices[ico] = op;
+              bk = broker.buy(stocks, op);
+              cashV! -= bk;
+              dayCashV! -= bk;
+              Orders.push(math.itof(idate));
+              Orders.push(math.itof(ico));
+              Orders.push(math.itof(cts.orderBuy));
+              Orders.push(stocks);
+              Orders.push(op);
+           }
+          }
+          // Profits simulation.
+          if (PrfDaysTraps[ico] < 1) {
+            prfCash = PrfCashes[ico];
+            stocksV = [math.trunc((prfCash - broker.buyFees(prfCash)) / op)];
+            costV = [broker.buy(stocksV!, op)];
+            while (costV! > prfCash) {
+              stocksV! -= 1.0;
+              costV! = broker.buy(stocksV!, op);
+            }
+            PrfStocks[ico] = stocksV!;
+            PrfPrices[ico] = op;
+            PrfCashes[ico] = prfCash - costV!;
+            Buys.push(math.itof(ico));
+            Buys.push(math.itof(idate));
+          }
+        } else {
+          // Global simulation.
+          stocks = Stocks[ico];
+          if (stocks > 0.0) {
+            Stocks[ico] = 0.0;
+            cashV! += broker.sell(stocks, op);
+            Orders.push(math.itof(idate));
+            Orders.push(math.itof(ico));
+            Orders.push(math.itof(cts.orderSell));
+            Orders.push(stocks);
+            Orders.push(op);
+
+            if (op < Prices[ico] * cts.noLossMultiplicator)
+              DaysTraps[ico] = cts.daysLoss;
+          }
+          // Profits simulation.
+          pstocks = PrfStocks[ico];
+          if (pstocks > 0.0) {
+            PrfStocks[ico] = 0.0;
+            PrfCashes[ico] += broker.sell(pstocks, op);
+            Sales.push(math.itof(ico));
+            Sales.push(math.itof(idate));
+
+            if (op < PrfPrices[ico] * cts.noLossMultiplicator)
+              PrfDaysTraps[ico] = cts.daysLoss;
+          }
+        }
+        ToDos[ico] = 0;
+      }
+
+      stocks = Stocks[ico];
+      if (stocks > 0.0) {
+        realV! += broker.sell(stocks, cl);
+        accV! += broker.sell(stocks, Prices[ico]);
+        refV! += broker.sell(stocks, rf < cl ? rf : cl);
+      }
+
+      if (ToSells[ico] == 1) {
+        if (rf > cl) {
+          ToDos[ico] = 1;
+          ToSells[ico] = 0;
+        }
+      } else if (rf < cl) {
+        ToDos[ico] = 1;
+        ToSells[ico] = 1;
+      }
+    }
+
+    total = cashV! + realV!;
+    if (total > cts.withdrawalLimit) {
+      dif = total - cts.initialCapital - cts.bet;
+      securAmount = cts.minToBet - cts.bet;
+      withdrawV = [-1.0];
+      if (cashV! > dif + securAmount) {
+        withdrawV! = dif;
+      } else if (cashV! > cts.minToBet) {
+        withdrawV! = math.trunc((cashV! - securAmount) / cts.bet) * cts.bet;
+      }
+      if (withdrawV! > 0.0) {
+        withdrawalsV! += withdrawV!;
+        cashV! -= withdrawV!;
+      }
+    }
+
+    Hreals[idate] = cashV! + withdrawalsV! + realV!;
+    Haccs[idate] = cashV! + withdrawalsV! + accV!;
+    Hrefs[idate] = cashV! + withdrawalsV! + refV!;
+    Hwithdrawals[idate] = withdrawalsV!;
+  }
+
+  iMxData = size - ncos;
+  for (i = 0:ncos) {
+    Profits[i] =
+      (PrfCashes[i] + PrfStocks[i] * Closes[iMxData + i] - cts.bet) / cts.bet;
+  }
+
+  return
+    References + Hreals + Haccs + Hrefs + Hwithdrawals +
+    [cashV! + withdrawalsV!] + Profits +
+    [math.itof(Orders.size() / 5)] + Orders +
+    [math.itof(Buys.size() / 2)] + Buys +
+    [math.itof(Sales.size() / 2)] + Sales
+  ;
+};

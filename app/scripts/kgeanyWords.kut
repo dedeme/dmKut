@@ -9,10 +9,14 @@ help = \ -> return """
   """;;
 
 :file kutConfPath = "/home/deme/.config/geany/filedefs/filetypes.Kut.conf";
-:file jkutConfPath = "/home/deme/.config/geany/filedefs/filetypes.JKut.conf";
+:file jkutConfPath = "/home/deme/.config/geany/filedefs/filetypes.Jkut.conf";
+:file nkutConfPath = "/home/deme/.config/geany/filedefs/filetypes.Nkut.conf";
+:file kuttConfPath = "/home/deme/.config/geany/filedefs/filetypes.Kutt.conf";
 
 sys.assert(kutConfPath.exists());
 sys.assert(jkutConfPath.exists());
+sys.assert(nkutConfPath.exists());
+sys.assert(kuttConfPath.exists());
 
 :arr Args = sys.args();
 if (Args.size() != 1) {
@@ -27,11 +31,19 @@ if (!pRoot.isDirectory()) {
 }
 
 :arr Kuts = str.split(
-  "arr b64 bytes cryp dic file iter js math path regex str sys tcp thread time",
+  "arr b64 bytes cryp dic file iter js math regex str sys tcp thread time",
   " "
 );
-:arr JKuts = str.split(
+:arr Jkuts = str.split(
   "arr b64 bytes client cryp dic domo iter js math storage str sys time timer ui",
+  " "
+);
+:arr Nkuts = str.split(
+  "arr b64 bytes cryp dic file iter js math str sys thread time timer",
+  " "
+);
+:arr Kutts = str.split(
+  "arr b64 bytes cryp dic file iter js math regex str sys tcp thread time",
   " "
 );
 
@@ -47,20 +59,27 @@ isValidWord = \f -> {
 
 populate = \:file d -> {
   for (f = d.dir()) {
-    :file fpath = path.cat([d, f]);
+    :file fpath = file.cat([d, f]);
     if (fpath.isDirectory())
       populate(fpath);
     else if (str.ends(fpath, ".kut") & isValidWord(f[:-4]))
       Kuts.push(f[:-4]);
     else if (str.ends(fpath, ".jkut") & isValidWord(f[:-5]))
-      JKuts.push(f[:-5]);
+      Jkuts.push(f[:-5]);
+    else if (str.ends(fpath, ".nkut") & isValidWord(f[:-5]))
+      Nkuts.push(f[:-5]);
+    else if (str.ends(fpath, ".ktt") & isValidWord(f[:-4]))
+      Kutts.push(f[:-4]);
   }
 };
 populate(pRoot);
 
 Kuts.sort(\e1, e2 -> return e1 < e2;);
-JKuts.sort(\e1, e2 -> return e1 < e2;);
+Jkuts.sort(\e1, e2 -> return e1 < e2;);
+Nkuts.sort(\e1, e2 -> return e1 < e2;);
+Kutts.sort(\e1, e2 -> return e1 < e2;);
 
+// \s, [s.] -> ()
 mkConf = \:file kPath, :arr Kuts ->
   kPath.write(arr.join(
     arr.map(
@@ -74,6 +93,8 @@ mkConf = \:file kPath, :arr Kuts ->
 
 
 mkConf(kutConfPath, Kuts);
-mkConf(jkutConfPath, JKuts);
+mkConf(jkutConfPath, Jkuts);
+mkConf(nkutConfPath, Nkuts);
+mkConf(kuttConfPath, Kutts);
 
 

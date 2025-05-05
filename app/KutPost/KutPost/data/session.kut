@@ -16,7 +16,7 @@
 /// \s,s,s,s,i,i -> <session>
 new : id, key, userId, level, tm, lapse;
 
-/// \JS -> <session>
+/// \[*.] -> <session>
 fromJs = \A -> return [
     A[id],
     A[key],

@@ -7,6 +7,7 @@ import "cgi/cgiUser";
 import "cgi/cgiSession";
 
 /// Standard password length.
+/// i
 klen = 300;
 
 // Seconds == 30 days
@@ -21,9 +22,11 @@ demeKey =
   "Hg55i7iiKbA0ogENhEIFjMG+wmFDNzgjvDnNYOaPTQ7l4C8aaPsEfl3sugiw";
 
 /// Key for responding when session is expired.
+/// s
 noSessionKey = "nosession";
 
 /// Cgi home directory. Must be initialized with 'cgi.init'.
+/// [s]
 homeV = [""];
 
 // File password.
@@ -38,11 +41,11 @@ tExpirationV = [0];
 
 // \[<user.>] -> ()
 writeUsers = \Us ->
-  file.write(path.cat([homeV!, "users.tb"]), cryp.encode(fkey, js.w(Us)));;
+  file.write(file.cat([homeV!, "users.tb"]), cryp.encode(fkey, js.w(Us)));;
 
 // \-> [<user>.]
 readUsers = \->
-  return js.r(cryp.decode(fkey, file.read(path.cat([homeV!, "users.tb"]))));;
+  return js.r(cryp.decode(fkey, file.read(file.cat([homeV!, "users.tb"]))));;
 
 // SESSIONS
 
@@ -57,11 +60,11 @@ updateSession = \:cgiSession s -> {
 
 // \[<session>.] -> ()
 writeSessions = \Ss ->
-  file.write(path.cat([homeV!, "sessions.tb"]), cryp.encode(fkey, js.w(Ss)));;
+  file.write(file.cat([homeV!, "sessions.tb"]), cryp.encode(fkey, js.w(Ss)));;
 
 // \-> [<session>.]
 readSessions = \-> {
-  j = cryp.decode(fkey, file.read(path.cat([homeV!, "sessions.tb"])));
+  j = cryp.decode(fkey, file.read(file.cat([homeV!, "sessions.tb"])));
   return arr.map(js.r(j), cgiSession.fromJs);
 };
 
@@ -69,7 +72,7 @@ readSessions = \-> {
 // \s, s, s, s, s, i -> ()
 addSession = \sessionId, key, user, level, lapse -> {
   now = time.now() / 1000;
-  NewSessions = arr.filter(
+  :arr NewSessions = arr.filter(
     readSessions(),
     \:cgiSession s -> return s.tm + s.lapse >= now;
   );
@@ -80,7 +83,7 @@ addSession = \sessionId, key, user, level, lapse -> {
 // Replace one session
 // \<session> -> ()
 replaceSession = \:cgiSession s -> {
-  NewSessions = arr.filter(
+  :arr NewSessions = arr.filter(
     readSessions(),
     \:cgiSession oldS -> return oldS.id != s.id;
   );
@@ -206,7 +209,7 @@ authentication = \user, pass, withExpiration -> {
 
 /// Returns the session key if ssId is a valid session.
 ///   ssId  : Session identifier.
-/// \s -> [s]|[]
+/// \s -> ([s]|[])
 getSessionKey = \ssId -> {
   sOp = arr.find(readSessions(), \:cgiSession s -> return s.id == ssId;);
   if (!sOp) return [];

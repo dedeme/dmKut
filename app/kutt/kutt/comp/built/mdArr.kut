@@ -1,0 +1,59 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "all": built.mkRs("[[A][A|b]|b]", md, sym);
+    "any": built.mkRs("[[A][A|b]|b]", md, sym);
+    "cat": built.mkRs("[[A][A]|]", md, sym);
+    "clear": built.mkRs("[[A]|]", md, sym);
+    "copy": built.mkRs("[[A]|[A]]", md, sym);
+    "drop": built.mkRs("[[A]i|[A]]", md, sym);
+    "dropWhile": built.mkRs("[[A][A|b]|[A]]", md, sym);
+    "duplicates": built.mkRs("[[A][AA|b]|[.[A][A]]]", md, sym);
+    "each": built.mkRs("[[A][A|]|]", md, sym);
+    "eachIx": built.mkRs("[[A][Ai|]|]", md, sym);
+    "filter": built.mkRs("[[A][A|b]|[A]]", md, sym);
+    "filterIn": built.mkRs("[[A][A|b]|]", md, sym);
+    "find": built.mkRs("[[A][A|b]|[A]]", md, sym);
+    "fromIter": built.mkRs("[[!A]|[A]]", md, sym);
+    "index": built.mkRs("[[A][A|b]|i]", md, sym);
+    "insert": built.mkRsEx("[[A]iA|]", ctx, ln, md, sym);
+    "insertArr": built.mkRsEx("[[A]i[A]|]", ctx, ln, md, sym);
+    "insertRange": built.mkRsEx("[[A]i[A]ii|]", ctx, ln, md, sym);
+    "join": built.mkRs("[[s]s|s]", md, sym);
+    "map": built.mkRs("[[A][A|B]|[B]]", md, sym);
+    "new": built.mkRs("[Ai|[A]]", md, "new_fill");
+    "peek": built.mkRsEx("[[A]|A]", ctx, ln, md, sym);
+    "pop": built.mkRsEx("[[A]|A]", ctx, ln, md, sym);
+    "push": built.mkRs("[[A]A|]", md, sym);
+    "reduce": built.mkRs("[[A]B[BA|B]|B]", md, sym);
+    "remove": built.mkRsEx("[[A]i|A]", ctx, ln, md, sym);
+    "removeRange": built.mkRsEx("[[A]ii|[A]]", ctx, ln, md, sym);
+    "reverse": built.mkRs("[[A]|[A]]", md, sym);
+    "reverseIn": built.mkRs("[[A]|]", md, sym);
+    "setArr": built.mkRsEx("[[A]i[A]|]", ctx, ln, md, sym);
+    "setRange": built.mkRsEx("[[A]i[A]ii|]", ctx, ln, md, sym);
+    "shift": built.mkRsEx("[[A]|A]", ctx, ln, md, sym);
+    "shuffle": built.mkRs("[[A]|]", md, sym);
+    "size": built.mkRs("[[A]|i]", md, sym);
+    "sort": built.mkRs("[[A][AA|b]|]", md, sym);
+    "take": built.mkRs("[[A]i|[A]]", md, sym);
+    "takeWhile": built.mkRs("[[A][A|b]|[A]]", md, sym);
+    "toIter": built.mkRs("[[A]|[!A]]", md, sym);
+    "unshift": built.mkRs("[[A]A|]", md, sym);
+    "unzip": built.mkRs("[[[.AB]]|[.[A][B]]]", md, sym);
+    "unzip3": built.mkRs("[[[.ABC]]|[.[A][B][C]]]", md, sym);
+    "zip": built.mkRs("[[A][B]|[[.AB]]]", md, sym);
+    "zip3": built.mkRs("[[A][B][C]|[[.ABC]]]", md, sym);
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};
+

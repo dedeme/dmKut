@@ -1,0 +1,83 @@
+// Copyright 14-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test tokens.
+
+import "readers/tokenRd";
+import "data/token";
+
+/// \ -> ()
+run = \ -> {
+  :tokenRd rd1 = tokenRd.mk("  false  ");
+  sys.test(rd1.next(), [1, token.bool, "false"]);
+  sys.test(rd1.next(), [1, token.eof, ""]);
+  sys.test(rd1.next(), [1, token.eof, ""]);
+
+  :tokenRd rd2 = tokenRd.mk("  true  /* \n x */ True // ab \n // bc \n1 \n");
+  sys.test(rd2.next(), [1, token.bool, "true"]);
+  //sys.test(rd2.next(), [1, token.comment, " \n x "]);
+  sys.test(rd2.next(), [2, token.symbol, "True"]);
+  //sys.test(rd2.next(), [2, token.lineComment, " ab "]);
+  //sys.test(rd2.next(), [3, token.lineComment, " bc "]);
+  sys.test(rd2.next(), [4, token.int, "1"]);
+  sys.test(rd2.next(), [5, token.eof, ""]);
+
+  :tokenRd rd3 = tokenRd.mk(
+    "1 1.2 +1 -12.2 23.4e2 \n\n 3.45E-4 0.00e+4 \n 1_124  1_124.2e-2"
+  );
+  sys.test(rd3.next(), [1, token.int, "1"]);
+  sys.test(rd3.next(), [1, token.float, "1.2"]);
+  sys.test(rd3.next(), [1, token.operator, "+"]);
+  sys.test(rd3.next(), [1, token.int, "1"]);
+  sys.test(rd3.next(), [1, token.operator, "-"]);
+  sys.test(rd3.next(), [1, token.float, "12.2"]);
+  sys.test(rd3.next(), [1, token.float, "23.4e2"]);
+  sys.test(rd3.next(), [3, token.float, "3.45E-4"]);
+  sys.test(rd3.next(), [3, token.float, "0.00e+4"]);
+  sys.test(rd3.next(), [4, token.int, "1124"]);
+  sys.test(rd3.next(), [4, token.float, "1124.2e-2"]);
+  sys.test(rd3.next(), [4, token.eof, ""]);
+
+  :tokenRd rd4 = tokenRd.mk("a11_2e2\n");
+  sys.test(rd4.next(), [1, token.symbol, "a11"]);
+  sys.test(rd4.next(), [1, token.operator, "_"]);
+  sys.test(rd4.next(), [1, token.int, "2"]);
+  sys.test(rd4.next(), [1, token.symbol, "e2"]);
+  sys.test(rd4.next(), [2, token.eof, ""]);
+
+  :tokenRd rd5 = tokenRd.mk("'' 'añb\\n\\t\\f\\r\\\\d\\u0064c\\'x\\''");
+  sys.test(rd5.next(), [1, token.string, '']);
+  sys.test(rd5.next(), [1, token.string, 'añb\n\t\f\r\\ddc\'x\'']);
+  sys.test(rd5.next(), [1, token.eof, ""]);
+  :tokenRd rd5b = tokenRd.mk('"" "añb\\n\\t\\f\\r\\\\d\\u0064c\\"x\\""');
+  sys.test(rd5b.next(), [1, token.string, '']);
+  sys.test(rd5b.next(), [1, token.string, 'añb\n\t\f\r\\ddc"x"']);
+  sys.test(rd5b.next(), [1, token.eof, ""]);
+
+  :tokenRd rd6 = tokenRd.mk('"""\n  añb \n   c\n  d\n""" """""" """abñc"""');
+  sys.test(rd6.next(), [1, token.string, "añb \n c\nd\n"]);
+  sys.test(rd6.next(), [5, token.string, ""]);
+  sys.test(rd6.next(), [5, token.string, "abñc"]);
+  sys.test(rd6.next(), [5, token.eof, ""]);
+
+  :tokenRd rd7 = tokenRd.mk(
+    "= == === <= >= >> << - -> -= \\ + += / /= * *= % %= & &= | |= != !!"
+  );
+  List = [
+    "=", "==", "==", "=", "<=", ">=", ">", ">", "<", "<", "-", "->", "-=",
+    "\\", "+", "+=", "/", "/=", "*", "*=", "%", "%=", "&", "&=",
+    "|", "|=", "!=", "!", "!"
+    ];
+  for (o = List) {
+    sys.test(rd7.next(), [1, token.operator, o]);
+  }
+  sys.test(rd7.next(), [1, token.eof, ""]);
+
+  :tokenRd rde1 = tokenRd.mk("\n'a\n'");
+  sys.test(rde1.next(), [2, 0, "Unclosed quotes."]);
+  :tokenRd rde1b = tokenRd.mk('"a\nb"');
+  sys.test(rde1b.next(), [1, 0, "Unclosed quotes."]);
+  :tokenRd rde2 = tokenRd.mk("'a\\cv'");
+  sys.test(rde2.next(), [1, 0, "Bad escape sequence 'c'."]);
+
+};

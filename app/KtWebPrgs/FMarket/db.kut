@@ -5,56 +5,60 @@
 
 import "libdm/log";
 import "libmkt/qs";
-import "libmkt/quotes";
+import "libmkt/tquotes";
 import "libmkt/model";
 import "libmkt/models";
 import "cts";
 import "data/flea";
 import "data/summaryRs";
 
-modelsPath = path.cat([cts.dbPath, "models"]);
+modelsPath = file.cat([cts.dbPath, "models"]);
+
+/// \s -> s
+modelPath = \mdId -> return file.cat([modelsPath, mdId]);;
 
 // \s -> s
-modelPath = \mdId -> return path.cat([modelsPath, mdId]);;
+fleasPath = \mdId -> return file.cat([modelPath(mdId), "fleas.tb"]);;
 
 // \s -> s
-fleasPath = \mdId -> return path.cat([modelPath(mdId), "fleas.tb"]);;
-
-// \s -> s
-historicPath = \mdId -> return path.cat([modelPath(mdId), "historic"]);;
+historicPath = \mdId -> return file.cat([modelPath(mdId), "historic"]);;
 
 // \s, s -> s
-rkPath = \mdId, date -> return path.cat(
+rkPath = \mdId, date -> return file.cat(
   [historicPath(mdId), date, "rk.tb"]
 );;
 
 // \s, s -> s
-bwaPath = \mdId, date -> return path.cat(
-  [historicPath(mdId), date, "bestWorstAvg.tb"]
+bPath = \mdId, date -> return file.cat(
+  [historicPath(mdId), date, "best.tb"]
 );;
 
 // Read companies.
 // \ -> [s.]
 readCos = \ -> {
-  CosT = js.r(file.read(path.cat([cts.marketDataPath, "ibex.tb"])));
-  :arr Cos = CosT[0];
+  CosT = js.r(file.read(file.cat([cts.marketDataPath, "cos.tb"])));
+  :arr Cos = arr.map(
+    arr.filter(CosT[1], \E -> return E[1];), \E -> return E[0];
+  );
   Cos.sort(\c1, c2 -> return c1 < c2;);
   return Cos;
 };
 
 /// Read CMarket quotes.
-/// \ -> <quotes>
+/// \ -> <tquotes>
 readQuotes = \ -> {
-  dpath = path.cat([cts.marketDataPath, "quotes"]);
+  dpath = file.cat([cts.marketDataPath, "quotes"]);
   Cos = readCos();
-  return quotes.read(dpath, Cos);
+  return tquotes.read(dpath, Cos, true);
 };
 
 /// Returns the model list.
+/// \ -> [<model>.]
 modelsList = \ -> return models.list();;
 
 /// Reinitializes database.
 /// It must be called when a new model is added.
+/// \ -> ()
 init = \ -> {
   log.reset();
 
@@ -66,15 +70,15 @@ init = \ -> {
   for (mdId = arr.map(modelsList(), \:model md -> return md.id;)) {
     mdPath = modelPath(mdId);
     file.mkdir(mdPath);
-    file.mkdir(path.cat([mdPath, "historic"]));
+    file.mkdir(file.cat([mdPath, "historic"]));
     fsPath = fleasPath(mdId);
     if (!file.exists(fsPath)) {
-      newFs = arr.new(cts.fleasPerModel, 0);
+      newFs = arr.new(0, cts.fleasPerModel);
       for (i = 0:cts.fleasPerModel)
         newFs[i] = flea.generate(i, 0, mdId);
       if (!QsOp) arr.push(QsOp, readQuotes());
       Qs = QsOp!;
-      writeFleas(mdId, flea.cycle(newFs, Qs));
+      writeFleas(mdId, flea.newCycle(newFs, Qs));
     }
   }
 };
@@ -99,46 +103,10 @@ writeFleas = \mdId, Fleas -> {
 
   file.mkdir(historicPath(mdId));
   rkPath = rkPath(mdId, today);
-  file.mkdir(path.parent(rkPath));
+  dirPath = file.parent(rkPath);
+  file.mkdir(dirPath);
   file.write(rkPath, js.w(arr.map(Fleas[:40], flea.toJs)));
-
-  :flea f = Fleas[0];
-  BWA = [
-    summaryRs.new(f.assets, f.profits, f.points),
-    summaryRs.new(f.assets, f.profits, f.points),
-    summaryRs.new(0.0, 0.0, 0)
-  ];
-
-  for (:flea f = Fleas) {
-    :summaryRs b = BWA[0];
-    B2 = summaryRs.new(
-      f.assets > b.assets ? f.assets : b.assets,
-      f.profits > b.profits ? f.profits : b.profits,
-      f.points > b.points ? f.points : b.points
-    );
-    :summaryRs w = BWA[1];
-    W2 = summaryRs.new(
-      f.assets < w.assets ? f.assets : w.assets,
-      f.profits < w.profits ? f.profits : w.profits,
-      f.points < w.points ? f.points : w.points
-    );
-    :summaryRs a = BWA[2];
-    A2 = summaryRs.new(
-      a.assets + f.assets,
-      a.profits + f.profits,
-      a.points + f.points
-    );
-    BWA[0] = B2;
-    BWA[1] = W2;
-    BWA[2] = A2;
-  }
-  size = arr.size(Fleas);
-  sizef = math.itof(size);
-  :summaryRs a = BWA[2];
-  A2 = summaryRs.new(a.assets / sizef, a.profits / sizef, a.points / size);
-  BWA[2] = A2;
-
-  file.write(bwaPath(mdId, today), js.w(BWA));
+  file.write(file.cat([dirPath, "best.tb"]), js.w(flea.toJs(Fleas[0])));
 
   // CLEAN
 
@@ -154,10 +122,10 @@ writeFleas = \mdId, Fleas -> {
     }
     if (d > minusYear) {
       if (d[:6] == dateV![:6])
-        file.del(path.cat([historicPath(mdId), d]));
+        file.del(file.cat([historicPath(mdId), d]));
     } else {
       if (d[:4] == dateV![:4])
-        file.del(path.cat([historicPath(mdId), d]));
+        file.del(file.cat([historicPath(mdId), d]));
     }
     dateV! = d;
   }
@@ -173,18 +141,17 @@ readRankings = \mdId -> {
   return Rk;
 };
 
-/// Returns an dictionary {date -> {model -> [best, worst, medium]}}, where
-/// best, worst and medium are arrays [assets, profits, points].
-/// \ -> {{[[f,f,f], [f,f,f], [f,f,f]].}.}
+/// Returns an dictionary {date: {model: [flea(JS).]}}, where
+/// \ -> {{[*.]}.}
 readSummary = \ -> {
-  R = {}; // {{[[f, f, f],[f, f, f],[f, f, f]].}.}
+  R = {}; // {{[flea(JS).]}.}
   Models = file.dir(modelsPath);
   for (mdId = Models) {
     Dates = file.dir(historicPath(mdId));
     for (d = Dates) {
       ModelDicOp = R.get(d);
       :dic ModelDic = !ModelDicOp ? {} : ModelDicOp!;
-      ModelDic.put(mdId, js.r(file.read(bwaPath(mdId, d))));
+      ModelDic.put(mdId, js.r(file.read(bPath(mdId, d))));
       R.put(d, ModelDic);
     }
   }

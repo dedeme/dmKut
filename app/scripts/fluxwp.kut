@@ -6,14 +6,13 @@
 ///   - Externs of "libdm/img"
 
 import "libdm/img";
-import "libdm/jstb";
 
 //  CONSTANTS -----------------------------------------------
 
 //  Home directory
 home = "/home/deme/.dmKutApp/fluxwp";
 //  Selected picture path
-pictDir = path.cat([home, "picture.jpg"]);
+pictDir = file.cat([home, "picture.jpg"]);
 //  Picture width
 width = 1280;
 //  Picture height
@@ -41,12 +40,6 @@ pictPonderation = \P -> return P[2];;
 // Returns true if P1 and P2 have equals group and equals name.
 pictEq = \P1, P2 -> return P1[0] == P2[0] & P1[1] == P2[1];;
 //  Serialization
-//  \pict> -> s
-pictToJs = \P -> return [
-    math.itof(P[0]),
-    P[1],
-    math.itof(P[2])
-  ];;
 //  s -> <pict>
 pictFromJs = \A -> return newPict(math.ftoi(A[0]), A[1], math.ftoi(A[2]));;
 
@@ -57,42 +50,46 @@ pictFromJs = \A -> return newPict(math.ftoi(A[0]), A[1], math.ftoi(A[2]));;
 initDb = \-> {
   if (!file.exists(home)) {
     file.mkdir(home);
+    pictsWrite([]);
     sync();
+
+    currentWrite(pictsRead()[0]);
   }
 };
 
-//  Current picture data.
-//  \-> s<jstb>
-currentTb = \-> return jstb.new(
-  path.cat([home, "current.tb"]),
-  \-> return [];,
-  pictToJs,
-  pictFromJs
-);;
+// current.tb --------------------------
 
-//  Pictures data
-//  \-> <pictAll><jstb>
-pictsTb = \-> return jstb.newArr(
-  path.cat([home, "picts.tb"]),
-  \-> return [];,
-  pictToJs,
-  pictFromJs
-);;
+// s
+currentPath = file.cat([home, "current.tb"]);
+// \ -> <pict>
+currentRead = \ -> return pictFromJs(js.r(file.read(currentPath)));;
+// \<pict> -> ()
+currentWrite = \P -> file.write(currentPath, js.w(P));;
+
+// picts.tb ----------------------------
+
+// s
+pictsPath = file.cat([home, "picts.tb"]);
+// \ -> [<pict>.]
+pictsRead = \ -> return arr.map(js.r(file.read(pictsPath)), pictFromJs);;
+// \[<pict>.] -> ()
+pictsWrite = \Picts -> file.write(pictsPath, js.w(Picts));;
 
 //  FUNCTIONS -----------------------------------------------
 
 //  Source directory of a group.
 //  \i -> s
 sourceDir = \group ->
-  return path.cat([sourceDirAll, math.itos(group)]);
+  return file.cat([sourceDirAll, math.itos(group)]);
 ;
 
-//  Generates a new adjusted image from 'i' filling the default size.
-//    i: Source image name.
-//  \s -> ()
+//  Generates a new adjusted image from 'im' filling the default size.
+//    group: Image group
+//    im   : Source image name.
+//  \i, s -> ()
 imgConversion = \group, im -> {
   target = pictDir;
-  img.fill(path.cat([sourceDir(group), im]), target, width, height);
+  img.fill(file.cat([sourceDir(group), im]), target, width, height);
 
   WH = img.dim(target);
   if (WH[0] == width) {
@@ -120,49 +117,47 @@ help = \-> {
 };
 
 //  Synchronize a group of pictures.
-//  \[<pict>, ...], i -> [<pict>, ...]
-syncGr = \Picts, group -> {
-  SourcePicts = file.dir(sourceDir(group));
+//  \[<pict>.], i -> [<pict>.]
+syncGr = \:arr Picts, group -> {
+  :arr SourcePicts = file.dir(sourceDir(group));
   for (Sp = SourcePicts)
-    if (!arr.any(Picts, \P -> return pictName(P) == Sp;))
-      arr.push(Picts, mkPict(group, Sp));
-  return arr.filter(
-    Picts,
-    \P -> return arr.any(SourcePicts, \Sp -> return pictName(P) == Sp;);
+    if (!Picts.any(\P -> return pictName(P) == Sp;))
+      Picts.push(mkPict(group, Sp));
+  return Picts.filter(
+    \P -> return SourcePicts.any(\Sp -> return pictName(P) == Sp;);
   );
 };
 
 //  Synchronize all the pictures.
 sync = \-> {
-  :jstb psTb = pictsTb();
-  Picts = psTb.read#();
+  :arr Picts = pictsRead();
   NewPicts = [];
   for (i = 0:10) {
-    Ps = syncGr(arr.filter(Picts, \p -> return pictGroup(p) == i;), i);
-    for (p = Ps) arr.push(NewPicts, p);
+    Ps = syncGr(Picts.filter(\p -> return pictGroup(p) == i;), i);
+    for (p = Ps) NewPicts.push(p);
   }
-  psTb.write#(NewPicts);
+  pictsWrite(NewPicts);
 };
 
 //  Show a new current picture.
 show = \-> {
-  Picts = pictsTb()[jstb.read]();
-  lim = arr.reduce(Picts, 0, \r, e -> return r + pictPonderation(e););
-  More = [true];
-  while (More!) {
+  :arr Picts = pictsRead();
+  lim = Picts.reduce(0, \r, e -> return r + pictPonderation(e););
+  moreV = [true];
+  while (moreV!) {
     ix = math.rndi(lim);
-    Sum = [0];
+    sumV = [0];
     for (P = Picts) {
-      Sum! += pictPonderation(P);
-      if (Sum! >= ix) {
+      sumV! += pictPonderation(P);
+      if (sumV! >= ix) {
         pgroup = pictGroup(P);
         pname = pictName(P);
-        sourcePict = path.cat([sourceDir(pgroup), pname]);
+        sourcePict = file.cat([sourceDir(pgroup), pname]);
         if (file.exists(sourcePict)) {
-          currentTb()[jstb.write](P);
+          currentWrite(P);
           imgConversion(pgroup, pname);
           sys.cmd("fbsetbg", [pictDir]);
-          More! = false;
+          moreV! = false;
         }
         break;
       }
@@ -174,40 +169,56 @@ show = \-> {
 //  Process a rejection of picture.
 //  \->()
 reject = \-> {
-  P = currentTb()[jstb.read]();
-  oldPonderation = pictPonderation(P);
-  dif = maxPonderation - oldPonderation;
-  newPonderation = oldPonderation == 0
-    ? 0
-    : oldPonderation == maxPonderation
-      ? maxPonderation - 1
-      : maxPonderation - dif - dif
-  ;
-  NewP = newPict(pictGroup(P), pictName(P), newPonderation);
+  do = \ -> {
+    P = currentRead();
+    oldPonderation = pictPonderation(P);
+    dif = maxPonderation - oldPonderation;
+    newPonderation = oldPonderation == 0
+      ? 0
+      : oldPonderation == maxPonderation
+        ? maxPonderation - 1
+        : maxPonderation - dif - dif
+    ;
+    NewP = newPict(pictGroup(P), pictName(P), newPonderation);
 
-  :jstb PictsTb = pictsTb();
-  Picts = PictsTb.read#();
-  arr.filterIn(Picts, \P -> return !pictEq(NewP, P););
-  arr.push(Picts, NewP);
-  PictsTb.write#(Picts);
+    :arr Picts = pictsRead();
+    Picts.filterIn(\P -> return !pictEq(NewP, P););
+    Picts.push(NewP);
+    pictsWrite(Picts);
 
-  show();
+    show();
+  };
+
+  while () {
+    do();
+    bash = "zenity --question --title=Fluxwp " +
+      '--text="¿Cambiar de nuevo?"\necho $?\n';
+    ftmp = file.tmp("", "fluxwp");
+    file.write(ftmp, bash);
+    r, ok = sys.cmd("bash", [ftmp]);
+    file.del(ftmp);
+    if (!ok) {
+      sys.cmd("zenity", ["--error --title=Fluxwp --text=" + r]);
+      continue;
+    }
+    // r == "1/n"
+    if (r[0] == "1") break;
+  }
 };
 
 //  Process a change of picture.
 //  \->()
 change = \-> {
-  P = currentTb()[jstb.read]();
+  P = currentRead();
   oldPonderation = pictPonderation(P);
   dif = maxPonderation - oldPonderation;
   newPonderation = maxPonderation - dif / 2;
   NewP = newPict(pictGroup(P), pictName(P), newPonderation);
 
-  :jstb PictsTb = pictsTb();
-  Picts = PictsTb.read#();
-  arr.filterIn(Picts, \P -> return !pictEq(NewP, P););
-  arr.push(Picts, NewP);
-  PictsTb.write#(Picts);
+  :arr Picts = pictsRead();
+  Picts.filterIn(\P -> return !pictEq(NewP, P););
+  Picts.push(NewP);
+  pictsWrite(Picts);
 
   show();
 };

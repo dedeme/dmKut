@@ -18,7 +18,7 @@ import "dailyInvestorData";
 /// \s,f,[i.],[f.],<dailyInvestorData> -> <dailyChart>
 new : nick, close, Hours, Quotes, invData;
 
-/// \JS -> <dailyChart>
+/// \[*.] -> <dailyChart>
 fromJs = \A -> return [
     A[nick],
     A[close],

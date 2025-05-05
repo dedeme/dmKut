@@ -1,0 +1,19 @@
+// Copyright 22-Jun-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+/// s
+appName = "NkutDoc";
+/// Application version.
+/// s
+version = "2024.06";
+/// Data version.
+/// s
+dataVersion = "2024.06";
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);

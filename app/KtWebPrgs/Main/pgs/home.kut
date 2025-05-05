@@ -11,13 +11,13 @@ import "KtWeb/global";
 process = \Rq -> {
   switch (Rq.rq) {
     "getLog": {
-      log.setPath(global.logPath);
+      log.init(global.logPath, 100);
       return rp.mkJs({
         Log: log.readJs()
       });
     }
     "resetLog": {
-      log.setPath(global.logPath);
+      log.init(global.logPath, 100);
       log.reset();
       return rp.mkEmpty();
     }

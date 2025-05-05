@@ -35,7 +35,7 @@ solve1 = \n -> {
 
 solve2 = \n -> {
   R = [0];
-  Qs = arr.new(n, -1);
+  Qs = arr.new(-1, n);
   while () {
     r = R!;
     Qs[r] += 1;

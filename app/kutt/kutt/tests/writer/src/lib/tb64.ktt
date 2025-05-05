@@ -1,0 +1,12 @@
+// Copyright 28-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+{
+  sys.println("tb64 ...");
+
+  sys.test(b64.decode(b64.encode("")), "");
+  sys.test(b64.decode(b64.encode("¿Vió un cañón?世界")), "¿Vió un cañón?世界");
+
+  sys.println("  finished.");
+}
+

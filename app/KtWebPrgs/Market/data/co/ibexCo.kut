@@ -1,0 +1,21 @@
+// Copyright 26-Oct-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Ibex company data.
+
+/// Constructor.
+///   nick  : Company nick.
+///   sel   : 'true' if it is selected to operate.
+///   stocks: Stocks to calculate index.
+///   pond  : Ponderation to calculate index.
+/// \s,b,i,i -> <ibexCo>
+new : nick, sel, stocks, pond;
+
+/// \[*.] -> <ibexCo>
+fromJs = \A -> return [
+    A[nick],
+    A[sel],
+    math.ftoi(A[stocks]),
+    math.ftoi(A[pond])
+  ];;
+

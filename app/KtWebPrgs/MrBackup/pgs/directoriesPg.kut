@@ -9,7 +9,7 @@ import "poolDb/poolDb";
 import "data/testRs";
 import "fns";
 
-/// \{*.} -> ()
+/// \{*.} -> s
 process = \Rq -> {
   rq = Rq.rq;
   switch (rq) {

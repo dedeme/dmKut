@@ -8,7 +8,7 @@ import "readers/mdReader";
 import "data/doc";
 
 /// Process request.
-/// \m -> s
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "doc": {

@@ -30,9 +30,9 @@ process = \Rq -> {
       isDup = !As.add(alarm.mk(Rq.key, math.ftoi(Rq.tm)));
       if (!isDup) {
         alarmTb.write(As);
-        ppath = path.cat([file.wd(), sys.mainPath()[:-4]]);
+        ppath = file.cat([file.wd(), sys.mainPath()[:-4]]);
         thread.run(
-          \ -> sys.cmd2("kut2", [ppath, "alarm!", Rq.key]);
+          \ -> sys.cmd2("kut", [ppath, "alarm!", Rq.key]);
         );
         sys.sleep(200);
       }

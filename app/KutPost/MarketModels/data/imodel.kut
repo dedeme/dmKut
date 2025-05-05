@@ -4,6 +4,7 @@
 /// Investor - model data.
 
 /// Paramter types.
+/// [i.]
 dayParam, percParam =;
 
 /// Constructor.

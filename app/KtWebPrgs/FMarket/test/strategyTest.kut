@@ -22,7 +22,7 @@ run = \ -> {
 // \s, [f.] -> s
 process = \modelId, Params -> {
   md = models.get(modelId)!;
-  :quotes qts = db.readQuotes();
+  :tquotes qts = db.readQuotes();
   :stRs rs = strategy.open(md, qts, Params);
   return js.w([rs.Hreals, rs.Orders]);
 };

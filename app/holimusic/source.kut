@@ -1,0 +1,100 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Source data checker.
+
+import "data/dirs";
+import "db/dirsTb";
+import "ui/alert";
+import "ui/confirm";
+import "ui/filesel";
+import "cts";
+
+/// Check source data and returns an option with list of songs (relative paths)
+/// If the option is empty the process should be stopped.
+/// \ -> ([[s.]]|[])
+check = \ -> while () {
+    :dirs ds = dirsTb.read();
+    :file dpath = ds.dsource;
+    if (dpath == "" | !dpath.isDirectory()) {
+      if (confirm.show(dpath == ""
+        ? "No se ha indicado el directorio de origen.\n¿Indicarlo ahora?"
+        : "El origen '" + dpath + "'\nno es un directorio.\n¿Cambiar la ruta?"
+      )) {
+        dOp = filesel.show();
+        if (!dOp) return [];
+        ds.setSource(dOp!);
+        dirsTb.write(ds);
+        continue;
+      } else {
+        return [];
+      }
+    }
+
+    Songs = []; // [s.]
+    err = readSongs(Songs, dpath, "");
+    if (err != "") {
+      alert.show(err);
+      return [];
+    }
+    if (Songs.size() == 0) {
+      alert.show(dpath + "\n no contiene archivos .mp3");
+      if (confirm.show(
+        dpath + "\n no contiene archivos '.mp3'.\n¿Cambiar la ruta?"
+      )) {
+        dOp = filesel.show();
+        if (!dOp) return [];
+        ds.setSource(dOp!);
+        dirsTb.write(ds);
+        continue;
+      } else {
+        return [];
+      }
+    }
+
+    :file fcontrol = file.cat([dpath, cts.holimusicControl]);
+    if (!fcontrol.exists()) {
+      if (confirm.show(
+        "El origen '" + dpath + "'\n" +
+        "no contiene el archivo '" + cts.holimusicControl + "'.\n" +
+        "¿Cambiar la ruta?"
+      )) {
+        dOp = filesel.show();
+        if (!dOp) return [];
+        ds.setSource(dOp!);
+        dirsTb.write(ds);
+        continue;
+      } else {
+        if (confirm.show(
+          "¿Crear automáticamente el archivo " + cts.holimusicControl + "\n" +
+          "en " + dpath + "?"
+        )) {
+          file.write(fcontrol, "");
+          continue;
+        } else {
+          return [];
+        }
+      }
+    }
+
+    return [Songs];
+  };
+
+
+//: \[s.], s, s -> s
+readSongs = \:arr Songs, root, parent -> {
+  dpath = parent == "" ? root : file.cat([root, parent]);
+  for (f = file.dir(dpath)) {
+    :file fpath = file.cat([dpath, f]);
+    if (fpath.isDirectory()) {
+      err = readSongs(Songs, root, parent == "" ? f : file.cat([parent, f]));
+      if (err != "") return err;
+    }
+    else if (str.ends(fpath, ".mp3")) {
+      if (Songs.any(\:file s -> return s.base() == f;))
+        return f + " esta repetido.";
+      Songs.push(parent == "" ? f : file.cat([parent, f]));
+    }
+  }
+  return "";
+};

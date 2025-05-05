@@ -8,7 +8,7 @@ import "data/co/cos";
 import "data/co/co";
 import "quotesDb";
 
-fpath = path.cat([cts.dataPath, "cos.tb"]);
+fpath = file.cat([cts.dataPath, "cos.tb"]);
 
 /// Initializes table.
 /// \ -> ()

@@ -1,0 +1,54 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/dirs";
+import "db/dirsTb";
+import "ui/confirm";
+import "ui/progress";
+import "db";
+import "cts";
+import "source";
+import "target";
+
+{
+  db.init();
+
+  songsOp = source.check();
+  if (!songsOp | !target.check()) return;
+
+  // copy process.
+
+  :dirs ds = dirsTb.read();
+  :file spath = ds.dsource;
+  :file tpath = ds.dtarget;
+
+  if (!confirm.show(
+    "¿Copiar archivos desde\n" + spath +
+    "\na\n" + tpath + "?"
+  )) return;
+
+  for (f = tpath.dir()) if (str.ends(f, ".mp3"))
+    file.del(file.cat([tpath, f]));
+
+  :arr Songs = songsOp!;
+  nfiles = cts.nfiles <= Songs.size() ? cts.nfiles : Songs.size();
+  Commands = []; // [s.]
+  mul = 100.0 / math.itof(nfiles);
+  for (i = 0:nfiles) {
+    is = (i < 9 ? "0" : "") + math.itos(i);
+    pc = math.itos(math.ftoi(math.round(math.itof(i + 1) * mul, 0)));
+    ixTt = math.itos(i + 1) + " / " + math.itos(nfiles);
+    ixSel = math.rndi(Songs.size());
+    song = Songs[ixSel];
+    Songs.remove(ixSel);
+    songName = file.base(song);
+    Commands.push(
+      'echo "#(' + ixTt + ") " + songName + '";' +
+      'cp "' + file.cat([spath, song]) + '" "' +
+        file.cat([tpath, is + "." + songName]) + '";' +
+      'echo "' + pc + '"'
+    );
+  }
+
+  progress.show(Commands);
+}

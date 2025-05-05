@@ -6,7 +6,7 @@
 import "data/ibex";
 import "cts";
 
-fpath = path.cat([cts.dataPath, "ibex.tb"]);
+fpath = file.cat([cts.dataPath, "ibex.tb"]);
 
 /// Initialize table.
 /// \ -> ()

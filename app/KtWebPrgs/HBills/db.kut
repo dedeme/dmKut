@@ -29,7 +29,7 @@ readBills = \ -> {
   sumV = [0.0];
   for (year = YearsRange[0] : YearsRange[1] + 1) {
     y = math.itos(year) + ".db";
-    pth = path.cat([cts.accPath, y]);
+    pth = file.cat([cts.accPath, y]);
     A = js.ra(file.read(pth));
     for (annJs = js.ra(A[3])) {
       Fields = js.ra(annJs);
@@ -61,7 +61,7 @@ readStays = \ -> {
   R = [];
   for (year = YearsRange[0] : YearsRange[1] + 1) {
     y = math.itos(year) + ".db";
-    pth = path.cat([cts.accPath, y]);
+    pth = file.cat([cts.accPath, y]);
     A = js.r(file.read(pth));
     for (i, annJs = A[3]) {
       if (i == 0) continue;
@@ -79,14 +79,14 @@ readStays = \ -> {
 // PROGAM DATA BASE
 
 klen = 20;
-dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
     file.write(dbStateKeyTb, cryp.genK(klen));
 
     placesTb.init();
@@ -96,7 +96,7 @@ init = \ -> {
 };
 
 /// Returns the state identifier.
-/// \ -> ();
+/// \ -> ()
 readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
 
 /// Checks the state identifier 'key' and returns:

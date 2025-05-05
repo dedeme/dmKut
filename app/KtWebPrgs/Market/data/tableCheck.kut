@@ -1,0 +1,32 @@
+// Copyright 30-Jul-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Register of differences between values in quotes table and values in
+/// server.
+
+/// Field type
+///  "o"(open), "c"(close), "x"(maximum, "n"(minimum) or "v"(volume)
+/// [s.]
+o, c, x, n, v :;
+
+/// Constructor.
+///   nick   : Company nick.
+///   date   : Date of difference in format YYYYMMDD.
+///   field  : Field of difference: "o"(open), "c"(close), "x"(maximum,
+///            "n"(minimum) or "v"(volume)
+///   svId   : Identifier of checked server.
+///   tbValue: Value in table.
+///   svValue: Value in server.
+///   deleted: MUTABLE FIELD. 'true' if deleted by user.
+/// \s,s,s,s,f,f,b -> <tableCheck>
+new : nick, date, field, svId, tbValue, svValue, deleted;
+
+/// Returns 'true' if fields 'nick', 'date', 'field' and 'svId' of 't1' and
+/// 't2' are equals.
+/// \<tableCheck>, <tableCheck> -> b
+eqSource = \t1, t2 -> return t1[:4] == t2[:4];;
+
+/// Returns 'true' if fields 'nick', 'date' and 'field' of 't1' and
+/// 't2' are equals.
+/// \<tableCheck>, <tableCheck> -> b
+eqQuote = \t1, t2 -> return t1[:3] == t2[:3];;

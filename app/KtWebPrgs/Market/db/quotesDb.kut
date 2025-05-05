@@ -9,10 +9,10 @@ import "libmkt/quotes";
 import "libmkt/cts" : mcts;
 import "cts";
 
-dpath = path.cat([cts.dataPath, "quotes"]);
+dpath = file.cat([cts.dataPath, "quotes"]);
 
 // \s -> s
-fpath = \nick -> return path.cat([dpath, nick + ".tb"]);;
+fpath = \nick -> return file.cat([dpath, nick + ".tb"]);;
 
 /// Initializes data base.
 /// Tables must be created manually.
@@ -34,7 +34,7 @@ nicks = \ -> return arr.map(
 read = \nick -> return file.read(fpath(nick));;
 
 /// Returns [quotes([<quote>.])|error, ok] of a company file (from after to before).
-/// \s -> [[<quote>.]|s, b]
+/// \s -> [([<quote>.]|s), b]
 readQs = \nick -> return qs.fromStr(mcts.historicQuotes, read(nick));;
 
 /// Write content of a company file.
@@ -44,7 +44,7 @@ write = \nick, data -> file.write(fpath(nick), data);;
 /// Returns [quotes(<quotes>)|error, ok] of a company file (from before to after).
 ///   mainNick: Nick of the main company. (To extract dates)
 ///   nick: Nick to make <quotes>.
-/// \s -> [<quotes>|s, b]
+/// \s, s -> [(<quotes>|s), b]
 readQuotes = \mainNick, nick -> {
   MainQs, ok = readQs(mainNick);
   if (!ok) return [MainQs, ok];
@@ -70,7 +70,7 @@ readQuotes = \mainNick, nick -> {
 /// Returns one value for each company. If data can not be read, the company
 /// value is set to 0.
 ///   Cos    : Nicks of companies to read.
-/// [s.] -> [f.]
+/// \[s.] -> [f.]
 readVolumes = \Cos -> {
-  return volumes.read(dpath, cts.quotesVolume, Cos);
+  return << volumes.read(dpath, cts.quotesVolume, Cos);
 };

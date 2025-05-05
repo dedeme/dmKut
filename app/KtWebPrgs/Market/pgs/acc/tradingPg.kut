@@ -15,9 +15,10 @@ import "db/trading/refsTb";
 import "db/invOperationsTb";
 import "db";
 import "cts";
+import "fns";
 import "qspr";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
@@ -34,12 +35,17 @@ process = \Rq -> {
         for (e = set.Errors) log.error(e);
       }
 
+      Ponds = fns.getIbexPonderations(true);
+      IbexCos = {}; // {i.}
+      for (k, v = Ponds) IbexCos.put(k, math.ftoi(v * cts.ibexInvestment));
+
       return rp.mk({
         ok: okV!,
         Portfolio: set.Portfolio,
         InvOperations,
         Closes: closesTb.readOnlyCloses(), // {f.} :: {nick -> close}
         Rebuys,
+        IbexCos,
         dbKey: db.readKey()
       });
     }

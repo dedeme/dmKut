@@ -6,24 +6,29 @@
 import "libmkt/models";
 import "libmkt/model";
 import "libmkt/quotes";
+import "libmkt/tquotes";
+import "extDb/cosTb";
 import "extDb/quotesDb";
 import "data/simParams";
 
 /// Returns
 ///   {}
-/// \{*.} -> {*.}
+/// \ -> {*.}
 run = \Rq -> {
   , kf : Rq;
-  :quotes qts = quotesDb.read();
-  Cls = qts.Closes;
+  Cos = cosTb.read();
+  :tquotes qts = quotesDb.read(Cos);
+  Cls = qts.closes();
+
   :arr List = models.list();
-  List.sort(\:model m1, :model m2 -> return m1.id < m2.id;);
+  List.sort(\:model m1, :model m2 -> return str.cmp(m1.id, m2.id) < 0;);
 
   :file f = file.wopen(kf);
   for (:model md = List) {
     mdId = md.id;
     Params = simParams.paramBases(mdId);
-    rfs = js.w(md.calc(Cls, Params));
+    Qs = tquotes.toQs(<< model.calc(mdId, Cls, Params));
+    rfs = js.w(Qs);
     f.writeText(mdId + ":" + rfs + "\n");
   }
   f.close();

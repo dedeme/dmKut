@@ -6,32 +6,39 @@
 import "libmkt/strategy";
 import "libmkt/models";
 import "libmkt/model";
-import "libmkt/quotes";
+import "libmkt/tquotes";
 import "libmkt/stRs";
 import "data/simParams";
 import "cts";
+import "extDb/cosTb";
 import "extDb/quotesDb";
 import "db";
 
 /// Update data.
 /// \ -> ()
 run = \ -> {
-  :quotes qts = quotesDb.read();
+  Cos = cosTb.read();
+  :tquotes qts = quotesDb.read(Cos);
   for (:model md = models.list()) {
-    date = arr.peek(qts.Dates);
+    date = arr.peek(<< qts.dates());
     mdId = md.id;
     Prices, Accs, Refs =
       arr.size(md.ParamTypes) == 1 ? calc1(md, qts) : calc2(md, qts);
+
     db.update(mdId, date, Prices, Accs, Refs);
   }
+
+  for (tp = cts.Types)
+    for (st = cts.Stats)
+      db.writeRankRows(tp, st);
 };
 
-// Calculates pices and references.
+// Calculates prices and references.
 // Returns [prices, accounting, references] each with as many elements as
 //    Params has.
-// \<model>, <quotes>, [[f.].] -> [[i.], [i.], [i.]]
+// \<model>, <tquotes>, [[f.].] -> [[i.], [i.], [i.]]
 calc = \md, qts, Params -> {
-  :: StRs = strategy.stGroup(md, qts, Params);
+  StRs = strategy.stGroup(md, qts, Params);
   Prices = [];
   Accs = [];
   Refs = [];

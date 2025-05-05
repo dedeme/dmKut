@@ -6,7 +6,7 @@
 import "cts";
 import "data/ann";
 
-fpath = path.cat([cts.dataPath, "anns.tb"]);
+fpath = file.cat([cts.dataPath, "anns.tb"]);
 
 /// Initializes table.
 /// \ -> ()

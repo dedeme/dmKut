@@ -6,7 +6,7 @@
 import "cts";
 import "data/session";
 
-:file fpath = path.cat([cts.dataPath, "sessions.tb"]);
+:file fpath = file.cat([cts.dataPath, "sessions.tb"]);
 
 /// Initializes table.
 /// \ -> ()

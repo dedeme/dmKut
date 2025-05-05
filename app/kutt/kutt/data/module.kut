@@ -1,0 +1,18 @@
+// Copyright 30-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <module> data definition.
+
+/// Constructor.
+///   isMain  : 'true' if the module is the main one.
+///   path    : Canonical path.
+///   id      : Identifier.
+///   Imports : Imports dictionary {UserName::ImportData}.
+///   Exports : Top symbols to export.
+///   TopSyms : Top symbols. (Symbols available in all the module)
+///   TypeDefs: Type definitions {identifer::[newType, oldType]}
+///   Code    : Statement array.
+/// \b,s,s,{<imp>.},[<typedSym>.],[<typedSym>.], {[<type>,<type>].},[<stat>.]
+///-  -> <module>
+new : isMain, path, id, Imports, Exports, TopSyms, TypeDefs, Code;
+

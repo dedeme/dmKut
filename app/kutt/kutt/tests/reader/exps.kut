@@ -1,0 +1,88 @@
+// Copyright 14-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test expressions.
+
+import "readers/expRd";
+import "data/token";
+import "data/exp";
+import "data/rdCtx";
+
+/// \ -> ()
+run = \ -> {
+  :expRd rd1 = mkRd(" true ");
+  sys.test(exp.toStr(rd1.next()), "true");
+  sys.test(exp.toStr(rd1.next()), "Unexpected end of file");
+
+  :expRd rd2 = mkRd(" tr4f}ue ");
+  sys.test(exp.toStr(rd2.next()), "tr4f");
+  sys.test(exp.toStr(rd2.next()), "Unexpected '}'");
+
+  :expRd rd3 = mkRd("12 3.15 'abcà' \"defñ\"");
+  sys.test(exp.toStr(rd3.next()), "12");
+  sys.test(exp.toStr(rd3.next()), "3.15");
+  sys.test(exp.toStr(rd3.next()), '"abcà"');
+  sys.test(exp.toStr(rd3.next()), '"defñ"');
+  sys.test(exp.toStr(rd1.next()), "Unexpected end of file");
+
+  :expRd rd4 = mkRd(" [ 1, 2] ; ");
+  sys.test(exp.toStr(rd4.next()), "[1,2]");
+  sys.test(token.toStr(rd4.nextToken()), "Operator: ;");
+
+  :expRd rd5 = mkRd(" {a:1, b:2} ");
+  sys.test(exp.toStr(rd5.next()), '{"a":1,"b":2}');
+
+  :expRd rd6 = mkRd(" [. 1, 2] ; [. abc12] ; [.] ");
+  sys.test(exp.toStr(rd6.next()), "[. 1,2]");
+  sys.test(token.toStr(rd6.nextToken()), "Operator: ;");
+  sys.test(exp.toStr(rd6.next()), "[. abc12]");
+  sys.test(token.toStr(rd6.nextToken()), "Operator: ;");
+  sys.test(exp.toStr(rd6.next()), "Unexpected ']'");
+
+  :expRd rd7 = mkRd(" [! 1, 2] ; [! 3,3,-5] ; [!2,] ");
+  sys.test(exp.toStr(rd7.next()), "[! 1,2]");
+  sys.test(token.toStr(rd7.nextToken()), "Operator: ;");
+  sys.test(exp.toStr(rd7.next()), "[! 3,3,-5]");
+  sys.test(token.toStr(rd7.nextToken()), "Operator: ;");
+  sys.test(exp.toStr(rd7.next()), "Unexpected ']'");
+
+  :expRd rd8 = mkRd("switch (v) {2, 4: true; 1: false; default: false; }");
+  sys.test(exp.toStr(rd8.next()), "switch(v){2,4:true;1:false;default:false}");
+  sys.test(exp.toStr(rd1.next()), "Unexpected end of file");
+
+  :expRd rd9 = mkRd(" a . b a[1] a.b[ 3: -6] a! c[]");
+  sys.test(exp.toStr(rd9.next()), "a.b");
+  sys.test(exp.toStr(rd9.next()), "a[1]");
+  sys.test(exp.toStr(rd9.next()), "a.b[3:-6]");
+  sys.test(exp.toStr(rd9.next()), "a[0]");
+  sys.test(exp.toStr(rd9.next()), "Unexpected ']'");
+
+  :expRd rd11 = mkRd(" fn ( ) fn2(1 ) fn2(3, a.b)");
+  sys.test(exp.toStr(rd11.next()), "fn()");
+  sys.test(exp.toStr(rd11.next()), "fn2(1)");
+  sys.test(exp.toStr(rd11.next()), "fn2(3,a.b)");
+
+  :expRd rd110 = mkRd(" fn ( )( ) fn()(a)[4] fn[a](a)[n]() fn[a](a)[n]()[z] ");
+  sys.test(exp.toStr(rd110.next()), "fn()()");
+  sys.test(exp.toStr(rd110.next()), "fn()(a)[4]");
+  sys.test(exp.toStr(rd110.next()), "fn[a](a)[n]()");
+  sys.test(exp.toStr(rd110.next()), "fn[a](a)[n]()[z]");
+
+  :expRd rd12 = mkRd(" a ? 3 : -1 b ? {a}");
+  sys.test(exp.toStr(rd12.next()), "a?3:-1");
+  sys.test(exp.toStr(rd12.next()), "Expected: :\n  Actual: Operator: }");
+
+  :expRd rd13 = mkRd(" a * b / c   a + b - c    a - b * c");
+  sys.test(exp.toStr(rd13.next()), "((a*b)/c)");
+  sys.test(exp.toStr(rd13.next()), "((a+b)-c)");
+  sys.test(exp.toStr(rd13.next()), "(a-(b*c))");
+
+  :expRd rd14 = mkRd(" a! & b >= c[3+c] | (3 > --s.b + 2*6)");
+  sys.test(exp.toStr(rd14.next()), "((a[0]&(b>=c[(3+c)]))|((3>(--s.b+(2*6)))))");
+  sys.test(exp.toStr(rd1.next()), "Unexpected end of file");
+};
+
+mkRd = \tx -> {
+  :mdCtx ctx = rdCtx.new("a/b", "md12");
+  return expRd.new(ctx, tx);
+};

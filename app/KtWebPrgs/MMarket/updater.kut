@@ -3,18 +3,21 @@
 
 /// Update data.
 
-import "libmkt/quotes";
+import "libmkt/tquotes";
 import "libmkt/models";
 import "libmkt/model";
+import "extDb/cosTb";
 import "extDb/quotesDb";
 import "data/evEs";
 import "cts";
 import "db";
 
 /// Update date.
+/// \ -> ()
 run = \ -> {
-  :quotes qts = quotesDb.read();
-  date = arr.peek(qts.Dates);
+  Cos = cosTb.read();
+  :tquotes qts = quotesDb.read(Cos);
+  date = arr.peek(<< qts.dates());
 
   :arr DataDates = db.dates("daily");
   if (!DataDates) {

@@ -1,0 +1,95 @@
+// Copyright 06-Oct-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Supports - Resitence model.
+
+import "../model";
+import "../cts";
+import "doc/sprsDoc";
+
+/// Returns a new 'sprs' model.
+/// \-><model>
+new = \ -> return model.new(
+    "SPRS",
+    "Soporte - Resistencia",
+    sprsDoc.text,
+    ["Incremento"],
+    [model.percParam]
+  );;
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  delta = Params[0];
+  upDelta = 1.0 + delta;
+  downDelta = 1.0 - delta;
+
+  Refs = arr.new(0.0, size);
+  Maxs = arr.new(0.0, ncos);
+  Mins = arr.new(0.0, ncos);
+  Tmps = arr.new(-1.0, ncos);
+  IsSolds = arr.new(0, ncos);
+  for (i = 0:ncos) {
+    c = Closes[i];
+    c2 = c * downDelta;
+    Maxs[i] = c;
+    Mins[i] = c2;
+    Refs[i] = c2;
+  }
+
+  for (idate = ncos:size-1:ncos) {
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      c = Closes[icurrent];
+
+      if (IsSolds[ico] == 0) {
+        if (c < Mins[ico]) {
+          IsSolds[ico] = 1;
+          Mins[ico] = c;
+          Tmps[ico] = -1.0;
+          Refs[icurrent] = Maxs[ico];
+        } else {
+          if (c > Maxs[ico]) {
+            Maxs[ico] = c;
+            if (Tmps[ico] >= 0.0) {
+              Mins[ico] = Tmps[ico];
+              Tmps[ico] = -1.0;
+            }
+          } else if (
+            (Tmps[ico] < 0.0 & c < Maxs[ico] * downDelta) |
+            c < Tmps[ico]
+          ) {
+            Tmps[ico] = c;
+          }
+          Refs[icurrent] = Mins[ico];
+        }
+      } else {
+        if (c > Maxs[ico]) {
+          IsSolds[ico] = 0;
+          Maxs[ico] = c;
+          Tmps[ico] = -1.0;
+          Refs[icurrent] = Mins[ico];
+        } else {
+          if (c < Mins[ico]) {
+            Mins[ico] = c;
+            if (Tmps[ico] >= 0.0) {
+              Maxs[ico] = Tmps[ico];
+              Tmps[ico] = -1.0;
+            }
+          } else if (
+            (Tmps[ico] < 0.0 & c > Mins[ico] * upDelta) |
+            (Tmps[ico] >= 0.0 & c > Tmps[ico])
+          ) {
+            Tmps[ico] = c;
+          }
+          Refs[icurrent] = Maxs[ico];
+        }
+      }
+    }
+  }
+  return Refs;
+};
+

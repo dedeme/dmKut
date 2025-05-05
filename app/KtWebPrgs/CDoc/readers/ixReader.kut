@@ -31,11 +31,11 @@ docRead = \:file fpath -> {
 };
 
 // Adds trees to node
-// \[m], s -> ()
+// \[<indexTree>.], s -> ()
 completeTrees = \:arr Trees, dir -> {
   Fnames = file.dir(dir);
   for (fname = Fnames) {
-    fpath = path.cat([dir, fname]);
+    fpath = file.cat([dir, fname]);
     if (file.isDirectory(fpath)) {
       :indexTree NewTree = indexTree.new(fname, [], []);
       Trees.push(NewTree);
@@ -48,7 +48,7 @@ completeTrees = \:arr Trees, dir -> {
 };
 
 /// Reads package index tree.
-/// \s -> [m]
+/// \s -> ([<indexTree>]|[])
 read = \pack -> {
   ppathOp = arr.find(
     pathsTb.read(), \:dpath p -> return p.id == pack;
@@ -56,7 +56,7 @@ read = \pack -> {
   if (!ppathOp) return [];
   :dpath ppath = ppathOp!;
 
-  root = path.cat([ppath.spath, "include"]);
+  root = file.cat([ppath.spath, "include"]);
   if (!file.exists(root)) return [];
 
   :indexTree r = indexTree.new("", [], []);

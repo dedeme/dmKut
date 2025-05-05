@@ -6,7 +6,7 @@
 import "data/invOperation";
 import "cts";
 
-fpath = path.cat([cts.dataPath, "invOperations.tb"]);
+fpath = file.cat([cts.dataPath, "invOperations.tb"]);
 
 /// Initialize table.
 /// \-> ()

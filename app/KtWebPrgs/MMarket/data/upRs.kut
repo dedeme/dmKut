@@ -23,10 +23,10 @@ new0 : sales, real, acc, prof, pon;
 new = \sales, real, acc, prof ->
   return new0(sales, real, acc, prof, real * 0.4 + acc * 0.4 + prof * 0.2);;
 
-/// \<upRs> -> JS
+/// \<upRs> -> [*.]
 toJs = \o -> return [o[sales], o[real], o[acc], o[prof]];;
 
-/// \JS -> <upRs>
+/// \[*.] -> <upRs>
 fromJs = \A -> return new(
     A[sales],
     A[real],

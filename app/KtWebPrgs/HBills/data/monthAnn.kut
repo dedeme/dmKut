@@ -7,5 +7,5 @@
 ///   month  : Annotation date type YYYYMM.
 ///   placeOp: Annotation description.
 ///   amount : Annotation amount.
-/// \s,[s]|[],f -> <monthAnn>
+/// \s,([s]|[]),f -> <monthAnn>
 new : month, placeOp, amount;

@@ -27,24 +27,22 @@ run = \ -> {
       log.error("Connection failed: " + err);
       continue;
     }
-
     thread.run(\ -> {
-      // [<bytes>, s]
-      :bytes bs, err = conn.read(1_000_000, 30);
-      if (err != "") {
-        log.error(err);
-      } else {
-        try {
+      try {
+        // [<bytes>, s]
+        :bytes bs, err = conn.read(1_000_000, 30);
+        if (err != "") {
+          log.error(err);
+        } else {
           rp = handle(str.rtrim(bs.toStr())); // Remove 'end line'.
           err = conn.write(bytes.fromStr(rp));
           if (err != "") log.error(err);
-        } catch (e) {
-          log.error(e);
         }
+        conn.closeConnection();
+      } catch (e) {
+        log.error(e);
       }
-      conn.closeConnection();
     });
-
   }
 };
 

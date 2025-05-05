@@ -7,14 +7,14 @@ import "cts";
 import "db/yearsDb";
 
 klen = 20;
-dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
     file.write(dbStateKeyTb, cryp.genK(klen));
 
     yearsDb.init();
@@ -24,7 +24,7 @@ init = \ -> {
 };
 
 /// Returns the state identifier.
-/// \ -> ();
+/// \ -> ()
 readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
 
 /// Checks the state identifier 'key' and returns:

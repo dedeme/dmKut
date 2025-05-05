@@ -8,7 +8,7 @@ import "readers/ixReader";
 import "data/indexTree";
 
 /// Process request.
-/// \m -> s
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "index": {

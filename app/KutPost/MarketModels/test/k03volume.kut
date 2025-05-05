@@ -9,9 +9,12 @@ import "cts";
 
 /// Returns
 ///   {
-///     vol: [f.]
+///     vol: [i.]
 ///   }
-/// \{*.} -> {*.}
-run = \Rq -> return {
-  vol: volumes.read(cts.quotesPath, 60, cosTb.read())
+/// \ -> {*.}
+run = \ -> return {
+  vol: arr.map(
+      << volumes.read(cts.quotesPath, 60, cosTb.read()),
+      \n -> return math.ftoi(n);
+    )
 };;

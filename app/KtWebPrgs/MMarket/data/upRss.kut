@@ -15,7 +15,7 @@ import "cts";
 /// If model is of two parameter returns a matrix of 'cts.evalSteps' (rows) x
 ///   'cts.evalSteps' (cols), where 'rows' are the first parameter values and
 ///   'cols' are the second paramenter ones.
-/// \<model>, <quotes> -> [<upRs>.]
+/// \<model>, <tquotes> -> [<upRs>.]
 read = \:model md, qts -> {
   :arr Base = cts.ParamBases[md.id];
   :arr Inc = cts.ParamBaseIncs[md.id];

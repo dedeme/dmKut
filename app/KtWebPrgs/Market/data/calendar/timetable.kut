@@ -11,7 +11,7 @@
 /// \i,i,i,i -> <timetable>
 new : hopen, mopen, hclose, mclose;
 
-/// \JS -> <mktDay>
+/// \[*.] -> <mktDay>
 fromJs = \A -> return [
     math.ftoi(A[hopen]),
     math.ftoi(A[mopen]),

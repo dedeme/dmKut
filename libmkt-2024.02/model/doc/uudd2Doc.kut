@@ -1,0 +1,58 @@
+// Copyright 04-Jul-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// 'uudd2' documentation.
+
+/// s
+text = """
+  <style>i {color:#305080}</style>
+  <h3>Símbolos</h3>
+  <pre>
+  <i> sc</i>: Ratio de separación inicial cuando se compra<br>
+  <i> sv</i>: Ratio de separación inicial cuando se vende<br>
+  <i> p</i>: Previa cotización<br>
+  <i> q</i>: Última cotización<br>
+  <i>df</i>: q - p<br>
+  <i> r</i>: Referencia<br>
+  <i>r2</i>: Valor de referencia itermedio<br>
+  <i>r'</i>: Nueva referencia<br>
+  </pre>
+  <h3>Resumen</h3>
+  <dl>
+  <dt>Compra</dt>
+    <dd>Cuando <i>q</i> pasa de menor a mayor que <i>r</i></dd>
+  <dt>Venta</dt>
+    <dd>Cuando <i>q</i> pasa de mayor a menor que <i>r</i></dd>
+  </dl>
+  <h3>Proceso</h3>
+  <h4>Inicialización</h4>
+  <p>Se establece la posición de 'comprado' y se calcula <i>r' = q * (1 - sc)</i></p>
+  <h4>Cada día</h4>
+  <dl>
+  <dt>Si la posición es 'vendido':</dt>
+     <dd>Se calcula <i>df = q - p</i> y  <i>r2</i> como el menor de
+         <i>r * (p + df) / p</i> y <i>r</i>.
+     <dl>
+     <dt>Si <i>q > r2</i>:</dt>
+       <dd><ul>
+         <li>Se cambia a posición 'comprado'</li>
+         <li>Se establece <i>r' = q * (1 - sc)</i></li>
+       </ul></dd>
+     <dt>En otro caso:</dt>
+       <dd> Se establece <i>r' = r2</i>.</dd>
+     </dl></dd>
+  <dt>Si la posición es 'comprado':</dt>
+     <dd>Se calcula <i>df = q - p</i> y  <i>r2</i> como el mayor de
+         <i>r * (p + df) / p</i> y <i>r</i>.
+     <dl>
+     <dt>Si <i>q < r2</i>:</dt>
+       <dd><ul>
+         <li>Se cambia a posición 'vendido'</li>
+         <li>Se establece <i>r' = q * (1 + sv)</i></li>
+       </ul></dd>
+     <dt>En otro caso:</dt>
+       <dd>Se establece <i>r' = r2</i>.</dd>
+     </dl></dd>
+  </dl>
+  </dl>
+""";

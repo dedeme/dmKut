@@ -1,0 +1,710 @@
+// Copyright 19-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Statement reader.
+
+import "data/rdCtx";
+import "data/type";
+import "data/stat";
+import "data/token";
+import "data/exp";
+import "data/dicLayer";
+import "expRd";
+
+/// End of file message.
+/// s
+endOfFile = "Unexpected end of file";
+
+/// Constructor. It is public only to be used by 'expRd'.
+///    ctx   : Context
+///    exrd  : Expression reader.
+/// \<rdCtx>, <expRd> -> <stRd>
+new0 : ctx, exrd;
+
+/// Constructor.
+///   ctx  : Context
+///   tx   : Text to read.
+/// \<rdCtx>, s -> <stRd>
+new = \ctx, tx -> return new0(ctx, expRd.new(ctx, tx));;
+
+//  Returns an error statement.
+//: \i, s -> <stat>
+fail = \ln, msg -> return stat.mkError(ln, msg);;
+
+//  Fail of type expected - actual
+//: \i, s, s -> <stat>
+failE = \ln, expected, actual ->
+  return fail(ln, "Expected: " + expected + "\n  Actual: " + actual);;
+
+/// Returns the current statement and advances the character reader.
+/// \<stRd> -> <stat>
+next = \strd -> {
+  :expRd erd = strd[exrd];
+  next2 = \strd -> {
+    :token tk = erd.peekToken();
+    ln = tk.ln;
+    switch (tk.tp) {
+      token.eof: return fail(ln, endOfFile);
+      token.operator: {
+        erd.nextToken();
+        switch (tk.value) {
+          "{": return readBlock(strd, ln);
+          "}": return stat.mkCloseBlock(ln);
+          ":": return readModuleSymbol(strd);
+          ",": return readMultiAssign(strd, ln, "");
+          "_": return fail(ln, "'private' out of main code");
+          default: return fail(ln, "Unexpected '" + tk.toStr() + "'");
+        }
+      }
+      default: {
+        if (tk.tp == token.symbol) {
+          switch(tk.value) {
+            "break": {
+              erd.nextToken();
+              return checkEnd(strd, stat.mkBreak(ln));
+            }
+            "continue": {
+              erd.nextToken();
+              return checkEnd(strd, stat.mkContinue(ln));
+            }
+            "return": {
+              erd.nextToken();
+              return readReturn(strd, ln);
+            }
+            "throw": {
+              erd.nextToken();
+              return readThrow(strd, ln);
+            }
+            "trace": {
+              erd.nextToken();
+              return readTrace(strd, ln);
+            }
+            "while": {
+              erd.nextToken();
+              return readWhile(strd, ln);
+            }
+            "if": {
+              erd.nextToken();
+              return readIf(strd, ln);
+            }
+            "switch": {
+              erd.nextToken();
+              return readSwitch(strd, ln);
+            }
+            "for": {
+              erd.nextToken();
+              return readFor(strd, ln);
+            }
+            "try": {
+              erd.nextToken();
+              return readTry(strd, ln);
+            }
+            "import": {
+              erd.nextToken();
+              return readImport(strd, ln);
+            }
+          } // default below
+        }
+
+        // Statements starts with an expression
+        :exp e = erd.next();
+        ln = e.ln;
+        switch (e.tp) {
+          exp.error: return fail(ln, e.value);
+          exp.symbol: return readSymbol(strd, e);
+          exp.square: return readSquare(strd, e);
+          exp.parenthesis: return readFunction(strd, e);
+          exp.binary: return fail(ln, "Unexpected operator '" + e.value[0]+ "'");
+          default: return fail(ln, "Unexpected expression '" + e.toStr() + "'");
+        }
+      }
+    }
+  };
+
+  :token tk = erd.peekToken();
+
+  ktpOp = [];
+  if (tk.tp == token.ktype) {
+    ktpOp.push(tk);
+    erd.nextToken();
+  }
+
+  :stat st = next2(strd);
+
+  if (
+    st.tp == stat.indexed |
+    (st.tp == stat.assign &
+      st.value[0][exp.tp] == exp.symbol &
+      st.value[1][exp.tp] == exp.function
+    )
+  ) {
+    if (!ktpOp) return fail(st.ln, "Type missing in assignation or indexed");
+    :token ktp = ktpOp!;
+    ln = ktp.ln;
+
+    :type t, ok = type.read(ktp.value);
+    if (!ok) return fail(ln, "Wrong type: " + t);
+
+    if (st.tp == stat.indexed) {
+      st.value[0] = t;
+      return st;
+    }
+
+    :exp e = st.value[1];
+    return stat.mkAssign(
+      st.ln, st.value[0], exp.mkFunction(e.ln, t, e.value[1], e.value[2])
+    );
+  } else {
+    if (!!ktpOp & st.tp != stat.error) {
+      return failE(
+        st.ln,
+        "Indexed or assignation of function to symbol after type defintion",
+        st.toStr()
+      );
+    }
+    return st;
+  }
+};
+
+/// Returns the current token without avancing the character reader.
+/// \<tokenRd> -> <token>
+peekToken = \strd -> return expRd.peekToken(strd[exrd]);;
+
+/// Returns the current token and advances the character reader.
+/// \<charRd> -> <token>
+nextToken = \strd -> return expRd.nextToken(strd[exrd]);;
+
+/// Read a definition type.
+/// Returns [type, true] or [exp.error, false].
+///   strd: Statement reader.
+///   isLeftSide: 'true' if is reading the left side of a difinition.
+/// \<stRd> -> [(<type>|<exp>), b]
+readDefType = \strd, isLeftSide ->
+  return expRd.readDefType(strd[exrd], isLeftSide);;
+
+//: \<stRd>, <stat> -> <stat>
+checkEnd = \strd, st -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.nextToken();
+  if (tk.isOp(";"))
+    return st;
+  return failE(tk.ln, ";", tk.value);
+};
+
+//: \<stRd>, i -> <stat>
+readBlock = \strd, ln -> {
+  :rdCtx ct = strd[ctx];
+  :expRd erd = strd[exrd];
+  :dicLayer sm = ct.symMods;
+
+  sm.addLayer();
+  Sts = []; //[<stat>.]
+  while () {
+    :token tk = erd.peekToken();
+    if (tk.tp == token.eof) return fail(ln, "No closed {");
+    if (tk.isOp("}")) {
+      erd.nextToken();
+      break;
+    }
+
+    :stat st = next(strd);
+    switch (st.tp) {
+      stat.closeBlock: break;
+      stat.indexed: return fail(st.ln, "'indexed' out of main code");
+      stat.importSt: return fail(st.ln, "'import' out of main code");
+      stat.error: return st;
+      default: Sts.push(st);
+    }
+  }
+  sm.removeLayer();
+  return stat.mkBlock(ln, Sts);
+};
+
+//: \<stRd> -> <stat>
+readModuleSymbol = \strd -> {
+  :rdCtx ct = strd[ctx];
+  :expRd erd = strd[exrd];
+  :token tk = erd.nextToken();
+  if (tk.tp != token.symbol) return failE(tk.ln, "symbol", tk.toStr());
+  mod = tk.value;
+
+  :stat st = next(strd);
+  switch (st.tp) {
+    stat.error: return st;
+    stat.assign: {
+      :exp sym = st.value[0];
+      :dicLayer sm = ct.symMods;
+      sm.putElement(sym.value, mod);
+      return st;
+    }
+    stat.multiAssign: {
+      sym = st.value[0][0];
+      if (sym == "") return failE(st.ln, "symbol of module" + tk.value, ",");
+      :dicLayer sl = ct.symMods;
+      sl.putElement(sym, mod);
+      return st;
+    }
+    default: return failE(tk.ln, "symbol of module " + tk.value, st.toEStr());
+  }
+
+};
+
+// 'sym' is a expression of type exp.symbol.
+//: \<stRd>, <exp> -> <stat>
+readSymbol = \strd, :exp sym -> {
+  :rdCtx ct = strd[ctx];
+  :dicLayer sm = ct.symMods;
+  sm.putElement(sym.value, "");
+  :expRd erd = strd[exrd];
+  ln = sym.ln;
+
+  :token tk = erd.nextToken();
+  if (tk.tp == token.operator) {
+    if (tk.value == ",") return readMultiAssign(strd, ln, sym.value);
+    if (tk.value == ":") {
+      Syms = []; // [s.]
+      while () {
+        :token tk2 = erd.nextToken();
+        if (tk2.tp != token.symbol)
+          return failE(tk2.ln, "symbol", tk2.toStr());
+        Syms.push(tk2.value);
+        :token tk3 = erd.peekToken();
+        if (tk3.isOp(",")) {
+          erd.nextToken();
+          continue;
+        }
+        break;
+      }
+      // Fake type
+      return checkEnd(strd, stat.mkIndexed(ln, type.new("t", []), sym.value, Syms));
+    }
+    else if (tk.value == "=") {
+      :exp e = erd.next();
+      switch (e.tp) {
+        exp.error : return fail(e.ln, e.value);
+        exp.array, exp.array00: sm.putElement(sym.value, "arr");
+        exp.dictionary, exp.dictionary00: sm.putElement(sym.value, "dic");
+        exp.parenthesis: {
+          :exp fn = e.value[0];
+          if (fn.tp == exp.point) sm.putElement(sym.value, fn.value[0]);
+        }
+      }
+
+      return checkEnd(strd, stat.mkAssign(ln, sym, e));
+    } // else continue below.
+  }
+  return failE(tk.ln, "= or ,", tk.toStr());
+};
+
+//: \<stRd>, <exp> -> <stat>
+readSquare = \strd, :exp e -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.nextToken();
+  if (tk.tp == token.operator) {
+    :exp e2 = erd.next();
+    if (e2.tp == exp.error) return fail(e2.ln, e2.value);
+    switch (tk.value) {
+      "=": return checkEnd(strd, stat.mkAssign(e.ln, e, e2));
+      "+=": return checkEnd(strd, stat.mkAddAs(e.ln, e, e2));
+      "-=": return checkEnd(strd, stat.mkSubAs(e.ln, e, e2));
+      "*=": return checkEnd(strd, stat.mkMulAs(e.ln, e, e2));
+      "/=": return checkEnd(strd, stat.mkDivAs(e.ln, e, e2));
+      "%=": return checkEnd(strd, stat.mkModAs(e.ln, e, e2));
+      "&=": return checkEnd(strd, stat.mkAndAs(e.ln, e, e2));
+      "|=": return checkEnd(strd, stat.mkOrAs(e.ln, e, e2));
+    } // default below
+  }
+  return failE(tk.ln, "assignation", tk.toStr());
+};
+
+//: \<stRd>, <exp> -> <stat>
+readFunction = \strd, :exp e -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.peekToken();
+  if (tk.tp == token.operator & tk.value != ";") return readSquare(strd, e);
+  return checkEnd(strd, stat.mkFunction(e.ln, e));
+};
+
+//: \<stRd>,i,s -> <stat>
+readMultiAssign = \strd, ln, firstSym -> {
+  :rdCtx ct = strd[ctx];
+  :expRd erd = strd[exrd];
+  :dicLayer sm = ct.symMods;
+  Syms = [firstSym];
+  while () {
+    :token tk = erd.peekToken();
+    if (tk.isOp(",")) {
+      erd.nextToken();
+      tk = erd.peekToken();
+      if (tk.isOp("="))
+        return fail(tk.ln, "Symbol '=' after ','");
+      Syms.push("");
+      continue;
+    }
+    modSymV = [""];
+    if (tk.isOp(":")) {
+      erd.nextToken();
+      :token tk = erd.nextToken();
+      if (tk.tp == token.symbol) modSymV! = tk.value;
+      else return failE(tk.ln, "symbol", tk.toStr());
+    }
+    :token tk2 = erd.nextToken();
+    if (tk2.tp == token.symbol) Syms.push(tk2.value);
+    else return failE(tk2.ln, "symbol", tk2.toStr());
+    sm.putElement(tk2.value, modSymV!);
+
+    :token tk3 = erd.nextToken();
+    if (tk3.tp == token.operator) {
+      if (tk3.value == ",") continue;
+      else if (tk3.value == "=") {
+        :exp e = erd.next();
+        if (e.tp == exp.error) return fail(e.ln, e.value);
+        return checkEnd(strd, stat.mkMultiAssign(ln, Syms, e));
+      } // else continue below.
+    }
+    return failE(tk.ln, "= or ,", tk.toStr());
+  }
+};
+
+//: \<stRd>,i -> ([<stat>]|[])
+readReturn = \strd, ln -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.peekToken();
+  if (tk.isOp(";"))
+    return checkEnd(strd, stat.mkReturn(ln, []));
+  :exp e = erd.next();
+  if (e.tp == exp.error) return fail(e.ln, e.value);
+  return checkEnd(strd, stat.mkReturn(ln, [e]));
+};
+
+//: \<stRd>,i -> ([<stat>]|[])
+readThrow = \strd, ln -> {
+  :expRd erd = strd[exrd];
+  :exp e = erd.next();
+  if (e.tp == exp.error) return fail(e.ln, e.value);
+  return checkEnd(strd, stat.mkThrow(ln, e));
+};
+
+//: \<stRd>,i -> <stat>
+readTrace = \strd, ln -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.peekToken();
+  isCompleteV = [false];
+  if (tk.isOp(":")) {
+    erd.nextToken();
+    isCompleteV! = true;
+  }
+  :exp e = erd.next();
+  if (e.tp == exp.error) return fail(e.ln, e.value);
+  return checkEnd(strd, stat.mkTrace(ln, isCompleteV!, e));
+};
+
+//: \<stRd>,i -> <stat>
+readWhile = \strd, ln -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.nextToken();
+  if (!tk.isOp("("))
+    return failE(tk.ln, "(", tk.toStr());
+
+  condOp = [];
+  :token tk2 = erd.peekToken();
+  if (!tk2.isOp(")")) {
+    :exp e = erd.next();
+    if (e.tp == exp.error) return fail(e.ln, e.value);
+    condOp.push(e);
+  }
+
+  :token tk3 = erd.nextToken();
+  if (!tk3.isOp(")"))
+    return failE(tk3.ln, ")", tk3.toStr());
+
+  :stat st = next(strd);
+
+  switch (st.tp) {
+    stat.error: return st;
+    stat.indexed: return fail(st.ln, "'indexed' out of main code");
+    stat.importSt: return fail(st.ln, "'import' out of main code");
+    stat.block: return stat.mkWhile(ln, condOp, st);
+    default: return stat.mkWhile(ln, condOp, stat.mkBlock(st.ln, [st]));
+  }
+};
+
+//: \<stRd>,i -> <stat>
+readIf = \strd, ln -> {
+  :expRd erd = strd[exrd];
+  :token tk = erd.nextToken();
+  if (!tk.isOp("("))
+    return failE(tk.ln, "(", tk.toStr());
+
+  :exp cond = erd.next();
+  if (cond.tp == exp.error) return fail(cond.ln, cond.value);
+
+  :token tk2 = erd.nextToken();
+  if (!tk2.isOp(")"))
+    return failE(tk2.ln, ")", tk2.toStr());
+
+  :stat st = next(strd);
+
+  switch (st.tp) {
+    stat.error: return st;
+    stat.indexed: return fail(st.ln, "'indexed' out of main code");
+    stat.importSt: return fail(st.ln, "'import' out of main code");
+    default: {
+      stYes = st.tp == stat.block ? st : stat.mkBlock(st.ln, [st]);
+      :token tk = erd.peekToken();
+      if (tk.isSym("else")) {
+        erd.nextToken();
+        :stat st2 = next(strd);
+        switch (st2.tp) {
+          stat.error: return st2;
+          stat.indexed: return fail(st2.ln, "'indexed' out of main code");
+          stat.importSt: return fail(st2.ln, "'import' out of main code");
+          stat.block: return stat.mkIf(ln, cond, stYes, st2);
+          default: return stat.mkIf(ln, cond, stYes, stat.mkBlock(st2.ln, [st2]));
+        }
+      }
+      return stat.mkIf(ln, cond, stYes, stat.mkBlock(st.ln, []));
+    }
+  }
+};
+
+//: \<stRd>,i -> <stat>
+readSwitch = \strd, ln -> {
+  :expRd erd = strd[exrd];
+
+  :token tk1 = erd.nextToken();
+  if (!tk1.isOp("("))
+    return failE(tk1.ln, "(", tk1.toStr());
+
+  :exp e = erd.next();
+  if (e.tp == exp.error) return fail(e.ln, e.value);
+
+  :token tk2 = erd.nextToken();
+  if (!tk2.isOp(")"))
+    return failE(tk2.ln, ")", tk2.toStr());
+
+  :token tk3 = erd.nextToken();
+  if (!tk3.isOp("{"))
+    return failE(tk3.ln, "{", tk3.toStr());
+
+  Es = []; // [[[<exp>.], <stat>].]
+  withDefaultV = [false];
+  while () {
+    :arr A, ok = expRd.readArray(erd, ":");
+    if (!ok) return fail(A[exp.ln], A[exp.value]);
+    if (A.size() > 1) {
+      if (A.any(\:exp e -> return e.tp == exp.symbol & e.value == "default";))
+        return fail(A[0][exp.ln], "'default' in a multiconditional entry");
+    } else {
+      :exp e = A[0];
+      if (e.tp == exp.symbol & e.value == "default")
+        withDefaultV! = true;
+    }
+
+    :stat st = next(strd);
+    if (st.tp == stat.error) return st;
+    Es.push([A, (st.tp == stat.block) ? st : stat.mkBlock(st.ln, [st])]);
+
+    :token tk3 = erd.peekToken();
+    if (tk3.isOp("}")) {
+      erd.nextToken();
+      break;
+    }
+
+    if (withDefaultV!) return fail(tk3.ln, "Conditions after 'default'");
+  }
+
+  return stat.mkSwitch(ln, e, Es);
+};
+
+//: \<stRd>,i -> <stat>
+readFor = \strd, ln -> {
+  :rdCtx ct = strd[ctx];
+  :expRd erd = strd[exrd];
+  :dicLayer sm = ct.symMods;
+  sm.addLayer();
+
+  :token tk = erd.nextToken();
+  if (!tk.isOp("("))
+    return failE(tk.ln, "(", tk.toStr());
+
+  v1V = []; //[s]
+  v2V = []; //[s]
+  e2V = []; //[<exp>]
+  e3V = []; //[<exp>]
+
+  mdV = [""];
+  :token tk2 = erd.peekToken();
+  if (tk2.isOp(":")) {
+    erd.nextToken();
+    :token tk = erd.nextToken();
+    if (tk.tp == token.symbol) mdV! = tk.value;
+    else return failE(tk.ln, "symbol", tk.toStr());
+  }
+  :token tk3 = erd.nextToken();
+  if (tk3.tp != token.symbol) return failE(tk3.ln, "symbol", tk3.toStr());
+  v = tk3.value;
+  sm.putElement(v, mdV!);
+
+  :token tk4 = erd.peekToken();
+  if (tk4.isOp(",")) {
+    erd.nextToken();
+    mdV = [""];
+    :token tk = erd.peekToken();
+    if (tk.isOp(":")) {
+      erd.nextToken();
+      :token tk = erd.nextToken();
+      if (tk.tp == token.symbol) mdV! = tk.value;
+      else return failE(tk.ln, "symbol", tk.toStr());
+    }
+    :token tk2 = erd.nextToken();
+    if (tk2.tp != token.symbol) return failE(tk2.ln, "symbol", tk2.toStr());
+    v2 = tk2.value;
+    if (v2 == v) return failE(tk2.ln, "Duplicate for variable '" + v + "'");
+    v1V.push(v);
+    v2V.push(v2);
+    sm.putElement(v2, mdV!);
+  } else {
+    v1V.push(v);
+  }
+
+  :token tk5 = erd.nextToken();
+  if (!tk5.isOp("="))
+    return failE(tk5.ln, "= or ,", tk5.toStr());
+
+  :exp e1 = erd.next();
+  if (e1.tp == exp.error) return fail(e1.ln, e1.value);
+
+  :token tk6 = erd.peekToken();
+  if (tk6.isOp(":")) {
+    if (!!v2V) return failE(tk6.ln, ")", tk6.toStr());
+
+    erd.nextToken();
+    :exp e = erd.next();
+    if (e.tp == exp.error) return fail(e.ln, e.value);
+    e2V.push(e);
+
+    :token tk = erd.peekToken();
+    if (tk.isOp(":")) {
+      erd.nextToken();
+      :exp e = erd.next();
+      if (e.tp == exp.error) return fail(e.ln, e.value);
+      e3V.push(e);
+    }
+  }
+
+  :token tk7 = erd.nextToken();
+  if (!tk7.isOp(")"))
+    return failE(tk7.ln, ")", tk7.toStr());
+
+  :stat st0 = next(strd);
+
+  sm.removeLayer();
+
+  switch (st0.tp) {
+    stat.error: return st0;
+    stat.indexed: return fail(st0.ln, "'indexed' out of main code");
+    stat.importSt: return fail(st0.ln, "'import' out of main code");
+    default: {
+      st = (st0.tp == stat.block) ? st0 : stat.mkBlock(st0.ln, [st0]);
+      if (!v2V) {
+        if (!e2V) return stat.mkFor(ln, [], v1V!, e1, st);
+        else if (!e3V) return stat.mkForRange(ln, v1V!, e1, e2V!, [], st);
+        else return stat.mkForRange(ln, v1V!, e1, e2V!, e3V, st);
+      } else {
+        return stat.mkFor(ln, v1V, v2V!, e1, st);
+      }
+    }
+  }
+};
+
+//: \<stRd>,i -> <stat>
+readTry = \strd, ln -> {
+  :rdCtx ct = strd[ctx];
+  :expRd erd = strd[exrd];
+
+  :stat st = next(strd);
+
+  switch (st.tp) {
+    stat.error: return st;
+    stat.indexed: return fail(st.ln, "'indexed' out of main code");
+    stat.importSt: return fail(st.ln, "'import' out of main code");
+    // default: continue below
+  }
+  st1 = (st.tp == stat.block) ? st : stat.mkBlock(st.ln, [st]);
+
+  :token tk = erd.nextToken();
+  if (tk.tp != token.symbol | tk.value != "catch")
+    return failE(tk.ln, "catch", tk.toStr());
+
+  :token tk2 = erd.nextToken();
+  if (!tk2.isOp("("))
+    return failE(tk2.ln, "(", tk2.toStr());
+
+  mdV = ["str"];
+  :token tk3 = erd.peekToken();
+  if (tk3.isOp(":")) {
+    erd.nextToken();
+    :token tk = erd.nextToken();
+    if (tk.tp == token.symbol) mdV! = tk.value;
+    else return failE(tk.ln, "symbol", tk.toStr());
+  }
+  :token tk4 = erd.nextToken();
+  if (tk4.tp != token.symbol) return failE(tk4.ln, "symbol", tk4.toStr());
+  v = tk4.value;
+
+  :token tk5 = erd.nextToken();
+  if (!tk5.isOp(")"))
+    return failE(tk5.ln, ")", tk5.toStr());
+
+  :dicLayer sm = ct.symMods;
+  sm.addLayer();
+  sm.putElement(v, mdV!);
+
+  :stat st02 = next(strd);
+
+  sm.removeLayer();
+
+  switch (st02.tp) {
+    stat.error: return st02;
+    stat.indexed: return fail(st02.ln, "'indexed' out of main code");
+    stat.importSt: return fail(st02.ln, "'import' out of main code");
+  }
+  :stat st2 = (st02.tp == stat.block) ? st02 : stat.mkBlock(st02.ln, [st02]);
+
+  :token tk6 = erd.peekToken();
+  if (tk6.isSym("finally")) {
+    erd.nextToken();
+    :stat st = next(strd);
+
+    switch (st.tp) {
+      stat.error: return st;
+      stat.indexed: return fail(st.ln, "'indexed' out of main code");
+      stat.importSt: return fail(st.ln, "'import' out of main code");
+    }
+    return stat.mkTry(
+      ln, st1, v, st2, st.tp == stat.block ? st : stat.mkBlock(st.ln, [st])
+    );
+  } else {
+    return stat.mkTry(ln, st1, v, st2, stat.mkBlock(st2.ln, []));
+  }
+};
+
+//: \<stRd>,i -> <stat>
+readImport = \strd, ln -> {
+  :expRd erd = strd[exrd];
+
+  :token tk = erd.nextToken();
+  if (tk.tp != token.string)
+    return failE(tk.ln, "string", tk.toStr());
+
+  :token tk2 = erd.peekToken();
+  if (tk2.isOp(":")) {
+    erd.nextToken();
+    :token tk2 = erd.nextToken();
+    if (tk2.tp != token.symbol)
+      return failE(tk2.ln, "symbol", tk2.toStr());
+    return checkEnd(strd, stat.mkImport(ln, tk.value, [tk2.value]));
+  }
+  return checkEnd(strd, stat.mkImport(ln, tk.value, []));
+};

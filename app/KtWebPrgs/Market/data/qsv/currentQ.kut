@@ -1,0 +1,11 @@
+// Copyright 07-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Current quote value.
+
+/// Constructor.
+/// Value <= 0 is not valid.
+///   code : Company server code.
+///   value: Current value.
+/// \s,f -> <currentQ>
+new : code, value;

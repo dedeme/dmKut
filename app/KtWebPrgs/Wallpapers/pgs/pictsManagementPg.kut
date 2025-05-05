@@ -1,0 +1,98 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pictures management page
+
+import "KtWeb/rp";
+import "cts";
+import "data/pict";
+import "db";
+import "db/pictsTb";
+import "db/selsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "idata": {
+      group = selsTb.getPictsGroup();
+      TotalShown = pictsTb.shownSights();
+      totalSights = TotalShown.totalSights;
+      shownSights = TotalShown.shownSights;
+      return rp.mkJs({
+        dbKey: js.ws(db.readKey()),
+        groups: js.wi(cts.pictureGroups),
+        group: js.ws(group),
+        Picts: pictsTb.readJs(group),
+        page: js.wi(selsTb.getPictsPage()),
+        totalSights: js.wi(totalSights),
+        shownSights: js.wi(shownSights)
+      });
+    }
+    "setLevel": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, id, level : Rq;
+      pictsTb.setLevel(group, id, math.ftoi(level));
+      return rp.mk({ dbKey });
+    }
+    "setPage": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      selsTb.setPictsPage(math.ftoi(Rq.page));
+      return rp.mk({ dbKey });
+    }
+    "setGroup": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      selsTb.setPictsGroup(Rq.group);
+      return rp.mk({ dbKey });
+    }
+    "changePage": {
+      if (db.readKey() != Rq.dbKey)
+        return rp.mkOutdated();
+
+      group = math.stoi(selsTb.getPictsGroup())!;
+      page = selsTb.getPictsPage();
+
+      switch (Rq.where) {
+        "up": {
+          gr = group <= 0 ? 9 : group - 1;
+          selsTb.setPictsGroup(math.itos(gr));
+        }
+        "down": {
+          gr = group >= 9 ? 0 : group + 1;
+          selsTb.setPictsGroup(math.itos(gr));
+        }
+        "left": {
+          if (page <= 0) {
+            gr = group <= 0 ? 9 : group - 1;
+            selsTb.setPictsGroup(math.itos(gr));
+            n = arr.size(pictsTb.readPictList(math.itos(gr)));
+            selsTb.setPictsPage(n / 20);
+          } else {
+            selsTb.setPictsPage(page - 1);
+          }
+        }
+        default: {
+          n = arr.size(pictsTb.readPictList(math.itos(group))) / 20;
+          pg = page + 1;
+          if (pg > n) {
+            gr = group >= 9 ? 0 : group + 1;
+            selsTb.setPictsGroup(math.itos(gr));
+            selsTb.setPictsPage(0);
+          } else {
+            selsTb.setPictsPage(pg);
+          }
+        }
+      }
+
+      return rp.mkEmpty();
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+

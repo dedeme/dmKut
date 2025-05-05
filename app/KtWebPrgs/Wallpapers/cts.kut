@@ -1,0 +1,59 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global constants
+
+import "KtWeb/global";
+
+/// Application name.
+/// s
+appName = "Wallpapers";
+/// Application version.
+/// s
+version = "2025.12";
+/// Data version.
+/// s
+dataVersion = "2024.05";
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
+/// Picts pool file.
+/// s
+pictsPath = "/var/www/html/fondosEscritorio/jpg";
+/// Pinups pool file.
+/// s
+pinupsPath = "/var/www/html/fondosEscritorio/pinups";
+/// Songs pool file.
+/// s
+songsPath = "/var/www/html/relax";
+/// Dance songs pool file.
+/// s
+danceSongsPath = "/var/www/html/danceBic";
+/// Number of picture groups
+/// i
+pictureGroups = 10;
+/// Number of pinups per page and pages per group in management window.
+/// i
+pinupsNGrouping = 20;
+/// Minimum time to show a pinup (minutes).
+/// i
+minPinupTime = 1;
+/// Registered radios
+/// [[s, s].]
+Radios = [
+//  ["Phever", "http://uk1.internet-radio.com:8200/live"],
+  ["Zeno-dance90", "https://stream.zeno.fm/xkvuvs7wc6quv"],
+  ["Zeno-dance", "https://stream.zeno.fm/f6q8nbaf22quv"],
+//  ["Dance UK", "https://robo.danceradiouk.com/listen/dance_uk_radio_danceradiouk_aac/stream"],
+  ["Ibiza-deep", "https://radio2.vip-radios.fm:18027/stream-128kmp3-IbizaDeep"],
+  ["Zeno-80(1)", "https://stream.zeno.fm/ah6v0aye22quv"],
+  ["Zeno-80(2)", "https://stream.zeno.fm/ekmnvb8e22quv"],
+//  ["Bruce-radio", "https://stream.bruce-radio.be/bruce-classic-rock"],
+  ["Zeno-motown", "https://stream.zeno.fm/evnpwt6wc6quv"],
+//  ["Ibiza-funky", "https://radio2.vip-radios.fm:18030/stream-128kmp3-IbizaFunky"],
+  ["Zeno-jazz", "https://stream.zeno.fm/ht3k17wf22quv"],
+  // ["Ibiza-jazz", "https://radio2.vip-radios.fm:18033/stream-128kmp3-IbizaSmooth"],
+  ["Zeno-chillout", "http://stream.zeno.fm/nxwm3y6ma9quv"],
+  //["Ibiza-chill", "https://radio2.vip-radios.fm:18018/stream-128kmp3-IbizaChill"],
+  ["Absolute-chillout", "https://ais-edge90-dal03.cdnstream.com/b05055_128mp3"]
+];

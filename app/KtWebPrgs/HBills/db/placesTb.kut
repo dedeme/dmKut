@@ -5,18 +5,19 @@
 
 import "cts";
 
-fpath = path.cat([cts.dataPath, "places.tb"]);
+fpath = file.cat([cts.dataPath, "places.tb"]);
 
 /// Initializes table.
 /// \ -> ()
 init = \ -> if (!file.exists(fpath)) write("{}");;
 
 /// Reads table.
-/// \ -> {s.}::{date-YYYYMMDD: place}
+/// returns {date-YYYYMMDD: place}
+/// \ -> {s.}
 read = \ -> return js.r(file.read(fpath));;
 
 /// Reads table as JSON string.
-/// \ -> JS
+/// \ -> s
 readJs = \ -> return file.read(fpath);;
 
 /// Writes table.

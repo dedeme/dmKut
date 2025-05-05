@@ -4,9 +4,11 @@
 /// Exponential mobil average.
 
 import "../model";
+import "../cts";
 import "doc/eaDoc";
 
 /// Returns a new 'appr' model.
+/// \-><model>
 new = \ -> return model.new(
     "ME",
     "Media móvil exponencial",
@@ -14,3 +16,83 @@ new = \ -> return model.new(
     ["Días", "Banda"],
     [model.dayParam, model.percParam]
   );;
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  daysf = Params[0];
+  days = math.ftoi(daysf);
+  daysUp = daysf + 1.0;
+  strip = Params[1];
+  stripUp = 1.0 + strip;
+  stripDown = 1.0 - strip;
+
+  Refs = arr.new(0.0, size);
+  IsSolds = arr.new(0, ncos);
+  Avgs = arr.new(0.0, ncos);
+
+  for (idate = 0:days*ncos-1:ncos) {
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      c = Closes[icurrent];
+      Refs[icurrent] = c * stripDown;
+      Avgs[ico] += c;
+    }
+  }
+
+  idate = days*ncos;
+  for (ico = 0:ncos) {
+    icurrent = idate + ico;
+    c = Closes[icurrent];
+
+    avg = Avgs[ico] / daysf;
+    newAvg = avg + 2.0 * (c - avg) / daysUp;
+    Avgs[ico] = newAvg;
+
+    if (c <= newAvg) {
+      IsSolds[ico] = 1;
+      Refs[icurrent] = newAvg * stripUp;
+    } else {
+      Refs[icurrent] = newAvg * stripDown;
+    }
+  }
+
+  for (idate = (days+1)*ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iprevious = previousIdate + ico;
+
+      c = Closes[icurrent];
+      rf = Refs[iprevious];
+      avg = Avgs[ico];
+      newAvg = avg + 2.0 * (c - avg) / daysUp;
+      Avgs[ico] = newAvg;
+
+      if (IsSolds[ico] == 1) {
+        if (c > rf) {
+          IsSolds[ico] = 0;
+          Refs[icurrent] = newAvg * stripDown;
+        } else {
+          newRf = newAvg * stripUp;
+          if (newRf < rf) Refs[icurrent] = newRf;
+          else Refs[icurrent] = rf;
+        }
+      } else {
+        if (c < rf) {
+          IsSolds[ico] = 1;
+          Refs[icurrent] = newAvg * stripUp;
+        } else {
+          newRf = newAvg * stripDown;
+          if (newRf > rf) Refs[icurrent] = newRf;
+          else Refs[icurrent] = rf;
+        }
+      }
+    }
+  }
+
+  return Refs;
+};

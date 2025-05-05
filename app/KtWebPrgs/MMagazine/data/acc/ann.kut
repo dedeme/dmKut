@@ -1,22 +1,22 @@
-// Copyright 28-Mar-2022 ºDeme
+// Copyright 03-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Diary annotation.
 
-import "data/acc/op" : opMd ;
+import "data/acc/opr" : opMd ;
 
 /// Creates a new Annotations.
-/// \i, s, <Op> -> a<Ann>
+/// \i, s, <op> -> <ann>
 new : id, date, op;
 
-/// \<Ann> -> s
+/// \<ann> -> s
 toJs = \An -> return js.wa([
   js.wi(An[id]),
   js.ws(An[date]),
   opMd.toJs(An[op])
 ]);;
 
-/// \s -> <Ann>
+/// \s -> <ann>
 fromJs = \j -> {
   A = js.ra(j);
   return [

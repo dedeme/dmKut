@@ -8,6 +8,7 @@ import "libmkt/model";
 import "libmkt/quotes";
 import "libmkt/strategy";
 import "libmkt/stRs";
+import "extDb/cosTb";
 import "extDb/quotesDb";
 import "data/simParams";
 
@@ -16,19 +17,22 @@ import "data/simParams";
 ///     buys:i, sales:i, profits:f}.} ::
 ///     {modelId: Rs}
 /// \{*.} -> {*.}
-run = \Rq -> {
-  qts = quotesDb.read();
+run = \ -> {
+  Cos = cosTb.read();
+  :tquotes qts = quotesDb.read(Cos);
   :arr List = models.list();
 
   mdRs = {}; // {ref:f, orders:i, hassets:f, hwithdrawals:f, cash:f,
              //  buys:i, sales:i, profits:f}.}
   for (:model md = List) {
     Params = simParams.paramBases(md.id);
-    :stRs Rs = strategy.open(md, qts, Params);
+
+    :stRs Rs = strategy.open(md, << Cos, qts, Params);
+
     mdRs.put(md.id, {
       ref: arr.reduce(arr.peek(Rs.Refs), 0.0, \r, e -> return r + e;),
       orders: arr.size(Rs.Orders),
-      hassets: arr.peek(Rs.Hassets),
+      hassets: arr.peek(Rs.Hreals),
       hwithdrawals: arr.peek(Rs.Hwithdrawals),
       cash: Rs.cash,
       buys: arr.size(arr.peek(Rs.Buys)),

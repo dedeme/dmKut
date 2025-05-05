@@ -10,14 +10,14 @@
 ///   price  : Stock buy value.
 ///   ref    : Reference of buy-sell
 ///   new    : 'true' if stocks has been bought today.
-/// \s,[f.],i,f,d,b -> <dailyInvestorData>
+/// \s,[f.],i,f,f,b -> <dailyInvestorData>
 new : modelId, Params, stocks, price, ref, isNew;
 
 /// Returns an empty not valid <dailyInvestorData> to use with indexes.
 /// \ -> <dailyInvestorData>
 mkEmpty = \ -> return new("", [0.0], 0, 0.0, 0.0, false);;
 
-/// \JS -> <dailyInvestorData>
+/// \[*.] -> <dailyInvestorData>
 fromJs = \A -> return [
     A[modelId],
     A[Params],

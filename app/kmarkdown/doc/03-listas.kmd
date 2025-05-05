@@ -4,7 +4,7 @@ title = Listas
 
 ## Creación
 
-Las listas se crean usando '*' o usando  \['digito'+'.'].
+Las listas se crean usando '**' o usando  \['digito'+'.'].
 
 En el primer caso se crean listas no ordenadas y el segundo listas ordenadas
 con números. Estos números se generan automáticamente y no dependen del dígito

@@ -1,0 +1,15 @@
+// Copyright 23-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Typed symbol data definition.
+
+import "type";
+
+/// Constructor.
+///   ln    : Line number.
+///   id    : Symbol name.
+///   tp    : Symbol type.
+///   cvalOp: Literal C value for types b, i, f and s, or otherwise [].
+///   used  : true if the symbol was used.
+/// \i,s,<type>,[s],b -> <typedSym>
+new : ln, id, tp, cvalOp, used;

@@ -1,0 +1,44 @@
+// Copyright 09-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/qsv/qsv";
+import "data/qsv/currentQ";
+
+/// Return Result<[serverId, [<quotes>.]]>.
+/// When server can not be read, 'quotes' is an empty array.
+/// \ -> [([s, [<currentQ>.]]|s), b]
+run = \ -> {
+  sv = "BYM";
+  R, ok = qsv.rq({
+    rq: "current",
+    sv
+  });
+  if (!ok)
+    return ["Fail reading " + sv + "\n" + R, false];
+
+  Qs, ok2 = js.r(R);
+  if (!ok2)
+    return ["Fail reading " + sv + "\n" + Qs, false];
+
+  return [[sv, Qs], true];
+};
+
+/// Return Result<[<quotes>.]>.
+/// When server can not be read, 'quotes' is an empty array.
+/// Server read is: BYM or IBERB.
+/// \s -> [([<currentQ>.]|s), b]
+runServer = \svId -> {
+  sv = svId;
+  R, ok = qsv.rq({
+    rq: "current",
+    sv
+  });
+  if (!ok)
+    return ["Fail reading " + sv + "\n" + R, false];
+
+  Qs, ok2 = js.r(R);
+  if (!ok2)
+    return ["Fail reading " + sv + "\n" + Qs, false];
+
+  return [Qs, true];
+};

@@ -3,11 +3,16 @@
 
 /// Global functions
 
+import "KtWeb/global";
 import "cts";
 
 /// Returns abs(n).
-/// \f | i -> f | i
+/// \(f | i) -> (f | i)
 abs = \n -> return n > -n ? n : -n;;
+
+/// Data file.
+/// \ -> s
+dataPath = \(|s) -> return file.cat([global.cgiRoot, cts.appName]);;
 
 /// Returns the parameter that matchs the result index 'ix'.
 ///   mdId: Model identifier.

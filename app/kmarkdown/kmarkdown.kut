@@ -18,7 +18,7 @@ import "writer";
 ///   mBook  : Page metadata. See 'metadata'.
 /// \s,s,<book> -> ()
 writeIndex = \dir, header, :book mBook -> {
-  fhtml = path.cat([dir, "index.html"]);
+  fhtml = file.cat([dir, "index.html"]);
   head = str.fmt("""
     <table class="kmd-main"><tr><td style="text-align:left">
       <span class="kmd-title">%s</span>
@@ -30,7 +30,7 @@ writeIndex = \dir, header, :book mBook -> {
     [mBook.name]
   );
   index = arr.join(arr.map(mBook.Pages, \:meta p ->
-    return "<a href='" + path.base(p.fpage) + ".html'>" + p.title + "</a>";
+    return "<a href='" + file.base(p.fpage) + ".html'>" + p.title + "</a>";
   ), "<br>\n");
 
   file.write(fhtml,
@@ -78,14 +78,14 @@ processFile = \header, :book mBook, fkmd -> {
           !prevMetaOp
             ? ""
             : "<a href='" +
-              path.base(prevMetaOp![meta.fpage]) +
+              file.base(prevMetaOp![meta.fpage]) +
               ".html'>Anterior (" +
               prevMetaOp![meta.title] +
               ")</a> · ",
           !nextMetaOp
             ? ""
             : " · <a href='" +
-              path.base(nextMetaOp![meta.fpage]) +
+              file.base(nextMetaOp![meta.fpage]) +
               ".html'>Posterior (" +
               nextMetaOp![meta.title] +
               ")</a>"
@@ -102,14 +102,14 @@ processFile = \header, :book mBook, fkmd -> {
         [ !prevMetaOp
             ? ""
             : "<a href='" +
-              path.base(prevMetaOp![meta.fpage]) +
+              file.base(prevMetaOp![meta.fpage]) +
               ".html'>Anterior (" +
               prevMetaOp![meta.title] +
               ")</a> · ",
           !nextMetaOp
             ? ""
             : " · <a href='" +
-              path.base(nextMetaOp![meta.fpage]) +
+              file.base(nextMetaOp![meta.fpage]) +
               ".html'>Posterior (" +
               nextMetaOp![meta.title] +
               ")</a>"
@@ -117,7 +117,7 @@ processFile = \header, :book mBook, fkmd -> {
       )
   ;
 
-  :arr Hs = [];
+  Hs = [];
   rd = reader.new(fkmd);
   err.setReader(rd);
   body = writer.process(Hs, numbered, rd);
@@ -181,9 +181,9 @@ processFile = \header, :book mBook, fkmd -> {
 ///   dir: Web directory.
 /// \s -> ()
 processDir = \dir -> {
-  :arr Fkmds = [];
+  Fkmds = [];
   for (f = file.dir(dir)) {
-    :file fpath = path.cat([dir, f]);
+    :file fpath = file.cat([dir, f]);
     if (fpath.isDirectory()) {
       processDir(fpath);
     } else if (str.ends(f, ".kmd")) {
@@ -193,10 +193,10 @@ processDir = \dir -> {
 
   if (!Fkmds) return ;
 
-  fstyles = path.cat([dir, "styles.css"]);
+  fstyles = file.cat([dir, "styles.css"]);
   if (!file.exists(fstyles)) file.write(fstyles, styles.text);
 
-  fheader = path.cat([dir, "000header.html"]);
+  fheader = file.cat([dir, "000header.html"]);
   if (!file.exists(fheader)) file.write(fheader, htmlHeader.text);
   header = file.read(fheader);
 

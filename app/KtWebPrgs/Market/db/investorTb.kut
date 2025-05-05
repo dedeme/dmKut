@@ -13,8 +13,9 @@ import "data/investor/investor";
 import "data/investor/istrategy";
 import "cosTb";
 import "quotesDb";
+import "fns";
 
-fpath = path.cat([cts.dataPath, "investor.tb"]);
+fpath = file.cat([cts.dataPath, "investor.tb"]);
 
 /// Initializes table.
 /// \ -> ()
@@ -42,7 +43,6 @@ update = \ -> {
   :istrategy base = inv.base;
   baseMdOp = models.get(base.modelId);
   if (!baseMdOp) return "Model " + base.modelId + " not found";
-  :model baseMd = baseMdOp!;
 
   :dic NickStr = inv.Nicks;
   NewNickStr = {}; // {<strategy>.}
@@ -56,12 +56,16 @@ update = \ -> {
         errV! = qts;
         break;
       }
-      nkMdOp = models.get(nkStrategy.modelId);
+
+      mdId = nkStrategy.modelId;
+      Params = nkStrategy.Params;
+      nkMdOp = models.get(mdId);
       if (!!nkMdOp) {
-        :model nkMd = nkMdOp!;
         cl = arr.peek(qts.Closes)[0];
-        baseRf = arr.peek(baseMd.calc(qts.Closes, base.Params))[0];
-        nkRf = arr.peek(nkMd.calc(qts.Closes, nkStrategy.Params))[0];
+        baseRf = arr.peek(fns.getReferences(
+          nk, base.modelId, base.Params, qts, false
+        ));
+        nkRf = arr.peek(fns.getReferences(nk, mdId, Params, qts, false));
         if ((baseRf < cl & nkRf > cl) | (baseRf > cl & nkRf < cl)){
           NewNickStr.put(nk, nkStrategy);
           continue;

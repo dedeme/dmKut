@@ -46,7 +46,7 @@ getNext = \PgMetas, fpage -> {
 /// \[s] -> <book>
 read = \Fkmds -> {
   bookNameV = [""];
-  :arr PgMetas = [];
+  PgMetas = [];
 
   for (fkmd = Fkmds) {
     :meta pgMeta = meta.new(fkmd[:-4], "", false, true, false);

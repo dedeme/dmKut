@@ -1,30 +1,32 @@
-// Copyright 09-May-2023 ºDeme
+// Copyright 14-May-2022 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Code page.
 
-import "libdm/jstb";
 import "KtWeb/rp";
 import "data/dpath";
-import "db";
+import "db/pathsTb";
 
 /// Process request.
-/// \m -> s
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "code": {
-      Code = [];
+      // s, s
+      pack, pth : Rq;
+
+      codeOp = [];
       ppathOp = arr.find(
-        db.pathsTb()[jstb.read](), \:dpath P -> return P.id == Rq.pack;
+        pathsTb.read(), \:dpath p -> return p.id == pack;
       );
       if (!!ppathOp) {
         :dpath ppath = ppathOp!;
-        fpath = path.cat([ppath.spath, Rq.path + ".jkut"]);
-        if (file.exists(fpath)) arr.push(Code, file.read(fpath));
+        fpath = file.cat([ppath.spath, pth + ".jkut"]);
+        if (file.exists(fpath)) codeOp.push(file.read(fpath));
       }
-      sys.println(rp.mk({
-        code: Code
-      }));
+      return rp.mk({
+        codeOp
+      });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

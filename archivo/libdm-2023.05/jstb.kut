@@ -1,0 +1,97 @@
+// Copyright 26-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// JSON table
+///
+/// A JSON table is a file with a JSON-string which store an array of objects
+/// serialized.
+///
+/// Example of use:
+///
+/// mk = \name, age -> {name, age};;
+/// pToJs = \P -> [P\name, math.itof(P\age)];;
+/// pFromJs = \Js -> mk(Js[0], math.ftoi(Js[1]));;
+/// Ps = [mk(Peter, 33), mk(Laura, 18)];
+///
+/// :jstb tb = new(
+///   "people.tb",
+///   \-> return [];,
+///   \A -> arr.map(A, pToJs);
+///   \Js -> arr.map(Js, pFromJs;
+/// );
+/// tb.write#(Ps);
+/// sys.test(tb.read#(), Ps);
+///
+/// or
+///
+/// :jstb tb = newArr("people.tb", \-> return [];, pToJs, pFromJs);
+/// tb.write#(Ps);
+/// sys.test(tb.read#(), Ps);
+
+/// Constructor.
+/// Don't use directly, use 'new' or 'newArr'.
+///   fpath  : Path of table file.
+///   readJs : Returns the JSON text of the table.
+///   read   : Returns the object which was serialized.
+///   writeJs: Writes JSON text in the table file (overwriting it).
+///   write  : Writes in the table file (overwriting it) an object.
+/// \s, (\->s), (\->*), (\s->()), (\*->()) -> <jstb>
+mkJstb : fpath, readJs, read, writeJs, write;
+
+/// Creates a new JSON table from a object.
+/// If 'fpath' does not exist, a file with the text 'init' is created.
+///   fpath  : Path of file to save table.
+///   init   : Function to generate the original initial value.
+///   toJs   : Function to serialize in JSONizable object.
+///   fromJs : Function to restore the original object from its JSONizable
+///            serialization.
+///
+/// The object returned has the following fields:
+///   fpath  : Path of table file.
+///   readJs : Returns the JSON text of the table.
+///   read   : Returns the object which was serialized.
+///   writeJs: Writes JSON text in the table file (overwriting it).
+///   write  : Writes in the table file (overwriting it) an object.
+/// \s, (\->*), (\*->*), (\*->*) -> <jstb>
+new = \fpath, init, toJs, fromJs -> {
+  if (!file.exists(fpath)) {
+    file.write(fpath, js.w(toJs(init())));
+  }
+
+  return mkJstb(
+    fpath,
+    \-> return file.read(fpath);,
+    \-> return fromJs(js.r(file.read(fpath)));,
+    \s -> file.write(fpath, s);,
+    \o -> file.write(fpath, js.w(toJs(o)));
+  );
+};
+
+/// Creates a new JSON table from an array.
+/// If 'fpath' does not exist, a file with the text 'init' is created.
+///   fpath  : Path of file to save table.
+///   init   : Function to generate the original initial value.
+///   toJs   : Function to serialize in JSONizable object an array element.
+///   fromJs : Function to restore each original array element from its
+///            JSONizable serialization.
+///
+/// The object returned has the following fields:
+///   fpath  : Path of table file.
+///   readJs : Returns the JSON text of the table.
+///   read   : Returns the array which was serialized.
+///   writeJs: Writes JSON text in the table file (overwriting it).
+///   write  : Writes in the table file (overwriting it) an array.
+/// \s, (\->[*.]), (\*->*), (\*->*) -> <jstb>
+newArr = \fpath, init, toJs, fromJs -> {
+  if (!file.exists(fpath)) {
+    file.write(fpath, js.w(arr.map(init(), \e -> return toJs(e);)));
+  }
+  return mkJstb(
+    fpath,
+    \-> return file.read(fpath);,
+    \-> return arr.map(js.r(file.read(fpath)), \e -> return fromJs(e););,
+    \s -> {file.write(fpath, s);},
+    \A -> file.write(fpath, js.w(arr.map(A, \e -> return toJs(e);)));
+  );
+};
+

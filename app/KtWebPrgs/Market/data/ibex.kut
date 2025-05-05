@@ -12,7 +12,7 @@ import "libmkt/quote";
 /// \[s.],[<quote>.] -> <ibex>
 new : Cos, Qs;
 
-/// \JS -> <ibex>
+/// \[*.] -> <ibex>
 fromJs = \A -> return [
     A[Cos],
     arr.map(A[Qs], quote.fromJs)

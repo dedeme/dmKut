@@ -1,0 +1,19 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// s
+appName = "holimusic";
+
+/// s
+version = "202412";
+
+/// s
+dataPath = file.cat([sys.home(), ".dmKutApp", appName]);
+
+/// Name of source / target check files.
+/// s
+holimusicControl, holimusicControlTg :;
+
+/// Files to copy.
+/// i
+nfiles = 100;

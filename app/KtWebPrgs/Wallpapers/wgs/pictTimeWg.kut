@@ -1,0 +1,25 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Picture time widget.
+
+import "KtWeb/rp";
+import "db";
+import "db/pictsTb";
+import "db/selsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  rq = Rq.rq;
+  switch (rq) {
+    "changePictTime": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      selsTb.setPictTime(math.ftoi(Rq.value));
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + rq + ") is not valid");
+  }
+};
+

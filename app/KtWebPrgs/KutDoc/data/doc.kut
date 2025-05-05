@@ -1,14 +1,12 @@
-// Copyright 08-May-2023 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Module documentation data.
 
-import "docEntry";
-
-/// Documentation constructor.
-///   doc      : Module documentation.
-///   indexeds : Indexeds functions documentation.
-///   functions: Functions documentation.
-///   values   : Values documentation.
-/// \s, [<docEntry>...], [<docEntry>...] -> <doc>
-mk : doc, Indexeds, Functions, Values;
+/// Constructor.
+///   docTx    : Module documentation data.
+///   Indexeds : Indexeds functions documentation.
+///   Functions: Functions documentation.
+///   Values   : Values documentation.
+/// \s,[<docEntry>.],[<docEntry>.],[<docEntry>.] -> <doc>
+new : docTx, Indexeds, Functions, Values;

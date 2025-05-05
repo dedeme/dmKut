@@ -12,7 +12,7 @@ import "cts";
 import "db";
 import "updater";
 
-// \ -> s
+//: \ -> s
 help = \ -> return """
   Use MarketModels [help | version | init | update | test <request> | <request>]
   where
@@ -25,7 +25,8 @@ help = \ -> return """
     request: Request sent by browser.
   """;;
 
-log.setPath(path.cat([cts.dataPath, "log.tb"]));
+
+log.init(file.cat([cts.dataPath, "log.tb"]), 100);
 
 :arr Args = sys.args();
 
@@ -46,7 +47,7 @@ switch (rq) {
   "init": db.init();
   "help", "": sys.println(help());
   default: try {
-    :: Rq = js.r(rq);
+    Rq = js.r(rq);
     sys.print(switch(Rq.source) {
       "LogPg": logPg.process(Rq);
       "GlobalPg": globalPg.process(Rq);

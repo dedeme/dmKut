@@ -3,12 +3,12 @@
 
 /// Main module.
 
-import "pgs/main/home";
+import "pgs/main/homePg";
 
-/// \m -> s
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.source) {
-    "Home": return home.process(Rq);
+    "HomePg": return homePg.process(Rq);
     default: sys.throw("Value of source (" + Rq.source + ") is not valid");
   }
 };

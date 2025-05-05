@@ -45,7 +45,7 @@ process = \Rq -> {
 
       nick, value : Rq;
       cosTb.select(nick, value);
-      if (Rq.value) qspr.updateClosesAndRefs(nick);
+      if (Rq.value) qspr.updateClosesAndRefs(nick, false);
       return rp.mk({ dbKey });
     }
     "test": {
@@ -67,13 +67,13 @@ process = \Rq -> {
         if (!!Errs){
           withWarningsV! = true;
           log.error(str.fmt(
-            "Warnings testing %v (%v and %v more)",
+            "Warnings testing %v\n%v\nand %v more",
             [nick, Errs[0], Errs.size() - 1]
           ));
         }
       } else {
         withErrorsV! = true;
-        log.error(str.fmt("Error testing %v (%v)", [nick, Qs]));
+        log.error(str.fmt("Error testing %v\n%v", [nick, Qs]));
       }
 
       return rp.mk({

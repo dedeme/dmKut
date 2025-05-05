@@ -49,8 +49,8 @@ extractFile = \Dict, fpath -> {
 extract = \Dict, fpath -> {
   sys.println(fpath);
   if (file.isDirectory(fpath)) {
-    for (fname = file.dir(fpath)) extract(Dict, path.cat([fpath, fname]));
-  } else if (path.extension(fpath) == ".jkut") {
+    for (fname = file.dir(fpath)) extract(Dict, file.cat([fpath, fname]));
+  } else if (file.extension(fpath) == ".jkut") {
     extractFile(Dict, fpath);
   }
 };
@@ -86,7 +86,7 @@ root = Args[1];
 if (!file.isDirectory(root))
   return help("'" + root + "' is not a directory");
 
-i18nDir = path.cat([root, "i18n"]);
+i18nDir = file.cat([root, "i18n"]);
 if (file.exists(i18nDir) & !file.isDirectory(i18nDir))
     return help("'" + i18nDir + "' is not a directory");
 file.mkdir(i18nDir);
@@ -97,16 +97,16 @@ extract(CurrentKeys, root);
 Ckeys = dic.keys(CurrentKeys);
 arr.sort(Ckeys, \k1, k2 -> return k1 < k2;);
 for (v = dic.values(CurrentKeys)) {
-  arr.sort(v, \p1, p2 -> {
-    if (p1.fpath == p2.fpath) return p1.line < p2.line;
-    else return p1.fpath < p2.fpath;
+  arr.sort(v, \P1, P2 -> {
+    if (P1.fpath == P2.fpath) return P1.line < P2.line;
+    else return P1.fpath < P2.fpath;
   });
 }
 
 // {{s.}}
 Translations = {};
 for (lang = Langs) {
-  fdic = path.cat([i18nDir, lang + ".txt"]);
+  fdic = file.cat([i18nDir, lang + ".txt"]);
   //{s.}
   OldDic = readOldDic(fdic);
 
@@ -130,8 +130,8 @@ for (lang = Langs) {
       v = OldDic[k];
       arr.push(
         Dones,
-        arr.join(arr.map(CurrentKeys[k], \p ->
-            return str.fmt("# %v: %v\n", [p.fpath, p.line]);
+        arr.join(arr.map(CurrentKeys[k], \P ->
+            return str.fmt("# %v: %v\n", [P.fpath, P.line]);
           ), "") +
         str.fmt("%v = %v\n\n", [k, v])
       );
@@ -140,8 +140,8 @@ for (lang = Langs) {
       arr.push(
         ToDos,
         "# TO DO\n" +
-        arr.join(arr.map(CurrentKeys[k], \p ->
-            return str.fmt("# %v: %v\n", [p.fpath, p.line]);
+        arr.join(arr.map(CurrentKeys[k], \P ->
+            return str.fmt("# %v: %v\n", [P.fpath, P.line]);
           ), "") +
         str.fmt("%v =\n\n", [k])
       );
@@ -176,7 +176,7 @@ for (lang = Langs) {
   arr.push(Code, str.fmt('/// \\-> ()\n%s = \\-> Lang! = "%v";;\n\n', [lang, lang]));
 }
 
-arr.push(Code, "//\\s -> {s...}\ndicByKey = \\s -> return switch (s) {\n");
+arr.push(Code, "//: \\s -> {s.}\ndicByKey = \\s -> return switch (s) {\n");
 arr.push(Code, arr.join(arr.map(
   Langs,
   \l -> return str.fmt('  "%v": %vDic;\n', [l, l]);
@@ -195,7 +195,7 @@ arr.push(Code, """
     return !T ? s : T!;
   };
 
-  /// \s, [s...] -> s
+  /// \s, [s.] -> s
   fmt = \tp, Rpls -> {
     R = [tp];
     for (i = 0:arr.size(Rpls)) R! = str.replace(R!, "%" + sys.toStr(i), Rpls[i]);
@@ -205,4 +205,4 @@ arr.push(Code, """
 );
 
 
-file.write(path.cat([root, "i18n.jkut"]), arr.join(Code, ""));
+file.write(file.cat([root, "i18n.jkut"]), arr.join(Code, ""));

@@ -1,53 +1,73 @@
-// Copyright 14-May-2022 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
+/// Paths page.
+
 import "KtWeb/rp";
-import "libdm/jstb";
 import "db";
 import "data/conf";
 import "data/dpath";
+import "db/confTb";
+import "db/pathsTb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "changeShowAll": {
-      :jstb confTb = db.confTb();
-      :conf Cf = confTb.read#();
-      Cf.showAll = Cf.showAll ? false : true;
-      confTb.write#(Cf);
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :conf cf = confTb.read();
+      confTb.write(conf.new(cf.spath, !cf.showAll));
+
+      return rp.mk({ dbKey });
     }
     "new": {
-      :jstb pathsTb = db.pathsTb();
-      Ps = pathsTb.read#();
-      arr.push(Ps, dpath.mk(Rq.id, Rq.path, true, false));
-      pathsTb.write#(Ps);
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      // s, s
+      id, pth : Rq;
+      :arr Ps = pathsTb.read();
+      Ps.push(dpath.new(id, pth, true, false));
+      pathsTb.write(Ps);
+
+      return rp.mk({ dbKey });
     }
     "changeShown": {
-      :jstb pathsTb = db.pathsTb();
-      Ps = pathsTb.read#();
-      for (:dpath P = Ps)
-        if (P.id == Rq.id) P.isShown = P.isShown ? false : true;
-      pathsTb.write#(Ps);
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      Ps = pathsTb.read();
+      for (:dpath p = Ps) if (p.id == Rq.id) p.isShown = !p.isShown;
+      pathsTb.write(Ps);
+
+      return rp.mk({ dbKey });
     }
     "delete": {
-      :jstb pathsTb = db.pathsTb();
-      Ps = pathsTb.read#();
-      arr.filterIn(Ps, \:dpath P -> return P.id != Rq.id;);
-      pathsTb.write#(Ps);
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      :arr Ps = pathsTb.read();
+      Ps.filterIn(\:dpath p -> return p.id != Rq.id;);
+      pathsTb.write(Ps);
+
+      return rp.mk({ dbKey });
     }
     "modify": {
-      :jstb pathsTb = db.pathsTb();
-      Ps = pathsTb.read#();
-      for (:dpath P = Ps) if (P.id == Rq.id) {
-        P.id = Rq.newId;
-        P.spath = Rq.path;
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      // s, s, s
+      id, newId, pth : Rq;
+      :arr Ps = pathsTb.read();
+      for (:dpath p = Ps) if (p.id == id) {
+        p.id = newId;
+        p.spath = pth;
       }
-      pathsTb.write#(Ps);
-      sys.print(rp.mkEmpty());
+      pathsTb.write(Ps);
+
+      return rp.mk({ dbKey });
     }
     default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
   }

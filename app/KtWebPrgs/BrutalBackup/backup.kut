@@ -23,7 +23,7 @@ start= \key -> {
   totalCountV = [sv.totalCount];
   currentCountV = [sv.currentCount];
 
-  th1 = thread.start(\ -> {
+  :thread th1 = thread.start(\ -> {
     while () {
       sys.sleep(900);
       state = stateV!;
@@ -47,7 +47,7 @@ start= \key -> {
   // \<file>, [[s, i].] -> ()
   readFiles = \:file dir, :arr FpathsTm -> {
       for (name = dir.dir()) {
-        :file fpath = path.cat([dir, name]);
+        :file fpath = file.cat([dir, name]);
         if (fpath.isDirectory())
           readFiles(fpath, FpathsTm);
         else if (fpath.isRegular()) {
@@ -61,14 +61,14 @@ start= \key -> {
       }
     };
 
-  th2 = thread.start(\ -> {
+  :thread th2 = thread.start(\ -> {
     try {
-      source = path.canonical(cl.source);
-      target = path.canonical(cl.target);
+      source = file.canonical(cl.source);
+      target = file.canonical(cl.target);
       sourceLen = str.len(source) + 1;
       targetLen = str.len(target) + 1;
 
-      kpath = path.cat([target, "BrutalBackups.txt"]);
+      kpath = file.cat([target, "BrutalBackups.txt"]);
       if (!file.exists(kpath)){
         stateV! = fromServer.error;
         errorMsgV! = "BrutalBackups.txt not found in " + target;
@@ -126,21 +126,21 @@ start= \key -> {
           return;
         }
         rpath = fTm[0];
-        s = path.cat([source, rpath]);
-        t = path.cat([target, rpath]);
-        file.mkdir(path.parent(t));
+        s = file.cat([source, rpath]);
+        t = file.cat([target, rpath]);
+        file.mkdir(file.parent(t));
         file.copy(s, t);
       }
 
       stateV! = fromServer.deleting;
-      for (i, fTm = ToDeletes) file.del(path.cat([target, fTm[0]]));
+      for (i, fTm = ToDeletes) file.del(file.cat([target, fTm[0]]));
       file.write(kpath, "");
 
       cleanDir = \:file dir -> {
           :arr Fs = dir.dir();
           if (Fs.size() == 0) file.del(dir);
           else for (f = Fs) {
-              :file p = path.cat([dir, f]);
+              :file p = file.cat([dir, f]);
               if (p.isDirectory()) cleanDir(p);
             }
         };

@@ -14,7 +14,7 @@ process = \Rq -> {
       R = sys.cmd2("ps", ["-x"]);
       isActive = str.index(
         R!,
-        "kut2 /dm/dmKut/app/KtWebPrgs/Market/main start"
+        "kut /dm/dmKut/app/KtWebPrgs/Market/main start"
       ) != -1;
       return rp.mk({isActive});
     }

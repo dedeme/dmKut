@@ -3,45 +3,43 @@
 
 /// Constants of libmkt
 
-import "libmktHelper";
-
-RRs = libmktHelper.constants();
-if (!RRs[1]) sys.throw(RRs!);
-R = RRs!;
-
 /// Number of quotes in historic tables.
 /// i
-historicQuotes = math.ftoi(R.historicQuotes);
+historicQuotes = 610;
+
+/// Date index of the first reference to make real references calculations.
+/// i
+realReferenceDateIx = 260;
 
 /// Initial capital.
 /// f
-initialCapital = R.initialCapital;
+initialCapital = 300000.0;
 
 /// Bet
 /// f
-bet = R.bet;
+bet = 15000.0;
 
 /// Minumum to bet
 /// f
-minToBet = R.minToBet;
+minToBet = 16000.0;
 
 /// Delay days after a sale with losses (in 5 days per week).
 /// i
-daysLoss = math.ftoi(R.daysLoss);
+daysLoss = 45;
 
 /// Multiplicator to calculate if should be applied 'daysLoss'.
 /// f
-noLossMultiplicator = R.noLossMultiplicator;
+noLossMultiplicator = 1.02;
 
-/// Cash limit to do a withdrawal.
+/// Cash limit to do a withdrawal (= initialCapital + bet + bet).
 /// f
-withdrawalLimit = R.withdrawalLimit;
+withdrawalLimit = 330000.0;
 
 /// Type of order.
 /// i
-orderBuy = math.ftoi(R.orderBuy);
+orderBuy = 0;
 
 /// Type of order.
 /// i
-orderSell = math.ftoi(R.orderSell);
+orderSell = 1;
 

@@ -1,0 +1,21 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <dirs> table.
+
+import "cts";
+import "data/dirs";
+
+fpath = file.cat([cts.dataPath, "dirs.tb"]);
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!file.exists(fpath)) write(dirs.newDefault());;
+
+/// Reads table.
+/// \ -> <dirs>
+read = \ -> return js.r(file.read(fpath));;
+
+/// Writes table.
+/// \<dirs> -> ()
+write = \o -> file.write(fpath, js.w(o));;

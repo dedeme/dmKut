@@ -1,0 +1,37 @@
+// Copyright 20-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Container made of layers of dictionaries.
+
+/// Constructor.
+/// \ -> <dicLayer>
+new = \ -> return [{}];;
+
+/// Adds a new layer to 'dLayer'.
+/// \<dicLayer> -> ()
+addLayer = \:arr dLayer -> dLayer.push({});;
+
+/// Returns the last added layer.
+/// \<dicLayer> -> {*.}
+peekLayer = \:arr dLayer -> return dLayer.peek();;
+
+/// Removes the last layer 'layer' to 'dLayer'.
+/// \<dicLayer>, {*.} -> ()
+removeLayer = \:arr dLayer -> dLayer.pop();;
+
+/// Adds an element to the last layer
+/// \<dicLayer>, s, * -> ()
+putElement = \:arr dLayer, key, value -> dic.put(dLayer.peek(), key, value);;
+
+/// Returns an option with the last element with 'key'.
+/// \<dicLayer>, s -> ([*]|[])
+getElement = \:arr dLayer, key -> {
+  for (:dic e = dLayer.reverse()) {
+    vOp = e.get(key);
+    if (!!vOp) {
+      if (vOp! == "") return [];
+      else return vOp;
+    }
+  }
+  return [];
+};

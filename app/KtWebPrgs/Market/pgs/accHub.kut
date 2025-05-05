@@ -10,6 +10,8 @@ import "acc/tradingPg";
 import "acc/profitsPg";
 import "acc/ibexPg";
 import "acc/speedometersPg";
+import "acc/executionPg";
+import "acc/quotesPg";
 
 /// \{*.} -> s
 process = \Rq -> {
@@ -20,6 +22,8 @@ process = \Rq -> {
     "ProfitsPg": profitsPg.process(Rq);
     "IbexPg": ibexPg.process(Rq);
     "SpeedometersPg": speedometersPg.process(Rq);
+    "ExecutionPg": executionPg.process(Rq);
+    "QuotesPg": quotesPg.process(Rq);
     default: sys.throw("Value of source (" + Rq.source + ") is not valid");
   };
 };

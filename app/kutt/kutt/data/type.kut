@@ -1,0 +1,723 @@
+// Copyright 07-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Type management
+
+import "char";
+import "modules";
+import "mdRc";
+import "module";
+import "wrCtx";
+import "imp";
+import "typedSym";
+import "cdtype";
+
+/// Create a type.
+///   id: Type id. Can be: b, i, f, s, <id>, (id), a, r, d, t, 0, 1 or
+///       upercases [A-Z].
+///       'id' stands by identifier.
+///       '0' is procedure type and '1' function type.
+///       [A-Z] stand by generics.
+///       (id) is a definition where id can be:
+///         module.symbol: Qualified symbol of a module different to the
+///                        current one.
+///         symbol       : Symbol of the current module. If the current module
+///                        has not such symbol, the pair module.symbol will be
+///                        be deduced.
+///   SubTypes: Elements of container or generics of definition.
+/// \s, [<type>.] -> <type>
+new : id, SubTypes;
+
+/// Type bolean
+/// <type>
+bool = new("b", []);
+
+/// Type bolean
+/// <type>
+int = new("i", []);
+
+/// Type bolean
+/// <type>
+float = new("f", []);
+
+/// Type bolean
+/// <type>
+string = new("s", []);
+
+/// Returns the identifier of an object.
+/// \<type> -> s
+oid = \t -> {
+  if (t[0][0] != "<") sys.throw("Type '" + t + "' is not an object");
+  return t[0][1:-1];
+};
+
+/// Returns the module of a definition.
+///   If definition has not module, the function returns "".
+///   Otherwise the function returns the local module identifier.
+/// \<type> -> s
+dmd = \t -> {
+  if (t[0][0] != "(") sys.throw("Type '" + t + "' is not a definition");
+  :str tx = t[0][1:-1];
+  ix = tx.index(".");
+  return ix == -1 ? "" : tx[:ix];
+};
+
+/// Returns the identifier of a definition.
+/// \<type> -> s
+did = \t -> {
+  if (t[0][0] != "(") sys.throw("Type '" + t + "' is not a definition");
+  :str tx = t[0][1:-1];
+  return tx[tx.index(".") + 1:];
+};
+
+/// Return the type of an array.
+/// \<type> -> <type>
+atype = \t -> {
+  if (t[0] != "a") sys.throw("Type '" + t + "' is not an array");
+  return t[1][0];
+};
+
+/// Return the type of an iterator.
+/// \<type> -> <type>
+rtype = \t -> {
+  if (t[0] != "r") sys.throw("Type '" + t + "' is not an iterator");
+  return t[1][0];
+};
+
+/// Return the type of a dictionary.
+/// \<type> -> <type>
+dtype = \t -> {
+  if (t[0] != "d") sys.throw("Type '" + t + "' is not a dictionary");
+  return t[1][0];
+};
+
+/// Returns the type of a position in tuple.
+///   t: Type (must be a tuple).
+///   i: Position of subtype in tuple.
+/// \<type>, i -> <type>
+ttype = \t, i -> {
+  if (t[0] != "t") sys.throw("Type '" + t + "' is not a tuple");
+  return t[1][i];
+};
+
+/// Returns the number of parameters of a function or -1 if 't' is not
+/// a function.
+/// \<type> -> i
+fnpars = \t ->
+  return switch (t[0]) {
+    "0": arr.size(t[1]);
+    "1": arr.size(t[1]) - 1;
+    default: -1;
+  };;
+
+/// Returns the type of a function parameter.
+///   t: Type (must be a function).
+///   i: Position of parameter.
+/// \<type>, i -> <type>
+fptype = \t, i -> {
+  if (t[0] == "0") return t[1][i];
+  else if (t[0] == "1") return t[1][:-1][i];
+  sys.throw("Type '" + toStr(t) + "' is not a function");
+};
+
+/// Returns the type of a function return:
+///   [type] If function returns something.
+///   [] If function returns nothing.
+/// \<type> -> ([<type>]|[])
+frtype = \t -> {
+  if (t[0] == "0") return [];
+  else if (t[0] == "1") return [arr.peek(t[1])];
+  sys.throw("Type '" + t + "' is not a function");
+};
+
+/// Returns C type of a funciton
+/// \<type> -> s
+fCtype = \t -> {
+  pars = "(" + arr.join(arr.fromIter(
+    iter.map([0:fnpars(t)], \i -> return "Val";)
+  ), ",") + ")";
+  if (t[0] == "0") return "void (*)" + pars;
+  else if (t[0] == "1") return "Val (*)" + pars;
+  sys.throw("Type '" + t + "' is not a function");
+};
+
+/// Returns 'true' if type 't' is generic.
+/// \<type> -> b
+isGeneric = \t -> {
+  ch = t[0][0];
+  return ch >= "A" & ch <= "Z";
+};
+
+/// Checks an user type and returns a canonical one.
+/// \s -> [(<type>|s), b]
+read = \tx -> {
+  rdOp = []; // Option of \s -> [([<type>, s]|s), b] :: function 'rd' bellow.
+
+  //: \s -> [s, b]
+  mkErr = \msg -> return [msg + " in '" + tx + "'", false];;
+
+  // Returns [([type, rest]|err), ok]
+  //: \s -> [([<type>, s]|s), b]
+  readObject = \t -> {
+    ix = str.index(t, ">");
+    if (ix == -1)
+      return mkErr("'>' is missing");
+    tp = str.trim(t[:ix]);
+    if (!char.isId(tp))
+      return mkErr("'" + tp + "' is not a valid identifier");
+    return [[new("<" + tp + ">", []), t[ix+1:]], true];
+  };
+
+  // Returns [([type, rest]|err), ok]
+  //: \s -> [([<type>, s]|s), b]
+  readDefinition = \t -> {
+    bix = str.index(t, "|");
+    pix = str.index(t, ")");
+    if (bix == -1 | bix > pix) {
+      ix = pix;
+      if (ix == -1)
+        return mkErr("')' is missing");
+      id, ok = char.mkDotId(str.trim(t[:ix]));
+      if (!ok)
+        return mkErr(id);
+      return [[new("(" + id + ")", []), t[ix+1:]], true];
+    }
+    id, ok = char.mkDotId(str.trim(t[:bix]));
+    if (!ok)
+      return mkErr(id);
+
+    Pars = []; // [<type>.]
+    restV = [str.ltrim(t[bix+1:])];
+    while () {
+      rest = restV!;
+      if (rest[0] == ")") break;
+      tRest, ok = rdOp!(rest);
+      if (!ok) return [tRest, false];
+      t, rest2 = tRest;
+      Pars.push(t);
+      restV! = str.ltrim(rest2);
+    }
+    rest = restV!;
+    if (!Pars) return mkErr("Definition parameters are missing");
+
+    return [[new("(" + id + ")", Pars), rest[1:]], true];
+  };
+
+  // Returns [([type, rest]|err), ok]
+  //: \s -> [([<type>, s]|s), b]
+  readArrays = \t -> {
+    t = str.ltrim(t);
+    if (t == "")
+      return mkErr("']' is missing");
+    ch = t[0];
+    if (ch == "]")
+      return mkErr("'[]' is not a valid type");
+    switch (ch) {
+      "|": {
+        tr = str.ltrim(t[1:]);
+        if (tr == "")
+          return mkErr("']' is missing");
+        if (tr[0] == "]")
+          return [[new("0", []), tr[1:]], true];
+
+        T, ok = rdOp!(tr);
+        if (!ok) return [T, false];
+        tp, rest = T;
+        rest2 = str.ltrim(rest);
+        if (rest2 == "")
+          return mkErr("']' is missing");
+        if (rest2[0] != "]")
+          return mkErr("Expected ']', but fund '" + rest2 + "'");
+        return [[new("1", [tp]), rest2[1:]], true];
+      }
+      "!": {
+        T, ok = rdOp!(t[1:]);
+        if (!ok) return [T, false];
+        tp, rest = T;
+        rest2 = str.ltrim(rest);
+        if (rest2 == "")
+          return mkErr("']' is missing");
+        if (rest2[0] != "]")
+          return mkErr("Expected ']', but fund '" + rest2 + "'");
+        return [[new("r", [tp]), rest2[1:]], true];
+      }
+      ".": {
+        Tps = []; //[<type>.]
+        tV = [t[1:]];
+        restV = [""];
+
+        while () {
+          T, ok = rdOp!(tV!);
+          if (!ok) return [T, false];
+          tp, rest = T;
+          Tps.push(tp);
+          t = str.ltrim(rest);
+          if (t == "")
+            return mkErr("']' is missing");
+          if (t[0] == "]") {
+            restV! = t[1:];
+            break;
+          }
+          tV! = t;
+        }
+        return [[new("t", Tps), restV!], true];
+      }
+      default: {
+        isFnV = [false];
+        Tps = []; //[<type>.]
+        tV = [t];
+        restV = [""];
+
+        while () {
+          T, ok = rdOp!(tV!);
+          if (!ok) return [T, false];
+          tp, rest = T;
+          Tps.push(tp);
+          t = str.ltrim(rest);
+          if (t == "")
+            return mkErr("']' is missing");
+          if (t[0] == "]") {
+            restV! = t[1:];
+            break;
+          }
+          if (isFnV!)
+            return mkErr("Bad function return");
+          if (t[0] == "|") {
+            isFnV! = true;
+            tr = str.ltrim(t[1:]);
+            if (tr == "")
+              return mkErr("']' is missing");
+            if (tr[0] == "]")                     // Return if procedure
+              return [[new("0", Tps), tr[1:]], true];
+          }
+          tV! = isFnV! ? str.ltrim(t[1:]) : t;
+        }
+        if (isFnV!) return [[new("1", Tps), restV!], true];
+        if (Tps.size() > 1) return mkErr("Array with more than one subtype");
+        return [[new("a", Tps), restV!], true];
+      }
+    }
+  };
+
+  // Returns [([type, rest]|err), ok]
+  //: \s -> [([<type>, s]|s), b]
+  readDictionary = \t -> {
+    t = str.ltrim(t);
+    if (t == "")
+      return mkErr("'}' is missing");
+    ch = t[0];
+    if (ch == "}")
+      return mkErr("'{}' is not a valid type");
+    T, ok = rdOp!(t);
+    if (!ok) return [T, false];
+    tp, rest = T;
+    rest2 = str.ltrim(rest);
+    if (rest2 == "")
+      return mkErr("'}' is missing");
+    if (rest2[0] != "}")
+      return mkErr("Expected '}', but fund '" + rest2 + "'");
+    return [[new("d", [tp]), rest2[1:]], true];
+  };
+
+  // Returns [([type, rest]|err), ok]
+  //: \s -> [([<type>, s]|s), b]
+  rd = \t -> {
+    t = str.ltrim(t);
+    if (tx == "")
+      return mkErr("Unexpected end of type");
+    ch = t[0];
+    return switch (ch) {
+      "b": [[bool, t[1:]], true];
+      "i": [[int, t[1:]], true];
+      "f": [[float, t[1:]], true];
+      "s": [[string, t[1:]], true];
+      "<": readObject(t[1:]);
+      "(": readDefinition(t[1:]);
+      "[": readArrays(t[1:]);
+      "{": readDictionary(t[1:]);
+      default: (ch >= "A" & ch <= "Z")
+        ? [[new(ch, []), t[1:]], true]
+        : mkErr("Unexpected '" + t[0] + "'");
+    };
+  };
+  rdOp.push(rd);
+
+  T, ok = rd(tx);
+  if (!ok) return [T, false];
+  tp, rest = T;
+
+  if (str.ltrim(rest) != "")
+    return mkErr("Extra charcters '" + rest + "'");
+  return [tp, true];
+};
+
+/// Returns an user type for a canonical one.
+/// \<type> -> s
+toStr = \t -> {
+  return switch(t[0][0]) {
+    "a": !t[1] ? "[]" : "[" + toStr(t[1][0]) + "]";
+    "r": "[!" + toStr(t[1][0]) + "]";
+    "d": !t[1] ? "{}" : "{" + toStr(t[1][0]) + "}";
+    "(": !t[1]
+      ? t[0]
+      : t[0][:-1] + "|" + arr.join(arr.map(t[1], toStr), "") + ")"
+    ;
+    "t": "[." + arr.join(arr.map(t[1], toStr), "") + "]";
+    "0": "[" + arr.join(arr.map(t[1], toStr), "") + "|]";
+    "1": !t[1] ? "[?|?]" : "[" +
+           arr.join(arr.map(t[1][:-1], toStr), "") + "|" +
+           toStr(arr.peek(t[1])) +
+         "]";
+    default: t[0];
+  };
+};
+
+/// Returns C Val of type.
+/// NOTE: array and dictionary must have indicated the element type.
+///   t  : Type to convert.
+///   ctx: Writer context.
+/// \<type>, <wrCtx> -> s
+toC = \t, :wrCtx ctx -> {
+  t2,  = ctx.expand(t);
+
+  /// \<type>, <wrCtx> -> s
+  toC2 = \t, :wrCtx ctx -> {
+    start = '__arr_new_from_carr((Val)2, (Val[]){(Val)"' + t[0] + '", ';
+    rest = switch(t[0][0]) {
+      "a", "r", "d": '__arr_new_from_carr((Val)1, (Val[]){' +
+          toC2(t[1][0], ctx) + "})";
+      "t": '__arr_new_from_carr((Val)' + math.itos(arr.size(t[1])) +
+          ', (Val[]){' +
+          arr.join(arr.map(t[1], \tp -> return toC2(tp, ctx);), ",") +
+          "})";
+      default: "__arr_new()";
+    };
+    return start + rest + "})";
+  };
+  return toC2(t2, ctx);
+};
+
+/// Returns string with generics of 't'.
+/// \<type> -> s
+getGenerics = \t -> {
+  get = \gs, t -> {
+    ch = t[id][0];
+    return switch (ch) {
+      "a", "r", "d", "(", "t", "0", "1": !t[SubTypes]
+        ? gs
+        : arr.reduce(t[SubTypes], gs, \gens, t -> return get(gens, t);)
+      ;
+      default: ch >= "A" & ch <= "Z" & str.index(gs, ch) == -1
+        ? gs + ch
+        : gs
+      ;
+    };
+  };
+  return get("", t);
+};
+
+/// Replace generics of 't' with the dictionary Gs.
+/// \{<type>.}, <type> -> <type>
+replaceGenerics = \:dic Gs, t -> {
+  ch = t[id][0];
+  switch (ch) {
+    "b", "i", "f", "s", "<": return t;
+    default: {
+      if (ch >= "A" & ch <= "Z") {
+        tOp = Gs.get(ch);
+        return (!tOp) ? t : tOp!;
+      }
+      return new(
+        t[id],
+        arr.map(t[SubTypes], \sbt -> return replaceGenerics(Gs, sbt);)
+      );
+    }
+  }
+};
+
+/// Returns the real right part of a definition form its real left part,
+/// replacing generics.
+/// NOTE: Is expected that 'leftDef' and 'realLeft' are definition types and
+///       have the same number of subtypes.
+///   realLeft: Real right part.
+///   leftDef: Left part of type definition.
+///   rightDef: Right part of type definition.
+/// \<type>, <type>, <type> -> <type>
+replaceDefGenerics = \realLeft, leftDef, rightDef -> {
+  :arr RealGs = realLeft[SubTypes];
+  :arr LeftGs = leftDef[SubTypes];
+  Gs = {};
+  for (i, g = LeftGs) Gs.put(g[id][0], RealGs[i]);
+  r = replaceGenerics(Gs, rightDef);
+  return r;
+};
+
+/// Returns true it tp1 and tp2 are the same type or error.
+/// 'error' is produced by types expansion.
+///   ctx: Writer context.
+///   tp1: Type.
+///   tp2: Type.
+/// \<wrCtx>, <type>, <type> -> [(b|s), b]
+eq = \:wrCtx ctx, tp1, tp2 -> {
+  /// \[s.], <wrCtx>, <type>, <type> -> [(b|s), b]
+  eq2 = \:arr pool, :wrCtx ctx, tp1, tp2 -> {
+    id1 = tp1[id];
+    id2 = tp2[id];
+
+    ch = id1[0];
+    switch (ch) {
+      "b", "i", "f", "s", "<":
+        return [id2 == id1, true];
+      "a", "d":
+        if (id2 != id1) return [false, true];
+        // else subtypes control
+      default: {
+        if (ch >= "A" & ch <= "Z") return [id1 == id2, true];
+
+        if (id2[0] == "("  & ch == "(") {
+          can1, ok1 = ctx.canonicalDef(dmd(tp1), did(tp1));
+          if (!ok1) return [can1, false];
+          can2, ok2 = ctx.canonicalDef(dmd(tp2), did(tp2));
+          if (!ok2) return [can2, false];
+          if (can1 != can2) {
+            in1 = pool.any(\id -> return can1 == id;);
+            in2 = pool.any(\id -> return can2 == id;);
+            if (!in1 | !in2) {
+              if (!in1) pool.push(can1);
+              if (!in2) pool.push(can2);
+              expand1, ok1 = ctx.expand(tp1);
+              if (!ok1) return [expand1, false];
+              expand2, ok2 = ctx.expand(tp2);
+              if (!ok2) return [expand2, false];
+              return eq2(pool, ctx, expand1, expand2);
+            }
+            // else subtypes control
+          }
+          // else subtypes control
+        } else {
+          if (ch == "(" ) {
+            expand, ok = ctx.expand(tp1);
+            if (!ok) return [expand, false];
+            return eq2(pool, ctx, expand, tp2);
+          }
+          if (id2[0] == "(" ) {
+            expand, ok = ctx.expand(tp2);
+            if (!ok) return [expand, false];
+            return eq2(pool, ctx, tp1, expand);
+          }
+          if (id1 != id2) return [false, true];
+          // else subtypes control
+        }
+      }
+    }
+    // Subtypes control
+    if (arr.size(tp1[SubTypes]) != arr.size(tp2[SubTypes]))
+      return [false, true];
+    return arr.reduce(
+      arr.zip([tp1[SubTypes], tp2[SubTypes]]),
+      [true, true],
+      \R, Z -> {
+        if (!R[1]) return R;
+        eqOk, ok = eq2(pool, ctx, Z[0], Z[1]);
+        return ok ? [R[0] & eqOk, true] : [eqOk, false];
+      }
+    );
+  };
+
+  return eq2([], ctx, tp1, tp2);
+};
+
+/// Returns true if the paremeter type 'texpected' can allow the value type
+/// 'tactual' as reification, or error
+/// Reification is the result of replace generics in 'pt' by other types.
+/// 'allow' is called when a function is called or a value is inserted in a
+/// container.
+/// 'error' is produced by types expansion.
+/// The expansion is not applied to Subtypes.
+///   ctx: Writer context.
+///   Generics : Dictionary {generic::type} with mandatory generic replacements.
+///              This dictionary grows up with each new 'pt' of generic type.
+///   texpected: Type of function parameter or container element.
+///   tactual  : Type of value to pass in functions or to insert.
+/// \<wrCtx>, {<type>.}, <type>, <type> -> [(b|s), b]
+allow = \:wrCtx ctx, :dic Generics, texpected, tactual -> {
+  /// \[s.], <wrCtx>, {<type>.}, <type>, <type> -> [(b|s), b]
+  allow2 = \:arr pool, :wrCtx ctx, :dic Generics, texpected, tactual -> {
+    id1 = texpected[id];
+    id2 = tactual[id];
+
+    ch = id1[0];
+    switch (ch) {
+      "b", "i", "f", "s", "<":
+        return [id2 == id1, true];
+      "a", "d":
+        if (id2 != id1) return [false, true];
+        // else subtypes control
+      default: {
+        if (ch >= "A" & ch <= "Z") {
+          tOp = Generics.get(ch);
+          if (!tOp) {
+            Generics.put(ch, tactual);
+            return [true, true];
+          }
+          t = tOp!;
+          if (t[id][0] >= "A" & t[id][0] <= "Z") return [t[id] == id2, true];
+          return allow2(pool, ctx, Generics, tOp!, tactual);
+        }
+
+        if (id2[0] == "("  & ch == "(") {
+          can1, ok1 = ctx.canonicalDef(dmd(texpected), did(texpected));
+          if (!ok1) return [can1, false];
+          can2, ok2 = ctx.canonicalDef(dmd(tactual), did(tactual));
+          if (!ok2) return [can2, false];
+          if (can1 != can2) {
+            in1 = pool.any(\id -> return can1 == id;);
+            in2 = pool.any(\id -> return can2 == id;);
+            if (!in1 | !in2) {
+              if (!in1) pool.push(can1);
+              if (!in2) pool.push(can2);
+              expand1, ok1 = ctx.expand(texpected);
+              if (!ok1) return [expand1, false];
+              expand2, ok2 = ctx.expand(tactual);
+              if (!ok2) return [expand2, false];
+              return allow2(pool, ctx, Generics, expand1, expand2);
+            }
+            // else subtypes control
+          }
+          // else subtypes control
+        } else {
+          if (ch == "(" ) {
+            expand, ok = ctx.expand(texpected);
+            if (!ok) return [expand, false];
+            return allow2(pool, ctx, Generics, expand, tactual);
+          }
+          if (id2[0] == "(" ) {
+            expand, ok = ctx.expand(tactual);
+            if (!ok) return [expand, false];
+            return allow2(pool, ctx, Generics, texpected, expand);
+          }
+          if (id1 != id2) return [false, true];
+          // else subtypes control
+        }
+      }
+    }
+    // Subtypes control
+    :arr EGs = texpected[SubTypes];
+    :arr AGs = tactual[SubTypes];
+    if (EGs.size() > AGs.size()) return [false, true];
+    for (i, :type t = EGs) {
+      aOk, ok = allow2([], ctx, Generics, t, AGs[i]);
+      if (!ok) return [aOk, false];
+      if (!aOk) return [false, true];
+    }
+    return [true, true];
+  };
+
+  return allow2([], ctx, Generics, texpected, tactual);
+};
+
+/// Returns true if the paremeter type 'tactual' can be returned as
+/// 'texpected', or error.
+/// 'error' is produced by types expansion.
+///   ctx: Writer context.
+///   texpected: Type expected to be returned.
+///   tactual  : Type of actual value.
+/// \<wrCtx>, {<type>.}, <type>, <type> -> [(b|s), b]
+allowReturn = \:wrCtx ctx, texpected, tactual -> {
+
+  /// \[s.], <wrCtx>, {<type>.}, <type>, <type> -> [(b|s), b]
+  allowReturn2 = \:arr pool, :wrCtx ctx, texpected, tactual -> {
+    id1 = texpected[id];
+    id2 = tactual[id];
+
+    ch = id1[0];
+    switch (ch) {
+      "b", "i", "f", "s", "<":
+        return [id2 == id1, true];
+      "a", "d":
+        if (id2 != id1) return [false, true];
+        // else subtypes control
+      default: {
+        if (ch >= "A" & ch <= "Z") return [true, true];
+
+        if (id2[0] == "("  & ch == "(") {
+          can1, ok1 = ctx.canonicalDef(dmd(texpected), did(texpected));
+          if (!ok1) return [can1, false];
+          can2, ok2 = ctx.canonicalDef(dmd(tactual), did(tactual));
+          if (!ok2) return [can2, false];
+          if (can1 != can2) {
+            in1 = pool.any(\id -> return can1 == id;);
+            in2 = pool.any(\id -> return can2 == id;);
+            if (!in1 | !in2) {
+              if (!in1) pool.push(can1);
+              if (!in2) pool.push(can2);
+              expand1, ok1 = ctx.expand(texpected);
+              if (!ok1) return [expand1, false];
+              expand2, ok2 = ctx.expand(tactual);
+              if (!ok2) return [expand2, false];
+              return allowReturn2(pool, ctx, expand1, expand2);
+            }
+            // else subtypes control
+          }
+          // else subtypes control
+        } else {
+          if (ch == "(" ) {
+            expand, ok = ctx.expand(texpected);
+            if (!ok) return [expand, false];
+            return allowReturn2(pool, ctx, expand, tactual);
+          }
+          if (id2[0] == "(" ) {
+            expand, ok = ctx.expand(tactual);
+            if (!ok) return [expand, false];
+            return allowReturn2(pool, ctx, texpected, expand);
+          }
+          if (id1 != id2) return [false, true];
+          // else subtypes control
+        }
+      }
+    }
+
+    // Subtypes control
+    :arr EGs = texpected[SubTypes];
+    :arr AGs = tactual[SubTypes];
+    if (EGs.size() > AGs.size()) return [false, true];
+    for (i, :type t = EGs) {
+      aOk, ok = allowReturn2([], ctx, t, AGs[i]);
+      if (!ok) return [aOk, false];
+      if (!aOk) return [false, true];
+    }
+    return [true, true];
+  };
+
+  return allowReturn2([], ctx, texpected, tactual);
+};
+
+/// Returns an empty string if the type definition match the generics string.
+/// Otherwise returns an error.
+///   gs: Generics string for a new type.
+///   type: Old type.
+/// \s, <type> -> s
+checkDef = \gs, t -> {
+  // \s, <type> -> s
+  addGs = \gens, tp -> {
+    tid = tp[id][0];
+    return switch (tid) {
+      "a", "r", "d", "(", "t", "0", "1": !tp[1]
+        ? gens
+        : arr.reduce(tp[1], gens, \gs, t -> return addGs(gs, t);)
+      ;
+      default:
+        tid >= "A" & tid <= "Z" & str.index(gens, tid) == -1
+          ? gens + tid
+          : gens;
+    };
+  };
+  oldGs = addGs("", t);
+  if (str.len(gs) != str.len(oldGs))
+    return "Number of generics does not match";
+
+  for (ch = gs) if (str.index(oldGs, ch) == -1)
+    return "Generic symbol '" + ch + "' of new type is not in the old one.";
+
+  return "";
+};

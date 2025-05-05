@@ -1,13 +1,23 @@
 // Copyright 07-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
+/// Server starter and scheduler.
+///
+/// SERVER START:
+///   - Test if Market is already running.
+///     If it is so, the program ends with console and log messages.
+///   - Test if year is changed.
+///     If it is so, tables diariesDb and profitsDb are updated calling
+///     'closeAccountingYear'.
+///   - Run the scheduler.
+///
+/// SERVER SCHEDULER:
+
+
 import "libdm/log";
 import "data/co/cos";
 import "data/co/co";
 import "data/qsprRs";
-import "data/qsv";
-import "data/svs/ibexSv";
-import "data/svs/bmania";
 import "data/ibex";
 import "data/acc/anns";
 import "data/acc/ann";
@@ -17,6 +27,7 @@ import "data/acc/ldg";
 import "data/chart/profitsEntry";
 import "data/calendar/calendar";
 import "data/activity";
+import "data/initRef";
 import "db/cosTb";
 import "db/svCodesTb";
 import "db/ibexTb";
@@ -28,16 +39,20 @@ import "db/acc/diariesDb";
 import "db/acc/profitsDb";
 import "db/calendarTb";
 import "db/activityTb";
+import "db/initRefsTb";
+import "net/readIxs";
 import "qspr";
 import "cts";
+import "fns";
+
 
 // If it fails, returns "". The found PID must be different to pid.
-// \s -> s
+//: \s -> s
 getPid = \pid -> {
   r, ok = sys.cmd("ps", ["-x"]);
   if (!ok) return "";
 
-  cmd = "kut2 /dm/dmKut/app/KtWebPrgs/market/main start";
+  cmd = "kut /dm/dmKut/app/KtWebPrgs/market/main start";
   for (prg = str.splitTrim(r, "\n")) {
     if (str.index(prg, cmd) != -1) {
       ix = str.index(prg, " ");
@@ -50,33 +65,42 @@ getPid = \pid -> {
   return "";
 };
 
-/// \s -> <qsprRs<qs>>
+/// Returns <qsprRs<qs>>.
+/// \s -> <qsprRs>
 ibexHistoricUpdate = \mainNick -> {
   :cos cs = cosTb.read();
 
-  :qsprRs rs = qspr.updateIbexHistoric(cs.mainNick);
+  :qsprRs rs = qspr.updateIbexHistoric(cs.mainNick); // Update ibexTb.Qs.
+  if (rs.withError) return rs;
 
-  // [s.], b
-  :arr Codes, ok = ibexSv.readComponents();
+  R, ok = readIxs.ibexCos();
   if (!ok) {
-    log.error("Reading Ibex components: " + Codes);
+    log.error("Reading Ibex components: " + R);
     rs.withError = true;
     return rs;
   }
 
-  :qsv sv = bmania.new();
-  :dic BmaniaCodes = svCodesTb.read(sv.id); // {s.}
+  sv, Cs, Ws : R;
+  if (!!Ws) {
+    for (w = Ws) log.warning("Reading Ibex components: " + w);
+    rs.withWarnings = true;
+  }
+
+  :dic SvCodes = svCodesTb.read(sv); // {s.}
   Nicks = []; // [s.]
-  for (code = Codes){
+  for (code = Cs){
     NkOp = [];
-    for (nk, cd = BmaniaCodes) {
+    for (nk, cd = SvCodes) {
       if (cd == code) {
         NkOp.push(nk);
         break;
       }
     }
     if (!NkOp) {
-      log.error("Reading Ibex components: Unknown company code " + code);
+      log.error(
+        "Reading Ibex components: Unknown company code " + code +
+        ". Add in 'Market/ibex.tb'?"
+      );
       rs.withError = true;
       return rs;
     }
@@ -85,18 +109,21 @@ ibexHistoricUpdate = \mainNick -> {
   }
 
   :ibex ibexT = ibexTb.read();
-  ibexTb.write(ibex.new(ibexT.Cos, ibexT.Qs));
+  ibexTb.write(ibex.new(Nicks, ibexT.Qs));
 
   for (nk = Nicks) {
     cOp = arr.find(cs.Cos, \:co c -> return c.nick == nk;);
     if (!cOp) {
-      log.error("Reading Ibex components: " + nk +
-        " in server not found in companies data base");
+      log.error(
+        "Reading Ibex components: " + nk +
+        " in server not found in companies data base. " +
+        " Remove in 'Market/ibex.tb'?"
+      );
       rs.withError = true;
       return rs;
     }
     :co c = cOp!;
-    if (!c.isSelected) {
+    if (!c.isSelected & !arr.any(cts.ibexExcluded, \e -> return e == nk;)) {
       log.warning("Reading Ibex components: Ibex company " + nk + " not selected");
       rs.withWarnings = true;
     }
@@ -104,8 +131,10 @@ ibexHistoricUpdate = \mainNick -> {
 
   for (:co c = cs.Cos) {
     if (c.isSelected & !arr.any(Nicks, \n -> return n == c.nick;)) {
-      log.warning("Reading Ibex components: Selectd company " + c.nick +
-        " not in Ibex");
+      log.warning(
+        "Reading Ibex components: Selectd company " + c.nick +
+        " not in Ibex"
+      );
       rs.withWarnings = true;
     }
   }
@@ -121,10 +150,10 @@ historicUpdate = \ -> {
   :arr SelCos = arr.filter(cs.Cos, \:co c -> return c.isSelected;);
 
   // Update historic.
-  :qsprRs r0 = qspr.updateHistoric(
+  :qsprRs r = qspr.updateHistoric(
     "Updating historic of main company " + cs.mainNick, cs.mainNick, cs.mainNick
   );
-  if (r0.withError)
+  if (r.withError)
     log.error("Fail reading main company " + cs.mainNick);
   else
     for (:co c = cs.Cos)
@@ -159,21 +188,27 @@ historicUpdate = \ -> {
     \nk -> return SelCos.any(\:co c -> return c.nick == nk;);
   ));
 
-  // Update Closes and Refs
+  // Update Closes and Refs (including initRefs)
   for (:co c = SelCos) {
-    err = qspr.updateClosesAndRefs(c.nick);
+    err = qspr.updateClosesAndRefs(c.nick, fns.isSelected(c.nick));
     if (err != "") log.error(err);
   }
   // Update indexes
   for (nk = cts.IxNicks) {
-    err = qspr.updateClosesAndRefs(nk);
+    err = qspr.updateClosesAndRefs(nk, false);
     if (err != "") log.error(err);
   }
 
+  // Clean initRefs
+  :arr InitRefs = initRefsTb.read();
+  InitRefs.filterIn(\:initRef ir -> return fns.isSelected(ir.nick););
+  initRefsTb.write(InitRefs);
+
+  // Update operations.
   qspr.updateOperations();
 };
 
-// \ -> ()
+//: \ -> ()
 dailyUpdate = \ -> {
   err = qspr.updateDailyCloses();
   if (err != "") log.error(err);
@@ -193,14 +228,14 @@ dailyActivate = \ -> { // Include dailyUpdate
   // Update Closes and Refs
   SelCos = arr.filter(cs.Cos, \:co c -> return c.isSelected;);
   for (:co c = SelCos) {
-    err = qspr.updateClosesAndRefs(c.nick);
+    err = qspr.updateClosesAndRefs(c.nick, false);
     if (err != "") log.error(err);
   }
   qspr.createDailyCharts();
   dailyUpdate();
 };
 
-// \ -> ()
+//: \ -> ()
 dailyDeactivate = \ -> {
   log.warning("Daily deactivate");
 
@@ -208,7 +243,15 @@ dailyDeactivate = \ -> {
   qspr.updateOperations();
 };
 
-// \ -> ()
+/// Update historic quotes with the last ones of day.
+/// \ -> ()
+finalQuotesUpdate = \ -> {
+  log.warning("Quotes update");
+  qspr.updateFinalQuotes();
+};
+
+// Update diariesDb and profitsDb.
+//: \ -> ()
 closeAccountingYear = \ -> {
   currentYear = math.itos(time.year(time.now()));
   dataYear = diariesDb.investorYears()[0];
@@ -223,7 +266,7 @@ closeAccountingYear = \ -> {
     :ldg l = set.ledger;
 
     date = currentYear + "0101";
-    newTable = anns.new();
+    :anns newTable = anns.new();
     newTable.add(ann.new(
       -1, date, opr.newIn(l.cash)
     ));
@@ -250,6 +293,7 @@ start = \ -> {
   pid1 = getPid("*");
   pid = getPid(pid1);
   if (pid != "") {
+    log.warning("Attempt to start Server when running.");
     sys.println("Server is already running");
     return;
   }
@@ -265,6 +309,7 @@ start = \ -> {
     ;
 
     :activity act = activityTb.read();
+
     if (
       ( time.toStr(act.tm) != time.toStr(now) |
         time.hour(act.tm) <= cts.actHistoricStart
@@ -276,13 +321,20 @@ start = \ -> {
     }
 
     if (cal.isMarketDay(now)) {
-      if (act.activity == cts.sleeping) {
+      if (act.activity == cts.sleeping) {                            // OPEN
         if (cal.isOpen(now)) {
           dailyActivate();
           activityTb.write(activity.newNow(cts.active));
-        } else if (time.hour(act.tm) < 12 & time.hour(now) > 12) {
+        } else if (time.hour(act.tm) <= 12 & time.hour(now) > 12) { // RE-UP
           dailyActivate();
           dailyDeactivate();
+          if (time.hour(now) > cts.actFinalQuotes) finalQuotesUpdate();
+          activityTb.write(activity.newNow(cts.sleeping));
+        } else if (
+          time.hour(act.tm) <= cts.actFinalQuotes &
+          time.hour(now) > cts.actFinalQuotes
+        ) {                                                     // FINAL QUOTES
+          finalQuotesUpdate();
           activityTb.write(activity.newNow(cts.sleeping));
         }
       } else {

@@ -1,0 +1,35 @@
+// Copyright 14-May-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Code page.
+
+import "KtWeb/rp";
+import "data/dpath";
+import "db/pathsTb";
+
+/// Process request.
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "code": {
+      // s, s
+      pack, pth : Rq;
+
+      codeOp = [];
+      ppathOp = arr.find(
+        pathsTb.read(), \:dpath p -> return p.id == pack;
+      );
+      if (!!ppathOp) {
+        :dpath ppath = ppathOp!;
+        fpath = file.cat([ppath.spath, pth + ".nkut"]);
+        if (file.exists(fpath)) codeOp.push(file.read(fpath));
+      }
+      return rp.mk({
+        codeOp
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+

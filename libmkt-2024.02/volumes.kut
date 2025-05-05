@@ -1,7 +1,7 @@
 // Copyright 31-Jun-2023 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-import "libmktHelper";
+/// Read volume average.
 
 /// Read volume average (in €) of serveral companies.
 /// Returns one value for each company. If data can not be read, the company
@@ -10,15 +10,26 @@ import "libmktHelper";
 ///   samples: Number of samples to make the average.
 ///   Cos    : Nicks of companies to read.
 /// \s, i, [s.] -> [f.]
-read = \dpath, samples, Cos -> {
-  Rq = {
-    "command": "volumes",
-    "path"   : dpath,
-    "samples": samples,
-    "Cos"    : Cos
-  };
+read = \(siS|F) dpath, samples, Cos -> {
+  samples2 = math.itof(samples + samples);
+  Vols = [!0.0];
+  for (c = Cos) {
+    :file path = file.cat([dpath, c + ".tb"]);
+    :str qs = str.trim(path.read());
+    nSamplesV = [0];
+    sumV = [0.0];
+    for (l = qs.split("\n")) {
+      Ps = str.split(l, ":");
+      mx = math.stof(Ps[3])!;
+      mn = math.stof(Ps[4])!;
+      v = math.stof(Ps[5])!;
+      if (mx <= 0.0 | mn <= 0.0 | v <= 0.0) continue;
+      sumV! += (mx + mn) * v;
+      nSamplesV! += 1;
+      if (nSamplesV! >= samples) break;
+    }
+    Vols.push(nSamplesV! == samples ? sumV[0] / samples2 : 0.0);
+  }
 
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return R.Vols;
+  return Vols;
 };

@@ -7,8 +7,9 @@ import "trading/closesTb";
 import "trading/refsTb";
 import "cts";
 
-/// Data base path.
-dpath = path.cat([cts.dataPath, "trading"]);
+/// Data base file.
+/// s
+dpath = file.cat([cts.dataPath, "trading"]);
 
 /// Initializes data base.
 /// \ -> ()

@@ -3,33 +3,40 @@
 
 /// Quotes servers.
 
-import "qsv";
-import "svs/bmania";
-import "svs/bsmks";
-import "svs/bym";
-import "svs/eleco";
-import "svs/inves";
-import "svs/mwatch";
-import "svs/wsj";
-import "svs/yahoo";
+import "qsv/qsv";
+import "qsv/svs/bmania";
+import "qsv/svs/bsmks";
+import "qsv/svs/bym";
+import "qsv/svs/eleco";
+import "qsv/svs/exp";
+import "qsv/svs/iberb";
+import "qsv/svs/inves";
+import "qsv/svs/pcbolsa";
+import "qsv/svs/mwatch";
+import "qsv/svs/yahoo";
 
 /// Returns an array with registered quotes servers.
-/// \-> [<qsv>...]
+/// \-> [<qsv>.]
 list = \-> return [
     bmania.new(),
     bsmks.new(),
     bym.new(),
     eleco.new(),
+    exp.new(),
+    iberb.new(),
     inves.new(),
     mwatch.new(),
-    wsj.new(),
+    pcbolsa.new(),
     yahoo.new()
   ];;
+
+/// Returns the server with identifier 'id' (Option).
+/// \s -> ([<qsv>]|[])
+get = \id -> {
+  for (:qsv sv = list()) if (sv.id == id) return [sv];
+  return [];
+};
 
 /// Returns the current active diary server
 /// \-> <qsv>
 currentDiary = \-> return bym.new();;
-
-/// Returns the current active historic server
-/// \-> <qsv>
-currentHistoric = \-> return yahoo.new();;

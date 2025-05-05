@@ -6,15 +6,20 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "MrBackup";
 /// Application version.
+/// s
 version = "2024.04";
-/// Application path.
-appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Application file.
+/// s
+appPath = file.cat([global.root, "prgs", appName, "kut"]);
 /// Data version.
+/// s
 dataVersion = "2024.04";
-/// Data path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
 
 /// Pools
 ///
@@ -24,10 +29,13 @@ dataPath = path.cat([global.cgiRoot, appName]);
 /// [s.]
 mrBackupTargets = [
     "/home/deme/MrBackup",
-    "/media/disk1/dm/MrBackup",
-    "/media/deme/Elements/MrBackup"
+    "/media/deme/Elements/MrBackup",
+    "/media/deme/EXTERNAL_USB/MrBackup",
+    "/media/deme/Verbatim-Red/MrBackup"
   ];
 /// 'ps -x' command to control if update is running.
+/// s
 psCommand = "kut /dm/KtWeb/prgs/MrBackup/kut/main update";
 /// MrBackup terminal command parameters.
-terminalCommand = [path.cat([appPath, "main"]), "update"];
+/// [s, s]
+terminalCommand = [file.cat([appPath, "main"]), "update"];

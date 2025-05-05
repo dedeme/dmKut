@@ -6,43 +6,58 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "MMaket";
 /// Application version.
+/// s
 version = "2024.03";
 /// Data version.
+/// s
 dataVersion = "2024.03";
-/// Data path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
 /// Days for geometrical results average
+/// i
 evalDays = 80;
 /// Number of steps for evaluation
+/// i
 evalSteps = 20;
 /// Number of steps for evaluation environment.
+/// i
 envSteps = endEnvSteps - startEnvSteps;
 /// First step for evaluation environment (inclusive)
+/// i
 startEnvSteps = -2;
 /// First step for evaluation environment (exclusive).
+/// i
 endEnvSteps = 3;
 /// Minimum sales to compute results.
-minSales = 80.0;
+/// f
+minSales = 40.0;
 
 /// Data base ------------------------------------------------------------------
 
 /// Periods to save data
+/// [s.]
 Periods = ["daily", "weekly", "monthly"];
 /// Dates in period.
+/// i
 datesInPeriod = 20;
 
 // External paths --------------------------------------------------------------
 
 /// Directory of historic quotes tables type 'NICK.tb'.
+/// s
 quotesPath = "/dm/KtWeb/dmcgi/Market/quotes";
-/// Table with ibex data.
-ibexTb = "/dm/KtWeb/dmcgi/Market/ibex.tb";
+/// Table with companies data.
+/// s
+cosPath = "/dm/KtWeb/dmcgi/Market/cos.tb";
 
 // Simulation parameteres ------------------------------------------------------
 
 /// Simulation bases.
+/// {[f, f].}
 ParamBases = {
     "APRX": [0.15, 0.005],
     "APRX2": [0.15, 0.005],
@@ -53,11 +68,15 @@ ParamBases = {
     "MX_MN": [5.0, 0.01],
     "QFIJO": [0.05],
     "QMOV": [0.05],
+    "SPRS": [0.015],
     "SS_BB": [0.15, 0.068],
-    "SSBB0": [0.15]
+    "SSBB0": [0.15],
+    "SSBB2": [0.15, 0.15],
+    "SSQF": [0.15, 0.4]
   };
 
 /// Simulation base increments.
+/// {[f, f].}
 ParamBaseIncs = {
     "APRX": [0.01, 0.005],
     "APRX2": [0.01, 0.005],
@@ -68,11 +87,15 @@ ParamBaseIncs = {
     "MX_MN": [2.0, 0.005],
     "QFIJO": [0.01],
     "QMOV": [0.01],
+    "SPRS": [0.001],
     "SS_BB": [0.01, 0.004],
-    "SSBB0": [0.01]
+    "SSBB0": [0.01],
+    "SSBB2": [0.01, 0.01],
+    "SSQF": [0.01, 0.025]
   };
 
 /// Simulation environment increments.
+/// {[f, f].}
 ParamEnvIncs = {
     "APRX": [0.001, 0.001],
     "APRX2": [0.001, 0.001],
@@ -83,6 +106,9 @@ ParamEnvIncs = {
     "MX_MN": [1.0, 0.001],
     "QFIJO": [0.001],
     "QMOV": [0.001],
+    "SPRS": [0.0002],
     "SS_BB": [0.001, 0.0008],
-    "SSBB0": [0.001]
+    "SSBB0": [0.001],
+    "SSBB2": [0.001, 0.001],
+    "SSQF": [0.001, 0.0025]
   };

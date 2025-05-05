@@ -10,7 +10,7 @@ import "db";
 import "db/pathsTb";
 
 /// Process request.
-/// \m -> s
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "code": {
@@ -25,8 +25,8 @@ process = \Rq -> {
       if (!!dpathOp) {
         :dpath pt = dpathOp!;
         fpath = isHeader
-          ? path.cat([pt.spath, "include", mpath + ".h"])
-          : path.cat([pt.spath, "src", mpath + ".c"])
+          ? file.cat([pt.spath, "include", mpath + ".h"])
+          : file.cat([pt.spath, "src", mpath + ".c"])
         ;
         if (file.exists(fpath)) arr.push(codeOp, file.read(fpath));
       }

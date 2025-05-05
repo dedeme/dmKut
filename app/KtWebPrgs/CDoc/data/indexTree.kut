@@ -8,5 +8,5 @@
 ///   doc  : [Documentation], if the entry is a file path.
 ///          Otherwise its value is [].
 ///   Trees: If 'doc' is '[]', entries of directory.
-/// \s, [s]|[], [<indexTree>.] -> <indexTree>
+/// \s, ([s]|[]), [<indexTree>.] -> <indexTree>
 new : id, doc, Trees;

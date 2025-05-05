@@ -4,7 +4,8 @@
 /// Entry of annotations table.
 
 /// Annotation type
-typePERIODIC, typeFIX, typeMANUAL=;
+/// [i.]
+typePERIODIC, typeFIX, typeMANUAL =;
 
 /// id  : Annotation identifier.
 /// type: Type of annotation.
@@ -39,7 +40,7 @@ setId = \a, id -> return [id, a[type], a[data], a[text]];;
 
 /// Execute an <ann>. If there is an error, returns [error]. Otherwise, returns
 /// [].
-/// \<ann> -> [s]|[]
+/// \<ann> -> ([s]|[])
 execute = \A -> {
   // Returns first token and rest of 'tx'.
   // If there are not more tokens, return [["", ""]].
@@ -140,7 +141,7 @@ modify = \:arr As, a -> {
 
 /// Execute an annotation from an array
 /// If the execution fails, returns [error]. Otherwise, returns [].
-/// \[<ann>.], i -> [s]|[]
+/// \[<ann>.], i -> ([s]|[])
 executeId = \As, id -> {
   for (a = As)
     if (a[0] == id)

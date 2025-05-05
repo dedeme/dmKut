@@ -1,0 +1,20 @@
+// Copyright 02-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <dirs> data definition.
+
+/// Constructor.
+///   source: Songs source directory.
+///   target: Songs target directory.
+/// \s,s -> <dirs>
+new : dsource, dtarget;
+
+/// Default constructor.
+/// \ -> <dirs>
+newDefault = \ -> return new("", "");;
+
+/// \<dirs>, s -> ()
+setSource = \O, v -> O[dsource] = v;;
+
+/// \<dirs>, s -> ()
+setTarget = \O, v -> O[dtarget] = v;;

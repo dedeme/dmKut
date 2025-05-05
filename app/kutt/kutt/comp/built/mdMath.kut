@@ -1,0 +1,63 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "abs": built.mkRs("[f|f]", md, sym);
+    "acos": built.mkRs("[f|f]", md, sym);
+    "acosh": built.mkRs("[f|f]", md, sym);
+    "asin": built.mkRs("[f|f]", md, sym);
+    "asinh": built.mkRs("[f|f]", md, sym);
+    "atan": built.mkRs("[f|f]", md, sym);
+    "atanh": built.mkRs("[f|f]", md, sym);
+    "ceil": built.mkRs("[f|f]", md, sym);
+    "cos": built.mkRs("[f|f]", md, sym);
+    "cosh": built.mkRs("[f|f]", md, sym);
+    "e": built.mkRs("[|f]", md, sym);
+    "eq": built.mkRs("[fff|b]", md, sym);
+    "exp": built.mkRs("[f|f]", md, sym);
+    "exp2": built.mkRs("[f|f]", md, sym);
+    "floor": built.mkRs("[f|f]", md, sym);
+    "fromEn": built.mkRs("[s|[f]]", md, sym);
+    "fromHex": built.mkRs("[s|[i]]", md, sym);
+    "fromIso": built.mkRs("[s|[f]]", md, sym);
+    "ftoi": built.mkRs("[f|i]", md, sym);
+    "ftos": built.mkRs("[f|s]", md, sym);
+    "ftos2": built.mkRs("[fi|s]", md, sym);
+    "isDigits": built.mkRs("[s|b]", md, sym);
+    "itof": built.mkRs("[i|f]", md, sym);
+    "itoh": built.mkRs("[i|s]", md, sym);
+    "itos": built.mkRs("[i|s]", md, sym);
+    "log": built.mkRs("[f|f]", md, sym);
+    "log10": built.mkRs("[f|f]", md, sym);
+    "log2": built.mkRs("[f|f]", md, sym);
+    "max": built.mkRs("[ff|f]", md, sym);
+    "maxFloat": built.mkRs("[|f]", md, sym);
+    "maxInt": built.mkRs("[|i]", md, sym);
+    "min": built.mkRs("[ff|f]", md, sym);
+    "minInt": built.mkRs("[|i]", md, sym);
+    "pi": built.mkRs("[|f]", md, sym);
+    "pow": built.mkRs("[ff|f]", md, sym);
+    "pow10": built.mkRs("[i|f]", md, sym);
+    "rnd": built.mkRs("[|f]", md, sym);
+    "rndi": built.mkRs("[i|i]", md, sym);
+    "round": built.mkRs("[fi|f]", md, sym);
+    "sin": built.mkRs("[f|f]", md, sym);
+    "sinh": built.mkRs("[f|f]", md, sym);
+    "sqrt": built.mkRs("[f|f]", md, sym);
+    "stof": built.mkRs("[s|[f]]", md, sym);
+    "stoi": built.mkRs("[s|[i]]", md, sym);
+    "tan": built.mkRs("[f|f]", md, sym);
+    "tanh": built.mkRs("[f|f]", md, sym);
+    "trunc": built.mkRs("[f|f]", md, sym);
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};
+

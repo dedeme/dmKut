@@ -8,9 +8,32 @@ import "libmkt/models";
 import "libmkt/model";
 import "data/vals";
 import "data/ival";
+import "data/rkEntry";
+import "data/rkRow";
+import "data/rk";
 import "cts";
 import "fns";
 import "updater";
+
+// Files cache {path->[assets.]}.
+// {[i.]}
+Fcache = {};
+
+// Reads file. if file is not found, returns an empty array.
+// \s -> [i.]
+readFcache = \fpath -> {
+  R = Fcache.get(fpath);
+  if (!R) {
+    NR = file.exists(fpath)
+      ? arr.map(js.ra(file.read(fpath)), js.ri)
+      : []
+    ;
+    Fcache.put(fpath, NR);
+    return NR;
+  }
+  return R!;
+};
+
 
 /// Initializes data base.
 /// NOTE: For add new models use commented code and calling 'MarketModels init'.
@@ -18,29 +41,55 @@ import "updater";
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.resultsDir);
-    file.write(path.cat([cts.dataPath, "version.txt"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.txt"]), cts.dataVersion);
     for (:model md = models.list()) {
-      mdPath = path.cat([cts.resultsDir, md.id]);
+      mdPath = file.cat([cts.resultsDir, md.id]);
       for (pr = cts.Periods)
         for (tp = cts.Types)
-          file.mkdir(path.cat([mdPath, pr, tp]));
+          file.mkdir(file.cat([mdPath, pr, tp]));
     }
+
+    for (tp = cts.Types) {
+      dpath = file.cat([cts.ranksDir, tp]);
+      file.mkdir(dpath);
+      for (st = cts.Stats) {
+        RankRows = [];
+        for (period = cts.Periods) {
+          Ranks = [];
+          for (i, d = rankDates(period)) {
+            Entries = [];
+            for (mdId = arr.map(models.list(), \:model md -> return md.id;))
+              Entries.push(rkEntry.new(mdId, 0, []));
+
+            Ranks.push(rk.new(d, Entries));
+          }
+          RankRows.push(rkRow.new(period, Ranks));
+        }
+        file.write(
+          file.cat([dpath, st]),
+          js.w(RankRows)
+        );
+      }
+    }
+
     log.reset();
     return;
   }
 
-//  mdPath = path.cat([cts.resultsDir, "MODEL-ID"]);
-//  for (pr = cts.Periods)
-//    for (tp = ["prices", "refs"])
-//      file.mkdir(path.cat([mdPath, pr, tp]));
+/*
+  mdPath = file.cat([cts.resultsDir, "SSBB2"]);
+  for (pr = cts.Periods)
+    for (tp = ["prices", "refs", "accs"])
+      file.mkdir(file.cat([mdPath, pr, tp]));
+*/
 
   sys.throw("Data base already initialized");
 };
 
-/// Returns dates for ranking.
-/// \s -> [s.]
+// Returns dates for ranking.
+// \s -> [s.]
 rankDates = \period -> {
-  BaseDates = file.dir(path.cat(
+  BaseDates = file.dir(file.cat(
     [cts.resultsDir, cts.modelBase, period, "prices"]
   ));
   arr.sort(BaseDates, \d1, d2 -> return d1 > d2;);
@@ -57,7 +106,7 @@ rankDates = \period -> {
 ///           values if there is some error.
 /// \s, s, s, i, i -> <vals>
 readResults = \mdId, period, type, start, len -> {
-  :arr BaseDates = file.dir(path.cat(
+  :arr BaseDates = file.dir(file.cat(
     [cts.resultsDir, cts.modelBase, period, type]
   ));
   if (BaseDates.size() <= start) return vals.new("", []);
@@ -65,24 +114,24 @@ readResults = \mdId, period, type, start, len -> {
   BaseDates.sort(\d1, d2 -> return d1 > d2;);
   RqDates = BaseDates[start:start + len];
 
-  dir = path.cat([cts.resultsDir, mdId, period, type]);
+  dir = file.cat([cts.resultsDir, mdId, period, type]);
 
   date = RqDates[0];
-  if (!file.exists(path.cat([dir, date]))) return vals.new("", []);
+  if (!file.exists(file.cat([dir, date]))) return vals.new("", []);
   Vals = [];
   Errs = [];
   for (d = RqDates) {
-    fpath = path.cat([dir, d]);
-    if (file.exists(fpath))
-      Vals.push(arr.map(js.ra(file.read(fpath)), js.ri));
-    else {
-      if (d > "20240219" | mdId[:2] != "SS")
-        Errs.push("Date missing " + d);
-    }
+    fpath = file.cat([dir, d]);
+    // [i.]
+    Assets = readFcache(fpath);
+    if (!!Assets)
+      Vals.push(Assets);
+    else
+      Errs.push("Date missing " + d);
   }
 
   if (!!Errs) {
-    log.error(
+    log.warning(
       "Reading results of " + mdId + "-" + period + "-" + type + ":\n" +
       arr.join(Errs.map(\e -> return "  - " + e;), "\n")
     );
@@ -90,15 +139,15 @@ readResults = \mdId, period, type, start, len -> {
   return vals.new(date, Vals);
 };
 
-/// Returns best value for global ranking.
-/// When 'stats=="deviation"' 'r.ix == 0', because r.val is an average.
-/// If the function fails, returns [].
-///   mdId  : Model identifier.
-///   period: One of 'cts.Periods' (diary, weekly or monthly).
-///   type  : One of 'cts.Types' (prices, accs or refs).
-///   idate : date index (first is 0).
-///   stats : One of 'cts.Stats' (price, average, crrAverage, deviation).
-/// \s, s, s, i, s -> [<ival>]
+// Returns best value for global ranking.
+// When 'stats=="deviation"' 'r.ix == 0', because r.val is an average.
+// If the function fails, returns [].
+//   mdId  : Model identifier.
+//   period: One of 'cts.Periods' (diary, weekly or monthly).
+//   type  : One of 'cts.Types' (prices, accs or refs).
+//   idate : date index (first is 0).
+//   stats : One of 'cts.Stats' (price, average, crrAverage, deviation).
+// \s, s, s, i, s -> [<ival>]
 rankValue = \mdId, period, type, idate, stats -> {
   len = stats == "price" ? 1 : cts.statDates;
   :vals rs = readResults(mdId, period, type, idate, len);
@@ -107,14 +156,7 @@ rankValue = \mdId, period, type, idate, stats -> {
 
   if (stats == "deviation") {
     Vs = fns.stats("deviation", Vals);
-    sumV = [0];
-    nV = [0];
-    for (v = Vs) {
-      if (v >= 0) {
-      sumV! += v;
-      nV! += 1;
-    }}
-    return [ival.new(0, sumV! / nV!)];
+    return [ival.new(0, Vs[0])];
   }
   Vs = stats == "price" ? Vals[0] : fns.stats(stats, Vals);
   invV = [0];
@@ -125,6 +167,49 @@ rankValue = \mdId, period, type, idate, stats -> {
   }
   return [ival.new(invV!, valV!)];
 };
+
+/// Write ranks.
+/// \s, s -> ()
+writeRankRows = \type, stats -> {
+  // \s, i -> [<rkEntry>.]
+  mkEntries = \period, idate -> {
+    // [<rkEntry>.]
+    Entries = [];
+    for (mdId = arr.map(models.list(), \:model md -> return md.id;)) {
+      invValOp = rankValue(mdId, period, type, idate, stats);
+      if (!invValOp) Entries.push(rkEntry.new(mdId, 0, []));
+      else {
+        :ival invVal = invValOp!;
+        Entries.push(rkEntry.new(mdId, invVal.ix, [invVal.val]));
+      }
+    }
+    return Entries;
+  };
+
+  // \s -> [<rk>.]
+  mkRanks = \period -> {
+    // [<rk>.]
+    Ranks = [];
+    for (i, d = rankDates(period)) {
+      Ranks.push(rk.new(d, mkEntries(period, i)));
+    }
+    return Ranks;
+  };
+
+  // [<rkRow>.]
+  RankRows = [];
+  for (period = cts.Periods) {
+    RankRows.push(rkRow.new(period, mkRanks(period)));
+  }
+
+  file.write(file.cat([cts.ranksDir, type, stats]), js.w(RankRows));
+};
+
+/// Returns ranks.
+/// \s, s -> [<rkRow>.]
+readRankRows = \type, stats ->
+  return js.r(file.read(file.cat([cts.ranksDir, type, stats])));;
+
 
 /// Updates data base.
 ///   mdId: Model intentifier.
@@ -143,35 +228,35 @@ update = \mdId, date, Prices, Accs, Refs -> {
     return (dfDays + wd) / 7;
   };
 
-  modelPath = path.cat([cts.resultsDir, mdId]);
+  modelPath = file.cat([cts.resultsDir, mdId]);
   for (tp = cts.Types) {
     data = js.w(switch (tp) {
       "prices": Prices;
       "accs": Accs;
       default: Refs;
     });
-    file.write(path.cat([modelPath, cts.Periods[0], tp, date]), data);
+    file.write(file.cat([modelPath, cts.Periods[0], tp, date]), data);
 
-    wPath = path.cat([modelPath, cts.Periods[1], tp]);
+    wPath = file.cat([modelPath, cts.Periods[1], tp]);
     :arr Wdates = file.dir(wPath);
     if (!Wdates) {
-      file.write(path.cat([wPath, date]), data);
+      file.write(file.cat([wPath, date]), data);
     } else {
       Wdates.sort(\d1, d2 -> return d1 < d2;);
       lastDate = Wdates.peek();
       if (lastDate == date | weekInYear(lastDate) != weekInYear(date))
-        file.write(path.cat([wPath, date]), data);
+        file.write(file.cat([wPath, date]), data);
     }
 
-    mPath = path.cat([modelPath, cts.Periods[2], tp]);
+    mPath = file.cat([modelPath, cts.Periods[2], tp]);
     :arr Mdates = file.dir(mPath);
     if (!Mdates) {
-      file.write(path.cat([mPath, date]), data);
+      file.write(file.cat([mPath, date]), data);
     } else {
       Mdates.sort(\d1, d2 -> return d1 < d2;);
       lastDate = Mdates.peek();
       if (lastDate == date | lastDate[:6] != date[:6])
-        file.write(path.cat([mPath, date]), data);
+        file.write(file.cat([mPath, date]), data);
     }
   }
 };

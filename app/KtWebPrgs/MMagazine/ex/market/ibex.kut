@@ -1,0 +1,26 @@
+// Copyright 19-Sep-20232 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Ibex historic.
+
+fpath = "/dm/KtWeb/dmcgi/Market/ibex.tb";
+
+/// Returns Ibex [date-value] for each entry in 'Dates'.
+/// If the date of a 'Dates' entry is not available, it returns ["000000", 0.0]
+/// for such entry.
+/// \[s.] -> [[s, f].]
+read = \Dates -> {
+  R = []; // [[s, f].]
+  Qs = js.r(file.read(fpath))[1];
+  for (d = Dates) {
+    vOp = [];
+    for (Q = Qs) {
+      if (d >= Q[0]) {
+        vOp.push(Q[2]);
+        break;
+      }
+    }
+    R.push(!vOp ? ["000000", 0.0] : [d, vOp!]);
+  }
+  return R;
+};

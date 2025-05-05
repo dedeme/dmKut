@@ -54,6 +54,8 @@ window.MathJax = {
 <a href='#Creación'>Creación</a><br>
 <a href='#Corte de línea'>Corte de línea</a><br>
 <a href='#Formato'>Formato</a><br>
+<a href='#Inyección de carácter.'>Inyección de carácter.</a><br>
+<a href='#Inyección de espacio en blanco.'>Inyección de espacio en blanco.</a><br>
 <a href='#Inyección de HTML'>Inyección de HTML</a>
 </p>
 <hr>
@@ -85,30 +87,53 @@ Esta otra está en párrafo distinto.</div>
 <h3>Formato</h3>
 <p>Se pueden utilizar '*' y '_' para establecer texto con formato '&lt;code>' y
 'cursiva' respectivamente.</p>
-<p>Estos signos deben aparecer inmediatamente antes y despues del texto a resaltar.</p>
-<p>Para finalizar el formato es preciso que después de '*' o '_' aparezca un fin
-de línea, espacio en blanco o uno de los simbolos <code>".,;:()<a href=""></a>{}!¡¿?"</code>.</p>
-<div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esta _cursiva_ está correcta pero ni esta _ cursiva_ ni esta _cursiva _ lo
-están_.
-
-Esta _cur-siva_ también vale. Y _esta_.</div>
-<script>aceConf("aceEditor-2", "kmd");</script>
+<p>Estos signos deben aparecer antes y despues del texto a resaltar.</p>
+<p>Si se requiere insertar los propios caracteres '*' o '_' se debe escribir
+'**' o '__' repectivamente.</p>
+<p>También</p>
+<div id="aceEditor-2" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">La siguiente palabra está en _cursiva_; pero esta otra no: __cursiva__. Lo
+mismo es aplicable a *code* y **code**.</div>
+<script>aceConf("aceEditor-2", "text");</script>
 <p>Produce:</p>
-<div style="color:#404080"><p>Esta <i>cursiva</i> está correcta pero ni esta _ cursiva_ ni esta <i>cursiva _ lo
-están</i>.</p>
-<p>Esta <i>cur-siva</i> también vale. Y <i>esta</i>.</p>
-</div><p><i>NOTA:</i></p>
-<p>'**' y '__' no tienen efecto en el formato.</p>
-<a name="Inyección de HTML"></a>
+<div style="color:#404080"><p>La siguiente palabra está en <i>cursiva</i>; pero esta otra no: _cursiva_. Lo
+mismo es aplicable a <code>code</code> y *code*.</p>
+</div><a name="Inyección de carácter."></a>
+<h3>Inyección de carácter.</h3>
+<p>Cuando se necesita usar un carácter que es interpretado como un caracter
+especial (p.ej. *), se puede escribir usando la composición
+'\[caracter]'.</p>
+<p>Por ejemplo:</p>
+<div id="aceEditor-3" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Se consigue que *\[*]los asteriscos \[*]* aparezcan como tales</div>
+<script>aceConf("aceEditor-3", "text");</script>
+<p>produce</p>
+<div style="color:#404080"><p>Se consigue que <code>*los asteriscos *</code> aparezcan como tales</p>
+</div><a name="Inyección de espacio en blanco."></a>
+<h3>Inyección de espacio en blanco.</h3>
+<p>Cuando se requiere que aparezcan blancos que son eliminados por el código
+HTML, se puede utilizar el punto elevado '·' (no confundir con el punto
+normal '.').</p>
+<p>Si se requiere el propio punto elevado se puede utilizar \[·].</p>
+<p>Ejemplo:</p>
+<div id="aceEditor-4" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Se precisa sangrado para \
+·· Esto y \
+·· Esto
+
+Pero no para \
+\[·]\[·]Esto ni \
+\[·]\[·]Esto</div>
+<script>aceConf("aceEditor-4", "text");</script>
+<p>Produce:</p>
+<div style="color:#404080"><p>Se precisa sangrado para <br>&nbsp;&nbsp; Esto y <br>&nbsp;&nbsp; Esto</p>
+<p>Pero no para <br>··Esto ni <br>··Esto</p>
+</div><a name="Inyección de HTML"></a>
 <h3>Inyección de HTML</h3>
 <p>Una inyección de HTML se puede realizar en el interior de un párrafo o a
 su comienzo.</p>
 <h4>Interior en un párrafo.</h4>
 <p>Se introduce y se finaliza con &#x0060;&#x0060;.</p>
-<div id="aceEditor-3" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>;
-&#x0060;&#x0060;pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
-</div>
-<script>aceConf("aceEditor-3", "text");</script>
+<div id="aceEditor-5" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Este texto está en &amp;lt;b>formato &amp;lt;big>normal&amp;lt;/big>&amp;lt;/b>;
+``pero este lo esta en &amp;lt;b>formato &amp;lt;big>de inyección&amp;lt;/big>&amp;lt;/b>``.</div>
+<script>aceConf("aceEditor-5", "text");</script>
 <p>Produce:</p>
 <div style="color:#404080"><p>Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>;
 pero este lo esta en <b>formato <big>de inyección</big></b>.</p>
@@ -116,12 +141,11 @@ pero este lo esta en <b>formato <big>de inyección</big></b>.</p>
 <p>En este caso es conveniente colocar los caracteres &#x0060;&#x0060; iniciales
 en una línea aparte, para evitar interferencia con la opción de presentación
 de código.</p>
-<div id="aceEditor-4" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>.
+<div id="aceEditor-6" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Este texto está en &amp;lt;b>formato &amp;lt;big>normal&amp;lt;/big>&amp;lt;/b>.
 
-&#x0060;&#x0060;
-Pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
-</div>
-<script>aceConf("aceEditor-4", "text");</script>
+``                                          ¨
+Pero este lo esta en &amp;lt;b>formato &amp;lt;big>de inyección&amp;lt;/big>&amp;lt;/b>``.</div>
+<script>aceConf("aceEditor-6", "text");</script>
 <p>Produce:</p>
 <div style="color:#404080"><p>Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>.</p>
 

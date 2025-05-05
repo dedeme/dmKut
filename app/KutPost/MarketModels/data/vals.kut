@@ -5,6 +5,6 @@
 
 /// Constructor.
 ///   date: Date of group values.
-///   Vals: Values of several dates sorted from 'date' (after) to before.
+///   Vals: Values of several dates sorted from 'date' (after to before).
 /// \s,[[i.].] -> <vals>
 new : date, Vals;

@@ -1,0 +1,38 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Image 'adjustment' data
+
+/// Types of adjustment.
+/// [i.]
+cut, background, stretch =;
+
+/// Constructor.
+///   type  : One of 'cut', 'background' or 'stretch'
+///   Params: Paramentes whose meaning depenends on type.
+/// \i,[i.] -> <imgAdj>
+new : type, Params;
+
+/// Creates a 'imgAdj' of type 'cut'.
+///   top: Top value to start cutting.
+/// \i -> <imgAdj>
+newCut = \top -> return new(cut, [top]);;
+
+/// Creates a 'imgAdj' of type 'background'.
+///   color: Backgroun color in format RGB.
+///   blur: Ratio of burriness. Value between 0 and 100 (both inclusive).
+///   light: Ratio of light. Value between 0 and 100 (both inclusive).
+/// \i, i, i -> <imgAdj>
+newBackground = \color, blur, light ->
+  return new(background, [color, blur, light]);;
+
+/// Creates a 'imgAdj' of type 'stretch'.
+///   pixels: Value between 1 and 100 (both inclusive).
+/// \i -> <imgAdj>
+newStretch = \pixels -> return new(stretch, [pixels]);;
+
+/// \[*.] -> <imgAdj>
+fromJs = \A -> return [
+    math.ftoi(A[type]),
+    arr.map(A[Params], math.ftoi)
+  ];;

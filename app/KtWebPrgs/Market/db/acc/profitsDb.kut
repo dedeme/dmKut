@@ -8,10 +8,10 @@ import "data/chart/profitsEntry";
 import "cts";
 
 // s
-dpath = path.cat([accDb.dpath, "profits"]);
+dpath = file.cat([accDb.dpath, "profits"]);
 
 // \i, i -> s
-fpath = \year -> return path.cat([dpath, str.fmt("%v.tb", [year])]);;
+fpath = \year -> return file.cat([dpath, str.fmt("%v.tb", [year])]);;
 
 /// Initializes data base
 /// \ -> ()
@@ -40,7 +40,7 @@ write = \year, table ->
 /// the investor.
 /// \-> [s.]
 investorYears = \ -> {
-  Years = arr.map(file.dir(dpath), \f -> return f[:-3];);
+  :arr Years = arr.map(file.dir(dpath), \f -> return f[:-3];);
   Years.sort(\y1, y2 -> return y1 > y2;);
   return Years;
 };

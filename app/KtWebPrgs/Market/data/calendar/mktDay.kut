@@ -15,7 +15,7 @@ new : date, hopen, mopen, hclose, mclose;
 /// \<mktDay> -> <timetable>
 toTimetable = \M -> return M[1:];;
 
-/// \JS -> <mktDay>
+/// \[*.] -> <mktDay>
 fromJs = \A -> return [
     A[date],
     math.ftoi(A[hopen]),

@@ -4,9 +4,23 @@
 /// Market model
 /// No serializable, althogh 'js.w' can be used directly.
 
-import "libmktHelper";
+import "libmkt/model/appr";
+import "libmkt/model/appr2";
+import "libmkt/model/appr3";
+import "libmkt/model/ea";
+import "libmkt/model/ea2";
+import "libmkt/model/ma";
+import "libmkt/model/mm";
+import "libmkt/model/qfix";
+import "libmkt/model/qmob";
+import "libmkt/model/sprs";
+import "libmkt/model/uudd";
+import "libmkt/model/uudd0";
+import "libmkt/model/uudd2";
+import "libmkt/model/uuqf";
 
 /// Type of parameters.
+/// [i.]
 dayParam, percParam =;
 
 /// Constructor.
@@ -21,20 +35,49 @@ new : id, name, doc, ParamNames, ParamTypes;
 
 /// Returns references of a model. Rows are dates (from before to after) and
 /// columns companies.
+///   mdId  : Model identifier.
+///   Closes: Matrix 'dates x companies' with market closes.
+///           These closes must be regularized (without -1.0 values).
+///   Params: Parameter values.
+///   RETURN: Matrix 'dates x companies' with market references.
+/// \s, [f.], [f.] -> [f.]
+calc = \(sFF|F) mdId, Closes, Params -> {
+  switch (mdId) {
+    "APRX": return appr.refs(Closes, Params);
+    "APRX2": return appr2.refs(Closes, Params);
+    "APRX3": return appr3.refs(Closes, Params);
+    "ME": return ea.refs(Closes, Params);
+    "ME2": return ea2.refs(Closes, Params);
+    "MM": return ma.refs(Closes, Params);
+    "MX_MN": return mm.refs(Closes, Params);
+    "QFIJO": return qfix.refs(Closes, Params);
+    "QMOV": return qmob.refs(Closes, Params);
+    "SPRS": return sprs.refs(Closes, Params);
+    "SS_BB": return uudd.refs(Closes, Params);
+    "SSBB0": return uudd0.refs(Closes, Params);
+    "SSBB2": return uudd2.refs(Closes, Params);
+    "SSQF": return uuqf.refs(Closes, Params);
+  }
+  sys.throw("Model '" + mdId + "' not found");
+  return [!0.0]; // Unreachable
+};
+
+/// Returns real references of a model-Company.
+/// Real references are calculated from a date-ref to today.
 ///   model  : Model.
-///   Closes : Matrix 'dates x companies' with market closes.
-///           This closes must be regularized (without -1.0 values).
+///   dateIx : Firts real reference date index or -1 if it is missing.
+///   rref   : Real reference value or -1.0 if it is missing.
+///   Closes : Company closes.
+///            These closes must be regularized (without -1.0 values).
 ///   Params : Parameter values.
-/// \<model>, [[f.].], [f.] -> [[f.].]
-calc = \m, Closes, Params -> {
-  Rq = {
-    "command": "mkRefs",
-    "modelId": m[id],
-    Closes,
-    Params
-  };
-  R, ok = libmktHelper.send(Rq);
-  if (!ok) sys.throw(R);
-  return R;
+///   RETURN : [[f.], i, f] :: [references, newDateIx, newRref]
+/// \<model>,i, f, [f.], [f.] -> [[f.], i, f]
+realRefs = \m, dateIx, rref, Closes, Params -> {
+  id = m[id];
+  if (id != "SSBB0")
+    sys.throw("Real references of " + id + " not implemented");
+
+  DRRefs = << uudd0.realRefs(dateIx, rref, Closes, Params);
+  return [DRRefs[2:], math.ftoi(DRRefs[0]), DRRefs[1]];
 };
 

@@ -7,21 +7,21 @@ import "cts";
 
 /// Read all data base.
 /// 'data' is a JSON string.
-/// \ -> {s, s, [s.], s} :: {timeStamp, year, Years, data}
+/// \ -> {timeStamp:s, year:s, Years:[s.], data:s}
 readData = \ -> {
 	dir = cts.dataPath;
 	if (!file.exists(dir)) {
 		file.mkdir(dir);
-		dt = time.now();
-		year = dt.format("%Y");
+		:time dt = time.now();
+		year = dt.fmt("%Y");
 		file.write(
-			path.cat([dir, "control.tb"]),
+			file.cat([dir, "control.tb"]),
       js.w(["", year])
 		);
-		file.write(path.cat([dir, year + ".db"]), js.w([]));
+		file.write(file.cat([dir, year + ".db"]), js.w([]));
 	}
 
-	A = js.r(file.read(path.cat([dir, "control.tb"])));
+	A = js.r(file.read(file.cat([dir, "control.tb"])));
 	year0 = A[1];
 	Years = []; // [s.]
 	for (fname = file.dir(dir))
@@ -34,7 +34,7 @@ readData = \ -> {
     timeStamp: A[0],
     year,
     Years,
-    data: file.read(path.cat([dir, year + ".db"]))
+    data: file.read(file.cat([dir, year + ".db"]))
   };
 };
 
@@ -44,13 +44,13 @@ readData = \ -> {
 ///   data: JSON string with year annotations.
 /// \s, s, s -> s
 writeData = \timeStamp, year, data -> {
-  controlTb = path.cat([cts.dataPath, "control.tb"]);
+  controlTb = file.cat([cts.dataPath, "control.tb"]);
   A = js.r(file.read(controlTb));
   if (A[0] != timeStamp) return "";
 
   newTimeStamp = cryp.genK(20);
   file.write(controlTb, js.w([newTimeStamp, year]));
-  file.write(path.cat([cts.dataPath, year + ".db"]), data);
+  file.write(file.cat([cts.dataPath, year + ".db"]), data);
   return newTimeStamp;
 };
 
@@ -59,7 +59,7 @@ writeData = \timeStamp, year, data -> {
 ///   year: Edited year.
 /// \s, s -> s
 changeYear = \timeStamp, year -> {
-  controlTb = path.cat([cts.dataPath, "control.tb"]);
+  controlTb = file.cat([cts.dataPath, "control.tb"]);
   A = js.r(file.read(controlTb));
   if (A[0] != timeStamp) return "";
 

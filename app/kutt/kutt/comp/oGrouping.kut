@@ -1,0 +1,106 @@
+// Copyright 28-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Maker of ordered groups of object compilation names and their groups of
+/// modules.
+
+/// Returns a sorted array with entries of object name and array of modules
+/// included.
+///   Deps: Array [module, [dependent modules]]. The first element must be
+///         the main module data.
+/// \[[s,[s.]].] -> [[s,[s.]].]
+run = \Deps -> {
+  :arr Ds = arr.copy(Deps);
+
+  R = []; // [[s,[s.]].] Return
+  update(R, Ds, [], Ds[0][0]);
+
+  if (Ds.size() != 0)
+    sys.throw("Spare modules: " + arr.join(Ds.map(\e -> return e[0];), ", "));
+  return R;
+};
+
+//  Rs  : Object groups. (Result)
+//  Deps: Dependency groups.
+//  Path: Parents of mod.
+//  mod : Module name.
+//: \[[s,[s.]].], [[s,[s.]].], [s.], [s.], s -> ()
+update = \:arr Rs, :arr Deps, :arr Path, mod -> {
+  depIx = Deps.index(\D -> return D[0] == mod;);
+  if (depIx == -1) return;
+  Deps1 = Deps[depIx][1];
+  Deps.remove(depIx);
+
+  // Processes ciclyc dependencies and add mod to Rs.
+  grCyclicIxV = [-1];
+  cyclicIxV = [-1];
+  Deps2 = [];
+  for (dpMod = Deps1) {
+    ix = Path.index(\m -> return m == dpMod;);
+    if (ix != -1) {
+      if (cyclicIxV! == -1 | ix < cyclicIxV!) cyclicIxV! = ix;
+    } else {
+      Deps2.push(dpMod);
+    }
+  }
+  if (cyclicIxV! != -1) {
+    i = cyclicIxV!;
+    CyclidMod = Path[i];
+    grCyclicIxV! = groupIx(Rs, CyclidMod);
+    :arr CyclicGroup = Rs[grCyclicIxV!][1];
+    CyclicGroup.push(mod);
+    for (pmod = Path[i+1:]) {
+      grIx = groupIx(Rs, pmod);
+      OldGroup = Rs[grIx][1];
+      Rs.remove(grIx);
+      CyclicGroup.cat(OldGroup);
+    }
+  } else {
+    Rs.push([mod,[mod]]);
+  }
+  :arr NewPath = Path + [mod];
+
+  // Processes processed dependencies
+  insertIxV = [-1];
+  Deps3 = [];
+  for (dpMod = Deps2) {
+    ix = groupIx(Rs, dpMod);
+    if (ix != -1) {
+      if (insertIxV! == -1 | ix < insertIxV!) insertIxV! = ix;
+    } else {
+      Deps3.push(dpMod);
+    }
+  }
+
+  // Modifies Rs
+  if (insertIxV! == 0) {
+    for (pmod = NewPath.reverse()) {
+      ix = groupIx(Rs, pmod);
+      if (ix > 0) arr.cat(Rs[0][1], Rs[ix][1]);
+      else break;
+    }
+  } else if (insertIxV! > 0) {
+    insertIx = insertIxV!;
+    for (pmod = NewPath.reverse()) {
+      ix = groupIx(Rs, pmod);
+      if (ix > insertIx) {
+        E = Rs[ix];
+        Rs.remove(ix);
+        Rs.insert(insertIx, E);
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Process rest of dependencies.
+  for (dpMod = Deps3) update(Rs, Deps, NewPath, dpMod);
+};
+
+// \[[s[s.]].], s -> i
+groupIx = \:arr Rs, id -> {
+  for (i, E = Rs) {
+    if (arr.any(E[1], \m -> return m == id;)) return i;
+  }
+  return -1;
+};

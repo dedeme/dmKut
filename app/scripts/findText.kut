@@ -6,12 +6,14 @@
 
 Args = sys.args();
 
-if (arr.size(Args) != 3) {
+if (Args[2] == "") {
   sys.println("""
     Use:
       kut findText path ext text
     For example:
-      kut findText /dm/dmKut kut ext.wget"""
+      kut findText /dm/dmKut kut ext.wget
+    To search in all the files use '.'. For example:
+      kut findText /dm/dmKut . ext.wget"""
   );
   return;
 }
@@ -27,7 +29,7 @@ if (!file.isDirectory(p)) {
 }
 
 searchFile = \fpath, msgs -> {
-  if (!str.ends(fpath, ext)) return;
+  if (ext != ".." & !str.ends(fpath, ext)) return;
   f = file.ropen(fpath);
   fcut = fpath[lenP1:];
   NLine = [1];
@@ -47,7 +49,7 @@ searchFile = \fpath, msgs -> {
 searchDir = \p, msgs -> {
   if (file.isLink(p)) return;
   for (f = file.dir(p)) {
-    fpath = path.cat([p, f]);
+    fpath = file.cat([p, f]);
     if (file.isDirectory(fpath)) searchDir(fpath, msgs);
     else searchFile(fpath, msgs);
   }

@@ -30,10 +30,10 @@ del = \as, i -> {
   if (ix != -1) arr.remove(as[Anns], ix);
 };
 
-/// \<anns> -> JS
+/// \<anns> -> [*.]
 toJs = \as -> return [as[nextId], arr.map(as[Anns], ann.toJs)];;
 
-/// \JS -> <anns>
+/// \[*.] -> <anns>
 fromJs = \A -> return new0(
     math.ftoi(A[0]),
     arr.map(A[1], ann.fromJs)

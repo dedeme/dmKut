@@ -1,0 +1,66 @@
+// Copyright 03-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+/// s
+appName = "MMagazine";
+/// Application version.
+/// s
+version = "2025.01";
+/// Data version.
+/// s
+dataVersion = "2025.01";
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
+/// Selected investor model-parameters.
+/// [s,[f.]]
+IModelParams = ["SSBB0", [0.21]];
+
+// Simulation parameteres Copied from MMarket/cts ------------------------------
+
+/// Number of steps for evaluation
+/// i
+evalSteps = 20;
+
+/// Simulation bases.
+/// {[f, f].}
+ParamBases = {
+    "APRX": [0.15, 0.005],
+    "APRX2": [0.15, 0.005],
+    "APRX3": [0.15, 0.005],
+    "ME": [5.0, 0.01],
+    "ME2": [5.0, 0.01],
+    "MM": [5.0, 0.01],
+    "MX_MN": [5.0, 0.01],
+    "QFIJO": [0.05],
+    "QMOV": [0.05],
+    "SPRS": [0.015],
+    "SS_BB": [0.15, 0.068],
+    "SSBB0": [0.15],
+    "SSBB2": [0.15, 0.15],
+    "SSQF": [0.15, 0.4]
+  };
+
+/// Simulation base increments.
+/// {[f, f].}
+ParamBaseIncs = {
+    "APRX": [0.01, 0.005],
+    "APRX2": [0.01, 0.005],
+    "APRX3": [0.01, 0.005],
+    "ME": [2.0, 0.005],
+    "ME2": [2.0, 0.005],
+    "MM": [2.0, 0.005],
+    "MX_MN": [2.0, 0.005],
+    "QFIJO": [0.01],
+    "QMOV": [0.01],
+    "SPRS": [0.001],
+    "SS_BB": [0.01, 0.004],
+    "SSBB0": [0.01],
+    "SSBB2": [0.01, 0.01],
+    "SSQF": [0.01, 0.025]
+  };

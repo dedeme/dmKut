@@ -1,0 +1,165 @@
+// Copyright 31-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Writer context.
+
+import "data/dicLayer";
+import "data/typedSym";
+import "data/exp";
+import "data/cdtype";
+import "data/type";
+import "data/imp";
+import "mdRc";
+import "module";
+import "modules";
+
+/// Constructor. Don not use directly. Use new function.
+///   mdIsMain  : 'true' if module is main.
+///   mdId      : Module identifier.
+///   mdPath    : Canonical path of module.
+///   TypeDefs  : Current module type definitions {identifer::[newType, oldType]}
+///   Imports   : Current module imports.
+///   TopSyms   : Top symbols. (Symbols available in all the module)
+///   symTypes  : dicLayer of {<typedSym>.}::{symbol: TypedSymbol}.
+/// \b, s, s,{[<type>, <type>].},{<imp>.},[<typedSym>.],<dicLayer> -> <wrCtx>
+XnewX : mdIsMain, mdId, mdPath, TypeDefs, Imports, TopSyms, symTypes;
+
+/// Constructor.
+///   mod       : Current module.
+///   AllModules: All modules record.
+/// \{<module>.} -> <wrCtx>
+new = \:module md -> {
+  return XnewX (
+    md.isMain, md.id, md.path, md.TypeDefs, md.Imports, md.TopSyms, dicLayer.new()
+  );
+};
+
+/// Returns 'true' if 'e' is a symbol that is not a top one.
+/// \<wrCtx>, <exp> -> b
+isInnerSymbol = \ctx, :exp e -> {
+  if (e.tp != exp.symbol) return false;
+  :dicLayer l = ctx[symTypes];
+  return !!l.getElement(e.value);
+};
+
+/// Returns the typedSymbol correponding to 'sym'. ([typedSymbol, isTop]|[])
+///   If symbol is not found, returns [].
+///   Otherwise returns the typedSymbol and 'true' if it is a top one.
+/// \<wrCtx>, s -> ([<typedSym>, b]|[])
+getSymbol = \ctx, sym -> {
+ :dicLayer symTypes = ctx[symTypes];
+  tpsOp = symTypes.getElement(sym);
+  if (!tpsOp) {
+    tpsOp = arr.find(ctx[TopSyms], \:typedSym tps -> return tps.id == sym;);
+    if (!tpsOp) return [];
+    return [tpsOp!, true];
+  }
+  return [tpsOp!, false];
+};
+
+/// Returns the canonical name of a definition type (It is in the form
+/// 'realModuleName.sym') or error.
+///   ctx: Writer context.
+///   mod: User module. It can be "" if only the symbol was indicated.
+///   sym: Defintion symbol.
+/// \<wrCtx>, s, s -> [s, b]
+canonicalDef = \ctx, mod, sym -> {
+  // \ -> s
+  error = \-> return ["Defintion of  type '" +
+      (mod == "" ?  "" : mod + ".") + sym +
+      "' not found", false
+    ];;
+
+  if (mod != "") {
+    imOp = dic.get(ctx[Imports], mod);
+    if (!imOp) return error();
+    :imp im = imOp!;
+    :module md = modules.get(im.id);
+    defOp = dic.get(md.TypeDefs, sym);
+    if (!defOp) return error();
+    return [im.id + "." + sym, true];  // Ok response
+  }
+
+  defOp = dic.get(ctx[TypeDefs], sym);
+  if (!defOp) {
+    impNameOp = [];
+    modOp = [];
+    for (impName, :imp im = ctx[Imports]) {
+      :module md = modules.get(im.id);
+      defOp = dic.get(md.TypeDefs, sym);
+      if (!defOp) continue;
+      if (!modOp) {
+        impNameOp.push(impName);
+        modOp.push(im.id);
+        continue;
+      }
+      return [str.fmt(
+          "Duplicate definition of type '%s': '%s.%s' and '%s.%s'",
+          [sym, impNameOp!, sym, impName, sym]
+        ), false];
+    }
+    if (!modOp) return error();
+    return [modOp! + "." + sym, true];  // Ok response
+  }
+
+  return [ctx[mdId] + "." + sym, true];  // Ok response
+};
+
+/// Returns the tuple corresponding to a definition type 't' or error.
+/// If 't' is not a type definition returns the same 't'.
+///   NOTE: Only makes one expasion (new defintion types resulting from the
+///         expansion are no expanded).
+/// \<wrCtx>, <type> -> [(<type>|s), b]
+expand = \ctx, :type t -> {
+  // \ -> s
+  error = \-> return ["Type '" + t.toStr() + "' not found", false];;
+  if (t.id[0] != "(") return [t, true];
+
+  modId = t.dmd();
+  sym = t.did();
+  nGs = arr.size(t.SubTypes);
+  if (modId != "") {
+    imOp = dic.get(ctx[Imports], modId);
+    if (!imOp) return error();
+    :imp im = imOp!;
+    :module md = modules.get(im.id);
+    defOp = dic.get(md.TypeDefs, sym);
+    if (!defOp) return error();
+    :type left, right = defOp!;
+    if (arr.size(left.SubTypes) != nGs)
+      return [str.fmt(
+        "Number of generics of %s and %s does not match",
+        [t.toStr(), left.toStr()]
+      ), false];
+    return [type.replaceDefGenerics(t, left, right), true];
+  }
+  defOp = dic.get(ctx[TypeDefs], sym);
+  if (!defOp) {
+    expandOp = [];
+    for (:imp im = ctx[Imports]) {
+      :module md = modules.get(im.id);
+      defOp = dic.get(md.TypeDefs, sym);
+      if (!defOp) continue;
+      if (!expandOp) {
+        :type left, right = defOp!;
+        if (arr.size(left.SubTypes) != nGs) continue;
+        expandOp.push(type.replaceDefGenerics(t, left, right));
+        continue;
+      }
+      :type defLeft, = defOp!;
+      return [str.fmt(
+          "Fund duplicate definition of type '%s': '%s' and '%s.%s'",
+          [sym, defLeft.toStr(), im.id, sym]
+        ), false];
+    }
+    if (!expandOp) return error();
+    return [expandOp!, true];
+  }
+  :type left, right = defOp!;
+  if (arr.size(left.SubTypes) != nGs)
+    return [str.fmt(
+      "Number of generics of %s and %s does not match",
+      [t.toStr(), left.toStr()]
+    ), false];
+  return [type.replaceDefGenerics(t, left, right), true];
+};

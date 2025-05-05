@@ -8,7 +8,7 @@ import "cts";
 import "poolDb";
 
 /// Testing pool files.
-/// \ -> {i, i, i} :: {files, outdatedDirs, outdatedFiles}
+/// \ -> {files:i, outdatedDirs:i, outdatedFiles:i}
 run = \ -> {
   :: R = {files: 0, outdatedDirs: 0, outdatedFiles: 0};
 
@@ -18,8 +18,8 @@ run = \ -> {
 		if (!pdirOp) continue;
     pdir = pdirOp!;
 
-    Tgzs = arr.filter(
-        file.dir(path.cat([pool, dir])),
+    :arr Tgzs = arr.filter(
+        file.dir(file.cat([pool, dir])),
         \f -> return str.ends(f, ".tgz");
       );
 
@@ -28,7 +28,7 @@ run = \ -> {
       : Tgzs.reduce(Tgzs[0], \r, e -> return e > r ? e : r;)
     ;
     lastTime = name != ""
-      ? file.tm(path.cat([pool, dir, name]))
+      ? file.tm(file.cat([pool, dir, name]))
       : 0
     ;
 
@@ -51,7 +51,7 @@ findOutdated = \dir, tm -> {
   :: R = {all: 0, outdated: 0};
 
 	for (fname = file.dir(dir)) {
-		p = path.cat([dir, fname]);
+		p = file.cat([dir, fname]);
 		if (file.isDirectory(p)) {
       all, outdated : findOutdated(p, tm);
 			R.all += all;

@@ -1,52 +1,63 @@
-// Copyright 26-Sep-2023 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Songs page
 
 import "KtWeb/rp";
-import "data/cts";
+import "cts";
 import "data/pict";
 import "data/song";
-import "db/songs";
-import "db/sels";
-import "pictures";
+import "db";
+import "db/songsTb";
+import "db/selsTb";
+import "picturesPg";
 
-/// \{*.} -> ()
+/// \{*.} -> s
 process = \Rq -> {
   rq = Rq.rq;
   switch (rq) {
     "idata": {
-      GroupPict = pictures.getPicture();
+      GroupPict = picturesPg.getPicture();
       GroupSong = getSong();
-      sys.print(rp.mk({
+      return rp.mk({
+        dbKey: db.readKey(),
         group: GroupPict.group,
-        pict: pict.toJs(GroupPict.pict),
+        picture: GroupPict.picture,
         songGroup: GroupSong.group,
-        song: song.toJs(GroupSong.s)
-      }));
+        ssong: GroupSong.s
+      });
     }
     "pictData": {
-      GroupPict = pictures.getPicture();
-      sys.print(rp.mk({
+      GroupPict = picturesPg.getPicture();
+      return rp.mk({
+        dbKey: db.readKey(),
         group: GroupPict.group,
-        pict: pict.toJs(GroupPict.pict)
-      }));
+        picture: GroupPict.picture
+      });
     }
     "setLapse": {
-      songs.setLapse(Rq.group, Rq.song, math.ftoi(Rq.lapse));
-      sys.print(rp.mkEmpty());
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, ssong, lapse : Rq;
+      songsTb.setLapse(group, ssong, math.ftoi(lapse));
+      return rp.mk({ dbKey });
     }
     "newSong": {
-      currentGroup = sels.getSongGroup();
-      currentSong = sels.getSong();
-      songs.setLapse(currentGroup, currentSong, 0);
-      GroupS = songs.next();
-      sels.setSongGroup(GroupS.group);
-      sels.setSong(GroupS.s.id);
-      sys.print(rp.mk({
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      currentGroup = selsTb.getSongGroup();
+      currentSong = selsTb.getSong();
+      songsTb.setLapse(currentGroup, currentSong, 0);
+      GroupS = songsTb.next();
+      selsTb.setSongGroup(GroupS.group);
+      selsTb.setSong(GroupS.s[song.id]);
+      return rp.mk({
+        dbKey,
         group: GroupS.group,
-        song: song.toJs(GroupS.s)
-      }));
+        ssong: GroupS.s
+      });
     }
     default: sys.throw("Value of rq (" + rq + ") is not valid");
   }
@@ -54,19 +65,19 @@ process = \Rq -> {
 
 // \ -> {s, <song>} :: {group, s}
 getSong = \ -> {
-	group = sels.getSongGroup();
-	songId = sels.getSong();
+	group = selsTb.getSongGroup();
+	songId = selsTb.getSong();
 
-	SongsOp = group != "" ? [songs.read(group)] : [];
+	SongsOp = group != "" ? [songsTb.read(group)] : [];
 	SongOp = !!SongsOp & songId != ""
-    ? arr.find(SongsOp!, \S -> return songId == S.id;)
+    ? arr.find(SongsOp!, \:song s -> return songId == s.id;)
     : []
   ;
 
   if (!SongOp) {
-    GroupS = songs.next();
-    sels.setSongGroup(GroupS.group);
-    sels.setSong(GroupS.s.id);
+    GroupS = songsTb.next();
+    selsTb.setSongGroup(GroupS.group);
+    selsTb.setSong(GroupS.s[song.id]);
     return GroupS;
   }
 

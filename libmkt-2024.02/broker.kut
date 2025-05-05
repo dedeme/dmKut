@@ -1,0 +1,46 @@
+// Copyright 10-Sep-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Returns total fees of a buy operation.
+/// amount: Operation amount.
+/// \f -> f
+buyFees = \(f|f) amount -> return
+  (amount > 50000.0           // broker
+      ? amount * 0.001
+      : 9.75
+    ) +
+    amount * 0.00003 +       // market
+    0.11 +                   // Execution fee
+    amount * 0.004           // tobin + penalty
+  ;;
+
+/// Returns net cost of operation (cost + fees).
+///   stocks: Stocks number.
+///   price : Stock price.
+/// \f, f -> f
+buy = \(ff|f) stocks, price -> {
+  amount = stocks * price;
+  return amount + buyFees(amount);
+};
+
+/// Returns total fees of a sale operation.
+///   amount: Operation amount.
+/// \f -> f
+sellFees = \(f|f) amount -> return
+  (amount > 50000.0          // broker
+      ? amount * 0.001
+      : 9.75
+    ) +
+    amount * 0.00003 +       // market
+    0.11 +                   // Execution fee
+    amount * 0.002           // penalty
+  ;;
+
+/// Returns net cost of operation (cost - fees).
+///   stocks: Stocks number.
+///   price : Stock price.
+/// \f, f -> f
+sell = \(ff|f) stocks, price -> {
+  amount = stocks * price;
+  return amount - sellFees(amount);
+};

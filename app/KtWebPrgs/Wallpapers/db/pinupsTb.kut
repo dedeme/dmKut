@@ -1,0 +1,86 @@
+// Copyright 30-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Pinups data base.
+
+import "cts";
+import "data/pict";
+
+//: \s -> s
+:file fpath = file.cat([cts.dataPath, "pinups.db"]);
+
+/// Update pinups list.
+/// \ -> ()
+update = \ -> {
+  if (!fpath.exists()) write([]);
+
+  :arr OldPinups = read();
+  NewPinups = []; // [<pict>.]
+  saveV = [false];
+  for (pictureId = file.dir(cts.pinupsPath)) {
+    pictOp = OldPinups.find(\:pict p -> return p.id == pictureId;);
+    if (!pictOp) {
+      NewPinups.push(pict.newDefault(pictureId));
+      saveV! = true;
+    } else {
+      NewPinups.push(pictOp!);
+    }
+  }
+  if (saveV! | NewPinups.size() != OldPinups.size())
+    write(NewPinups);
+};
+
+/// Returns sorted pinups.
+/// \ -> [<pict>.]
+read = \ -> {
+  :arr Pinups = arr.map(js.r(fpath.read()), pict.fromJs);
+  Pinups.sort(\:pict p1, :pict p2 ->
+    return str.toUpper(p1.id) < str.toUpper(p2.id);
+  );
+  return Pinups;
+};
+
+/// Writes pinup.
+/// \[<pict>.] -> ()
+write = \Pinups -> fpath.write(js.w(Pinups));;
+
+/// Set pinup level.
+/// \s, i -> ()
+setLevel = \id, level -> {
+  Pinups = read();
+  for (:pict p = Pinups) if (p.id == id) p.setLevel(level);
+  write(Pinups);
+};
+
+/// Returns the next pinup
+/// \ -> <pict>
+next = \ -> {
+  Pinups = read();
+  PinupsIx = []; // [i.]
+  for (i, :pict p = Pinups) for (j = 0:p.level - p.sights)
+    PinupsIx.push(i);
+
+  if (!PinupsIx) {
+    for (:pict p = Pinups) p.setSights(0);
+    write(Pinups);
+    return next();
+  }
+
+  ix = math.rndi(PinupsIx.size());
+  :pict p = Pinups[PinupsIx[ix]];
+  p.setSights(p.sights + 1);
+  write(Pinups);
+
+  return p;
+};
+
+/// Returns total sights and shown sights.
+/// \ -> {totalSights:i, shownSights:i}
+shownSights = \ -> {
+  :: R = {totalSights: 0, shownSights: 0};
+  for (:pict p = read()) {
+    R.totalSights += p.level;
+    R.shownSights += p.sights;
+  }
+  return R;
+};

@@ -1,0 +1,112 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Tr widget page.
+
+import "KtWeb/rp";
+import "libdm/img";
+import "cts";
+import "data/image";
+import "data/imgCut";
+import "data/imgAdj";
+import "data/imgBlur";
+import "db";
+import "db/imagesTb";
+import "art";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      :image im = image.fromJs(Rq.im);
+      ok = file.exists(file.cat([cts.sourcePath, im.id]));
+      try {
+        processImg(im);
+      } catch (e) {
+        sys.sleep(100);
+        try {
+          processImg(im);
+        } catch (e) {
+          sys.sleep(100);
+          processImg(im);
+        }
+      }
+      return rp.mk({
+        dbKey: db.readKey(),
+        ok
+      });
+    }
+    "update": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      imagesTb.write(Rq.Images);
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+/// \<image> -> ()
+processImg = \:image im -> {
+  ix = str.lastIndex(im.id, ".");
+  newId = ix == -1 ? im.id + ".jpg" : im.id[:ix] + ".jpg";
+  sourceImg = file.cat([cts.sourcePath, im.id]);
+  cutImg = file.cat([db.cutPath(), newId]);
+  adjustImg = file.cat([db.adjustmentPath(), newId]);
+  targetImg = file.cat([cts.targetPath, newId]);
+
+  if (!im.cutOp)
+    img.copy(sourceImg, cutImg);
+  else {
+    WH = img.dim(sourceImg);
+    :imgCut c = im.cutOp!;
+    img.crop(
+      sourceImg, cutImg,
+      c.left, c.top,
+      WH[0] - c.left - c.right,
+      WH[1] - c.top - c.bottom
+    );
+  }
+
+  art.SourceDir! = db.cutPath();
+  art.TargetDir! = db.adjustmentPath();
+  if (!im.adjOp) {
+    art.defaultConversion(newId);
+  } else {
+    :imgAdj a = im.adjOp!;
+    switch (a.type) {
+      imgAdj.cut: {
+          WH = img.dim(cutImg);
+          if (WH[0] < WH[1]) {
+
+            art.cutFromTop(newId, a.Params[0]);
+          } else {
+            art.cutFromLeft(newId, a.Params[0]);
+          }
+        }
+      imgAdj.background: art.goteleTune(
+          newId,
+          "#" + ("00000" + math.itoh(a.Params[0]))[-6:],
+          math.itof(a.Params[1]) / 100.0,
+          math.itof(a.Params[2]) / 100.0
+        );
+      imgAdj.stretch: {
+        WH = img.dim(cutImg);
+        if (WH[1] < math.ftoi(math.itof(WH[0]) * 0.8))
+          img.copy(cutImg, adjustImg);
+        else
+          art.stretchTune(newId, a.Params[0]);
+      }
+    }
+  }
+
+  if (!im.blurOp) {
+    img.copy(adjustImg, targetImg);
+  } else {
+    :imgBlur b = im.blurOp!;
+    art.SourceDir! = db.adjustmentPath();
+    art.TargetDir! = cts.targetPath;
+    art.blur(newId, math.itof(b.ratio) / 100.0);
+  }
+};

@@ -1,0 +1,130 @@
+// Copyright 10-Sep-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "../cts";
+import "../model";
+import "../broker";
+import "../tquotes";
+
+/// Returns the result of a simulation.
+/// Returns the the following values.
+///   - sales   : Number of sales.
+///   - assets  : cash + withdrawals + portfolio evaluated with closes.
+///   - accs    : cash + withdrawals + portfolio evaluated with prices.
+///   - rfAssets: cash + withdrawals + portfolio evaluated with references.
+///   mdId    : Model identifier.
+///   qts     : Quotes.
+///   Params  : Model parameters.
+/// \s, <tquotes>, [f.] -> [f, f, f, f]
+run = \(sFF|F) mdId, :tquotes qts, Params -> {
+  ndates = cts.historicQuotes;
+  ncos = qts.ncos();
+  size = ndates * ncos;
+
+  Opens = qts.opens();
+  Closes = qts.closes();
+  References = model.calc(mdId, Closes, Params);
+
+  // Global simulation.
+
+  cashV = [cts.initialCapital];
+  withdrawalsV = [0.0];
+  nsalesV = [0];
+
+  Stocks = arr.new(0.0, ncos);
+  Prices = arr.new(0.0, ncos);
+  ToDos = arr.new(0, ncos);
+  ToSells = arr.new(1, ncos);
+  DaysTraps = arr.new(0, ncos);
+
+  // START -----------------------------
+
+  for (idate = 0:size-1:ncos) {
+    dayCashV = [cashV!];
+    assetsV = [0.0];
+    for (ico = 0:ncos) {
+      iq = idate + ico;
+      op = Opens[iq];
+      cl = Closes[iq];
+      rf = References[iq];
+
+      DaysTraps[ico] -= 1;
+
+      if (ToDos[ico] == 1) {
+        if (ToSells[ico] == 1) { // there is buy order.
+          // Global simulation.
+          if (DaysTraps[ico] < 1) {
+            if (dayCashV! > cts.minToBet) {
+              stocks = math.trunc(cts.bet / op);
+              Stocks[ico] = stocks;
+              Prices[ico] = op;
+              bk = broker.buy(stocks, op);
+              cashV! -= bk;
+              dayCashV! -= bk;
+            }
+          }
+        } else {
+          // Global simulation.
+          stocks = Stocks[ico];
+          if (stocks > 0.0) {
+            Stocks[ico] = 0.0;
+            cashV! += broker.sell(stocks, op);
+            nsalesV! += 1;
+
+            if (op < Prices[ico] * cts.noLossMultiplicator)
+              DaysTraps[ico] = cts.daysLoss;
+          }
+        }
+        ToDos[ico] = 0;
+      }
+      stocks = Stocks[ico];
+      if (stocks > 0.0) assetsV! += broker.sell(stocks, cl);
+
+      if (ToSells[ico] == 1) {
+        if (rf > cl) {
+          ToDos[ico] = 1;
+          ToSells[ico] = 0;
+        }
+      } else if (rf < cl) {
+        ToDos[ico] = 1;
+        ToSells[ico] = 1;
+      }
+    }
+
+    total =cashV! + assetsV!;
+    if (total > cts.withdrawalLimit) {
+      dif = total - cts.initialCapital - cts.bet;
+      securAmount = cts.minToBet - cts.bet;
+      withdrawV = [-1.0];
+      if (cashV! > dif + securAmount) {
+        withdrawV! = dif;
+      } else if (cashV! > cts.minToBet) {
+        withdrawV! = math.trunc((cashV! - securAmount) / cts.bet) * cts.bet;
+      }
+      if (withdrawV! > 0.0) {
+        withdrawalsV! += withdrawV!;
+        cashV! -= withdrawV!;
+      }
+    }
+  }
+
+  // Global simulation.
+  cashV! += withdrawalsV!;
+  assetsV = [cashV!];
+  accsV = [cashV!];
+  rfAssetsV = [cashV!];
+  idate = size - ncos;
+  for (i = 0:ncos) {
+    iq = idate + i;
+    stk = Stocks[i];
+    cl = Closes[iq];
+    rf = References[iq];
+    if (stk > 0.0) {
+      assetsV! += broker.sell(stk, cl);
+      accsV! += broker.sell(stk, Prices[i]);
+      rfAssetsV! += broker.sell(stk, rf < cl ? rf : cl);
+    }
+  }
+
+  return [math.itof(nsalesV!), assetsV!, accsV!, rfAssetsV!];
+};

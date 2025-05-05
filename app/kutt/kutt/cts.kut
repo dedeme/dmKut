@@ -1,0 +1,32 @@
+// Copyright 01-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+/// Application name.
+/// s
+appName = "kutt";
+/// Application version.
+/// s
+version = "2025.02";
+/// Data version.
+/// s
+dataVersion = "2025.02";
+/// Data path.
+/// s
+dataPath = file.cat([sys.home(), ".dmKutApp", appName]);
+/// Compilation data base path.
+/// s
+compilationPath = file.cat([dataPath, "compilationDb"]);
+/// Temporary initialization base c-file.
+/// s
+cBuiltPath = file.cat([dataPath, "built.c"]);
+/// Initialization base h-file.
+/// s
+hBuiltPath = file.cat([dataPath, "built.h"]);
+/// Temporary initialization base o-file.
+/// s
+oBuiltPath = file.cat([dataPath, "built.o"]);
+/// Initialization base library.
+/// s
+aBuiltPath = file.cat([dataPath, "libbuilt.a"]);

@@ -19,7 +19,7 @@ process = \Rq -> {
       // [<bkEntry>.]
       List = bkEntryTb.read();
       // [<bkEntry>.]
-      :arr NewList = [];
+      NewList = [];
       for(:bkEntry e = List) {
         source = e.source;
         sourceErrorV = [""];
@@ -28,17 +28,17 @@ process = \Rq -> {
         else if (!file.isDirectory(source))
           sourceErrorV! = "'" + source + "' is not a directory.";
 
-        backup = e.backup;
+        back = e.backup;
         backupErrorV = [""];
-        if (!file.exists(backup))
-          backupErrorV! = "'" + backup + "' not found.";
-        else if (!file.isDirectory(backup))
-          backupErrorV! = "'" + backup + "' is not a directory.";
-        else if (!file.exists(path.cat([backup, "BrutalBackups.txt"])))
-          backupErrorV! = "'BrutalBackups.txt' not found in '" + backup + "'";
+        if (!file.exists(back))
+          backupErrorV! = "'" + back + "' not found.";
+        else if (!file.isDirectory(back))
+          backupErrorV! = "'" + back + "' is not a directory.";
+        else if (!file.exists(file.cat([back, "BrutalBackups.txt"])))
+          backupErrorV! = "'BrutalBackups.txt' not found in '" + back + "'";
 
         NewList.push(bkEntry.new(
-          e.id, source, sourceErrorV!, backup, backupErrorV!
+          e.id, source, sourceErrorV!, back, backupErrorV!
         ));
       }
 
@@ -82,8 +82,8 @@ process = \Rq -> {
 
       key = cryp.genK(64);
       :fromClient cl = Rq.fromClient;
-      kpath = path.cat([cl.target, "BrutalBackups.txt"]);
-      if (file.exists(kpath)) file.write(kpath, key);
+      :file kpath = file.cat([cl.target, "BrutalBackups.txt"]);
+      if (kpath.exists()) kpath.write(key);
 
       fromClientTb.write(cl);
       :fromServer sv = fromServer.newDefault();
@@ -91,7 +91,7 @@ process = \Rq -> {
       fromServerTb.write(sv);
 
       thread.run(\ -> {
-        sys.cmd("kut2", [sys.mainPath()[:-4], "start", key]);
+        sys.cmd("kut", [sys.mainPath()[:-4], "start", key]);
       });
       sys.sleep(200);
 

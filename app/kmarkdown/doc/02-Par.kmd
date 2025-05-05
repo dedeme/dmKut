@@ -47,34 +47,80 @@ Esta otra está en párrafo distinto.
 
 ## Formato
 
-Se pueden utilizar '*' y '_' para establecer texto con formato '<code>' y
+Se pueden utilizar '**' y '__' para establecer texto con formato '<code>' y
 'cursiva' respectivamente.
 
-Estos signos deben aparecer inmediatamente antes y despues del texto a resaltar.
+Estos signos deben aparecer antes y despues del texto a resaltar.
 
-Para finalizar el formato es preciso que después de '*' o '_' aparezca un fin
-de línea, espacio en blanco o uno de los simbolos *".,;:()[]{}!¡¿?"*.
+Si se requiere insertar los propios caracteres '**' o '__' se debe escribir
+'\[*]\[*]' o '\[_]\[_]' repectivamente.
 
-``kmd
-Esta _cursiva_ está correcta pero ni esta _ cursiva_ ni esta _cursiva _ lo
-están_.
+También
 
-Esta _cur-siva_ también vale. Y _esta_.``
+``text
+La siguiente palabra está en _cursiva_; pero esta otra no: __cursiva__. Lo
+mismo es aplicable a *code* y **code**.``
 
 Produce:
 
 ``<div style="color:#404080">``
 
-Esta _cursiva_ está correcta pero ni esta _ cursiva_ ni esta _cursiva _ lo
-están_.
-
-Esta _cur-siva_ también vale. Y _esta_.
+La siguiente palabra está en _cursiva_; pero esta otra no: __cursiva__. Lo
+mismo es aplicable a *code* y **code**.
 
 ``</div>``
 
-_NOTA:_
+## Inyección de carácter.
 
-'**' y '__' no tienen efecto en el formato.
+Cuando se necesita usar un carácter que es interpretado como un caracter
+especial (p.ej. \[*]), se puede escribir usando la composición
+'\\[caracter]'.
+
+Por ejemplo:
+
+``text
+Se consigue que *\[*]los asteriscos \[*]* aparezcan como tales``
+
+produce
+
+``<div style="color:#404080">``
+
+Se consigue que *\[*]los asteriscos \[*]* aparezcan como tales
+
+``</div>``
+
+## Inyección de espacio en blanco.
+
+Cuando se requiere que aparezcan blancos que son eliminados por el código
+HTML, se puede utilizar el punto elevado '\[·]' (no confundir con el punto
+normal '.').
+
+Si se requiere el propio punto elevado se puede utilizar \\[\[·]].
+
+Ejemplo:
+
+``text
+Se precisa sangrado para \
+·· Esto y \
+·· Esto
+
+Pero no para \
+\[·]\[·]Esto ni \
+\[·]\[·]Esto``
+
+Produce:
+
+``<div style="color:#404080">``
+
+Se precisa sangrado para \
+·· Esto y \
+·· Esto
+
+Pero no para \
+\[·]\[·]Esto ni \
+\[·]\[·]Esto
+
+``</div>``
 
 ## Inyección de HTML
 
@@ -87,8 +133,7 @@ Se introduce y se finaliza con ``&#x0060;&#x0060;``.
 
 ``text
 Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>;
-&#x0060;&#x0060;pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
-``
+``pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>``.``
 
 Produce:
 
@@ -108,9 +153,8 @@ de código.
 ``text
 Este texto está en &lt;b>formato &lt;big>normal&lt;/big>&lt;/b>.
 
-&#x0060;&#x0060;
-Pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>&#x0060;&#x0060;.
-``
+``                                          ¨
+Pero este lo esta en &lt;b>formato &lt;big>de inyección&lt;/big>&lt;/b>``.``
 
 Produce:
 

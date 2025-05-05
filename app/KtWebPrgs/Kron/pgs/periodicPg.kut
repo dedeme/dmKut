@@ -9,7 +9,7 @@ import "db";
 import "db/annsTb";
 import "data/ann";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {

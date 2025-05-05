@@ -17,15 +17,15 @@ cmd = \c, Ps -> {
 /// Returns [width, height] of the image 'im'
 /// \s -> [i, i]
 dim = \im -> return arr.map(
-  str.split(
     str.split(
-      cmd("identify", [im]),
-      " "
-    )[2],
-    "x"
-  ),
-  \n -> return math.stoi(n)!;
-);;
+      str.split(
+        cmd("identify", [im]),
+        " "
+      )[2],
+      "x"
+    ),
+    \n -> return math.stoi(n)!;
+  );;
 
 /// Copy a imgSource in a new imgTarget
 /// \s, s -> ()
@@ -93,6 +93,7 @@ fill = \imgSource, imgTarget, width, height -> {
 /// Changes imgSource size in imgTarget.
 /// imgSource will be deformed is its dimension is different to the
 /// imgTarget one.
+/// \s, s, i, i -> ()
 resize = \imgSource, imgTarget, width, height -> {
   w = width < 1 ? 1 : width;
   h = height < 1 ? 1 : height;
@@ -206,13 +207,13 @@ noise = \blur, light, color, width, height, img -> {
 /// Position can be:
 ///   center,
 ///   northWest, north, northEast, east, southEast, south, southWest, west
-/// \s, s, s, s - ()
+/// \s, s, s, s -> ()
 over = \img1, img2, imgTarget, position ->
   cmd("composite", ["-gravity", position, img1, img2, imgTarget]);;
 
 /// Overwrite 'img1' over 'img2' creating a new image 'imgTarget'.
 /// Img2 is placed at 'left', 'top'.
-/// \s, s, s, i, i - ()
+/// \s, s, s, i, i -> ()
 overAt = \img1, img2, imgTarget, left, top -> {
   l = left >= 0 ? "+" + math.itos(left) : math.itos(left);
   t = top >= 0 ? "+" + math.itos(top) : math.itos(top);

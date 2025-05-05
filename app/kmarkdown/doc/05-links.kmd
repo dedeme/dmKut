@@ -105,7 +105,7 @@ Produce:
 ## Escape de '['
 
 Si se quiere escribir el caracter '\[' sin que introduzca un hipervínculo o
-imagen, se debe usar '\\['.
+imagen, se puede usar '\\['.
 
 ``kmd
 Esto no es un hipervínculo \[https://www.gnu.org] y

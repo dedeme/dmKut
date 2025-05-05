@@ -1,0 +1,15 @@
+// Copyright 07-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Global functions.
+
+/// Returns the message of an exception
+/// \s -> s
+excMsg = \e -> return e[:str.index(e, "\n  /")];;
+
+/// Returns the message of a 'kexc'
+/// \s -> s
+kexcMsg = \e -> {
+  msg = excMsg(e);
+  return msg[6:-7];
+};

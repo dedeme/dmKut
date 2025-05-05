@@ -1,0 +1,57 @@
+// Copyright 12-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Expression writer result.
+
+import "wrCtx";
+import "type";
+import "wrSRs";
+import "exp";
+
+/// Constructor.
+/// When error 'code' has the message.
+/// Do not use directly, use 'mk', 'fail' or 'failE'.
+///   isError: 'true' if an error happend.
+///   tp     : Expression type.
+///   funCode: Code of functions. It can be "".
+///   code   : Code body.
+/// \b, <type>,s,s -> <wrERs>
+XnewX : isError, tp, funCode, code;
+
+/// Error constructor.
+///   md : Module.
+///   ln : Line number.
+///   msg: Error message.
+/// \<wrCtx>, i, s -> <wrERs>
+fail = \:wrCtx ctx, ln, msg -> return XnewX(
+    true, type.bool, "",
+    ctx.mdPath + ":" + math.itos(ln) + ":\n" +
+      arr.join(arr.map(str.split(msg, "\n"), \l -> return "  " + l;), "\n")
+  );;
+
+///  Fail of type expected - actual
+/// \<wrCtx>, i, s, s -> <wrERs>
+failE = \:wrCtx ctx, ln, expected, actual ->
+  return fail(ctx, ln, "Expected: " + expected + "\n  Actual: " + actual);;
+
+///  Type fail.
+/// \<wrCtx>, i, <type>, <exp>, <type> -> <wrERs>
+failT = \:wrCtx ctx, ln, :type t, :exp e, :type et ->
+  return failE(ctx, ln,
+    "Expression of type " + t.toStr(),
+    e.toStr() + " (of type " + et.toStr() + ")"
+  );;
+
+/// Converts wrSRs.fail in wrERs.fail
+/// \<wrSRs> -> <wrERs>
+fromWrSRsFail = \:wrSRs rs -> return XnewX(true, type.bool, "", rs.code);;
+
+/// Expression constructor.
+///   tp     : Expression type.
+///   funCode: Code of functions.
+///   code   : Code body. In a top block, it is placed inside the
+///               '_main()' function.
+/// \<type>,s,s -> <wrERs>
+mk = \tp, funCode, code ->
+  return XnewX(false, tp, funCode, code);;
+

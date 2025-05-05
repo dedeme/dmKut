@@ -1,0 +1,22 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Built-in functions
+
+import "../built";
+import "data/wrERs";
+
+/// \<wrCtx>, i , s, s -> <wrERs>
+process = \ctx, ln, md, sym -> {
+  return switch (sym) {
+    "print", "println", "test", "type", "typeExpand":
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +
+        "' only can be used in function call.");
+    "compilerRoot": built.mkRs("[|s]", md, sym);
+    "getLocale": built.mkRs("[|s]", md, sym);
+    "setLocale": built.mkRs("[s|]", md, sym);
+    default:
+      wrERs.fail(ctx, ln, "Function '" + md  + "." + sym +  "' not found.");
+  };
+};
+

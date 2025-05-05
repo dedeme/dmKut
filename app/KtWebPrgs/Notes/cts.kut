@@ -1,7 +1,19 @@
-// Copyright 13-Sep-2023 ºDeme
+// Copyright 02-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Progam constants
+/// Constants.
 
+import "KtWeb/global";
+
+/// Application name
 /// s
 appName = "Notes";
+/// Application version.
+/// s
+version = "2024.05";
+/// Data version.
+/// s
+dataVersion = "2024.05";
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);

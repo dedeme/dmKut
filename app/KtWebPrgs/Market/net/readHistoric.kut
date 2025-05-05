@@ -1,0 +1,220 @@
+// Copyright 08-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "libmkt/quote";
+import "data/qsv/qsv";
+import "data/qsv/historicQ";
+import "db/svCodesTb";
+
+import "libdm/log";
+
+//: \f, f, f -> f
+selectQ = \q1, q2, q3 -> {
+  return q1 > 0.0
+    ? q2 > 0.0 & q3 > 0.0 & q2 == q3
+      ? q2
+      : q1
+    : q2 > 0.0
+      ? q2
+      : q3
+  ;
+};
+
+//: \s,s -> [[<historicQ>.], [s.]]
+readCode = \sv, code -> {
+  R, ok = qsv.rq({
+    rq: "historic",
+    sv,
+    code
+  });
+  if (!ok)
+    return [[], ["Fail reading " + code + "\n" + R]];
+
+  QWs, ok2 = js.r(R);
+  if (!ok2)
+    return [[], ["Fail reading " + code + "\n" + QWs]];
+
+  Qs, Ws : QWs;
+  return [Qs, Ws];
+};
+
+
+// Return Result<[[quotes, quotes, quotes], warnings]>
+// When server can not be read, 'quotes' is an empty array.
+// Servers read are: BYM, EXP and PCB.
+//    nick  : Company nick
+//    merged: 'true' if server values are reordered.
+//: \s, b -> [([[[<historicQ>.], [<historicQ>.], [<historicQ>.]], [s.]]|s), b]
+read = \nick, merged -> {
+  Ws = [];
+
+  :dic BymCodes = svCodesTb.read("BYM");
+  bymCodeOp = BymCodes.get(nick);
+  if (!bymCodeOp) Ws.push("Code of " + nick + " not found in BYM");
+
+  :dic ExpCodes = svCodesTb.read("EXP");
+  expCodeOp = ExpCodes.get(nick);
+  if (!expCodeOp) Ws.push("Code of " + nick + " not found in EXP");
+
+  :dic PcbCodes = svCodesTb.read("PCB");
+  pcbCodeOp = PcbCodes.get(nick);
+  if (!pcbCodeOp) Ws.push("Code of " + nick + " not found in PCB");
+
+  if (!bymCodeOp & !expCodeOp & !pcbCodeOp)
+    return [
+      "No code found for " + nick + " in any server\n" + Ws.join("\n"),
+      false
+    ];
+
+  Q1V = [[]];
+  E1V = [[]];
+  Q2V = [[]];
+  E2V = [[]];
+  Q3V = [[]];
+  E3V = [[]];
+
+  :thread th1 = thread.start(\ -> {
+      if (!bymCodeOp) return;
+
+      Qs, :arr Ws = readCode("BYM", bymCodeOp!);
+
+      Q1V! = Qs;
+      E1V! = Ws.map(\w -> return "[BYM] " + w;);
+    });
+  :thread th2 = thread.start(\ -> {
+      if (!expCodeOp) return;
+
+      Qs, :arr Ws = readCode("EXP", expCodeOp!);
+
+      Q2V! = Qs;
+      E2V! = Ws.map(\w -> return "[EXP] " + w;);
+    });
+  :thread th3 = thread.start(\ -> {
+      if (!pcbCodeOp) return;
+
+      Qs, :arr Ws = readCode("PCB", pcbCodeOp!);
+
+      Q3V! = Qs;
+      E3V! = Ws.map(\w -> return "[PCB] " + w;);
+    });
+
+  th1.join();
+  th2.join();
+  th3.join();
+
+  :arr E1s = E1V!;
+  :arr E2s = E2V!;
+  :arr E3s = E3V!;
+  Ws.cat(E1s + E2s + E3s);
+
+  // RETURN if not merged
+  if (!merged) return [[[Q1V!, Q2V!, Q3V!], Ws], true];
+
+  if (!Q1V!) {
+    if (!Q2V!) {
+      if (!Q3V!) {
+        return [
+            "No datum was read for " + nick + " in any server\n" +
+            E1s.join("\n") + "\n" + E2s.join("\n") + "\n" + E3s.join("\n"),
+            false
+          ];
+      } else {
+        Q1V! = Q3V!;
+        Q3V! = [];
+      }
+    } else {
+      Q1V! = Q2V!;
+      Q2V! = [];
+    }
+  }
+
+  :arr Q1s = Q1V!;
+  size = Q1s.size();
+  :arr Q2s = Q2V![:size];
+  :arr Q3s = Q3V![:size];
+
+  return [[[Q1s, Q2s, Q3s], Ws], true];
+};
+
+/// Read historic date of a nick.
+///   nick  : Company nick.
+///   RETURN: Result with two fields:
+///     Qs: Nick quotes from after to before.
+///         Some quote values can be -1.0.
+///     Ws: Warnings.
+/// \s -> [({Qs:[<historicQ>.], Ws:[s.]}|s), b]
+run = \nick -> {
+  R, ok = read(nick, true);
+  if (!ok) return R;
+  QQs, Ws = R;
+  :arr Q1s, :arr Q2s, :arr Q3s = QQs;
+
+  Qs = [];
+  for (:historicQ q1 = Q1s) {
+    q2Op = Q2s.find(\:historicQ q -> return q.date == q1.date;);
+    :historicQ q2 = !q2Op
+      ? historicQ.new(q1.date, -1.0, -1.0, -1.0, -1.0, -1.0)
+      : q2Op!
+    ;
+    q3Op = Q3s.find(\:historicQ q -> return q.date == q1.date;);
+    :historicQ q3 = !q3Op
+      ? historicQ.new(q1.date, -1.0, -1.0, -1.0, -1.0, -1.0)
+      : q3Op!
+    ;
+
+    open = selectQ(q1.open, q2.open, q3.open);
+    close = selectQ(q1.close, q2.close, q3.close);
+    max = selectQ(q1.max, q2.max, q3.max);
+    min = selectQ(q1.min, q2.min, q3.min);
+    vol = selectQ(q1.vol, q2.vol, q3.vol);
+
+    Qs.push(historicQ.new(q1.date, open, close, max, min, vol));
+  }
+
+  return [{Qs, Ws}, true];
+};
+
+/// Returns historic quotes ordered by server: BYM, EXP and PCB.
+/// Some quote values can be -1.0.
+/// Quotes are from after to before.
+/// When a server can not be read, its 'ServerQuotes' is an empty array.
+/// Returns [ServersId, ServersQuotes, Warnings]
+/// \s -> [[s, s, s], [[<quote>.], [<quote>.], [<quote>.]], [s.]]
+byServer = \nick -> {
+  // \[<historicQ>.] -> [<quote>.]
+  toQuote = \:arr Qs -> return Qs.map(historicQ.toQuote);;
+
+  R, ok = read(nick, false);
+  if (!ok) return [["BYM", "EXP", "PCB"], [[], [], []], [R]];
+
+  QQs, Ws = R;
+  Q1s, Q2s, Q3s = QQs;
+  return [
+    ["BYM", "EXP", "PCB"],
+    [toQuote(Q1s), toQuote(Q2s), toQuote(Q3s)],
+    Ws
+  ];
+};
+
+/// Returns historic quotes of one server:
+/// Some quote values can be -1.0.
+/// Quotes are from after to before.
+/// When server can not be read, 'quotes' is an empty array.
+///   svId  : Server id. Can by BYM, EXP or PCB.
+///   nick  : Company nick.
+///   RETURN: [quotes, warnigs]
+/// \s -> [[<quote>.], [s.]]
+oneServer = \svId, nick -> {
+  // \[<historicQ>.] -> [<quote>.]
+  toQuote = \:arr Qs -> return Qs.map(historicQ.toQuote);;
+
+  :dic SvCodes = svCodesTb.read(svId);
+  svCodeOp = SvCodes.get(nick);
+  if (!svCodeOp)
+    return [[], ["Code of " + nick + " not found in BYM"]];
+
+  Qs, :arr Ws = readCode(svId, svCodeOp!);
+
+  return [toQuote(Qs), Ws];
+};
+

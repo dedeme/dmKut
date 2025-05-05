@@ -1,0 +1,109 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Songs data base.
+
+import "cts";
+import "data/danceSong";
+import "data/sighter";
+
+// \s -> s
+fpath = \group -> return file.cat([cts.dataPath, "dance_" + group + ".db"]);;
+
+///Returns groups list
+/// \ -> [s.]
+getGroups = \ -> {
+  Groups = arr.filter(
+    file.dir(cts.danceSongsPath),
+    \f -> return file.isDirectory(file.cat([cts.danceSongsPath, f]));
+  );
+  if (!Groups) sys.throw("Song groups not found");
+  return Groups;
+};
+
+/// \s -> ()
+update = \group -> {
+  p = fpath(group);
+  if (!file.exists(p)) write(group, []);
+
+  :arr OldSongs = arr.map(js.r(file.read(p)), danceSong.fromJs); /// FIX: use read
+  NewSongs = []; // [<danceSong>.]
+  saveV = [false];
+  for (songId = readSongsList(group)) {
+    songOp = OldSongs.find(\:danceSong s -> return s.id == songId;);
+    if (!songOp) {
+      NewSongs.push(danceSong.newDefault(songId));
+      saveV! = true;
+    } else {
+      NewSongs.push(songOp!);
+    }
+  }
+  if (saveV! | NewSongs.size() != OldSongs.size())
+    write(group, NewSongs);
+};
+
+/// \s -> [s.]
+readSongsList = \group -> {
+  Songs = arr.filter(
+    file.dir(file.cat([cts.danceSongsPath, group])),
+    \f -> return str.ends(f, ".mp3");
+  );
+  if (!Songs) sys.throw("No song found in group " + file.cat([cts.danceSongsPath, group]));
+  return Songs;
+};
+
+/// Returns songs ([<danceSong>.]) of a group serialized with JSON.
+/// \s -> s
+readJs = \group -> return file.read(fpath(group));;
+
+/// Returns group song.
+/// \s -> [<danceSong>.]
+read = \group -> return arr.map(js.r(readJs(group)), danceSong.fromJs);;
+
+/// Write song.
+/// \s, [<danceSong>.] -> ()
+write = \group, Songs ->
+  file.write(fpath(group), js.w(Songs));;
+
+/// Set level of song 'group'-'id'.
+/// \s, s, i -> ()
+setLevel = \group, id, level -> {
+  Songs = read(group);
+  for (:danceSong s = Songs) if (s.id == id) {
+    s.level = level;
+    if (s.shortPlays > level) s.shortPlays = level;
+    if (s.longPlays > level) s.longPlays = level;
+  }
+  write(group, Songs);
+};
+
+/// Set speed of song 'group'-'id'.
+/// \s, s, i -> ()
+setSpeed = \group, id, speed -> {
+  Songs = read(group);
+  for (:danceSong s = Songs) if (s.id == id) s.speed = speed;
+  write(group, Songs);
+};
+
+/// Increments reproductions counter. (When it reachs 100, it is set to 0).
+/// \s, s, b -> ()
+incrementPlays = \group, id, isShort -> {
+  :arr Songs = read(group);
+  for (:danceSong s = Songs) if (s.id == id) {
+    if (isShort) {
+      s.shortPlays += 1;
+      if (s.shortPlays == 100) s.shortPlays = 0;
+    } else {
+      s.longPlays += 1;
+      if (s.longPlays == 100) s.longPlays = 0;
+    }
+  }
+  if (Songs.all(
+    \:danceSong s -> return isShort ? s.shortPlays > 0 : s.longPlays > 0;
+  ))
+    for (:danceSong s = Songs) {
+      if (isShort) s.shortPlays = 0;
+      else s.longPlays = 0;
+    }
+  write(group, Songs);
+};

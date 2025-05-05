@@ -1,0 +1,57 @@
+// Copyright 08-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Arrat of bytes functions.
+/// The type <bytes> is a compact representation of an arrat of bytes.
+
+/// Adds bs2 to bs1 in place and returns bs1 modified.
+//: [<bytes><bytes>|<bytes>]
+add = \bs1, bs2 -> {throw "fake for doc";};
+
+/// Returns the rest of bytes after 'bytes.take(bs)'.
+/// If n <= 0 returns returns a copy of bs.
+/// If n >= bytes.size(bs) returns an empty <bytes>.
+//: [<bytes>i|<bytes>]
+drop = \bs, n -> {throw "fake for doc";};
+
+/// Creates a <bytes> from an array of 'int's.
+//: [[i]|<bytes>]
+fromArr = \A -> {throw "fake for doc";};
+
+/// Creates a <bytes> from a normal string.
+//: [s|<bytes>]
+fromStr = \s -> {throw "fake for doc";};
+
+/// Returns the value of 'bs' in position 'ix'.
+/// If ix is out of range, it returns an exception.
+//: [<bytes>i|i]
+get = \bs, ix -> {throw "fake for doc";};
+
+/// Creates a <bytes> of length 'len', intialized with 0's.
+/// If 'len' < 0, it is set to 0.
+//: [i|<bytes>]
+new = \len -> {throw "fake for doc";};
+
+/// Set the value of 'bs' in position 'ix' to 'b'.
+/// If ix is out of range, it returns an exception.
+//: [<bytes>ii|]
+set = \bs, ix, v -> {throw "fake for doc";};
+
+/// Returns the number of bytes of 'bs'
+//: [<bytes>|i]
+size = \bs -> {throw "fake for doc";};
+
+/// Returns the first 'n' elements of 'bs' in a new <bytes>.
+/// If n <= 0 returns an empty <bytes>.
+/// If n >= bytes.size(bs) returns a copy of bs.
+//: [<bytes>i|<bytes>]
+take = \bs, n -> {throw "fake for doc";};
+
+/// Returns 'bs' as an array of 'int's.
+//: [<bytes>|[i]]
+toArr = \bs -> {throw "fake for doc";};
+
+/// Returns 'bs' as a normal string ('bs' must not contain zeroes).
+//: [<bytes>|s]
+toStr = \bs -> {throw "fake for doc";};
+

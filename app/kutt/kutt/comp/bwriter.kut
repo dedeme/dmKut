@@ -1,0 +1,25 @@
+// Copyright 05-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Body writer.
+
+import "data/module";
+import "data/wrCtx";
+import "data/wrSRs";
+import "writeBlock";
+
+/// Returns three values:
+///   1: "" if all is good or error message.
+///   2: The C body code of a module or "" if an error happens.
+///   3: 'true' if there is no error and 'md' has the main function.
+/// \<module> -> [s, s, b]
+write = \:module md ->  {
+  :wrSRs rs = writeBlock.run(
+    [], writeBlock.top, false, false, wrCtx.new(md), 0, md.Code
+  );
+  return rs.isError
+    ? [rs.code, "", false]
+    : ["", rs.code, rs.isMain]
+  ;
+};
+

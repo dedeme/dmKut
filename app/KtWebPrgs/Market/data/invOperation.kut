@@ -10,7 +10,7 @@
 /// \i,s -> <invOperation>
 new : stocks, nick;
 
-/// \JS -> <invOperation>
+/// \[*.] -> <invOperation>
 fromJs = \A -> return [
     math.ftoi(A[stocks]),
     A[nick]

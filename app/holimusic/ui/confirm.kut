@@ -1,0 +1,20 @@
+// Copyright 03-Dec-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Confimation message.
+
+import "cts";
+
+/// Show confirm message.
+/// \s -> b
+show = \msg -> {
+  :file fsh = file.cat([cts.dataPath, "cmd.sh"]);
+  fsh.write(
+    "if zenity --question --text=\"" + msg + "\"; then\n" +
+    "echo 1\nelse echo 0\n" +
+    "fi"
+  );
+  r, ok = sys.cmd("bash", [fsh]);
+  if (ok & str.starts(r, "1")) return true;
+  return false;
+};

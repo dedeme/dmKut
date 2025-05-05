@@ -1,0 +1,222 @@
+// Copyright 07-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test types.
+
+import "data/type";
+import "tests/fns";
+
+/// \ -> ()
+run = \ -> {
+  try {
+    type.read("");
+  } catch (e) {
+    sys.test(fns.kexcMsg(e), "Unexpected end of type in ''");
+  }
+
+  // Returns (type | error).
+  //: \s -> (<type>|s)
+  read = \s -> {
+    tp, = type.read(s);
+    return tp;
+  };
+
+  //: \s -> s
+  toStr = \s -> {
+    tp, ok = type.read(s);
+    if (!ok) sys.throw("Bad user type:\n" + tp);
+    return type.toStr(tp);
+  };
+
+  //: \s -> b
+  testJs = \s -> {
+    :type t = read(s);
+    :type t2 = js.r(js.w(t));
+    sys.test(t2.toStr(), t.toStr());
+  };
+
+  sys.test(read("b"), type.bool);
+  sys.test(read(" i "), type.int);
+  sys.test(read("f"), type.float);
+  sys.test(read("  s   "), type.string);
+
+  sys.test(read("  A   "), type.new("A", []));
+  sys.test(read("Z"), type.new("Z", []));
+
+  sys.test(read(" < file > "), type.new("<file>", []));
+
+  sys.test(read(" ( abc ) ") , type.new("(abc)", []));
+  sys.test(read(" ( z0.abc ) ") , type.new("(z0.abc)", []));
+
+  sys.test(read(" [. s ] "), type.new("t", [type.string]));
+  sys.test(
+    read(" [. s<file> ( a) ] "),
+    type.new("t", [type.string, type.new("<file>", []), type.new("(a)", [])])
+  );
+  sys.test(
+    read(" [. i [.s<file> ( a)] ] "),
+    type.new("t", [
+      type.int,
+      type.new("t", [type.string, type.new("<file>", []), type.new("(a)", [])])
+    ])
+  );
+
+  sys.test(read("[ | ] "), type.new("0", []));
+  sys.test(read("[ | ( ab ) ] "), type.new("1", [type.new("(ab)", [])]));
+  sys.test(
+    read("[ i | b ] "),
+    type.new("1", [type.int, type.bool])
+  );
+  sys.test(
+    read(" [ i [.s<file> ( a)] | [.s ] ]"),
+    type.new("1", [
+      type.int,
+      type.new("t", [
+        type.string, type.new("<file>", []), type.new("(a)", [])
+      ]),
+      type.new("t", [type.string])
+    ])
+  );
+
+  sys.test(read("[ b ]"), type.new("a", [type.bool]));
+  sys.test(read("[! [i] ]"), type.new("r", [type.new("a", [type.int])]));
+
+  sys.test(read("{ [i] }"), type.new("d", [type.new("a", [type.int])]));
+  sys.test(read("{ [  A] }"), type.new("d", [type.new("a", [type.new("A",[])])]));
+
+  sys.test(toStr(" b "), "b");
+  sys.test(toStr(" i "), "i");
+  sys.test(toStr(" f "), "f");
+  sys.test(toStr(" s "), "s");
+  sys.test(toStr(" A "), "A");
+  sys.test(toStr("Z"), "Z");
+  sys.test(toStr(" < abc > "), "<abc>");
+  sys.test(toStr(" ( abc ) "), "(abc)");
+  sys.test(toStr(" ( abc | AB ) "), "(abc|AB)");
+  sys.test(toStr(" ( abc | A i ) "), "(abc|Ai)");
+  sys.test(toStr(" [( abc | s  [. (ef)(g| A )] ) ]"), "[(abc|s[.(ef)(g|A)])]");
+  sys.test(toStr(" [ . s ] "), "[.s]");
+  sys.test(toStr(" [. <file> i s ] "), "[.<file>is]");
+  sys.test(toStr(" [ <file> i s | ] "), "[<file>is|]");
+  sys.test(toStr(" [ <file> i s | (  abc ) ] "), "[<file>is|(abc)]");
+  sys.test(toStr(" [ <file> A Z | (  abc ) ] "), "[<file>AZ|(abc)]");
+
+  testJs("b");
+  testJs(" i ");
+  testJs("f");
+  testJs("  s   ");
+  testJs("  A   ");
+  testJs("Z");
+  testJs(" < file > ");
+  testJs(" ( abc ) ");
+  testJs(" (  . abc ) ");
+  testJs(" ( z0 . abc ) ");
+  testJs(" [ s ] ");
+  testJs(" [ s<file> ( a) ] ");
+  testJs(" [ i [s<file> ( a)] ] ");
+  testJs("[ | ] ");
+  testJs("[ | ( ab ) ] ");
+  testJs("[ i | b ] ");
+  testJs(" [ i [s<file> ( a)] | [s ] ]");
+  testJs("[. b ]");
+  testJs("[! [.i] ]");
+  testJs("{ [.i] }");
+
+  // ERRORS ----------------------------
+
+  sys.test(read("b i "), "Extra charcters ' i ' in 'b i '");
+  sys.test(read("A i "), "Extra charcters ' i ' in 'A i '");
+
+  sys.test(read(" < file  "), "'>' is missing in ' < file  '");
+  sys.test(
+    read(" < 0file > "),
+    "'0file' is not a valid identifier in ' < 0file > '"
+  );
+  sys.test(
+    read(" < fi-le > "),
+    "'fi-le' is not a valid identifier in ' < fi-le > '"
+  );
+
+  sys.test(
+    read(" ( abc  "),
+    "')' is missing in ' ( abc  '"
+  );
+  sys.test(
+    read(" ( 0abc ) "),
+    "'0abc' is not a valid identifier in ' ( 0abc ) '"
+  );
+  sys.test(
+    read(" ( a_b ) "),
+    "'a_b' is not a valid identifier in ' ( a_b ) '"
+  );
+  sys.test(
+    read(" ( 0a . b ) "),
+    "'0a' is not a valid identifier in ' ( 0a . b ) '"
+  );
+  sys.test(
+    read(" ( a . !b ) "),
+    "'!b' is not a valid identifier in ' ( a . !b ) '"
+  );
+
+  sys.test(
+    read(" [ x ] "),
+    "Unexpected 'x' in ' [ x ] '"
+  );
+  sys.test(
+    read(" [ Zi  "),
+    "']' is missing in ' [ Zi  '"
+  );
+  sys.test(
+    read(" [ ]"),
+    "'[]' is not a valid type in ' [ ]'"
+  );
+  sys.test(
+    read(" [. ]"),
+    "Unexpected ']' in ' [. ]'"
+  );
+  sys.test(
+    read(" [! ]"),
+    "Unexpected ']' in ' [! ]'"
+  );
+  sys.test(
+    read(" [ i i]"),
+    "Array with more than one subtype in ' [ i i]'"
+  );
+  sys.test(
+    read(" [! i i]"),
+    "Expected ']', but fund 'i]' in ' [! i i]'"
+  );
+  sys.test(
+    read(" [|i"),
+    "']' is missing in ' [|i'"
+  );
+  sys.test(
+    read(" [|is]"),
+    "Expected ']', but fund 's]' in ' [|is]'"
+  );
+  sys.test(
+    read("[||]"),
+    "Unexpected '|' in '[||]'"
+  );
+
+  sys.test(
+    read(" { }"),
+    "'{}' is not a valid type in ' { }'"
+  );
+  sys.test(
+    read(" { i "),
+    "'}' is missing in ' { i '"
+  );
+  sys.test(
+    read(" { i s "),
+    "Expected '}', but fund 's ' in ' { i s '"
+  );
+  sys.test(
+    read(" (  .abc ) ") ,
+    "Identifier start with dot in ' (  .abc ) '"
+  );
+  sys.test(
+    read(" ( abc | ) "),
+    "Definition parameters are missing in ' ( abc | ) '"
+  );
+};

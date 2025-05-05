@@ -6,7 +6,7 @@
 import "cts";
 import "db/yearDb";
 
-dpath = path.cat([cts.dataPath, "years"]);
+dpath = file.cat([cts.dataPath, "years"]);
 
 /// \ -> ()
 init = \ -> {
@@ -22,7 +22,7 @@ init = \ -> {
 
 /// Returns data base path of a year.
 /// \s -> s
-yearPath = \y -> return path.cat([dpath, y]);;
+yearPath = \y -> return file.cat([dpath, y]);;
 
 /// Returns unsorted list of years
 /// \ -> [s.]

@@ -1,22 +1,44 @@
-// Copyright 26-Sep-2023 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Data base initializer.
+/// Data base management.
 
-import "data/cts";
-import "db/sels";
-import "db/picts";
-import "db/songs";
-import "db/danceSongs";
+import "cts";
+import "db/selsTb";
+import "db/pictsTb";
+import "db/songsTb";
+import "db/danceSongsTb";
 
+klen = 20;
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
+
+/// Initializes data base
 /// \ -> ()
 init = \ -> {
-	dbpath = cts.dbPath;
-	file.mkdir(dbpath);
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
 
-	sels.init(dbpath);
-	picts.init(dbpath);
-	songs.init(dbpath);
-	danceSongs.init(dbpath);
+    selsTb.init();
+    return;
+  }
+  sys.throw("Data base already is initialized");
 };
 
+/// Returns the state identifier.
+/// \ -> ()
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};

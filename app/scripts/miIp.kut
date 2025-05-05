@@ -1,0 +1,73 @@
+import "libdm/ext";
+
+dataPath = file.cat([sys.home(), ".dmKutApp", "miIp", "ip.txt"]);
+url = "https://my-ip.cc/es";
+title = "--title=Mi Ip";
+
+if (!file.exists(dataPath)) {
+  file.mkdir(file.parent(dataPath));
+  file.write(dataPath, "0.0.0.0");
+}
+ipSaved = file.read(dataPath);
+
+
+:str html, ok = ext.wget(url, true);
+
+if (!ok) {
+  sys.cmd("zenity", [title, "--error", "--text=" + html]);
+  return;
+}
+if (html == "") {
+  sys.cmd("zenity", [
+    title, "--error", "--text=Empty html reading '" + url + "'"
+  ]);
+  return;
+}
+
+ix = html.index("<mark>");
+if (ix == -1) {
+  sys.cmd("zenity", [
+    title, "--error", "--text=Start field '<mark>' not found"
+  ]);
+  return;
+}
+ixStart = ix + 6;
+
+ixEnd = html.indexFrom("<", ixStart);
+if (ixEnd == -1) {
+  sys.cmd("zenity", [
+    title, "--error", "--text=End field '<' not found"
+  ]);
+  return;
+}
+
+ipReal = html[ixStart : ixEnd];
+
+if (ipSaved == ipReal) {
+  sys.cmd("zenity", [
+    title, "--info", "--text=Current IP " + ipReal + " correctly saved"
+  ]);
+  return;
+}
+
+msg = "Current IP " + ipReal + "\ndoes not match saved IP " + ipSaved +
+  ".\nUpdate?";
+
+bash = "zenity --question " + title + " " +
+  '--text="' + msg + '"\necho $?\n';
+ftmp = file.tmp("", "miIp");
+file.write(ftmp, bash);
+r, ok2 = sys.cmd("bash", [ftmp]);
+file.del(ftmp);
+if (!ok2) {
+  sys.cmd("zenity", [title, "--error", "--text=" + r]);
+  return;
+}
+
+if (r[0] != "1") {
+  file.write(dataPath, ipReal);
+  sys.cmd("zenity", [
+    title, "--info", "--text=Current IP " + ipReal + " has been saved"
+  ]);
+}
+

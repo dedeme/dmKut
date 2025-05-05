@@ -1,4 +1,4 @@
-// Copyright 13-Sep-2023 ºDeme
+// Copyright 02-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Data base.
@@ -6,73 +6,93 @@
 import "KtWeb/global";
 import "cts";
 
-dbPathV = [""];
+klen = 20;
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
-normalPath = \ -> return path.cat([dbPathV!, "normal"]);;
-
-trashPath = \ -> return path.cat([dbPathV!, "trash"]);;
+normalPath = file.cat([cts.dataPath, "normal"]);
+trashPath = file.cat([cts.dataPath, "trash"]);
 
 /// Initializes data base.
 /// \-> ()
 init = \ -> {
-  dbPath = path.cat([global.cgiRoot, cts.appName]);
-  dbPathV! = dbPath;
-  if (!file.exists(dbPath)) {
-    file.mkdir(dbPath);
-    file.mkdir(normalPath());
-    file.mkdir(trashPath());
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    file.mkdir(normalPath);
+    file.mkdir(trashPath);
+    return;
   }
+  sys.throw("Data base already is initialized");
+};
+
+/// Returns the state identifier.
+/// \ -> ()
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
 };
 
 /// Reads file.
 /// \s, b -> s
 read = \id, isTrash -> return isTrash
-    ? file.read(path.cat([trashPath(), id]))
-    : file.read(path.cat([normalPath(), id]))
+    ? file.read(file.cat([trashPath, id]))
+    : file.read(file.cat([normalPath, id]))
   ;;
 
 /// Writes file.
 /// \s, b, s -> s
 write = \id, isTrash, text ->
-    if (isTrash) file.write(path.cat([trashPath(), id]), text);
-    else file.write(path.cat([normalPath(), id]), text);
+    if (isTrash) file.write(file.cat([trashPath, id]), text);
+    else file.write(file.cat([normalPath, id]), text);
   ;
 
 /// Makes file name from its text.
 /// \s -> s
 mkName = \tx -> {
-  Text = str.toRunes(str.trim(tx));
-  ix = arr.index(Text, \r -> return r == "\n";);
+  :arr Text = str.toRunes(str.trim(tx));
+  ix = Text.index(\r -> return r == "\n";);
   return ix == -1
-    ? !!Text
-      ? arr.join(Text[:15], "")
-      : "◊◊◊"
+    ? !Text
+      ? "◊◊◊"
+      : arr.join(Text[:15], "")
     : arr.join(Text[:ix][:15], "")
   ;
 };
 
 /// Files list
-/// \b -> [{s, s}.] :: [{id, name}.]
+/// \b -> [{id:s, name:s}.]
 list = \isTrash -> {
   mkFileId = \dpath, id ->
-    return {id, name: mkName(file.read(path.cat([dpath, id])))};;
+    return {id, name: mkName(file.read(file.cat([dpath, id])))};;
 
-  dpath = isTrash ? trashPath() : normalPath();
+  dpath = isTrash ? trashPath : normalPath;
   return arr.map(file.dir(dpath), \id -> return mkFileId(dpath, id););
 };
 
 /// Returns 'true' if 'id' exists.
 /// \s, b -> b
 exists = \id, isTrash -> return isTrash
-    ? file.exists(path.cat([trashPath(), id]))
-    : file.exists(path.cat([normalPath(), id]))
+    ? file.exists(file.cat([trashPath, id]))
+    : file.exists(file.cat([normalPath, id]))
   ;;
 
 /// Remove 'id' if 'id' exists.
 /// \s, b -> b
 remove = \id, isTrash ->
-    if (isTrash) file.del(path.cat([trashPath(), id]));
-    else file.del(path.cat([normalPath(), id]));
+    if (isTrash) file.del(file.cat([trashPath, id]));
+    else file.del(file.cat([normalPath, id]));
   ;
 
 /// Remove out of date files in trash.

@@ -4,6 +4,7 @@
 /// Client to server channel.
 
 /// Actions enumeration
+/// {i.}
 start, stop :;
 
 /// Constructor.
@@ -14,6 +15,7 @@ start, stop :;
 new : action, source, target;
 
 /// Equals to new(stop, "", "");
+/// \ -> <fromClient>
 newDefault = \ -> return new(stop, "", "");;
 
 /// \<fromClient>, s -> ()

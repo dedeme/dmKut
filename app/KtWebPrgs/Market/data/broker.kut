@@ -5,7 +5,7 @@
 
 /// Returns total fees of a buy operation.
 ///   amount: Operation amount.
-/// \n -> n
+/// \f -> f
 buyFees = \amount -> return
     ( amount > 50000.0       // broker
         ? amount * 0.001
@@ -19,7 +19,7 @@ buyFees = \amount -> return
 /// Returns net cost of operation (cost + fees).
 ///   stocks: Stocks number.
 ///   price : Stock price.
-/// \i, n -> n
+/// \i, f -> f
 buy = \stocks, price -> {
   amount = math.itof(stocks) * price;
   return amount + buyFees(amount);
@@ -27,7 +27,7 @@ buy = \stocks, price -> {
 
 /// Returns total fees of a sell operation.
 ///   amount: Operation amount.
-/// \n -> n
+/// \f -> f
 sellFees = \amount -> return
     ( amount > 50000.0       // broker
         ? amount * 0.001
@@ -40,7 +40,7 @@ sellFees = \amount -> return
 /// Returns net incomes of operation (incomes - fees).
 ///   stocks: Stocks number.
 ///   price : Stock price.
-/// \i, n -> n
+/// \i, f -> f
 sell = \stocks, price -> {
   amount = math.itof(stocks) * price;
   return amount - sellFees(amount);

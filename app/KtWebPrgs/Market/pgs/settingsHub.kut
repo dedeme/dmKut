@@ -7,6 +7,7 @@ import "KtWeb/rp";
 import "settings/calendarPg";
 import "settings/nicksPg";
 import "settings/nickEditorPg";
+import "settings/ibexCosPg";
 import "settings/serversPg";
 import "settings/annsPg";
 import "settings/investorsPg";
@@ -17,6 +18,7 @@ process = \Rq -> {
     "CalendarPg": calendarPg.process(Rq);
     "NicksPg": nicksPg.process(Rq);
     "NickEditorPg": nickEditorPg.process(Rq);
+    "IbexCosPg": ibexCosPg.process(Rq);
     "ServersPg": serversPg.process(Rq);
     "AnnsPg": annsPg.process(Rq);
     "InvestorsPg": investorsPg.process(Rq);

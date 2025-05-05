@@ -8,7 +8,7 @@ import "cts";
 import "poolDb";
 
 /// Testing pool directories.
-/// \ -> {i, i, i, i} :: {pools, badPools, dirs, badDirs}
+/// \ -> {pools:i, badPools:i, dirs:i, badDirs:i}
 run = \ -> {
   :: R = {pools: 0, badPools: 0, dirs: 0, badDirs: 0};
 
@@ -80,7 +80,7 @@ run = \ -> {
 // Tests directory state (1).
 //    - Pool exists.
 //    - Directory is an existent directory
-//    - Directory contains a correct 'path.txt'
+//    - Directory contains a correct 'file.txt'
 // \s -> {i, i} :: {files, badFiles}
 testDirs1 = \pool -> {
   :: R = {files: 0, badFiles: 0};
@@ -148,8 +148,8 @@ testDir2 = \BaseDirs, poolId, PoolDirs -> {
 mkMapNameSize = \pool -> {
 	R = {}; // {{s, i}.} :: {dir -> {name, size}}
 	for (d = file.dir(pool)) {
-		Tgzs = arr.filter(
-      file.dir(path.cat([pool, d])),
+		:arr Tgzs = arr.filter(
+      file.dir(file.cat([pool, d])),
       \f -> return str.ends(f, ".tgz");
     );
 		if (!Tgzs) {
@@ -157,7 +157,7 @@ mkMapNameSize = \pool -> {
 			continue;
 		}
     name = Tgzs.reduce(Tgzs[0], \r, e -> return e > r ? e : r;);
-		R.put(d, {name, size: file.size(path.cat([pool, d, name]))});
+		R.put(d, {name, size: file.size(file.cat([pool, d, name]))});
 	}
 	return R;
 };

@@ -1,15 +1,20 @@
 title = "--title=Kut Servidores";
+// [<svData>.]
 SvData = [
-    {ix: 1, name: "KtWeb", command: "kut2",
+    {ix: 1, name: "KtWeb", command: "kut",
         Pars: ["/dm/KtWeb/KtWeb", "start"]},
-    {ix: 2, name: "Kron", command: "kut2",
+    {ix: 2, name: "Kron", command: "kut",
       Pars: ["/dm/dmKut/app/KtWebPrgs/Kron/main", "start"]},
-    {ix: 3, name: "Market", command: "kut2",
+    {ix: 3, name: "Market", command: "kut",
       Pars: ["/dm/dmKut/app/KtWebPrgs/Market/main", "start"]},
-    {ix: 4, name: "KutPost", command: "kut2",
-      Pars: ["/dm/dmKut/app/KutPost/KutPost/main", "start"]}
+//    {ix: 3, name: "Wdriver", command: "kut",
+//      Pars: ["/dm/dmKut/app/wdriver/main", "start"]},
+    {ix: 4, name: "KutPost", command: "kut",
+      Pars: ["/dm/dmKut/app/KutPost/KutPost/main", "start"]},
+    {ix: 5, name: "serversObserver", command: "kut",
+      Pars: ["/dm/dmKut/app/scripts/serversObserver"]}
   ];
-// <svData> -> <rsData>
+// \[s.], <svData> -> <rsData>
 mkRsData = \Procs, D -> {
   cmd = !D.Pars
     ? D.command
@@ -40,8 +45,8 @@ while () {
   }
   Procs = str.splitTrim(procs, "\n");
 
-  :arr Acts = []; // [<rsData>.]
-  :arr Deacts = []; // [<rsData>.]
+  Acts = []; // [<rsData>.]
+  Deacts = []; // [<rsData>.]
   for (SvD = SvData) {
     RsData = mkRsData(Procs, SvD);
     if (RsData.state == "Activo") Acts.push(RsData);
@@ -73,12 +78,13 @@ while () {
       sys.cmd("zenity", ["--error", title, "--text=" + r]);
       break;
     }
+    // r == "1\n"
     if (r[0] == "1") break;
 
     for (D = Deacts) thread.run(\-> sys.cmd(D.command, D.Pars););
   } else {
     r, ok = sys.cmd("zenity", ["--info", title, "--text=" + txV!]);
-    if (!ok) sys.cmd("zenity", ["--error", title, "--text=" + r!]);
+    if (!ok) sys.cmd("zenity", ["--error", title, "--text=" + r]);
     break;
   }
 }

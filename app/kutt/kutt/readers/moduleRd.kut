@@ -1,0 +1,244 @@
+// Copyright 19-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Module reader.
+
+import "data/rdCtx";
+import "data/token";
+import "data/exp";
+import "data/stat";
+import "data/module";
+import "data/type";
+import "data/typedSym";
+import "data/mdRc";
+import "data/imp";
+import "stRd";
+import "db";
+import "char";
+import "modules";
+
+/// Returns module or error [(module|error), ok].
+///   isMain  : 'true' if it is the main module.
+///   fpath   : Canonical path of module.
+///   id      : Compiler module identifier.
+///   tx      : Code to read.
+/// \i,s,s,s -> [(<module>|s), b]
+read = \isMain, :file fpath, id, tx -> {
+  // \i, s -> [s, b]
+  fail = \ln, msg -> return [
+      fpath + ":" + math.itos(ln) + ":\n" +
+        arr.join(arr.map(str.split(msg, "\n"), \l -> return "  " + l;), "\n"),
+      false
+    ];;
+
+  Imports = {}; // {<imp>.}
+  Exports = []; // [<typedSym>.]
+  TopSyms = []; // [<typedSym>.]
+  TypeDefs = {}; // {[<type>, [<type>.]].} :: {[typeDefinition, Generics].}
+  Code = []; // [<stat>.]
+
+  :stRd strd = stRd.new(rdCtx.new(fpath, id), tx);
+  while () {
+    publicV = [true];
+    :token tk = strd.peekToken();
+
+    if (tk.tp == token.eof) break;
+    if (tk.tp == token.operator) {
+      if (tk.value == "(") {
+        :exp leftErr, ok1 = strd.readDefType(true);
+        if (!ok1)
+          return fail(leftErr.ln, leftErr.value);
+        :type left = leftErr;
+
+        :exp rightErr, ok2 = strd.readDefType(false);
+        if (!ok2)
+          return fail(rightErr.ln, rightErr.value);
+        :type right = rightErr;
+
+        err = type.checkDef(type.getGenerics(left), right);
+        if (err != "") return fail(tk.ln, err);
+
+        TypeDefs.put(left.did(), [left, right]);
+        continue;
+      }
+
+      if (tk.value == "_") {
+        strd.nextToken();
+        publicV! = false;
+      }
+    }
+
+    :stat st = strd.next();
+    switch (st.tp) {
+      stat.error:
+        if (st.value == stRd.endOfFile) break;
+        else return fail(st.ln, st.value);
+      stat.closeBlock:
+        return fail(st.ln, "'}' out block");
+      stat.assign: {
+        sym = st.value[0][exp.value];
+        if (sym == "main" & isMain)
+          return fail(st.ln, "Main module can not define any 'main' symbol");
+        oldSymOp = TopSyms.find(\:typedSym s -> return s.id == sym;);
+        if (!!oldSymOp)
+          return fail(st.ln,
+            "Symbol '" + sym + "' is duplicated " +
+            "(first assigned in line " + math.itos(oldSymOp![typedSym.ln]) + ")"
+          );
+        impOp = Imports.get(sym);
+        if (!!impOp)
+          return fail(st.ln,
+            "Symbol '" + sym + "' is duplicated " +
+            "(first assigned in line " + math.itos(impOp![imp.ln]) + ")"
+          );
+
+        :exp e = st.value[1];
+        switch (e.tp) {
+          exp.boolean, exp.integer,
+          exp.float, exp.string: {
+            t = switch (e.tp) {
+              exp.boolean: type.bool;
+              exp.integer: type.int;
+              exp.float: type.float;
+              default: type.string;
+            };
+            cvalue = t == type.string ? js.ws(e.value) : e.value;
+            ts = typedSym.new(st.ln, sym, t, [cvalue], true);
+            TopSyms.push(ts);
+            if (publicV!) Exports.push(ts);
+            Code.push(st);
+          }
+          exp.array00: {
+            tOp = e.value;
+            if (!tOp) return fail (e.ln, "Missing type in empty array");
+            :type t = tOp!;
+            ts = typedSym.new(st.ln, sym, type.new("a", [t]), [], true);
+            TopSyms.push(ts);
+            if (publicV!) Exports.push(ts);
+            Code.push(st);
+          }
+          exp.function: {
+            ts = typedSym.new(st.ln, sym, e.value[0], [], true);
+            TopSyms.push(ts);
+            if (publicV!) Exports.push(ts);
+            Code.push(st);
+          }
+          default:
+            return fail(e.ln, "Expected: empty array, function or constant\n  Actual: " + e.toStr());
+        }
+      }
+      stat.indexed: {
+        ln = st.ln;
+        :type rt = st.value[0];
+        fn = st.value[1];
+        :arr Pars = st.value[2];
+
+        ch0 = rt.id[0];
+        finalTypeV = [rt];
+        if (ch0 == "(") {
+          typesOp = TypeDefs.get(rt.id[1:-1]);
+          if (!typesOp)
+            return fail(ln, "Type " + rt.toStr() + " not found in this module");
+          left, right = typesOp!;
+          finalTypeV! = rt.replaceDefGenerics(left, right);
+        }
+        :type ft = finalTypeV!;
+
+        if (ft.id != "t") return fail(
+            ln, "Indexed expected a tuple type but '" + rt.toStr() + "' was found"
+          );
+        if (arr.size(Pars) != arr.size(ft.SubTypes))
+          return fail(ln, "Parameters number of type and indexed does not match");
+
+        :type fntp = type.new("1", ft.SubTypes + [rt]);
+
+        for (sym = [fn] + Pars) {
+          oldSymOp = TopSyms.find(\:typedSym s -> return s.id == sym;);
+          if (!!oldSymOp)
+            return fail(st.ln,
+              "Symbol '" + sym + "' is duplicated " +
+              "(first assigned in line " + math.itos(oldSymOp![typedSym.ln]) + ")"
+            );
+          impOp = Imports.get(sym);
+          if (!!impOp)
+            return fail(st.ln,
+              "Symbol '" + sym + "' is duplicated " +
+              "(first assigned in line " + math.itos(impOp![imp.ln]) + ")"
+            );
+        }
+
+        for (i, p = Pars) {
+          itos = math.itos(i);
+          ts = typedSym.new(ln, p, type.int, [itos], true);
+          TopSyms.push(ts);
+          if (publicV!) Exports.push(ts);
+          Code.push(stat.mkAssign(
+            ln, exp.mkSymbol(ln, p), exp.mkInteger(ln, itos)
+          ));
+        }
+
+        ts = typedSym.new(ln, fn, fntp, [], true);
+        TopSyms.push(ts);
+        if (publicV!) Exports.push(ts);
+        Code.push(stat.mkAssign(
+          ln, exp.mkSymbol(ln, fn), exp.mkFunction(
+            ln, fntp, Pars, stat.mkBlock(ln, [stat.mkReturn(ln, [
+              exp.mkTuple(ln, Pars.map(\p -> return exp.mkSymbol(ln, p);))
+            ])])
+          )
+        ));
+      }
+      stat.importSt: {
+        if (!publicV!)
+          return fail(st.ln, "Expected: assignation\n  Actual: " + st.toStr());
+
+        :file mpath = st.value[0];
+        rpath = mpath + ".ktt";
+        pathV = [file.cat([fpath.parent(), rpath])];
+        if (!file.exists(pathV!)) pathV! = file.cat([db.mainRoot(), rpath]);
+        path, compMdId = db.getPathId(pathV!);
+        if (path == "") return fail(st.ln, "Module '" + mpath + "' not found.");
+        userMdId = !st.value[1] ? mpath.base() : st.value[1]!;
+        if (!char.isId(userMdId))
+          return fail(st.ln, "'" + userMdId + "' is not a valid symbol.");
+
+        tpsOp = TopSyms.find(\:typedSym s -> return s.id == userMdId;);
+        if (!!tpsOp)
+          return fail(st.ln ,
+            "Import symbol '" + userMdId + "' is duplicated " +
+            "(first assigned in line " + math.itos(tpsOp![typedSym.ln]) + ")"
+          );
+
+        for (uId, :imp i = Imports) {
+          if (uId == userMdId)
+            return fail(st.ln ,
+              "Import symbol '" + userMdId + "' is duplicated " +
+              "(first assigned in line " + math.itos(i.ln) + ")"
+            );
+          if (i.id == compMdId)
+            return fail(st.ln ,
+              "Import path '" + mpath + "' is duplicated " +
+              "(first assigned in line " + math.itos(i.ln) + ")"
+            );
+        }
+
+        Imports.put(userMdId, imp.new(st.ln, mpath, compMdId));
+
+        err = modules.add(false, pathV!, compMdId);
+        if (err != "") return fail(st.ln, err);
+      }
+      default: {
+        if (!publicV! | !isMain | st.tp != stat.block)
+          return fail(st.ln,
+            "Expected: import, indexed, assignation or block in top code\n" +
+            "  Actual: " + st.toStr());
+        Code.push(st);
+      }
+    }
+  }
+
+  return [
+    module.new(isMain, fpath, id, Imports, Exports, TopSyms, TypeDefs, Code),
+    true
+  ];
+};

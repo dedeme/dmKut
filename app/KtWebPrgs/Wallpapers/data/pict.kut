@@ -1,4 +1,4 @@
-// Copyright 26-Sep-2023 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Picture data.
@@ -8,15 +8,31 @@
 ///   level : Picture level (1, 2, or 3).
 ///   sights: Number of sights in normal mode.
 ///   id    : Picture name.
-/// \i, i, s -> <pict> / <sighter>
-new = \level, sights, id -> return {level, sights, id};;
+/// \i,i,s -> <pict>
+new : level, sights, id;
 
 /// Returns a <pict> with 'level=1' and 'sight=0'
 /// \s -> <pict>
-mk = \id -> return new(1, 0, id);;
+newDefault = \id -> return new(1, 0, id);;
 
-/// \<pict> -> JS
-toJs = \P -> return [math.itof(P.level), math.itof(P.sights), P.id];;
+/// Set 'p' level.
+/// \<pict>, i -> ()
+setLevel = \p, newLevel -> {
+  p[level] = newLevel;
+  if (p[sights] > newLevel) p[sights] = newLevel;
+};
 
-/// \JS -> <pict>
-fromJs = \A -> return new(math.ftoi(A[0]), math.ftoi(A[1]), A[2]);;
+/// Set 'p' sights.
+/// \<pict>, i -> ()
+setSights = \p, newSights -> {
+  p[sights] = newSights > p[level] ? p[level] : newSights;
+};
+
+
+
+/// \[*.] -> <pict>
+fromJs = \A -> return [
+    math.ftoi(A[level]),
+    math.ftoi(A[sights]),
+    A[id]
+  ];;

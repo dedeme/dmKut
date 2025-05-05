@@ -8,13 +8,13 @@ import "reader";
 readerV = [[]];
 
 /// Set the current processing file.
-///   fpath: File path.
+///   fpath: File file.
 /// \<reader> -> ()
 setReader = \rd -> readerV! = rd;;
 
 /// Shows in console an error message
 ///   msg: Message to show.
-/// s -> ()
+/// \s -> ()
 show = \msg -> {
   :reader rd = readerV!;
   pos = rd.pos();

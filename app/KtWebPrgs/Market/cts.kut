@@ -6,66 +6,95 @@
 import "KtWeb/global";
 
 /// Application name.
+/// s
 appName = "Market";
 /// Application version.
+/// s
 version = "2024.04";
-/// Application path.
-appPath = path.cat([global.root, "prgs", appName, "kut"]);
+/// Application file.
+/// s
+appPath = file.cat([global.root, "prgs", appName, "kut"]);
 /// Data version.
+/// s
 dataVersion = "2024.04";
-/// Data path.
-dataPath = path.cat([global.cgiRoot, appName]);
+/// Data file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
 
 /// Number of quotes used to calculate companies volume.
+/// i
 quotesVolume = 60;
 
 // Server --------------------------------------------------------------------
 
-/// Minimum entries for a valid reading of historic quotes.
-historicMinimumEntries = 4;
-
 /// Server configuration stopped
+/// i
 serverStopped = 0;
 
 /// Server configuration active
+/// i
 serverActive = 1;
 
 /// Server configuration selected
+/// i
 serverSelected = 2;
 
+/// Companies excluded of ibex.
+/// [s.]
+ibexExcluded = ["GRF", "PUIG", "ANE"];
+
 /// me nick.
+/// s
 meNick = "<ME>";
 
 /// Ibex nick
+/// s
 ibexNick = "<IBEX>";
 
 /// Euro index nick.
+/// s
 euroNick = "<EURO>";
 
 /// All index nicks;
+/// [s.]
 IxNicks = [ibexNick, euroNick];
 
 // Scheduler -----------------------------------------------------------------
 
 /// Time to scheduler sleep (milliseconds)
+/// i
 schedulerSleepTime = 900000; // 15'
 
 /// Time to scheduler sleep (milliseconds)
+/// i
 schedulerWatchingTime = 120000; // 2'
 
 /// External servers (Bolsamania, Investing, etc.) delay in SECONDS
+/// i
 serverDelay = 900; // 15 minutes
 
 /// Activity tyes
+/// {i.}
 sleeping, active :;
 
+/// Hour to start to actFinalQuotes fase
+/// i
+actFinalQuotes = 19;
+
 /// Hour to start actHistoric fase
-actHistoricStart = 2;
+/// i
+actHistoricStart = 4;
 
 // Models - Investors --------------------------------------------------------
 
 /// Number of quotes for accounting charts.
+/// i
 accountingQuotes = 250;
 
 /// Delay days after a sale with losses (7 days per week).
+/// i
 daysLoss7 = 63;
+
+/// Amount to invest in Ibex.
+/// f
+ibexInvestment = 100000.0;

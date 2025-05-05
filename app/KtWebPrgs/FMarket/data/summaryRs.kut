@@ -11,7 +11,7 @@
 /// \f,f,i -> <summaryRs>
 new : assets, profits, points;
 
-/// \JS -> <summaryRs>
+/// \[*.] -> <summaryRs>
 fromJs = \A -> return [
     A[assets],
     A[profits],

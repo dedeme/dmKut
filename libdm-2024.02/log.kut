@@ -2,17 +2,25 @@
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Log utility.
-/// Function 'setPath' must be called before any other function!!!.
+/// Function 'init' must be called before any other function!!!.
 /// Log table is initialized with 'reset'.
 
+// [s.]
 fileOp = [];
+// [i.]
+sizeOp = [];
 
-/// Set file path of log.
-/// \s -> ()
-setPath = \fpath -> arr.push(fileOp, fpath);;
+/// Set file path of log and its maximum size.
+///   path: File path.
+///   size: Maximum number of entries.
+/// \s, i -> ()
+init = \fpath, size -> {
+  arr.push(fileOp, fpath);
+  arr.push(sizeOp, size);
+};
 
 // () -> s
-date = \-> return time.format(time.now(), "%D/%M/%Y(%t)");;
+date = \-> return time.fmt(time.now(), "%D/%M/%Y(%t)");;
 
 // [[b,s,s]...] -> ()
 write = \L -> file.write(fileOp!, js.w(L));;
@@ -21,22 +29,25 @@ write = \L -> file.write(fileOp!, js.w(L));;
 read = \-> return js.r(file.read(fileOp!));;
 
 /// Returns the log serialized.
-/// \-> s
+/// \->s
 readJs = \-> return file.read(fileOp!);;
 
 /// Adds a warning to log.
+/// \s->()
 warning = \msg -> {
   :arr L = read();
   L.push([false, date(), str.fromRunes(str.toRunes(msg)[:400])]);
-  write(L);
+  write(L.drop(L.size() - sizeOp!));
 };
 
 /// Adds an error to log.
+/// \s->()
 error = \msg -> {
   :arr L = read();
   L.push([true, date(), str.fromRunes(str.toRunes(msg)[:400])]);
-  write(L);
+  write(L.drop(L.size() - sizeOp!));
 };
 
 /// Reset log.
+/// \->()
 reset = \-> file.write(fileOp!, "[]");;

@@ -1,0 +1,62 @@
+// Copyright 06-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Statement writer result.
+
+import "wrCtx";
+import "wrERs";
+import "type";
+import "exp";
+
+/// <wrSRs> field 'stopped' values.
+///   no      : Statement does not stop code.
+///   byBreak : Statement stop code with break or continue.
+///   byReturn: Statement stop code with return.
+/// i
+no, byBreak, byReturn =;
+
+/// Constructor.
+/// When error 'code' has the message.
+/// Do not use directly. Use 'mk', 'fail' or 'failE'.
+///   isError   : 'true' if an error happend.
+///   isMain    : 'true' if 'code' came from the main module and has main code.
+///   stopped   : One of 'no', 'byBreak' or 'byReturn'.
+///   code      : C Code.
+/// \b, b, i, s -> <wrRs>
+XnewX : isError, isMain, stopped, code;
+
+/// Error constructor.
+///   md : Module.
+///   ln : Line number.
+///   msg: Error message.
+/// \<wrCtx>, i, s -> <wSRs>
+fail = \:wrCtx ctx, ln, msg -> return XnewX(
+    true, false, no,
+    ctx.mdPath + ":" + math.itos(ln) + ":\n" +
+      arr.join(arr.map(str.split(msg, "\n"), \l -> return "  " + l;), "\n")
+  );;
+
+///  Fail of type expected - actual
+/// \<wrCtx>, i, s, s -> <wSRs>
+failE = \:wrCtx ctx, ln, expected, actual ->
+  return fail(ctx, ln, "Expected: " + expected + "\n  Actual: " + actual);;
+
+///  Type fail.
+/// \<wrCtx>, i, <type>, <exp>, <type> -> <wrERs>
+failT = \:wrCtx ctx, ln, :type t, :exp e, :type et ->
+  return failE(ctx, ln,
+    "Expression of type " + t.toStr(),
+    e.toStr() + " (of type " + et.toStr() + ")"
+  );;
+
+/// Converts wrERs.fail in wrSRs.fail
+/// \<wrERs> -> <wrSRs>
+fromWrERsFail = \:wrERs rs -> return XnewX(true, false, no, rs.code);;
+
+/// Block constructor.
+///   isMain    : 'true' if 'code' came from the main module and has main code.
+///   stopped   : One of 'no', 'byBreak' or 'byReturn'.
+///   code      : C Code.
+/// \b,s -> <wrSRs>
+mk = \isMain, stopped, code ->
+  return XnewX(false, isMain, stopped, code);;

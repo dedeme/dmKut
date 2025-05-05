@@ -1,0 +1,203 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+{
+  sys.println("tstr ...");
+
+  // sys.test(""[1], "");
+
+  sys.test("abc"[0], "a");
+  sys.test("abc"[1], "b");
+  sys.test("abc"[2], "c");
+
+  sys.test([]/s/[1:], []/s/);
+  sys.test([]/s/[1:100], []/s/);
+  sys.test([]/s/[:], []/s/);
+
+  sys.test("abc"[2:1], "");
+  sys.test("abc"[:0], "");
+  sys.test("abc"[:1], "a");
+  sys.test("abc"[:3], "abc");
+  sys.test("abc"[:-3], "");
+  sys.test("abc"[:-2], "a");
+  sys.test("abc"[:-1], "ab");
+  sys.test("abc"[0:], "abc");
+  sys.test("abc"[1:], "bc");
+  sys.test("abc"[3:], "");
+  sys.test("abc"[-3:], "abc");
+  sys.test("abc"[-2:], "bc");
+  sys.test("abc"[-1:], "c");
+  sys.test("abc"[0:2], "ab");
+  sys.test("abc"[1:2], "b");
+  sys.test("abc"[1:1], "");
+  sys.test("abc"[-3:-1], "ab");
+  sys.test("abc"[-2:-1], "b");
+  sys.test("abc"[-2:-2], "");
+  sys.test("abc"[:], "abc");
+
+  A3 = "abc";
+  sys.test("" + A3[:1] + "" + A3[2:] + "", "ac");
+
+  sys.test(str.cmp("z", "é") < 0, true);
+  sys.setLocale("es_ES.utf8");
+  sys.test(str.cmp("z", "é") > 0, true);
+  sys.setLocale("C");
+  sys.test(str.cmp("z", "é") < 0, true);
+
+  sys.test(str.ends("abc", "c"), true);
+  sys.test(str.ends("abc", ""), true);
+  sys.test(str.ends("", ""), true);
+  sys.test(!str.ends("abc", "zc"), true);
+  sys.test(!str.ends("abc", "1abc"), true);
+  sys.test(!str.ends("", "x"), true);
+
+  sys.test(str.fmt("%v, %v, %v", [. "abc", 33, 12.152]), "abc, 33, 12.152");
+  sys.test(
+    str.fmt("%%%v, %v, %v", [.true, false, [. 1, "a"]]), '%true, false, [. 1,"a"]'
+  );
+  sys.test(str.fmt("%vabc%vd%%eñ%v", [. "->", 5, "<-"]), "->abc5d%eñ<-");
+
+
+  sys.test(str.fromIso(bytes.toStr(bytes.fromArr([97, 241, 111]))), "año");
+
+  sys.test(str.fromRunes(str.toRunes("")), "");
+  sys.test(arr.size(str.toRunes("")), 0);
+  sys.test(str.fromRunes(str.toRunes("añña世界")), "añña世界");
+  sys.test(arr.size(str.toRunes("añña世界")), 6);
+
+  sys.test(str.fromUtf16(str.toUtf16("")), "");
+  sys.test(arr.size(str.toUtf16("")), 0);
+  sys.test(str.fromUtf16(str.toUtf16("añña世界")), "añña世界");
+  sys.test(arr.size(str.toUtf16("añña世界")), 6);
+
+  sys.test(str.index("abcb", "b"), 1);
+  sys.test(str.index("abcb", "bc"), 1);
+  sys.test(str.index("abcb", "abcb"), 0);
+  sys.test(str.index("abcb", "abcbc"), -1);
+  sys.test(str.index("a", ""), 0);
+  sys.test(str.index("año", "o"), 3);
+
+  sys.test(str.indexFrom("abcb", "b", 3), 3);
+  sys.test(str.indexFrom("abcb", "bc", 3), -1);
+  sys.test(str.indexFrom("abcb", "abcb", 0), 0);
+  sys.test(str.indexFrom("abcb", "abcbc", 0), -1);
+  sys.test(str.indexFrom("a", "", 1), -1);
+  sys.test(str.indexFrom("año", "o", 1), 3);
+
+  sys.test(str.lastIndex("abcb", "b"), 3);
+  sys.test(str.lastIndex("abcb", "bc"), 1);
+  sys.test(str.lastIndex("abcb", "abcb"), 0);
+  sys.test(str.lastIndex("abcb", "abcbc"), -1);
+  sys.test(str.lastIndex("a", ""), 1);
+  sys.test(str.lastIndex("año", "o"), 3);
+
+  sys.test(str.left("", 2), "");
+  sys.test(str.left("año", 2), "añ");
+  sys.test(str.left("año", 2000), "año");
+  sys.test(str.left("", -2), "");
+  sys.test(str.left("año", -2), "a");
+  sys.test(str.left("año", -2000), "");
+
+  sys.test(str.ltrim(""), "");
+  sys.test(str.ltrim("   a"), "a");
+  sys.test(str.ltrim("a   "), "a   ");
+  sys.test(str.ltrim("   a   "), "a   ");
+
+  sys.test(str.len(""), 0);
+  sys.test(str.len("a"), 1);
+  sys.test(str.len("a d"), 3);
+
+  sys.test(str.replace("", "a", "bc"), "");
+  sys.test(str.replace("cdrs", "a", "bc"), "cdrs");
+  sys.test(str.replace("adrs", "a", "bc"), "bcdrs");
+  sys.test(str.replace("cdas", "a", "bc"), "cdbcs");
+  sys.test(str.replace("cdaa", "a", "bc"), "cdbcbc");
+
+  sys.test(str.right("", 2), "");
+  sys.test(str.right("año", 2), "o");
+  sys.test(str.right("año", 2000), "");
+  sys.test(str.right("", -2), "");
+  sys.test(str.right("año", -2), "ño");
+  sys.test(str.right("año", -2000), "año");
+
+  sys.test(str.rtrim(""), "");
+  sys.test(str.rtrim("   a"), "   a");
+  sys.test(str.rtrim("a   "), "a");
+  sys.test(str.rtrim("   a   "), "   a");
+
+  sys.test(str.split("ab", "") , ["a", "b"]);
+  sys.test(arr.size(str.split("", "")), 0);
+  sys.test(arr.join(str.split("", ""), ""), "");
+  sys.test(arr.size(str.split("a", "")), 1);
+  sys.test(arr.join(str.split("a", ""), ""), "a");
+  sys.test(arr.size(str.split("añ", "")), 2);
+  sys.test(arr.join(str.split("añ", ""), ""), "añ");
+  sys.test(arr.size(str.split("", ";")), 1);
+  sys.test(arr.join(str.split("", ";"), ";"), "");
+  sys.test(arr.size(str.split("ab;cd;", ";")), 3);
+  sys.test(arr.join(str.split("ab;cd;", ";"), ";"), "ab;cd;");
+  sys.test(arr.size(str.split("ab;cd", ";")), 2);
+  sys.test(arr.join(str.split("ab;cd", ";"), ";"), "ab;cd");
+  sys.test(arr.size(str.split("ab;", ";")), 2);
+  sys.test(arr.join(str.split("ab;", ";"), ";"), "ab;");
+  sys.test(arr.size(str.split("ab", ";")), 1);
+  sys.test(arr.join(str.split("ab", ";"), ";"), "ab");
+  sys.test(arr.size(str.split("", "ñ")), 1);
+  sys.test(arr.join(str.split("", "ñ"), "ñ"), "");
+  sys.test(arr.size(str.split("abñcdñ", "ñ")), 3);
+  sys.test(arr.join(str.split("abñcdñ", "ñ"), "ñ"), "abñcdñ");
+  sys.test(arr.size(str.split("abñcd", "ñ")), 2);
+  sys.test(arr.join(str.split("abñcd", "ñ"), "ñ"), "abñcd");
+  sys.test(arr.size(str.split("abñ", "ñ")), 2);
+  sys.test(arr.join(str.split("abñ", "ñ"), "ñ"), "abñ");
+  sys.test(arr.size(str.split("ab", "ñ")), 1);
+  sys.test(arr.join(str.split("ab", "ñ"), "ñ"), "ab");
+  sys.test(arr.size(str.split("", "--")), 1);
+  sys.test(arr.join(str.split("", "--"), "--"), "");
+  sys.test(arr.size(str.split("ab--cd--", "--")), 3);
+  sys.test(arr.join(str.split("ab--cd--", "--"), "--"), "ab--cd--");
+  sys.test(arr.size(str.split("ab--cd", "--")), 2);
+  sys.test(arr.join(str.split("ab--cd", "--"), "--"), "ab--cd");
+  sys.test(arr.size(str.split("ab--", "--")), 2);
+  sys.test(arr.join(str.split("ab--", "--"), "--"), "ab--");
+  sys.test(arr.size(str.split("ab", "--")), 1);
+  sys.test(arr.join(str.split("ab", "--"), "--"), "ab");
+
+  sys.test(arr.size(str.splitTrim(" ab ;  cd ;", ";")), 3);
+  sys.test(arr.join(str.splitTrim(" ab ;  cd ;", ";"), ";"), "ab;cd;");
+  sys.test(arr.size(str.splitTrim(" ab ;  cd ", ";")), 2);
+  sys.test(arr.join(str.splitTrim(" ab ;  cd ", ";"), ";"), "ab;cd");
+  sys.test(arr.size(str.splitTrim("ab;cd;", ";")), 3);
+  sys.test(arr.join(str.splitTrim("ab;cd;", ";"), ";"), "ab;cd;");
+  sys.test(arr.size(str.splitTrim("ab;cd", ";")), 2);
+  sys.test(arr.join(str.splitTrim("ab;cd", ";"), ";"), "ab;cd");
+
+  sys.test(str.starts("abc", "a"), true);
+  sys.test(str.starts("abc", ""), true);
+  sys.test(str.starts("", ""), true);
+  sys.test(!str.starts("abc", "zc"), true);
+  sys.test(!str.starts("abc", "1abc"), true);
+  sys.test(!str.starts("", "x"), true);
+
+  sys.test(str.sub("", 1, 3), "");
+  sys.test(str.sub("çaño", 1, 3), "añ");
+  sys.test(str.sub("çaño", 3, 1), "");
+  sys.test(str.sub("", -3, -1), "");
+  sys.test(str.sub("añoÇ", -3, -1), "ño");
+  sys.test(str.sub("añoÇ", -1, -3), "");
+
+  sys.setLocale("es_ES.utf8");
+  sys.test(str.toLower(""), "");
+  sys.test(str.toLower("CAÑÓN"), "cañón");
+  sys.test(str.toUpper(""), "");
+  sys.test(str.toUpper("cañón"), "CAÑÓN");
+  sys.setLocale("C");
+
+  sys.test(str.trim(""), "");
+  sys.test(str.trim("   a"), "a");
+  sys.test(str.trim("a   "), "a");
+  sys.test(str.trim("   a   "), "a");
+
+  sys.println("  finished.");
+}
+

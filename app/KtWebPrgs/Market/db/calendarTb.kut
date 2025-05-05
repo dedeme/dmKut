@@ -6,7 +6,7 @@
 import "cts";
 import "data/calendar/calendar";
 
-fpath = path.cat([cts.dataPath, "calendar.tb"]);
+fpath = file.cat([cts.dataPath, "calendar.tb"]);
 
 /// Initializes table.
 /// \ -> ()

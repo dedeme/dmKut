@@ -5,20 +5,94 @@
 
 import "cts";
 
+stats2 = \(SsIi|I) allStats, tp, :arr Rss, nInvs -> {
+  size = Rss.size();
+  nrows = size / nInvs;
+  nrowsf = math.itof(nrows);
+  ncols = nInvs;
+
+  Vss = arr.new(0.0, size);
+  for (i, v = Rss) Vss[i] = math.itof(v);
+
+  // SUM
+
+  :arr Sums = arr.new(0.0, ncols);
+  SNs = arr.new(0.0, ncols);
+
+  for (r = 0:size-1:ncols) for (c = 0:ncols) {
+    v = Vss[r + c];
+    sm = Sums[c];
+    if (sm < 0.0 | v < 0.0) Sums[c] = -1.0;
+    else {
+      Sums[c] += v;
+      SNs[c] += 1.0;
+    }
+  }
+
+  // AVG
+
+  :arr Avgs = Sums.copy();
+  for (c = 0:ncols)
+    if (Avgs[c] < 0.0) Avgs[c] = -1.0;
+    else Avgs[c] /= SNs[c];
+
+  if (tp == allStats[1]) {
+    R = arr.new(0, ncols);
+    for (i, n = Avgs) R[i] = math.ftoi(n);
+    return R;                                           // average -------------
+  }
+
+  // DEVIATION SUMS
+
+  lastRowsIx = size - ncols;
+  Slopes = arr.new(0.0, ncols);
+  for (c = 0:ncols)
+    Slopes[c] = (Vss[lastRowsIx + c] - Vss[c]) / nrowsf;
+
+  Dsums = arr.new(0.0, ncols);
+  rV = [0.0];
+  for (r = 0:size-1:ncols) {
+    for (c = 0:ncols) {
+      if (Avgs[c] < 0.0) Dsums[c] = -1.0;
+      else Dsums[c] += math.abs(Vss[r + c] - Vss[c] + rV! * Slopes[c]);
+    }
+    rV! += 1.0;
+  }
+
+  maxDvV = [-1.0];
+  maxCrrV = [-1.0];
+  for (c = 0:ncols) {
+    if (Avgs[c] > 0.0) {
+      dv = Dsums[c] / SNs[c];
+      v = Avgs[c] - dv;
+      Dsums[c] = v;
+      if (v > maxCrrV!) {
+        maxCrrV! = v;
+        maxDvV! = dv / Avgs[c];
+      }
+    }
+  }
+
+  if (tp == allStats[2]) {
+    R = arr.new(0, ncols);
+    for (i, n = Dsums) R[i] = math.ftoi(n);
+    return R;                                           // corrected average ---
+  }
+
+  // DEVIATIONS
+
+  return [math.ftoi(maxDvV! * 10_000.0)];               // deviation -----------
+};
+
 /// Calculates statistis.
-/// Returns one value for each investor (col).
+/// For 'average' and 'crrAverage' returns one value for each investor (col).
+/// For 'deviation' returns only only one value with the deviation of the
+/// greater 'crrAverage' value,
 ///   tp: Type of statistics ("average", "crrAverage", "deviation")
 ///   Rss: Values to make calculations. (days (rows) x invs (cols))
 /// NOTE: When in a calculus, some historic value is -1, the final result is
 ///       also -1.
 /// \s, [[i.]] -> [i.]
 stats = \tp, Rss -> {
-  fn = arr.index(cts.Stats, \s -> return s == tp;) - 1;
-  rRs = sys.cmd(
-    path.cat([path.parent(sys.mainPath()), "chelper"]),
-    [math.itos(fn), js.w(Rss)]
-  );
-  if (rRs[1]) return arr.map(js.r(rRs!), math.ftoi);
-  sys.throw(rRs!);
+  return << stats2(cts.Stats, tp, Rss, arr.size(Rss[0]));
 };
-

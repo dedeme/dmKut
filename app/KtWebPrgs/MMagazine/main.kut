@@ -1,61 +1,50 @@
-// Copyright 27-Mar-2022 ºDeme
+// Copyright 03-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Program start
+/// Main module.
 
 import "KtWeb/rp";
-import "libdm/cgi";
 import "libdm/log";
-import "data/cts";
 import "db";
-import "update";
+import "cts";
 import "pgs/main";
-import "pgs/cmarket";
-import "pgs/mmarket";
+import "pgs/market";
 
-import "db/evalsDb"; // TO REMOVE
+//: \ -> s
+help = \ -> return """
+  Use MMagazine [help | version | init | key rq]
+  where
+    help   : Shows this message.
+    version: Shows program version.
+    init   : Initializes program.
+             Must be called only the first time that the program is run.
+    key rq : Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-help = "Usage: MMagazine [update | test | version | help | <request>]";
+log.init(file.cat([cts.dataPath, "log.tb"]), 100);
 
-test = \ -> {
-  sys.println("No test done");
-};
+:arr Args = sys.args();
 
-db.init();
-log.init(cts.logPath);
-
-Args = sys.args();
-if (arr.size(Args) == 1) {
+if (Args.size() == 1) {
   switch (Args[0]) {
-    "update": {
-        try { update.process(); }
-        catch(e) {
-          log.error(e);
-          sys.throw(e);
-        }
-      }
     "version": sys.println(cts.version);
-    "test": test();
-    default: sys.println(help);
+    "init": db.init();
+    default: sys.println(help());
   }
   return;
 }
 
-if (arr.size(Args) != 2) {
-  sys.println(help);
+if (Args.size() != 2) {
+  sys.println(help());
   return;
 }
 
-ck = Args[0];
+key = Args[0];
+rp.init(key);
+
 Rq = js.r(Args[1]);
-
-rp.init(ck);
-sys.print(
-  switch (Rq.module) {
+sys.print(switch(Rq.module) {
     "Main": main.process(Rq);
-    "CMarket": cmarket.process(Rq);
-    "MMarket": mmarket.process(Rq);
-    default: sys.throw("Value of module (" + Rq.module + ") is not valid");
-  }
-);
-
+    "Market": market.process(Rq);
+  default: sys.throw("Value of module (" + Rq.module + ") is not valid");
+});

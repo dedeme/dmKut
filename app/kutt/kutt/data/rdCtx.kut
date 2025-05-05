@@ -1,0 +1,24 @@
+// Copyright 19-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Reader context.
+
+import "dicLayer";
+import "typedSym";
+
+/// Constructor. Don not use directly. Use new function.
+///   fpath  : Canonical path of module file.
+///   id     : C identifier of module (cid.h and cid.c will be created)
+///   Imports: Dictionary of imports. {sym::moduleId}
+///   Exports: List of symbols to export.
+///   symMods: 'dicLayer' of dictionaries {s.}::{symbol: module} that associates
+///             expression symnbols with names of imported modules.
+/// \s,s,{s.},[<typedSym>.],<dicLayer> -> <rdCtx>
+XnewX : fpath, id, Imports, Exports, symMods;
+
+/// Constructor.
+///   fpath: Canonical path of module file.
+///    id  : C identifier of module (cid.h and cid.c will be created)
+/// \s,s -> <rdCtx>
+new = \fpath, id -> return [fpath, id, {}, [], dicLayer.new()];;
+

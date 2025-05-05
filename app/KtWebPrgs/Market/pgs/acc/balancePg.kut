@@ -15,7 +15,7 @@ import "db/trading/closesTb";
 import "db/trading/refsTb";
 import "db/invOperationsTb";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {

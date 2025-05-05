@@ -1,0 +1,72 @@
+// Copyright 08-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/qsv/qsv";
+import "data/qsv/dailyQ";
+
+/// Return [serveIds, [quotes, quotes, quotes], warnings]>
+/// Each quotes came from a server.
+/// When server can not be read, 'quotes' is an empty array.
+/// Servers read are: BYM, IBERB and PCB, in this order.
+/// \ -> [[s, s, s], [[<dailyQ>.], [<dailyQ>.], [<dailyQ>.]], [s.]]
+run = \ -> {
+  Ws = [];
+
+  Q1V = [[]];
+  E1V = [[]];
+  Q2V = [[]];
+  E2V = [[]];
+  Q3V = [[]];
+  E3V = [[]];
+  :thread th1 = thread.start(\ -> {
+      Qs, :arr Ws = runServer("BYM");
+
+      Q1V! = Qs;
+      E1V! = Ws.map(\w -> return "[BYM] " + w;);
+    });
+  :thread th2 = thread.start(\ -> {
+      Qs, :arr Ws = runServer("IBERB");
+
+      Q2V! = Qs;
+      E2V! = Ws.map(\w -> return "[IBERB] " + w;);
+    });
+  :thread th3 = thread.start(\ -> {
+      Qs, :arr Ws = runServer("PCB");
+
+      Q3V! = Qs;
+      E3V! = Ws.map(\w -> return "[PCB] " + w;);
+    });
+
+  th1.join();
+  th2.join();
+  th3.join();
+
+  :arr E1s = E1V!;
+  :arr E2s = E2V!;
+  :arr E3s = E3V!;
+  Ws.cat(E1s + E2s + E3s);
+
+  return [["BYM", "IBERB", "PCB"], [Q1V!, Q2V!, Q3V!], Ws];
+};
+
+/// Read quotes from server.
+/// Returns [quotes, warnings]
+/// When server can not be read, 'quotes' is an empty array.
+/// \s -> [[<dailyQ>.], [s.]]
+runServer = \svId -> {
+  sv = svId;
+  R, ok = qsv.rq({
+    rq: "daily",
+    sv
+  });
+  if (!ok)
+    return [[], ["Fail reading " + sv + "\n" + R]];
+
+  QWs, ok2 = js.r(R);
+  if (!ok2)
+    return [[], ["Fail reading " + sv + "\n" + QWs]];
+
+  Qs, Ws : QWs;
+  return [Qs, Ws];
+};
+

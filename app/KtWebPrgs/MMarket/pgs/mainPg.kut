@@ -5,6 +5,7 @@
 
 import "libmkt/cts" : mcts;
 import "libmkt/models";
+import "libmkt/model";
 import "KtWeb/rp";
 import "cts";
 import "db";

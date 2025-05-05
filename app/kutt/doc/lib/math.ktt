@@ -1,0 +1,197 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Numerical and mathematical functions.
+
+/// Returns the absolute value of n.
+//: [f|f]
+abs = \n -> {throw "fake for doc";};
+
+/// Returns arccosine of n.
+//: [f|f]
+acos = \n -> {throw "fake for doc";};
+
+/// Returns arc-hyperbolic cosine of n.
+//: [f|f]
+acosh = \n -> {throw "fake for doc";};
+
+/// Returns arcsine of n.
+//: [f|f]
+asin = \n -> {throw "fake for doc";};
+
+/// Returns arc-hyperbolic sine of n.
+//: [f|f]
+asinh = \n -> {throw "fake for doc";};
+
+/// Returns arctangent of n.
+//: [f|f]
+atan = \n -> {throw "fake for doc";};
+
+/// Returns arc-hyperbolic tangent of n.
+//: [f|f]
+atanh = \n -> {throw "fake for doc";};
+
+/// Returns the next greater integer of n.
+//: [f|f]
+ceil = \n -> {throw "fake for doc";};
+
+/// Returns cosine of n.
+//: [f|f]
+cos = \n -> {throw "fake for doc";};
+
+/// Returns hyperbolic cosine of n.
+//: [f|f]
+cosh = \n -> {throw "fake for doc";};
+
+/// Returns 'e' constant.
+//: [|f]
+e = \ -> {throw "fake for doc";};
+
+/// Returns if n1 is equals to n2 +- gap
+//: [fff|b]
+eq = \n1, n2, gap -> {throw "fake for doc";};
+
+/// Returns 'pow(e, n)'.
+//: [f|f]
+exp = \n -> {throw "fake for doc";};
+
+/// Returns 'pow(2, n)'.
+//: [f|f]
+exp2 = \n -> {throw "fake for doc";};
+
+/// Returns the next less integer of n.
+//: [f|f]
+floor = \n -> {throw "fake for doc";};
+
+/// Returns the float value of 's' (option), which contains a number in english
+/// format.
+//: [s|[f]]
+fromEn = \s -> {throw "fake for doc";};
+
+/// Returns the int value of a hexadecimal string (option).
+//: [s|[i]]
+fromHex = \s -> {throw "fake for doc";};
+
+/// Returns the float value of 's' (option), which contains a number in ISO
+/// format.
+//: [s|[f]]
+fromIso = \s -> {throw "fake for doc";};
+
+/// Returns the int value of 'n'.
+//: [f|i]
+ftoi = \n -> {throw "fake for doc";};
+
+/// Returns the string representation of 'n'.
+//: [f|s]
+ftos = \n -> {throw "fake for doc";};
+
+/// Returns the string representation of 'n' with 'dec' decimal positions.
+//: [fi|s]
+ftos2 = \n, dec -> {throw "fake for doc";};
+
+/// Returns 'true' if every character of 's' is a digit.
+//: [s|b]
+isDigits = \s -> {throw "fake for doc";};
+
+/// Returns the float value of 'n'
+//: [i|f]
+itof = \n -> {throw "fake for doc";};
+
+/// Returns the hexadecimal representation of 'n'
+//: [i|s]
+itoh = \n -> {throw "fake for doc";};
+
+/// Returns the string representation of 'n'.
+//: [i|s]
+itos = \n -> {throw "fake for doc";};
+
+/// Returns napierian logarithm of n.
+//: [f|f]
+log = \n -> {throw "fake for doc";};
+
+/// Returns base 10 logarithm of n.
+//: [f|f]
+log10 = \n -> {throw "fake for doc";};
+
+/// Returns base 2 logarithm of n.
+//: [f|f]
+log2 = \n -> {throw "fake for doc";};
+
+/// Returns the greater of n1 and n2.
+//: [ff|f]
+max = \n1, n2 -> {throw "fake for doc";};
+
+/// Returns the maximum value of a float.
+/// NOTE: There is not 'minFloat'.
+//: [|f]
+maxFloat = \ -> {throw "fake for doc";};
+
+/// Returns the maximum value of an integer
+//: [|i]
+maxInt = \ -> {throw "fake for doc";};
+
+/// Returns the less of n1 and n2.
+//: [ff|f]
+min = \n1, n2 -> {throw "fake for doc";};
+
+/// Returns the minimum value of an integer
+//: [|i]
+minInt = \ -> {throw "fake for doc";};
+
+/// Returns 'i' constant.
+//: [|f]
+pi = \ -> {throw "fake for doc";};
+
+/// Returns 'base' raised to the power of 'ex'.
+//: [ff|f]
+pow = \base, ex -> {throw "fake for doc";};
+
+/// Returns 10 raised to the power of 'ex'.
+//: [i|f]
+pow10 = \ex -> {throw "fake for doc";};
+
+/// Returns a random number between 0 (inclusive) and 1 (exclusive).
+//: [|f]
+rnd = \ -> {throw "fake for doc";};
+
+/// Returns a random integer between 0 (inclusive) and top (exclusive).
+/// Note: This function works with negative numbers too.
+//: [i|i]
+rndi = \top -> {throw "fake for doc";};
+
+/// Rounds 'n' with 'dec' decimals.
+//: [fi|f]
+round = \n, dec -> {throw "fake for doc";};
+
+/// Returns sine of n.
+//: [f|f]
+sin = \n -> {throw "fake for doc";};
+
+/// Returns hyperbolic sine of n.
+//: [f|f]
+sinh = \n -> {throw "fake for doc";};
+
+/// Returns the square root of n.
+//: [f|f]
+sqrt = \n -> {throw "fake for doc";};
+
+/// Returns the [float] value of 's' (option).
+//: [s|[f]]
+stof = \s -> {throw "fake for doc";};
+
+/// Returns the [integer] value of 's' (option).
+//: [s|[i]]
+stoi = \s -> {throw "fake for doc";};
+
+/// Returns tangent of n.
+//: [f|f]
+tan = \n -> {throw "fake for doc";};
+
+/// Returns hyperbolic tangent of n.
+//: [f|f]
+tanh = \n -> {throw "fake for doc";};
+
+/// Returns the integer part of n.
+//: [f|f]
+trunc = \n -> {throw "fake for doc";};
+

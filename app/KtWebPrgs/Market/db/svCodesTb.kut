@@ -5,11 +5,11 @@
 
 import "libdm/log";
 import "data/qsvs";
-import "data/qsv";
+import "data/qsv/qsv";
 import "quotesDb";
 import "cts";
 
-fpath = path.cat([cts.dataPath, "svCodes.tb"]);
+fpath = file.cat([cts.dataPath, "svCodes.tb"]);
 
 /// Initialize table.
 /// \-> ()
@@ -27,8 +27,8 @@ read = \serverId -> {
   for (id = SvCodes.keys()) {
     if (!Svs.any(\:qsv sv -> return sv.id == id;))
       log.error(str.fmt(
-        "Found codes of not existent server '%v'\n" +
-        "Codes can be deleted with 'svCodesTb_purge'",
+        "Found codes of not existing server '%v'\n" +
+        "Codes can be deleted with 'svCodesTb.purge'",
         [id]
       ));
   }

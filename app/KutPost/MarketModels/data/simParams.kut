@@ -16,8 +16,11 @@ paramBases = \modelId -> return switch (modelId) {
   "MX_MN": [5.0, 0.01];
   "QFIJO": [0.05];
   "QMOV": [0.05];
+  "SPRS": [0.015];
   "SS_BB": [0.15, 0.068];
   "SSBB0": [0.15];
+  "SSBB2": [0.15, 0.15];
+  "SSQF": [0.15, 0.4];
   default: sys.throw("Model " + modelId + " not found");
 };;
 
@@ -34,7 +37,10 @@ paramIncrs = \modelId -> return switch (modelId) {
   "MX_MN": [2.0, 0.005];
   "QFIJO": [0.01];
   "QMOV": [0.01];
+  "SPRS": [0.001];
   "SS_BB": [0.01, 0.004];
   "SSBB0": [0.01];
+  "SSBB2": [0.01, 0.01];
+  "SSQF": [0.01, 0.025];
   default: sys.throw("Model " + modelId + " not found");
 };;

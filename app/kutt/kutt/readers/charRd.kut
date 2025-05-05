@@ -1,0 +1,29 @@
+// Copyright 13-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Character reader.
+
+/// Constructor.
+///   tx : Text to read.
+///   i  : Index of current character in 'tx'. Intial value must be set to '0'.
+///   ln : Line number. Initial value must be set to '1'.
+/// \s,i,i -> <charRd>
+new : tx, i, ln;
+
+/// Returns the current character of 'chr' or "" if chr is at end of text.
+/// \<charRd> -> s
+peek = \chr -> return str.len(chr[tx]) <= chr[i] ? "" : chr[tx][chr[i]];;
+
+/// Returns the current character of 'chr' or "" if chr is at end of text,
+/// and advances 'i' one position.
+/// If the current character is '\n', 'ln' advances one line.
+/// \<charRd> -> s
+next = \chr -> {
+  :str t = chr[tx];
+  ix = chr[i];
+  if (t.len() <= ix) return "";
+  ch = t[ix];
+  chr[i] += 1;
+  if (ch == "\n") chr[ln] += 1;
+  return ch;
+};

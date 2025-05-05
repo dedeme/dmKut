@@ -9,14 +9,14 @@
 /// \s,i -> <alarm>
 mk : id, tm;
 
-/// \JS -> <alarm>
+/// \[*] -> <alarm>
 fromJs = \A -> return [
     A[0],
     math.ftoi(A[1])
   ];;
 
 /// Removes in place obsolete alarms
-/// [<alarm>.] -> ()
+/// \[<alarm>.] -> ()
 update = \:arr As -> {
   top = time.now() - 180000; // -3 minutes
   As.filterIn(\a -> {
@@ -28,14 +28,14 @@ update = \:arr As -> {
 // \<alarm>, <alarm> -> i
 cmp = \a1, a2 -> {
   fmt = "%Y%M%D%t";
-  d1 = time.format(a1[tm], fmt)[:-3];
-  d2 = time.format(a2[tm], fmt)[:-3];
+  d1 = time.fmt(a1[tm], fmt)[:-3];
+  d2 = time.fmt(a2[tm], fmt)[:-3];
   return d1 > d2 ? 1 : d1 < d2 ? -1 : 0;
 };
 
 /// Adds in place a new alarm to an array. If its time is duplicated, function
 /// does nothing and returns 'false'. Otherwise, returns 'true'.
-/// [<alarm>.], <alarm> -> b
+/// \[<alarm>.], <alarm> -> b
 add = \:arr As, a -> {
   if (As.any(\a0 -> return cmp(a0, a) == 0;)) return false;
   As.push(a);
@@ -43,5 +43,5 @@ add = \:arr As, a -> {
 };
 
 /// Removes in place any alarm of 'As' with its same time.
-/// [<alarm>, ...], <alarm> -> ()
-del = \As, a -> arr.filterIn(As, \a0 -> return cmp(a0, a) != 0;);;
+/// \[<alarm>.], <alarm> -> ()
+del = \:arr As, a -> As.filterIn(\a0 -> return cmp(a0, a) != 0;);;

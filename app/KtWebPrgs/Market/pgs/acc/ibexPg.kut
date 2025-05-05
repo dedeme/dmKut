@@ -10,7 +10,7 @@ import "data/qsprRs";
 import "data/co/cos";
 import "sch";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {

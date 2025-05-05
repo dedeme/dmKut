@@ -1,0 +1,40 @@
+// Copyright 09-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/qsv/qsv";
+
+/// Returns historic quotes of IBEX.
+/// \ -> [({Qs: [<historicQ>.], Ws: [s.]}|s), b]
+ibexHistoric = \ -> {
+  R, ok = qsv.rq({
+    rq: "ixs",
+    sv: "IBEX"
+  });
+  if (!ok) return [R, false];
+
+  return js.r(R);
+};
+
+/// Returns nicks of IBEX components.
+/// \ -> [({Cs: [s.], Ws: [s.]}|s), b]
+ibexCos = \ -> {
+  R, ok = qsv.rq({
+    rq: "ixs",
+    sv: "IBEX_COS"
+  });
+  if (!ok) return [R, false];
+
+  return js.r(R);
+};
+
+/// Returns current quotes of ibex and euro indexes.
+/// \ -> [({ibex: [f, f], euro: [f, f], Ws: [s.]}|s), b]
+ixs = \ -> {
+  R, ok = qsv.rq({
+    rq: "ixs",
+    sv: "IXS"
+  });
+  if (!ok) return ["readIxs.ixs:\n" + R, false];
+
+  return js.r(R);
+};

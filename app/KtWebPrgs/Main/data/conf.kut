@@ -9,4 +9,5 @@
 new : lang;
 
 /// Returns the default configuration data.
+/// \ -> <conf>
 newDefault = \-> return new("es");;

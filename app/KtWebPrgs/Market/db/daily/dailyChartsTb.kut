@@ -6,7 +6,7 @@
 import "../dailyDb";
 import "data/chart/dailyChart";
 
-fpath = path.cat([dailyDb.dpath, "dailyCharts.tb"]);
+fpath = file.cat([dailyDb.dpath, "dailyCharts.tb"]);
 
 /// Initialize table.
 /// \ -> ()

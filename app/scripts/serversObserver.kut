@@ -1,0 +1,83 @@
+import "libdm/log";
+import "../KtWeb/global";
+
+// Log path is that of Main application.
+log.init(global.logPath, 100);
+
+// {applicationName: port}
+// {s.}
+Ports = {
+    "KtWeb": "8008",
+    "KutPost": "8668"
+  };
+
+// [<svData>.]
+SvData = [
+    {ix: 1, name: "KtWeb", command: "kut",
+        Pars: ["/dm/KtWeb/KtWeb", "start"]},
+    {ix: 2, name: "Kron", command: "kut",
+      Pars: ["/dm/dmKut/app/KtWebPrgs/Kron/main", "start"]},
+    {ix: 3, name: "Market", command: "kut",
+      Pars: ["/dm/dmKut/app/KtWebPrgs/Market/main", "start"]},
+//    {ix: 3, name: "Wdriver", command: "kut",
+//      Pars: ["/dm/dmKut/app/wdriver/main", "start"]},
+    {ix: 4, name: "KutPost", command: "kut",
+      Pars: ["/dm/dmKut/app/KutPost/KutPost/main", "start"]}
+  ];
+
+// Returns 'true' if 'D' is active.
+// \ [s.], <svData> -> b
+isActive = \Procs, D -> {
+  cmd = !D.Pars
+    ? D.command
+    : D.command + " " + arr.join(D.Pars, " ")
+  ;
+
+  for (l = Procs)
+    if (str.ends(l, cmd)) return true;
+  return false;
+};
+
+// \s -> ()
+writeLog = \msg -> log.error("[From serversObserver] " + msg);;
+
+// Close applicatons using 'port'.
+// \s -> s
+closePort = \port -> {
+  r, ok = sys.cmd ("bash", ["-c", "ss -tlp| grep :" + port]);
+  if (!ok) return r;
+
+  ix = str.index(r, "pid=");
+  if (ix == -1) return "";
+
+  pid = r[ix+4:str.indexFrom(r, ",", ix+4)];
+  sys.println("kill " + pid);
+  return closePort(port);
+};
+
+
+{
+  while () {
+    procs, ok = sys.cmd("ps", ["x"]);
+    if (!ok) {
+      writeLog("Command 'ps x' failed");
+    } else {
+      Procs = str.splitTrim(procs, "\n");
+      for (D = SvData) {
+        if (!isActive(Procs, D)) {
+          portOp = Ports.get(D.name);
+          if (!!portOp) {
+            p = portOp!;
+            err = closePort(p);
+            if (err != "") writeLog("Error closing port " + p + ": " + err);
+            else writeLog("Closed port " + p);
+          }
+
+          thread.run(\-> sys.cmd(D.command, D.Pars););
+          writeLog("Restarted " + D.name);
+        }
+      }
+    }
+    sys.sleep(15000);
+  }
+}

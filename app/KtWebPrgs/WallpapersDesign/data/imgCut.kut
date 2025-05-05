@@ -1,29 +1,20 @@
-// Copyright 22-Dic-2022 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Image 'cut' data
+/// image 'blut' data.
 
-/// Creates new 'cut' parameters.
-///   left: Left point to cut.
-///   top: Top point to cut.
-///   right: Right point to cut.
+/// Constructor.
+///   left  : Left point to cut.
+///   top   : Top point to cut.
+///   right : Right point to cut.
 ///   bottom: Bottom point to cut.
-/// \i, i, i, i -> d<imgCut>
-new = \left, top, right, bottom -> return {left, top, right, bottom};;
+/// \i,i,i,i -> <imgCut>
+new : left, top, right, bottom;
 
-/// \<imgCut> -> [*(JS)...]
-toJs = \IC -> return [
-    math.itof(IC.left),
-    math.itof(IC.top),
-    math.itof(IC.right),
-    math.itof(IC.bottom)
+/// \[*.] -> <imgCut>
+fromJs = \A -> return [
+    math.ftoi(A[left]),
+    math.ftoi(A[top]),
+    math.ftoi(A[right]),
+    math.ftoi(A[bottom])
   ];;
-
-/// \[*(JS)...] -> <imgCut>
-fromJs = \A -> return new(
-    math.ftoi(A[0]),
-    math.ftoi(A[1]),
-    math.ftoi(A[2]),
-    math.ftoi(A[3])
-  );;
-

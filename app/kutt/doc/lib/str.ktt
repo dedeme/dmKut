@@ -1,0 +1,167 @@
+// Copyright 07-Mar-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// String functions.
+///
+/// Beside the functions described below, 'string' also allows:
+///
+/// Subindex (s[ix])
+///   - Returns a the byte in position 'ix'.
+///   - If 'ix >= str.len(s)' or 'ix < 0' an exception is thrown.
+///
+/// Substrings at left (s[:ix]), at right (s[ix:]) and between limits (s[i:j]).
+///   - Values ix in 'right' and 'i' are inclusive, while 'ix' in 'left' and
+///     'j' are exclusive.
+///   - If subindices are '< 0', they are converted en 'len(s) + i'.
+///   - If the final value is '< 0' or '>= len(s)', it is adjusted to limits.
+///   - In case of 's[i, j]', if 'j < i', an empty string is returned.
+///   - The expresion 's[:]' returns a copy of 's'.
+///
+/// Strings can be compared by ==, <, <=, > and >=. This comparations are made
+/// by 'byte' order. To make a 'locale language' comparation can be used 'cmp'.
+///
+/// String also allows the function '+', that concatenate two of them.
+
+
+/// Compares using the current locale 's1' with 's2' and returns an integer
+/// '> 0' if 's1 > s2', '< 0' if 's1 < s2' and '== 0' if 's1 == s2'.
+/// It is necessary set the language previously (by default it is 'C').
+/// For example:
+///   sys.setLocale("es_ES.utf8");
+///   sys.assert(str.cmp("z", "é") > 0);
+///   sys.setLocale("C");
+//: [ss|i]
+cmp = \s1, s2 -> {throw "fake for doc";};
+
+/// Returns 'true' if 's' ends with 'subs'.
+//: [ss|b]
+ends = \s, subs -> {throw "fake for doc";};
+
+/// Returns the result of fill 'format' with values of 'Values'
+/// '%v' is used as substitution variable. '%%' produce '%'.
+/// NOTE. Values must be a tuple, although it is marked as array type.
+///       It allows one or more values, whose number must match the number
+///       of '%v' variables.
+/// Examples:
+///   str.fmt("%v, %v, %v", [. "abc", 33, 12.152]) produce "abc, 33, 12.152".
+///   str.fmt("%%%v, %v, %v", [.true, false, [. 1, "a"]]) produce
+///     '%true, false, [. 1,"a"]'.
+//: [s[A]|s]
+fmt = \ format, Values -> {throw "fake for doc";};
+
+/// Returns a normal string from a ISO-8859-1 string.
+//: [s|s]
+fromIso = \s -> {throw "fake for doc";};
+
+/// Returns a string from runes (utf8 single values).
+//: [[s]|s]
+fromRunes = \Runes -> {throw "fake for doc";};
+
+/// Returns a string from UTF16 codepoints.
+//: [[i]|s]
+fromUtf16 = \Codepoints -> {throw "fake for doc";};
+
+/// Returns position of the first occurence of 'subs' in 's', counting by bytes,
+/// or -1 if 'subs' is not in 's'.
+//: [ss|i]
+index = \s, subs -> {throw "fake for doc";};
+
+/// Returns position of the first occurence of 'subs' in 's', counting by bytes,
+/// and searching from the 'ix' byte (inclusive), or -1 if 'subs' is not found.
+//: [ssi|i]
+indexFrom = \s, subs, ix -> {throw "fake for doc";};
+
+/// Returns position of the last occurence of 'subs' in 's', counting by bytes,
+/// or -1 if 'subs' is not in 's'.
+//: [ss|i]
+lastIndex = \s, subs -> {throw "fake for doc";};
+
+/// Returns (s[:end]), counting by runes (Utf8 codepoints).
+/// 'end' is exclusive in the same terms as was descripted for subindices
+/// (s[:ix]) at the beginning of this page. That is, negative values are allowed.
+//: [si|s]
+left = \s, end -> {throw "fake for doc";};
+
+/// Returns the length of 's'.
+//: [s|i]
+len = \s -> {throw "fake for doc";};
+
+/// Returns 's' removing starting spaces (characters <= " ").
+//: [s|s]
+ltrim = \s -> {throw "fake for doc";};
+
+/// Returns 's' replacing all ocurreces of 'old' by 'new'.
+//: [sss|s]
+replace = \s, old, new -> {throw "fake for doc";};
+
+/// Returns (s[begin:]), counting by runes (Utf8 codepoints).
+/// 'begin' is inclusive in the same terms as was descripted for subindices
+/// (s[ix:]) at the beginning of this page. That is, negative values are allowed.
+//: [si|s]
+right = \s, begin -> {throw "fake for doc";};
+
+/// Returns 's' removing trailing spaces (characters <= " ").
+//: [s|s]
+rtrim = \s -> {throw "fake for doc";};
+
+/// Returns an array with 's' splitted by 'sep'.
+/// Examples:
+///   sys.test(arr.size(str.split("", "")), 0);
+///   sys.test(arr.join(str.split("", ""), ""), "");
+///   sys.test(arr.size(str.split("a", "")), 1);
+///   sys.test(arr.join(str.split("a", ""), ""), "a");
+///   sys.test(arr.size(str.split("añ", "")), 2);
+///   sys.test(arr.join(str.split("añ", ""), ""), "añ");
+///   sys.test(arr.size(str.split("", ";")), 1);
+///   sys.test(arr.join(str.split("", ";"), ";"), "");
+///   sys.test(arr.size(str.split("ab;cd;", ";")), 3);
+///   sys.test(arr.join(str.split("ab;cd;", ";"), ";"), "ab;cd;");
+///   sys.test(arr.size(str.split("ab;cd", ";")), 2);
+///   sys.test(arr.join(str.split("ab;cd", ";"), ";"), "ab;cd");
+//: [ss|[s]]
+split = \s, sep -> {throw "fake for doc";};
+
+/// Equals to split, but triming each strings in the resulting array.
+//: [ss|[s]]
+splitTrim = \s, sep -> {throw "fake for doc";};
+
+/// Returns 'true' if 's' starts with 'subs'.
+//: [ss|b]
+starts = \s, subs -> {throw "fake for doc";};
+
+/// Returns (s[begin:end]), counting by runes (Utf8 codepoints).
+/// 'begin' is 'inclusive' and 'end' is  exclusive in the same terms as was
+/// descripted for subindices (s[i,j]) at the beginning of this page. That is,
+/// negative values are allowed.
+//: [sii|s]
+sub = \s, begin, end -> {throw "fake for doc";};
+
+/// Returns 's' with all runes in lowercase.
+/// It is necessary set the language previously (by default is 'C').
+/// For example:
+///   sys.setLocale("es_ES.utf8");
+///   sys.test(str.toLower("CAÑÓN"), "cañón");
+///   sys.setLocale("C");
+//: [s|s]
+toLower = \s -> {throw "fake for doc";};
+
+/// Returns an array with the runes of 's'
+//: [s|[s]]
+toRunes = \s -> {throw "fake for doc";};
+
+/// Returns 's' with all runes in uppercase.
+/// It is necessary set the language previously (by default is 'C').
+/// For example:
+///   sys.setLocale("es_ES.utf8");
+///   sys.test(str.toUpper("cañón"), "CAÑÓN");
+///   sys.setLocale("C");
+//: [s|s]
+toUpper = \s -> {throw "fake for doc";};
+
+/// Returns an array with the codepoints of 's'
+//: [s|[i]]
+toUtf16 = \s -> {throw "fake for doc";};
+
+/// Returns 's' removing starting and trailing spaces (characters <= " ").
+//: [s|s]
+trim = \s -> {throw "fake for doc";};

@@ -11,7 +11,7 @@ import "cts";
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
 
     log.reset();
     return;

@@ -4,6 +4,7 @@
 /// Investors page.
 
 import "KtWeb/rp";
+import "libmkt/model";
 import "libmkt/models";
 import "libdm/log";
 import "data/investor/investor";

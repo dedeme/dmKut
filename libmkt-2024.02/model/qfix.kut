@@ -4,9 +4,11 @@
 /// Fix model.
 
 import "../model";
+import "../cts";
 import "doc/qfixDoc";
 
 /// Returns a new 'qfix' model.
+/// \-><model>
 new = \ -> return model.new(
     "QFIJO",
     "Quantum fijo",
@@ -14,3 +16,66 @@ new = \ -> return model.new(
     ["Salto"],
     [model.percParam]
   );;
+
+//: \f, f, f -> f
+downGap = \(fff|f) jmp, lgJmp, q ->
+  return math.pow(jmp, math.round(math.log(q)/lgJmp, 0) - 1.0);;
+//: \f, f, f -> f
+upGap = \(fff|f) jmp, lgJmp, q ->
+  return math.pow(jmp, math.round(math.log(q)/lgJmp, 0) + 1.0);;
+//: \f, f, f, f -> f
+downGap2 = \(ffff|f) jmp, lgJmp, q, ref -> {
+  ref2 = ref * jmp;
+  return ref2 * math.sqrt(jmp) >= q ? ref : downGap2(jmp, lgJmp, q, ref2);
+};
+//: \f, f, f, f -> f
+upGap2 = \(ffff|f) jmp, lgJmp, q, ref -> {
+  ref2 = ref / jmp;
+  return ref2 / math.sqrt(jmp) <= q ? ref : upGap2(jmp, lgJmp, q, ref2);
+};
+
+/// Caculates references.
+/// \[f.], [f.] -> [f.]
+refs = \(FF|F) :arr Closes, :arr Params -> {
+  size = Closes.size();
+  ndates = cts.historicQuotes;
+  ncos = size / ndates;
+  jmp = Params[0] + 1.0;
+  lgJmp = math.log(jmp);
+
+  Refs = arr.new(0., size);
+  for (i = 0:ncos)
+    Refs[i] = math.pow(
+        jmp, math.round(math.log(Closes[i])/lgJmp, 0) - 1.0
+      ) / jmp;
+
+  for (idate = ncos:size-1:ncos) {
+    previousIdate = idate - ncos;
+    for (ico = 0:ncos) {
+      icurrent = idate + ico;
+      iprevious = previousIdate + ico;
+
+      q = Closes[icurrent];
+      ref = Refs[iprevious];
+      q0 = Closes[iprevious];
+
+      if (q0 <= ref) {
+        if (q < q0)
+          Refs[icurrent] = upGap2(jmp, lgJmp, q, ref);
+        else if (q > ref)
+          Refs[icurrent] = downGap(jmp, lgJmp, q);
+        else
+          Refs[icurrent] = ref;
+      } else {
+        if (q > q0)
+          Refs[icurrent] = downGap2(jmp, lgJmp, q, ref);
+        else if (q <= ref)
+          Refs[icurrent] = upGap(jmp, lgJmp, q);
+        else
+          Refs[icurrent] = ref;
+      }
+    }
+  }
+
+  return Refs;
+};

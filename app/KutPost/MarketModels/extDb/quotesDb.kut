@@ -4,11 +4,13 @@
 /// Quotes reader.
 
 import "libmkt/quotes";
+import "libmkt/tquotes";
 import "cts";
 import "cosTb";
 
-/// \ -> <quotes>
-read = \ -> {
-  Cos = cosTb.read();
-  return quotes.read(cts.quotesPath, Cos);
+/// Returns companies selected in cosTb and its <tquotes>.
+/// \[s.] -> <tquotes>
+read = \(S|F) Cos -> {
+  return tquotes.read(cts.quotesPath, Cos, true);
 };
+

@@ -7,7 +7,7 @@ import "cts";
 import "data/conf";
 import "db";
 
-fpath = path.cat([cts.dataPath, "conf.tb"]);
+fpath = file.cat([cts.dataPath, "conf.tb"]);
 
 /// Initializes table.
 /// \ -> ()

@@ -1,0 +1,306 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Selections data base.
+
+import "data/pict";
+import "songsTb";
+import "pinupsTb";
+import "cts";
+
+fGroup      = "group";
+fPict       = "pict";
+fPictDate   = "pictDate";
+fPictsGroup = "pictsGroup";
+fPictsPage  = "pictsPage";
+
+fPinup      = "pinup";
+fPinupDate  = "pinupDate";
+fPinupsGroup = "pinupsGroup";
+fPinupsPage  = "pinupsPage";
+
+fSongGroup  = "songGroup";
+fSong       = "song";
+fSongsGroup = "songsGroup";
+fSongsSong  = "songsSong";
+
+fDanceManagementGroup = "danceManagementGroup";
+fDanceSelectorGroup   = "danceSelectorGroup";
+
+pictTime       = "pictTime";
+shortDanceTime = "shortDanceTime";
+longDanceTime  = "longDanceTime";
+
+radioIx = "radioIx";
+
+fpath = file.cat([cts.dataPath, "sels.db"]);
+
+/// Initialize data base
+/// \s -> ()
+init = \ -> {
+  if (!file.exists(fpath)) file.write(fpath, js.w({}));
+};
+
+// \ -> {*.}
+read = \ -> return js.r(file.read(fpath));;
+
+/// Returns the selected group.
+/// Default "0"
+/// \ -> s
+getGroup = \ -> {
+  groupOp = dic.get(read(), fGroup);
+  return !groupOp ? "0" : groupOp!;
+};
+
+/// Returns the selected picture.
+/// Default ""
+/// \ -> s
+getPict = \ -> {
+  pictOp = dic.get(read(), fPict);
+  return !pictOp ? "" : pictOp!;
+};
+
+/// Returns the date of selected picture.
+/// Default current date-time.
+/// \ -> s
+getPictDate = \ -> {
+  pictDateOp = dic.get(read(), fPictDate);
+  if (!!pictDateOp) return math.ftoi(pictDateOp!);
+  return time.now();
+};
+
+/// Returns the selected pictures group.
+/// Default "0"
+/// \ -> s
+getPictsGroup = \ -> {
+  groupOp = dic.get(read(), fPictsGroup);
+  return !groupOp ? "0" : groupOp!;
+};
+
+/// Returns the selected pictures page.
+/// Default 0
+/// \ -> i
+getPictsPage = \ -> {
+  pageOp = dic.get(read(), fPictsPage);
+  return !pageOp ? 0 : math.ftoi(pageOp!);
+};
+
+/// Returns the selected pinup.
+/// Default ""
+/// \ -> s
+getPinup = \ -> {
+  pinupOp = dic.get(read(), fPinup);
+  return !pinupOp ? "" : pinupOp!;
+};
+
+/// Returns the date of selected pinup.
+/// Default current date-time.
+/// \ -> i
+getPinupDate = \ -> {
+  dateOp = dic.get(read(), fPinupDate);
+  if (!!dateOp) return math.ftoi(dateOp!);
+  return time.now();
+};
+
+/// Returns the selected pinup group.
+/// Default 0
+/// \ -> i
+getPinupsGroup = \ -> {
+  groupOp = dic.get(read(), fPinupsGroup);
+  return !groupOp ? 0 : math.ftoi(groupOp!);
+};
+
+/// Returns the selected pinups page.
+/// Default 0
+/// \ -> i
+getPinupsPage = \ -> {
+  pageOp = dic.get(read(), fPinupsPage);
+  return !pageOp ? 0 : math.ftoi(pageOp!);
+};
+
+/// Returns the songs selected group
+/// Default ""
+/// \ -> s
+getSongGroup = \ -> {
+  groupOp = dic.get(read(), fSongGroup);
+  return !!groupOp & groupOp! != "" ? groupOp! : "";
+};
+
+/// Returns the selected song (for relaxing).
+/// Default ""
+/// \ -> s
+getSong = \ -> {
+  songOp = dic.get(read(), fSong);
+  return !!songOp & songOp! != "" ? songOp! : "";
+};
+
+/// Returns the selected group in songs management.
+/// Default ""
+/// \ -> s
+getSongsGroup = \ -> {
+  groupOp = dic.get(read(), fSongsGroup);
+  return !groupOp ? "" : groupOp!;
+};
+
+/// Returns the selected song for songs management.
+/// Default ""
+/// \ -> s
+getSongsSong = \ -> {
+  songOp = dic.get(read(), fSongsSong);
+  return !songOp ? "" : songOp!;
+};
+
+/// Returns the dance management selected group
+/// Default ""
+/// \ -> s
+getDanceManagementGroup = \ -> {
+  groupOp = dic.get(read(), fDanceManagementGroup);
+  return !groupOp ? "" : groupOp!;
+};
+
+/// Returns the dance selector selected group
+/// Default ""
+/// \ -> s
+getDanceSelectorGroup = \ -> {
+  groupOp = dic.get(read(), fDanceSelectorGroup);
+  return !groupOp ? "" : groupOp!;
+};
+
+/// Returns time to show a picture (minutes).
+/// Default 1
+/// \ -> i
+getPictTime = \ -> {
+  valueOp = dic.get(read(), pictTime);
+  return !valueOp ? 1 : math.ftoi(valueOp!);
+};
+
+/// Returns time to show a pinup (savedTime x cts.minPinupTime minutes)
+/// Default 1
+/// \ -> i
+getPinupTime = \ -> {
+  :dic Table = read();
+  levelV = [1];
+  idOp = Table.get(fPinup);
+  if (!!idOp) {
+    pOp = arr.find(pinupsTb.read(), \:pict pic -> return pic.id == idOp!;);
+    if (!!pOp) {
+      :pict p = pOp!;
+      levelV! = p.level;
+    }
+  }
+  return cts.minPinupTime + levelV!;
+};
+
+/// Returns duration time of short dance (minutes).
+/// Default 15
+/// \ -> i
+getShortDanceTime = \ -> {
+  valueOp = dic.get(read(), shortDanceTime);
+  return !valueOp ? 15 : math.ftoi(valueOp!);
+};
+
+/// Returns duration time of long dance (minutes).
+/// Default 45
+/// \ -> i
+getLongDanceTime = \ -> {
+  valueOp = dic.get(read(), longDanceTime);
+  return !valueOp ? 45 : math.ftoi(valueOp!);
+};
+
+/// Returns the current radio path index.
+/// Default 0
+/// \ -> i
+getRadioIx = \ -> {
+  valueOp = dic.get(read(), radioIx);
+  return !valueOp ? 0 : math.ftoi(valueOp!);
+};
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+// \s, * -> ()
+write = \key, value -> {
+  Selections = read();
+  dic.put(Selections, key, value);
+  file.write(fpath, js.w(Selections));
+};
+
+/// Set the selected group.
+/// \s -> ()
+setGroup = \group -> write(fGroup, group);;
+
+/// Set the selected picture.
+/// \s -> ()
+setPict = \pict -> write(fPict, pict);;
+
+/// Set the date of selected picture.
+/// \i -> ()
+setPictDate = \date -> write(fPictDate, date);;
+
+/// Set the selected pictures group.
+/// \s -> ()
+setPictsGroup = \group -> write(fPictsGroup, group);;
+
+/// Set the selected pictures page.
+/// \i -> ()
+setPictsPage = \page -> write(fPictsPage, math.itof(page));;
+
+/// Set the selected pinup.
+/// \s -> ()
+setPinup = \pict -> write(fPinup, pict);;
+
+/// Set the date of selected pinup.
+/// \i -> ()
+setPinupDate = \date -> write(fPinupDate, date);;
+
+/// Set the selected pinups group.
+/// \i -> ()
+setPinupsGroup = \group -> write(fPinupsGroup, group);;
+
+/// Set the selected pinups page.
+/// \i -> ()
+setPinupsPage = \page -> write(fPinupsPage, math.itof(page));;
+
+/// Set the selected song group (for relaxing).
+/// \s -> ()
+setSongGroup = \group -> write(fSongGroup, group);;
+
+/// Set the selected song (for relaxing).
+/// \s -> ()
+setSong = \ssong -> write(fSong, ssong);;
+
+/// Set the selected group for songs management.
+/// \ -> ()
+setSongsGroup = \group -> write(fSongsGroup, group);;
+
+/// Set the selected song for songs management.
+/// \s -> ()
+setSongsSong = \ssong -> write(fSongsSong, ssong);;
+
+/// Set the dance management selected group
+/// \s -> ()
+setDanceManagementGroup = \group -> write(fDanceManagementGroup, group);;
+
+/// Set the dance selector selected group
+/// \s -> ()
+setDanceSelectorGroup = \group -> write(fDanceSelectorGroup, group);;
+
+/// Set the time to show a picture (minutes).
+/// \i -> ()
+setPictTime = \value -> write(pictTime, math.itof(value));;
+
+/// Set the time to show a picture (minutes).
+/// \i -> ()
+setShortDanceTime = \value -> write(shortDanceTime, math.itof(value));;
+
+/// Set the time to show a picture (minutes).
+/// \i -> ()
+setLongDanceTime = \value -> write(longDanceTime, math.itof(value));;
+
+/// Set the next radio index.
+/// \ -> ()
+nextRadioIx = \ -> {
+  ix = getRadioIx() + 1;
+  if (ix >= arr.size(cts.Radios)) write(radioIx, math.itof(0));
+  else write(radioIx, math.itof(ix));
+};

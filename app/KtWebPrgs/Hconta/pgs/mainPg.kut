@@ -6,11 +6,11 @@
 import "KtWeb/rp";
 import "db";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "read": {
-      :: DbData = db.readData();
+      DbData = db.readData();
       return rp.mk({
         timeStamp: DbData.timeStamp,
         year:      DbData.year,

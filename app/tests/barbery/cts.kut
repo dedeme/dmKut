@@ -4,6 +4,6 @@
 ///
 clockTime = 40000;
 ///
-clientMakerTime = 5000;
+clientMakerTime = 2500;
 ///
 barberTime = 3000;

@@ -24,7 +24,7 @@ run = \id -> {
         "--info",
         "--width=400",
         '--title=alarmClock',
-        '--text=Alarma de las ' + time.format(a.tm, "%t")[:5]
+        '--text=Alarma de las ' + time.fmt(a.tm, "%t")[:5]
       ]);
     }
   }

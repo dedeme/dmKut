@@ -8,5 +8,6 @@
 ///   title   : Page title or "".
 ///   numbered: 'true' if headers '##' should be numbered.
 ///   withUp  : 'true' if an up arrow is shown.
-///   withDown: 'true' if an down arrow is shown./// \s,s,b,b,b -> <meta>
+///   withDown: 'true' if an down arrow is shown.
+/// \s,s,b,b,b -> <meta>
 new : fpage, title, numbered, withUp, withDown;

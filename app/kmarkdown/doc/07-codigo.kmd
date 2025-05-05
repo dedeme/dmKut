@@ -17,11 +17,11 @@ Se pueden presentar recuadros con código utilizando la siguiente sintaxis:
 ``kmd
 Código en javascript:
 
-&#x0060;&#x0060;javascript
+``javascript
 function sum3(a) {
   return a + 3;
 }
-&#x0060;&#x0060;``
+``   ``
 
 Produce:
 
@@ -39,42 +39,18 @@ function sum3(a) {
 _NOTA:_
 
 _Escribir texto en la misma línea detrás de las marcas de cierre ``&#x0060;&#x0060;``
-es un error; pero escribirlo en la siguiente línea no._
+es un error._
 
 Esto es un error:
 
 ``kmd
 Código en javascript:
 
-&#x0060;&#x0060;javascript
-function sum3(a) {
-  return a + 3;
-}
-&#x0060;&#x0060; Esto es un error``
-
-Esto no es un error:
-
-``kmd
-Código en javascript:
-
-&#x0060;&#x0060;javascript
-function sum3(a) {
-  return a + 3;
-}
-&#x0060;&#x0060;
-Esto no es un error``
-
-Produce:
-
-``<div style="color:#404080">``
-
 ``javascript
 function sum3(a) {
   return a + 3;
-}``
-Esto no es un error
-
-``</div>``
+}
+`` Esto es un error``
 
 ## Requisitos
 
@@ -100,7 +76,7 @@ generado automáticamente por kmarkdown
 # Lenguaje
 
 Los lenguajes disponibles se encuentra en el dírectorio *"ace"* con nombres
-tipo ``<code>mode-<i>lenguaje</i>.js</code>``. Por ejemplo *mode-c_cpp.js*
+tipo ``<code>mode-<i>lenguaje</i>.js</code>``. Por ejemplo *mode-c__cpp.js*
 se corresponde con los lenguajes 'c' y 'c++', *mode-javascript-js* con el
 lenguaje 'javascript', etc.
 

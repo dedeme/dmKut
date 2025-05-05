@@ -1,0 +1,12 @@
+// Copyright 11-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Quotes server data ELECO ("El Economista").
+
+import "../qsv";
+
+/// Constructor.
+/// \-> <qsv>
+new = \-> return qsv.new(
+  "ELECO", "El Economista", qsv.undef, qsv.undef, qsv.undef
+);;

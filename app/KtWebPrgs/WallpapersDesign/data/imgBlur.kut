@@ -1,15 +1,14 @@
-// Copyright 22-Dic-2022 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Image 'blur' data
 
-/// Creates new 'blur' parameters.
+/// Constructor.
 ///   ratio: Value between 0 and 100 (both inclusive).
-/// \i -> d<imgBlur>
-new = \ratio -> return {ratio};;
+/// \i -> <imgBlur>
+new : ratio;
 
-/// \<imgBlur> -> *(JS)
-toJs = \IB -> return math.itof(IB.ratio);;
-
-/// \*(JS) -> <imgBlur>
-fromJs = \j -> return new (math.ftoi(j));;
+/// \[*.] -> <imgBlur>
+fromJs = \A -> return [
+    math.ftoi(A[ratio])
+  ];;

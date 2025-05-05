@@ -7,7 +7,7 @@ import "KtWeb/rp";
 import "poolDb/poolDb";
 import "fns";
 
-/// \{*.} -> ()
+/// \{*.} -> s
 process = \Rq -> {
   rq = Rq.rq;
   switch (rq) {

@@ -1,0 +1,378 @@
+// Copyright 28-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+{
+  sys.println("tarr ...");
+
+  // sys.test([][1], 1);
+
+  sys.test([1, 2, 3][0], 1);
+  sys.test([1, 2, 3][1], 2);
+  sys.test([1, 2, 3][2], 3);
+
+  sys.test([]/i/[1:], []/i/);
+  sys.test([]/i/[1:100], []/i/);
+  sys.test([]/i/[:], []/i/);
+
+  sys.test([1, 2, 3][2:1], []/i/);
+  sys.test([1, 2, 3][:0], []/i/);
+  sys.test([1, 2, 3][:1], [1]);
+  sys.test([1, 2, 3][:3], [1, 2, 3]);
+  sys.test([1, 2, 3][:-3], []/i/);
+  sys.test([1, 2, 3][:-2], [1]);
+  sys.test([1, 2, 3][:-1], [1, 2]);
+  sys.test([1, 2, 3][0:], [1, 2, 3]);
+  sys.test([1, 2, 3][1:], [2, 3]);
+  sys.test([1, 2, 3][3:], []/i/);
+  sys.test([1, 2, 3][-3:], [1, 2, 3]);
+  sys.test([1, 2, 3][-2:], [2, 3]);
+  sys.test([1, 2, 3][-1:], [3]);
+  sys.test([1, 2, 3][0:2], [1, 2]);
+  sys.test([1, 2, 3][1:2], [2]);
+  sys.test([1, 2, 3][1:1], []/i/);
+  sys.test([1, 2, 3][-3:-1], [1, 2]);
+  sys.test([1, 2, 3][-2:-1], [2]);
+  sys.test([1, 2, 3][-2:-2], []/i/);
+  sys.test([1, 2, 3][:], [1, 2, 3]);
+
+  A3 = [1, 2, 3];
+  sys.test(A3[:1] + A3[2:], [1, 3]);
+
+  sys.test(arr.all([]/i/, \i -> return i < 3;), true);
+  sys.test(arr.all([0, 1, 2], \i -> return i < 3;), true);
+  sys.test(!arr.all([0, 1, 2, 4, 5], \i -> return i < 3;), true);
+
+  sys.test(!arr.any([]/i/, \i -> return i < 3;), true);
+  sys.test(arr.any([0, 1, 2], \i -> return i < 3;), true);
+  sys.test(arr.any([0, 1, 2, 4, 5], \i -> return i == 4;), true);
+  sys.test(!arr.any([0, 1, 2, 4, 5], \i -> return i == 3;), true);
+
+  A0 = []/i/;
+  arr.cat(A0, A0);
+  sys.test(A0, []/i/);
+
+  arr.cat(A0, A3);
+  sys.test(A3, [1, 2, 3]);
+
+  arr.cat(A0, A0);
+  sys.test(A0, [1, 2, 3, 1, 2, 3]);
+
+  arr.clear(A0);
+  sys.test(A0, []/i/);
+
+  arr.push(A0, 1);
+  sys.test(A0, [1]);
+  arr.clear(A0);
+  sys.test(A0, []/i/);
+
+  A1 = [1];
+  sys.test(arr.copy(A0), A0);
+  sys.test(arr.copy(A1), A1);
+  sys.test(arr.copy(A3), A3);
+  A0c = arr.copy(A0);
+  arr.push(A0c, 1);
+  sys.test(A0c, [1]);
+  sys.test(A0, []/i/);
+  A3c = arr.copy(A3);
+  arr.push(A3c, 1);
+  sys.test(A3c, [1, 2, 3, 1]);
+  sys.test(A3, [1, 2, 3]);
+
+  sys.test(arr.drop(A0, -1), A0);
+  sys.test(arr.drop(A0, 2), A0);
+  sys.test(arr.drop(A0, 200), A0);
+
+  sys.test(arr.drop(A1, -1), A1);
+  sys.test(arr.drop(A1, 2), A0);
+  sys.test(arr.drop(A1, 200), A0);
+
+  sys.test(arr.drop(A3, -1), A3);
+  sys.test(arr.drop(A3, 2), [3]);
+  sys.test(arr.drop(A3, 200), A0);
+
+  sys.test(arr.drop([]/i/, 2), []/i/);
+  sys.test(arr.drop(["a"], 2), []/s/);
+  sys.test(arr.drop([0, 1, 2, 3, 4], 2), [2, 3, 4]);
+  sys.test(arr.drop([0, 1, 2, 3, 4], -2), [0, 1, 2, 3, 4]);
+
+  //: [ii|b]
+  ffpred = \e, n -> return e <= n;;
+  sys.test(arr.dropWhile(A0, \e -> return ffpred(e, -1);), A0);
+  sys.test(arr.dropWhile(A0, \e -> return ffpred(e, 2);), A0);
+  sys.test(arr.dropWhile(A0, \e -> return ffpred(e, 200);), A0);
+
+  sys.test(arr.dropWhile(A1, \e -> return ffpred(e, -1);), A1);
+  sys.test(arr.dropWhile(A1, \e -> return ffpred(e, 2);), A0);
+  sys.test(arr.dropWhile(A1, \e -> return ffpred(e, 200);), A0);
+
+  sys.test(arr.dropWhile(A3, \e -> return ffpred(e, -1);), A3);
+  sys.test(arr.dropWhile(A3, \e -> return ffpred(e, 2);), [3]);
+  sys.test(arr.dropWhile(A3, \e -> return ffpred(e, 200);), A0);
+
+  sys.test(arr.dropWhile([]/s/, \s -> return s == "a";), []/s/);
+  sys.test(arr.dropWhile(["a"], \s -> return s == "a";), []/s/);
+  sys.test(arr.dropWhile([0, 1, 2, 3, 4], \i -> return i < 2;), [2, 3, 4]);
+  sys.test(arr.dropWhile([0, 1, 2, 3, 4], \i -> return i > 2;), [0, 1, 2, 3, 4]);
+
+  D0 = arr.duplicates([]/i/, \i1, i2 -> return i1 == i2;);
+  sys.test(!D0[0] & !D0[1], true);
+  D1 = arr.duplicates([1,2,3], \i1, i2 -> return i1 == i2;);
+  sys.test(D1[0] == [1, 2, 3] & !D1[1], true);
+  D2 = arr.duplicates([1,2,1,3,2, 2, 1], \i1, i2 -> return i1 == i2;);
+  sys.test(D2[0] == [1, 2, 3] & D2[1] == [1, 2], true);
+
+  Sum = [0];
+  arr.each([]/i/, \e -> Sum! += e;);
+  sys.test(Sum!, 0);
+  arr.each([1], \e -> Sum! += e;);
+  sys.test(Sum!, 1);
+  Sum! = 0;
+  arr.each([1, 2, 3], \e -> Sum! += e;);
+  sys.test(Sum!, 6);
+
+  Sum! = 0;
+  SumIx = [0];
+  arr.eachIx([]/i/, \e, i -> { Sum! += e; SumIx! += i; });
+  sys.test(Sum!, 0);
+  sys.test(SumIx!, 0);
+  arr.eachIx([1], \e, i -> { Sum! += e; SumIx! += i; });
+  sys.test(Sum!, 1);
+  sys.test(SumIx!, 0);
+  Sum! = 0;
+  arr.eachIx([1, 2, 3], \e, i -> { Sum! += e; SumIx! += i; });
+  sys.test(Sum!, 6);
+  sys.test(SumIx!, 3);
+
+  sys.test(arr.filter([]/i/, \i -> return i % 2 == 0;), []/i/);
+  sys.test(arr.filter([0, 1, 2, 3, 4], \i -> return i % 2 == 0;), [0, 2, 4]);
+  sys.test(arr.filter([0, 1, 2, 3, 4], \i -> return i % 2 != 0;), [1, 3]);
+  sys.test(arr.filter([0, 1, 2, 3, 4], \i -> return i > 1000;), []/i/);
+
+  AF = []/i/;
+  arr.filterIn([]/i/, \i -> return i % 2 == 0;);
+  sys.test(AF, []/i/);
+  AF2 = [0, 1, 2, 3, 4];
+  arr.filterIn(AF2, \i -> return i % 2 == 0;);
+  sys.test(AF2, [0, 2, 4]);
+  AF3 = [0, 1, 2, 3, 4];
+  arr.filterIn(AF3, \i -> return i % 2 != 0;);
+  sys.test(AF3, [1, 3]);
+  AF4 = [0, 1, 2, 3, 4];
+  arr.filterIn(AF4, \i -> return i > 1000;);
+  sys.test(AF4, []/i/);
+
+  sys.test(arr.find([]/i/, \i -> return i == 3;), []/i/);
+  sys.test(arr.find([0, 1, 2, 3, 4], \i -> return i == 3;), [3]);
+  sys.test(arr.find([0, 1, 2, 3, 4], \i -> return i == -100;), []/i/);
+
+//  sys.test(arr.fromIter(iter.empty()), []);
+//  sys.test(arr.fromIter([0:4]), [0, 1, 2, 3]);
+
+  sys.test(arr.index([]/i/, \i -> return i < 3;), -1);
+  sys.test(arr.index([0, 1, 2], \i -> return i < 3;), 0);
+  sys.test(arr.index([0, 1, 2, 4, 5], \i -> return i == 4;), 3);
+  sys.test(arr.index([0, 1, 2, 4, 5], \i -> return i == 3;), -1);
+
+  AI0 = []/i/;
+  arr.insert(AI0, 0, 2);
+  sys.test(AI0, [2]);
+  AI1 = [0,0,0];
+  arr.insert(AI1, 1, 2);
+  sys.test(AI1, [0,2,0,0]);
+
+  AIa0 = []/i/;
+  arr.insertArr(AIa0, 0, [2, 200]);
+  sys.test(AIa0, [2, 200]);
+  AIa1 = [0,0,0];
+  arr.insertArr(AIa1, 1, [2, 200]);
+  sys.test(AIa1, [0,2,200,0,0]);
+  arr.insertRange(AIa1, 2, [1, 2, 200, 2001], 4, 4);
+  sys.test(AIa1, [0,2,200,0,0]);
+  arr.insertRange(AIa1, 2, [1, 2, 200, 2001], 1, 3);
+  sys.test(AIa1, [0,2,2,200,200,0,0]);
+
+  sys.test(arr.join([], "-"), "");
+  sys.test(arr.join(["a"], "-"), "a");
+  sys.test(arr.join(["a", "b", "c"], "-"), "a-b-c");
+
+  sys.test(arr.map([]/i/, \e -> return e * 2;), []/i/);
+  sys.test(arr.map([1], \e -> return e * 2;), [2]);
+  sys.test(arr.map([1, 2, 3], \e -> return e * 2;), [2, 4, 6]);
+
+  sys.test(arr.map([1], math.itos), ["1"]);
+  sys.test(arr.map([1, 2, 3], math.itos), ["1", "2", "3"]);
+
+  AN0 = arr.new("a", 0);
+  sys.test(!AN0, true);
+  ANB = arr.new(true, 2);
+  sys.test(ANB, [true, true]);
+  ANI = arr.new(1, 2);
+  sys.test(ANI, [1, 1]);
+  ANI[1] = 76;
+  sys.test(ANI, [1, 76]);
+  ANF = arr.new(2.4, 2);
+  sys.test(ANF, [2.4, 2.4]);
+  ANS = arr.new("a", 2);
+  sys.test(ANS, ["a","a"]);
+
+  sys.test(arr.peek([1]), 1);
+  sys.test(arr.peek([1]), 1);
+  sys.test(arr.peek([1, 2, 3]), 3);
+  sys.test(arr.peek([1, 2, 3]), 3);
+
+  Apop = [1];
+  sys.test(arr.pop(Apop), 1);
+  sys.test(!Apop, true);
+  Apop3 = [1, 2, 3];
+  sys.test(arr.pop(Apop3), 3);
+  sys.test(arr.pop(Apop3), 2);
+
+  sys.test(arr.reduce([]/i/, 0, \r, e -> return r + e;), 0);
+  sys.test(arr.reduce([1, 2, 3], 6, \r, e -> return r - e;), 0);
+  sys.test(arr.reduce([1, 2, 3], 0, \seed, e -> return seed + e;), 6);
+
+  A1! = 2;
+  sys.test(arr.remove(A1, 0), 2);
+  sys.test(!A1, true);
+  arr.insertArr(A1, 0, [1, 2, 3, 4]);
+  sys.test(arr.removeRange(A1, 2, 3), [3]);
+  sys.test(A1, [1, 2, 4]);
+  sys.test(arr.removeRange(A1, 1, 3), [2, 4]);
+  sys.test(arr.removeRange(A1, 0, 0), []/i/);
+  sys.test(arr.removeRange(A1, 0, 1), [1]);
+  sys.test(!A1, true);
+  arr.push(A1, 222);
+
+  sys.test(!arr.reverse(A0), true);
+  arr.reverseIn(A0);
+  sys.test(!A0, true);
+
+  A1! = 2;
+  sys.test(arr.reverse(A1), [2]);
+  arr.reverseIn(A1);
+  sys.test(A1, [2]);
+
+  A3b = [1, 2, 3];
+  sys.test(arr.reverse(A3b), [3, 2, 1]);
+  arr.reverseIn(A3b);
+  sys.test(A3b, [3, 2, 1]);
+
+  Aset = [1, 2, 3, 4];
+  Aset.setArr(1, []);
+  sys.test(Aset, [1, 2, 3, 4]);
+  Aset.setArr(1, [101, 102, 103]);
+  sys.test(Aset, [1, 101, 102, 103]);
+  Aset.setRange(1, [201, 202, 203], 2, 2);
+  sys.test(Aset, [1, 101, 102, 103]);
+  Aset.setRange(0, [201, 202, 203], 1, 3);
+  sys.test(Aset, [202, 203, 102, 103]);
+
+  Ashift = [1];
+  sys.test(arr.shift(Ashift), 1);
+  sys.test(!Ashift, true);
+  Ashift3 = [1, 2, 3];
+  sys.test(arr.shift(Ashift3), 1);
+  sys.test(arr.shift(Ashift3), 2);
+
+  //arr.shuffle(A3b);
+  //sys.println(A3b);
+
+  arr.sort(A0, \e1, e2 -> return e1 < e2;);
+  sys.test(!A0, true);
+  arr.sort(A1, \e1, e2 -> return e1 < e2;);
+  sys.test(A1, [2]);
+  arr.sort(A3, \e1, e2 -> return e1 > e2;);
+  sys.test(A3, [3, 2, 1]);
+  arr.sort(A3, \e1, e2 -> return e1 < e2;);
+  sys.test(A3, [1, 2, 3]);
+  arr.sort(Aset, \e1, e2 -> return e1 > e2;);
+  sys.test(Aset, [203, 202, 103, 102]);
+  arr.sort(Aset, \e1, e2 -> return e1 < e2;);
+  sys.test(Aset, [102, 103, 202, 203]);
+  Aset2 = Aset + Aset;
+  //sys.println(Aset2);
+  arr.shuffle(Aset2);
+  //sys.println(Aset2);
+  arr.sort(Aset2, \e1, e2 -> return e1 > e2;);
+  sys.test(Aset2, [203,203,202,202,103,103,102,102]);
+
+  sys.test(arr.take(A0, -1), A0);
+  sys.test(arr.take(A0, 2), A0);
+  sys.test(arr.take(A0, 200), A0);
+
+  sys.test(arr.take(A1, -1), A0);
+  sys.test(arr.take(A1, 2), A1);
+  sys.test(arr.take(A1, 200), A1);
+
+  sys.test(arr.take(A3, -1), A0);
+  sys.test(arr.take(A3, 2), [1, 2]);
+  sys.test(arr.take(A3, 200), A3);
+
+  sys.test(arr.take([]/i/, 2), []/i/);
+  sys.test(arr.take(["a"], 2), ["a"]);
+  sys.test(arr.take([0, 1, 2, 3, 4], 2), [0, 1]);
+  sys.test(arr.take([0, 1, 2, 3, 4], -2), []/i/);
+
+  sys.test(arr.takeWhile(A0, \e -> return ffpred(e, -1);), A0);
+  sys.test(arr.takeWhile(A0, \e -> return ffpred(e, 2);), A0);
+  sys.test(arr.takeWhile(A0, \e -> return ffpred(e, 200);), A0);
+
+  sys.test(arr.takeWhile(A1, \e -> return ffpred(e, -1);), A0);
+  sys.test(arr.takeWhile(A1, \e -> return ffpred(e, 2);), A1);
+  sys.test(arr.takeWhile(A1, \e -> return ffpred(e, 200);), A1);
+
+  sys.test(arr.takeWhile(A3, \e -> return ffpred(e, -1);), A0);
+  sys.test(arr.takeWhile(A3, \e -> return ffpred(e, 2);), [1, 2]);
+  sys.test(arr.takeWhile(A3, \e -> return ffpred(e, 200);), A3);
+
+  sys.test(arr.takeWhile([]/s/, \s -> return s == "a";), []/s/);
+  sys.test(arr.takeWhile(["a"], \s -> return s == "a";), ["a"]);
+  sys.test(arr.takeWhile([0, 1, 2, 3, 4], \i -> return i < 2;), [0, 1]);
+  sys.test(arr.takeWhile([0, 1, 2, 3, 4], \i -> return i > 2;), []/i/);
+
+  sys.test(arr.fromIter(arr.toIter(A0)), A0);
+  sys.test(arr.fromIter(arr.toIter(A1)), A1);
+  sys.test(arr.fromIter(arr.toIter(A3)), A3);
+
+  arr.clear(A3);
+  arr.unshift(A3, 3);
+  arr.unshift(A3, 2);
+  arr.unshift(A3, 1);
+  sys.test(A3, [1, 2, 3]);
+
+  sys.test(arr.unzip([]/[.is]/), [. []/i/, []/s/]);
+  sys.test(
+    arr.unzip([[. 1, "a"], [. 2, "b"]]),
+    [. [1, 2], ["a", "b"]]
+  );
+  sys.test(arr.unzip3([]/[.isf]/), [. []/i/, []/s/, []/f/]);
+  sys.test(
+    arr.unzip3([[. 1, "a", 1.5], [. 2, "b", 2.6]]),
+    [. [1, 2], ["a", "b"], [1.5, 2.6]]
+  );
+
+  sys.test(arr.zip([]/i/, []/s/), []/[.is]/);
+  sys.test(
+    arr.zip([1, 2], ["a", "b", "c"]),
+    [[. 1, "a"], [. 2, "b"]]
+  );
+  sys.test(
+    arr.zip([1, 2, 3], ["a", "b"]),
+    [[. 1, "a"], [. 2, "b"]]
+  );
+  sys.test(arr.zip3([]/i/, []/s/, []/f/), []/[.isf]/);
+  sys.test(
+    arr.zip3([1, 2], ["a", "b", "c"], [1.5, 2.6]),
+    [[. 1, "a", 1.5], [. 2, "b", 2.6]]
+  );
+  sys.test(
+    arr.zip3([1, 2, 3], ["a", "b"], [1.5, 2.6]),
+    [[. 1, "a", 1.5], [. 2, "b", 2.6]]
+  );
+  sys.test(
+    arr.zip3([1, 2], ["a", "b"], [1.5, 2.6, 1.0, 1.0]),
+    [[. 1, "a", 1.5], [. 2, "b", 2.6]]
+  );
+
+  sys.println("  finished.");
+}

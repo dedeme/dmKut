@@ -1,0 +1,11 @@
+// Copyright 02-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Import data.
+
+/// Constructor.
+///   ln   : Line number of definition statement.
+///   mpath: Relative user module path (without .ktt).
+///   id   : Unique indentifier.
+/// \i,s,s -> <imp>
+new : ln, mpath, id;

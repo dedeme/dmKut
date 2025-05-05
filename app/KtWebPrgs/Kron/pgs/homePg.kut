@@ -8,14 +8,14 @@ import "KtWeb/rp";
 import "db";
 import "cts";
 
-/// \m -> ()
+/// \{*.} -> s
 process = \Rq -> {
   switch (Rq.rq) {
     "idata": {
       R = sys.cmd2("ps", ["-x"]);
       isActive = str.index(
         R!,
-        "kut2 /dm/dmKut/app/KtWebPrgs/Kron/main start"
+        "kut /dm/dmKut/app/KtWebPrgs/Kron/main start"
       ) != -1;
       return rp.mk({isActive});
     }

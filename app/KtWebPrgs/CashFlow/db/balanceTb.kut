@@ -8,7 +8,7 @@
 mk = \ypath -> writeJs(ypath, js.w(0.0));;
 
 /// \s -> s
-readJs = \ypath -> return file.read(path.cat([ypath, "balance.tb"]));;
+readJs = \ypath -> return file.read(file.cat([ypath, "balance.tb"]));;
 
 /// \s, s -> ()
-writeJs = \ypath, jsStr -> file.write(path.cat([ypath, "balance.tb"]), jsStr);;
+writeJs = \ypath, jsStr -> file.write(file.cat([ypath, "balance.tb"]), jsStr);;

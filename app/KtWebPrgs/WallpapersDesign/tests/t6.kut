@@ -1,9 +1,9 @@
-// Copyright 22-Dic-2022 ºDeme
+// Copyright 01-May-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 import "art";
 import "db";
-import "data/cts";
+import "cts";
 
 ///
 run = \-> {
@@ -11,7 +11,7 @@ run = \-> {
 
   D1 = [];
   for (i = 0:9) {
-    L = file.dir(path.cat([cts.adjustedArchivePath, math.itos(i)]));
+    L = file.dir(file.cat([cts.adjustedArchivePath, math.itos(i)]));
     arr.push(D1, L[math.rndi(arr.size(L))]);
   }
   D2 = ["-xxx.jpg", "--xxx.jpg", "---xxx.jpg"];

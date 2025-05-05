@@ -20,7 +20,7 @@ newNow = \activity -> return new(time.now(), activity);;
 /// \ -> <activity>
 newDefault = \->  return new(1652263649990, cts.sleeping);;
 
-/// \JS -> <activity>
+/// \[*.] -> <activity>
 fromJs = \A -> return [
     math.ftoi(A[tm]),
     A[activity]

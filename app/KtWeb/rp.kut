@@ -7,14 +7,14 @@ comKeyV = [""];
 
 /// Initialize responses.
 ///   comKey: Comunications key.
-///:\s -> ()
+/// \s -> ()
 init = \comKey -> comKeyV! = comKey;;
 
 /// Returns a generic response to send to client.
 ///   Rp: Response. It is a 'JSONizable' normal object.
 ///       Example of reponse:
 ///        {"error": msg}
-/// \JS -> s
+/// \* -> s
 mk = \Rp -> return cryp.encode(comKeyV!, js.w(Rp));;
 
 /// Returns a generic response to send to client.
@@ -25,7 +25,7 @@ mk = \Rp -> return cryp.encode(comKeyV!, js.w(Rp));;
 mkJs = \Rp -> return cryp.encode(comKeyV!, js.wo(Rp));;
 
 /// Returns an empty response.
-/// \-> s
+/// \ -> s
 mkEmpty = \ -> return mkJs({});;
 
 /// Returns a "data base out of date" response:

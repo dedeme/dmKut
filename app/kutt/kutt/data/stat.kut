@@ -1,0 +1,228 @@
+// Copyright 19-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Statement data (Immutable object).
+/// NOTE: There are stat.error (+ message) and stat.eof.
+
+import "exp";
+import "type";
+
+/// Expression types
+/// i
+error,
+indexed, assign, multiAssign,
+addAs, subAs, mulAs, divAs, modAs, andAs, orAs,
+function, block, closeBlock,
+bbreak, ccontinue, rreturn, tthrow,
+ttrace,
+wwhile, iif, sswitch,
+ffor, forRange,
+ttry,
+importSt =;
+
+
+/// Constructor. Do not use directly. Use mk... functions.
+///   ln: Line number.
+///   tp : type
+///   val: C or auxiliar values
+/// \i, i, [*] -> <stat>
+XnewX : ln, tp, value;
+
+/// Statement constuctor
+/// \i, s -> <stat>
+mkError = \ln, msg -> return [ln, error, msg];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   tp: Type (tuple)
+///   fn: Function name.
+///   Pars: Parameters name.
+/// \i, <type>, s, [s.] -> <stat>
+mkIndexed = \ln, tp, fn, Pars  -> return [ln, indexed, [tp, fn, Pars]];;
+
+/// Statement constuctor
+///   ln   : Line number.
+///   symSq: Expression of type symbol or square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkAssign = \ln, symSq, value -> return [ln, assign, [symSq, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   syms: No empty sumbols list. Elements not assigned have "" value. Every
+///         symbol of 'syms' must not be "".
+///   value: Tuple expression.
+/// \i, [s.], <exp> -> <stat>
+mkMultiAssign = \ln, syms, value -> return [ln, multiAssign, [syms, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkAddAs = \ln, var, value -> return [ln, addAs, [var, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkSubAs = \ln, var, value -> return [ln, subAs, [var, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkMulAs = \ln, var, value -> return [ln, mulAs, [var, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkDivAs = \ln, var, value -> return [ln, divAs, [var, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkModAs = \ln, var, value -> return [ln, modAs, [var, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkAndAs = \ln, var, value -> return [ln, andAs, [var, value]];;
+
+/// Statement constuctor
+///   ln: Line number.
+///   var: Expression type square.
+///   value: Expression to assign.
+/// \i, <exp>, <exp> -> <stat>
+mkOrAs = \ln, var, value -> return [ln, orAs, [var, value]];;
+
+/// Statement constuctor.
+///   ln: Line number.
+///   fn: Parenthesis expression.
+/// \i, <exp> -> <stat>
+mkFunction = \ln, fn -> return [ln, function, fn];;
+
+/// Statement constuctor
+/// \i, [<stat>.] -> <stat>
+mkBlock = \ln, Sts -> return [ln, block, Sts];;
+
+/// Statement constuctor
+/// \i -> <stat>
+mkCloseBlock = \ln -> return [ln, closeBlock, ""];;
+
+/// Statement constuctor
+/// \i -> <stat>
+mkBreak= \ln -> return [ln, bbreak, ""];;
+
+/// Statement constuctor
+/// \i -> <stat>
+mkContinue = \ln -> return [ln, ccontinue, ""];;
+
+/// Statement constuctor.
+/// \i, ([<exp>]|[]) -> <stat>
+mkReturn = \ln, exOp -> return [ln, rreturn, exOp];;
+
+/// Statement constuctor.
+/// \i, <exp> -> <stat>
+mkThrow = \ln, ex -> return [ln, tthrow, ex];;
+
+/// Statement constuctor.
+/// \i, b, <exp> -> <stat>
+mkTrace = \ln, isComplete, ex -> return [ln, ttrace, [isComplete, ex]];;
+
+/// Statement constuctor.
+///   st: Statement of type Block.
+/// \i, [<exp>], <stat> -> <stat>
+mkWhile = \ln, condOp, st -> return [ln, wwhile, [condOp, st]];;
+
+/// Statement constuctor.
+///   stTrue : Statement of type Block.
+///   stFalse: Statement of type Block (It there is no 'else' clause, it is
+///            an empty block).
+/// \i, <exp>, <stat>, <stat> -> <stat>
+mkIf = \ln, cond, StsTrue, StsFalse ->
+  return [ln, iif, [cond, StsTrue, StsFalse]];;
+
+/// Statement constuctor.
+/// NOTE: The statement of entries is a block.
+/// \i, <exp>, [[[<exp>.], <stat>].] -> <stat>
+mkSwitch = \ln, var, Entries -> return [ln, sswitch, [var, Entries]];;
+
+/// Statement constuctor.
+///   st: Statement of type Block.
+/// \i, [s], s, <exp>, <stat> -> <stat>
+mkFor = \ln, ixOp, elem, cont, st ->
+  return [ln, ffor, [ixOp, elem, cont, st]];;
+
+/// Statement constuctor.
+///   st: Statement of type Block.
+/// \i, s, <exp>, <exp>, [<exp>], <stat> -> <stat>
+mkForRange = \ln, var, val1, val2, valOp, st ->
+  return [ln, forRange, [var, val1, val2, valOp, st]];;
+
+/// Statement constuctor.
+///   st       : Statement of type Block.
+///   stCatch  : Statement of type Block.
+///   stFinally: Statement of type Block (It there is no 'finally' clause, it is
+///              an empty block).
+/// \i, <stat>, s, <stat> -> <stat>
+mkTry = \ln, st, var, stCatch, stFinally ->
+  return [ln, ttry, [st, var, stCatch, stFinally]];;
+
+/// Statement constuctor.
+/// \i, s, ([s]|[]) -> <stat>
+mkImport = \ln, path, nameOp -> return [ln, importSt, [path, nameOp]];;
+
+/// \<stat> -> s
+toStr = \st -> {
+  v = st[value];
+  return switch (st[tp]) {
+    indexed: v[1] + ":" + type.toStr(v[0]) + arr.join(v[2], ",");
+    assign: exp.toStr(v[0]) + "=" + exp.toStr(v[1]);
+    multiAssign: arr.join(v[0], ",") + "=" + exp.toStr(v[1]);
+    addAs: exp.toStr(v[0]) + "+=" + exp.toStr(v[1]);
+    subAs: exp.toStr(v[0]) + "-=" + exp.toStr(v[1]);
+    mulAs: exp.toStr(v[0]) + "*=" + exp.toStr(v[1]);
+    divAs: exp.toStr(v[0]) + "/=" + exp.toStr(v[1]);
+    modAs: exp.toStr(v[0]) + "%=" + exp.toStr(v[1]);
+    andAs: exp.toStr(v[0]) + "&=" + exp.toStr(v[1]);
+    orAs: exp.toStr(v[0]) + "|=" + exp.toStr(v[1]);
+    function: exp.toStr(v);
+    block: "{\n" + arr.join(arr.map(v, \s -> return toStr(s);), "\n") + "\n}";
+    closeBlock: "}";
+    bbreak: "break";
+    ccontinue: "continue";
+    rreturn: "return" + (!v ? "" : " " + exp.toStr(v!));
+    ttrace: "trace" + (v[0] ? ":" : " ") + exp.toStr(v[1]);
+    wwhile: "while(" + (!v[0] ? "" : exp.toStr(v[0]!)) + ")" + toStr(v[1]);
+    iif: "if(" + exp.toStr(v[0]) + ")" + toStr(v[1]) +
+      (!v[2][exp.value] ? "" : "else " + toStr(v[2]));
+    sswitch: "switch(" + exp.toStr(v[0]) + "){" +
+      arr.join(arr.map(v[1],
+        \CsV -> return arr.join(arr.map(CsV[0],
+            \e -> return exp.toStr(e);), ","
+          ) + ":" + toStr(CsV[1]);
+       ), ";\n") +
+      "}";
+    ffor: "for(" + (!v[0] ? "" : v[0]! + ",") + v[1] + "=" +
+      exp.toStr(v[2]) + ")" + toStr(v[3]);
+    forRange: "for(" + v[0] + "=" + exp.toStr(v[1]) + ":" +
+      exp.toStr(v[2]) + (!v[3] ? "" : ":" + exp.toStr(v[3]!)) +
+      ")" + toStr(v[4]);
+    ttry: "try " + toStr(v[0]) + "catch(" + v[1] + ")" + toStr(v[2]) +
+      (!v[3][exp.value] ? "" : "finally" + toStr(v[3]));
+    importSt: "import " + js.w(v[0]) + (!v[1] ? "" : ":" + v[1]!);
+    default: sys.toStr(st[value]);
+  };
+};
+
+/// \<stat> -> s
+toEStr = \st -> return str.fromRunes(arr.take(str.toRunes(toStr(st)), 50));;

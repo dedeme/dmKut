@@ -1,0 +1,18 @@
+// Copyright 30-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Module record.
+
+import "typedSym";
+import "data/imp";
+
+/// Constructor.
+///   path    : Canonical path.
+///   id      : Identifier.
+///   Imports : Imports dictionary {UserName::ImportData}.
+///   Exports : Symbols exported. Only are exportable.
+///               - Functions.
+///               - Booleans, integers, floats and strings literals.
+///   TypeDefs: Type definitions {identifer::type}
+/// \s,s,{<imp>.},[<typedSym>.],{<type>.} -> <mdRc>
+new : path, id, Imports, Exports, TypeDefs;

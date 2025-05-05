@@ -1,0 +1,35 @@
+// Copyright 28-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+{
+  sys.println("tbytes ...");
+
+  sys.test(sys.type(bytes.new(2)), "<bytes>");
+
+  sys.test(bytes.toStr(bytes.fromStr("abcñ")), "abcñ");
+  b = bytes.fromArr([1, 2]);
+  sys.test(bytes.get(b, 0), 1);
+  sys.test(bytes.get(b, 1), 2);
+  bytes.set(b, 1, 116);
+  sys.test(bytes.toArr(b)[1], 116);
+
+  b2 = bytes.new(3);
+  sys.test(bytes.toArr(b2), [0, 0, 0]);
+  sys.test(bytes.size(b2), 3);
+
+  bs1 = bytes.fromStr("ab");
+  bs2 = bytes.fromStr("cde");
+  sys.test(bytes.toStr(bytes.add(bs1, bs2)), "abcde");
+  sys.test(bytes.toStr(bs1), "abcde");
+
+  sys.test(bytes.toStr(bytes.take(bs1, 22000)), "abcde");
+  sys.test(bytes.toStr(bytes.take(bs1, 3)), "abc");
+  sys.test(bytes.toStr(bytes.take(bs1, -1)), "");
+
+  sys.test(bytes.toStr(bytes.drop(bs1, 22000)), "");
+  sys.test(bytes.toStr(bytes.drop(bs1, 3)), "de");
+  sys.test(bytes.toStr(bytes.drop(bs1, -1)), "abcde");
+
+  sys.println("  finished.");
+}
+

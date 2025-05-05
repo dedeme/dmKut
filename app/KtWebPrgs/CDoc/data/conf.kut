@@ -10,5 +10,5 @@
 mk : spath, showAll;
 
 /// Default constructor.
-/// \ -> <conf>.
+/// \ -> <conf>
 getDefault = \ -> return mk("@", true);;

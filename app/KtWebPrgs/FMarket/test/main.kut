@@ -6,10 +6,21 @@
 import "modelTest";
 import "strategyTest";
 
+import "libmkt/models";
+import "libmkt/model";
+import "db";
+
 /// Run tests
+/// \ -> ()
 run = \ -> {
+  for (mdId = arr.map(models.list(), \:model md -> return md.id;)) {
+    mdPath = file.cat([db.modelPath(mdId), "historic"]);
+    for (date = file.dir(mdPath)) {
+      file.del(file.cat([mdPath, date, "bestWorstAvg.tb"]));
+    }
+  }
   //modelTest.run();
-  strategyTest.run();
+  //strategyTest.run();
 };
 
 

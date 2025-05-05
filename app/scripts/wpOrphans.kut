@@ -1,0 +1,69 @@
+// Copyright 06-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+// Linked in /var/www/html/fondosEscritorio
+
+// \s -> [[s, s].]::[[id, path].]
+readPicts = \d -> {
+  R = [];
+  for (fname = file.dir(d)) {
+    :file path = file.cat([d, fname]);
+    if (path.isDirectory()) R.cat(readPicts(path));
+    else R.push([fname[:str.lastIndex(fname, ".")], path]);
+  }
+  return R;
+};
+
+// MAIN
+
+{
+  sys.println("Buscando imágenes huérfanas\n");
+
+  Originals = readPicts("originales");
+  Wallpapers =  readPicts("jpg");
+  Pinups = readPicts("pinups");
+
+  Orphans = [];
+  for (P = Originals) {
+    okV = [false];
+    for (P2 = Wallpapers) if (P2[0] == P[0]) {
+      okV! = true;
+      break;
+    }
+    if (!okV!) for (P2 = Pinups) if (P2[0] == P[0]) {
+      okV! = true;
+      break;
+    }
+    if (!okV!) Orphans.push(P[1]);
+  }
+  sys.println("ORIGINALES:");
+  if (!Orphans) sys.println("Ninguna");
+  else sys.println(Orphans.join("\n"));
+  sys.println("");
+
+  Orphans.clear();
+  for (P = Wallpapers) {
+    okV = [false];
+    for (P2 = Originals) if (P2[0] == P[0]) {
+      okV! = true;
+      break;
+    }
+  }
+  sys.println("FONDOS:");
+  if (!Orphans) sys.println("Ninguna");
+  else sys.println(Orphans.join("\n"));
+  sys.println("");
+
+  Orphans.clear();
+  for (P = Pinups) {
+    okV = [false];
+    for (P2 = Originals) if (P2[0] == P[0]) {
+      okV! = true;
+      break;
+    }
+  }
+  sys.println("PIN-UPS:");
+  if (!Orphans) sys.println("Ninguna");
+  else sys.println(Orphans.join("\n"));
+  sys.println("");
+}

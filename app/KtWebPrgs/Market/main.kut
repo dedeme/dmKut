@@ -8,25 +8,27 @@ import "KtWeb/rp";
 import "db";
 import "cts";
 import "sch";
+import "test";
 import "pgs/home/homePg";
 import "pgs/settingsHub";
 import "pgs/accHub";
 import "pgs/daily/dailyPg";
 import "pgs/verification/verificationPg";
 
-// \ -> s
+//: \ -> s
 help = \ -> return """
-  Use Market [help | version | init | start | key rq]
+  Use Market [help | version | init | test | start | key rq]
   where
     help   : Shows this message.
     version: Shows program version.
     init   : Initializes program.
              Must be called only the first time that the program is called.
+    test   : Application testing.
     start  : Start server.
     key rq : Requests 'rq' with 'key'. (Sent by browser)
   """;;
 
-log.setPath(path.cat([cts.dataPath, "log.tb"]));
+log.init(file.cat([cts.dataPath, "log.tb"]), 100);
 
 :arr Args = sys.args();
 
@@ -34,6 +36,7 @@ if (Args.size() == 1) {
   switch (Args[0]) {
     "version": sys.println(cts.version);
     "init": db.init();
+    "test": test.run();
     "start": sch.start();
     default: sys.println(help());
   }
@@ -48,12 +51,12 @@ if (Args.size() != 2) {
 key = Args[0];
 rp.init(key);
 
-:: Rq = js.r(Args[1]);
+Rq = js.r(Args[1]);
 sys.print(switch(Rq.module) {
-  "Home": homePg.process(Rq);
-  "Settings": settingsHub.process(Rq);
-  "Acc": accHub.process(Rq);
-  "DailyPg": dailyPg.process(Rq);
+  "Home"        : homePg.process(Rq);
+  "Settings"    : settingsHub.process(Rq);
+  "Acc"         : accHub.process(Rq);
+  "DailyPg"     : dailyPg.process(Rq);
   "Verification": verificationPg.process(Rq);
   default: sys.throw("Value of module (" + Rq.module + ") is not valid");
 });

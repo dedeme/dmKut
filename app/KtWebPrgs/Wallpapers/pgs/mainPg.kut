@@ -1,0 +1,34 @@
+// Copyright 01-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Main page.
+
+import "KtWeb/rp";
+import "db";
+import "db/pictsTb";
+import "db/pinupsTb";
+import "db/songsTb";
+import "db/danceSongsTb";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      return rp.mk({
+        dbKey: db.readKey()
+      });
+    }
+    "update": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      for (g = pictsTb.getGroups()) pictsTb.update(g);
+      pinupsTb.update();
+      for (g = songsTb.getGroups()) songsTb.update(g);
+      for (g = danceSongsTb.getGroups()) danceSongsTb.update(g);
+
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

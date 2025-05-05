@@ -10,7 +10,7 @@
 new : ix, val;
 
 /// Update values of 'this'.
-/// \<smVal>, i, f -> ();
+/// \<smVal>, i, f -> ()
 up = \this, newIx, newVal -> {
   this[ix] = newIx;
   this[val] = newVal;

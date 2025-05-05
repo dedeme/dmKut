@@ -9,13 +9,13 @@ mk = \ypath -> writeJs(ypath, mkEmpty());;
 
 /// \s -> s
 readJs = \ypath -> {
-  :file p = path.cat([ypath, "budget.tb"]);
+  :file p = file.cat([ypath, "budget.tb"]);
   if (p.exists()) return p.read();
   else return "[]";
 };
 
 /// \s, s -> ()
-writeJs = \ypath, jsStr -> file.write(path.cat([ypath, "budget.tb"]), jsStr);;
+writeJs = \ypath, jsStr -> file.write(file.cat([ypath, "budget.tb"]), jsStr);;
 
 // \ -> s
 mkEmpty = \ -> return js.w(arr.fromIter(iter.map([0:12], \i -> return [];)));;

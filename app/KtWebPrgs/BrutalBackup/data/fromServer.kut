@@ -4,6 +4,7 @@
 /// Server to client channel.
 
 /// States enumeration.
+/// {i.}
 end, error, readingSource, readingTarget, selecting, copying, deleting :;
 
 /// Constructor.
@@ -17,6 +18,7 @@ end, error, readingSource, readingTarget, selecting, copying, deleting :;
 new : state, errorMsg, Warnings, totalCount, currentCount;
 
 /// Equals to new(end, "", [], 0, 0);
+/// \ -> <fromServer>
 newDefault = \ -> return new(end, "", [], 0, 0);;
 
 /// \<fromServer>, s -> ()
@@ -31,7 +33,7 @@ setWarnings = \O, v -> O[Warnings] = v;;
 /// \<fromServer>, i -> ()
 setCurrentCount = \O, v -> O[currentCount] = v;;
 
-/// \JS -> <fromServer>
+/// \[*] -> <fromServer>
 fromJs = \A -> return [
     A[state],
     A[errorMsg],

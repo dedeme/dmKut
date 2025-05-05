@@ -1,0 +1,7 @@
+(animal) [. i ];
+
+//: (animal)
+new : age;
+
+//: [(animal) | i]
+getAge = \a -> return a.age;;

@@ -1,0 +1,39 @@
+// Copyright 09-Sep-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+:file kutPath = "/dm/dmKut";
+if (!kutPath.exists())
+  sys.throw("Kut path '" + kutPath + "' not found.");
+
+wd = file.wd();
+file.cd(kutPath);
+:arr Files = arr.filter(kutPath.dir(), \:file f ->
+  return f.isDirectory() & str.starts(f, "lib");
+);
+Files.sort(\d1, d2 -> return d1 < d2;);
+for (:file f = Files) {
+  sys.println(f);
+  Files = arr.filter(kutPath.dir(), \:file f ->
+    return f.isDirectory() & !str.starts(f, ".");
+  );
+  Files.sort(\d1, d2 -> return d1 < d2;);
+  for (:file f2 = Files) showUsers(f2, file.canonical(f));
+}
+
+file.cd(wd);
+
+//: \s, s -> ()
+showUsers = \:file dir, libPath -> {
+  :arr Files = arr.filter(
+    arr.map(dir.dir(), \f -> return file.cat([dir, f]);),
+    \:file f -> return f.isDirectory();
+  );
+  Files.sort(\d1, d2 -> return d1 < d2;);
+  for (:file f = Files) {
+    if (f.isLink()) {
+      if (f.canonical() == libPath) sys.println("  " + f.parent());
+    } else
+      showUsers(f, libPath);
+  }
+};
+

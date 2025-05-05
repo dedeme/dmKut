@@ -7,16 +7,16 @@ import "cts";
 import "data/alarm";
 import "db";
 
-fpath = path.cat([cts.dataPath, "alarm.tb"]);
+:file fpath = file.cat([cts.dataPath, "alarm.tb"]);
 
 /// Initializes table.
 /// \ -> ()
-init = \ -> if (!file.exists(fpath)) write([]);;
+init = \ -> if (!fpath.exists()) write([]);;
 
 /// Reads table.
 /// \ -> [<alarm>.]
-read = \ -> return arr.map(js.r(file.read(fpath)), alarm.fromJs);;
+read = \ -> return arr.map(js.r(fpath.read()), alarm.fromJs);;
 
 /// Writes table.
 /// \[<alarm>.] -> ()
-write = \tb -> file.write(fpath, js.w(tb));;
+write = \tb -> fpath.write(js.w(tb));;

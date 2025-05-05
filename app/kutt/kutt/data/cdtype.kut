@@ -1,0 +1,11 @@
+// Copyright 21-Feb-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Canonical definition type.
+
+/// Constructor.
+///   id   : Canonical identifier (C-Module.symbol)
+///   left : Left part of definition.
+///   right: Right part of definition.
+/// \s,<type>,<type> -> <cdtype>
+new : id, left, right;

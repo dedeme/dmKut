@@ -1,46 +1,53 @@
-// Copyright 14-May-2022 ºDeme
+// Copyright 30-Apr-2024 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
-/// Program start.
+/// Main module.
 
 import "KtWeb/rp";
-import "libdm/jstb";
 import "db";
-import "data/conf";
-import "data/dpath";
+import "cts";
+import "pgs/mainPg";
 import "pgs/pathsPg";
 import "pgs/indexPg";
 import "pgs/modulePg";
 import "pgs/codePg";
 
-Args = sys.args();
-ck = Args[0];
-Rq = js.r(Args[1]);
+//: \ -> s
+help = \ -> return """
+  Use KutDoc [help | version | init | key rq]
+  where
+    help   : Shows this message.
+    version: Shows program version.
+    init   : Initializes program.
+             Must be called only the first time that the program is run.
+    key rq : Requests 'rq' with 'key'. (Sent by browser)
+  """;;
 
-db.init();
-rp.init(ck);
+:arr Args = sys.args();
 
-switch(Rq.source) {
-  "Main": process(Rq);
+if (Args.size() == 1) {
+  switch (Args[0]) {
+    "version": sys.println(cts.version);
+    "init": db.init();
+    default: sys.println(help());
+  }
+  return;
+}
+
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
+
+key = Args[0];
+rp.init(key);
+
+:: Rq = js.r(Args[1]);
+sys.print(switch(Rq.source) {
+  "MainPg": mainPg.process(Rq);
   "PathsPg": pathsPg.process(Rq);
   "IndexPg": indexPg.process(Rq);
   "ModulePg": modulePg.process(Rq);
   "CodePg": codePg.process(Rq);
   default: sys.throw("Value of source (" + Rq.source + ") is not valid");
-}
-
-process = \Rq -> {
-  switch (Rq.rq) {
-    "idata": sys.print(rp.mk({
-      conf: db.confTb()[jstb.read](),
-      paths: arr.map(db.pathsTb()[jstb.read](), dpath.toJs)
-    }));
-    "savePath": {
-      :jstb confTb = db.confTb();
-      :conf Cf = confTb.read#();
-      confTb.write#(conf.mk(Rq.path, Cf.showAll));
-      sys.print(rp.mkEmpty());
-    }
-    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
-  }
-};
+});

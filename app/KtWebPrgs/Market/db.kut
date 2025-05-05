@@ -13,19 +13,22 @@ import "db/invOperationsTb";
 import "db/svCodesTb";
 import "db/accDb";
 import "db/ibexTb";
+import "db/ibexCosTb";
 import "db/dailyDb";
 import "db/activityTb";
+import "db/initRefsTb";
+import "db/tableChecksTb";
 import "cts";
 
 klen = 20;
-dbStateKeyTb = path.cat([cts.dataPath, "dbStateKey.tb"]);
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
 
 /// Initializes data base
 /// \ -> ()
 init = \ -> {
   if (!file.exists(cts.dataPath)) {
     file.mkdir(cts.dataPath);
-    file.write(path.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
     file.write(dbStateKeyTb, cryp.genK(klen));
 
     log.reset();
@@ -39,15 +42,18 @@ init = \ -> {
     accDb.init();
     invOperationsTb.init();
     ibexTb.init();
+    ibexCosTb.init();
     dailyDb.init();
     activityTb.init();
+    initRefsTb.init();
+    tableChecksTb.init();
     return;
   }
   sys.throw("Data base already is initialized");
 };
 
 /// Returns the state identifier.
-/// \ -> ();
+/// \ -> ()
 readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
 
 /// Checks the state identifier 'key' and returns:

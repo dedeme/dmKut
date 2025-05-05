@@ -1,0 +1,51 @@
+// Copyright 29-Jan-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Test Object files grouping.
+
+import "comp/oGrouping";
+
+/// \ -> ()
+run = \ -> {
+  sys.test(
+    sys.toStr(oGrouping.run([
+      ["A",["B", "C"]], ["B", ["D"]], ["C", ["E", "F"]], ["D", []],
+      ["E", ["G"]], ["F", []], ["G", []]
+    ])),
+    sys.toStr(
+      [["A", ["A"]], ["B", ["B"]], ["D", ["D"]], ["C", ["C"]],
+      ["E", ["E"]], ["G", ["G"]], ["F", ["F"]]]
+    )
+  );
+  sys.test(
+    sys.toStr(oGrouping.run([
+      ["A",["B", "F"]], ["B", ["C"]], ["C", ["D", "E"]], ["D", []],
+      ["E", ["D"]], ["F", ["B", "G"]], ["G", []]
+    ])),
+    sys.toStr(
+      [["A", ["A"]], ["F", ["F"]], ["B", ["B"]], ["C", ["C"]], ["E", ["E"]],
+      ["D", ["D"]], ["G", ["G"]]]
+    )
+  );
+  sys.test(
+    sys.toStr(oGrouping.run([
+      ["A",["B", "F"]], ["B", ["C"]], ["C", ["D", "E"]], ["D", []],
+      ["E", ["G"]], ["F", ["B", "G"]], ["G", ["C"]]
+    ])),
+    sys.toStr(
+      [["A", ["A"]], ["F", ["F"]], ["B", ["B"]], ["C", ["C", "G", "E"]],
+      ["D", ["D"]]]
+    )
+  );
+  sys.test(
+    sys.toStr(oGrouping.run([
+      ["A",["B", "F", "H"]], ["B", ["I", "C"]], ["C", ["D", "E"]], ["D", []],
+      ["E", ["G"]], ["F", ["B", "G"]], ["G", ["C"]], ["H", ["D", "I"]],
+      ["I", ["F"]]
+    ])),
+    sys.toStr(
+      [["A", ["A"]], ["H", ["H"]], ["B", ["B", "F", "I"]],
+      ["G", ["G", "E", "C"]], ["D", ["D"]]]
+    )
+  );
+};

@@ -3,6 +3,28 @@
 
 /// Functions using external programs.
 
+/// Execute a command, sending a request to the external program in a temporal
+/// file and reading the response en the same file.
+///   prg: Program to execute-
+///   rq : Request in a JSONizable value.
+///   RETURN: A 'result' with the response value in a JSONizable object. This
+///           value is the external program output processed with 'js.r'.
+/// \s, * -> [(*|s), b]
+fcmd = \prg, rq -> {
+  rsRs = ["ext.fcmd generic fail", false];
+  :file ftmp = file.tmp("", "libdm-ext.fcmd");
+  try {
+    ftmp.write(js.w(rq));
+    rs, ok = sys.cmd(prg, [ftmp]);
+    rsRs[0] = ok ? js.r(rs) : rs;
+    rsRs[1] = ok;
+  } catch (e) {
+    rsRs[0] = e;
+  }
+  ftmp.del();
+  return rsRs;
+};
+
 /// If 'isMozilla' is 'false', it calls "wget -q --no-cache -O - 'url'" and
 /// returns the text read.
 /// If 'isMozilla' is 'true', it calls:
@@ -130,35 +152,38 @@ sha256Str = \s -> {
   sys.throw(r);
 };
 
-/// Returns 'Files' converted to 'pdf'. It calls
+/// Converts 'Files' to 'pdf' format. It calls
 ///     If 'isBook' is true:
-///     htmldoc --book --charset utf-8 --footer ... --size A4 -t pdf ['Files']
+///     htmldoc --book --charset utf-8 --footer ... --size A4 -t pdf
+///             --outfile 'fpdf' ['Files']
 ///     If 'isBook' is false:
-///     htmldoc --webpage --charset utf-8 --footer ... --size A4 -t pdf ['Files']
+///     htmldoc --webpage --charset utf-8 --footer ... --size A4 -t pdf
+///             --outfile 'fpdf' ['Files']
 /// htmldoc documentation: https://www.msweet.org/htmldoc/htmldoc.html
 ///   isBook: 'true' if a book shuld be generated.
 ///   Files : Files in HTML to convert.
-/// \b, [s...] -> <bytes>
-htmldoc = \isBook, Files -> {
+///   fpdf  : Target file.
+/// \b, [s.], s -> <bytes>
+htmldoc = \isBook, Files, fpdf -> {
   R = sys.cmd2(
     "htmldoc",
     [ isBook ? "--book" : "--webpage",
-      "--charset", "utf-8", "--footer", "...", "--size", "A4", "-t", "pdf"
+      "--charset", "utf-8", "--footer", "...", "--size", "A4", "-t", "pdf",
+      "--outfile", fpdf
     ] + Files
   );
   if (R[1] != "" & !str.starts(str.trim(R[1]), "PAGES:")) sys.throw(R[1]);
-  return bytes.fromStr(R[0]);
 };
 
-/// Returns 'html' converted to 'pdf'. It calls 'htmldoc'.
+/// Converts 'html' to 'pdf' format. It calls 'htmldoc'.
 ///   isBook: 'true' if a book shuld be generated.
 ///   html  : Text in HTML to convert.
-/// \b, s -> <bytes>
-htmldocStr = \isBook, html -> {
+///   fpdf  : Target file.
+/// \b, s, s -> <bytes>
+htmldocStr = \isBook, html, fpdf -> {
   tmp = file.tmp("", "kut_htmldoc");
   file.write(tmp, html);
-  r = htmldoc(isBook, [tmp]);
+  htmldoc(isBook, [tmp], fpdf);
   file.del(tmp);
-  return r;
 };
 

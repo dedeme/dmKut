@@ -1,0 +1,23 @@
+// Copyright 07-Aug-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Historic quote.
+
+import "libmkt/quote";
+
+/// Constructor.
+/// Values <= 0 are not valid ones.
+///   date : Quote date.
+///   open : Open value.
+///   close: Close value.
+///   max  : Maximum value.
+///   min  : Minimum value.
+///   vol  : Volume value.
+/// \s,f,f,f,f,f -> <historicQ>
+new : date, open, close, max, min, vol;
+
+/// Returns a <quote> with the field 'force' set to false.
+/// \<historicQ> -> <quote>
+toQuote = \q -> return quote.new(
+  q[date], q[open], q[close], q[max], q[min], math.ftoi(q[vol]), false
+);;

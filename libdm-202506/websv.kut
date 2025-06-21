@@ -1,0 +1,345 @@
+// Copyright 24-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Web server.
+
+// Tcp server.
+Sv = [];
+// Server root in the file system.
+Root = [];
+
+// mime types
+Mimetypes = {
+  ".aac": "audio/aac",
+  ".abw": "application/x-abiword",
+  ".avi": "video/x-msvideo",
+  ".bin": "application/octet-stream",
+  ".bmp": "image/bmp",
+  ".bz": "application/x-bzip",
+  ".bz2": "application/x-bzip2",
+  ".cda": "application/x-cdf",
+  ".css": "text/css",
+  ".csv": "text/csv",
+  ".doc": "application/msword",
+  ".epub": "application/epub+zip",
+  ".gz": "application/gzip",
+  ".gif": "image/gif",
+  ".htm": "text/html",
+  ".html": "text/html",
+  ".ico": "image/vnd.microsoft.icon",
+  ".jar": "application/java-archive",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpg",
+  ".js": "text/javascript",
+  ".json": "application/json",
+  ".mid": "audio/x-midi",
+  ".midi": "audio/x-midi",
+  ".mjs": "text/javascript",
+  ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4",
+  ".mpeg": "video/mpeg",
+  ".odp": "application/vnd.oasis.opendocument.presentation",
+  ".ods": "application/vnd.oasis.opendocument.spreadsheet",
+  ".odt": "application/vnd.oasis.opendocument.text",
+  ".oga": "audio/ogg",
+  ".ogv": "video/ogg",
+  ".ogx": "application/ogg",
+  ".otf": "font/otf",
+  ".png": "image/png",
+  ".pdf": "application/pdf",
+  ".php": "application/x-httpd-php",
+  ".ppt": "application/vnd.ms-powerpoint",
+  ".rar": "application/vnd.rar",
+  ".rtf": "application/rtf",
+  ".svg": "image/svg+xml",
+  ".tar": "application/x-tar",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+  ".ttf": "font/ttf",
+  ".txt": "text/plain",
+  ".wav": "audio/wav",
+  ".xhtml": "application/xhtml+xml",
+  ".xls": "application/vnd.ms-excel",
+  ".xml": "application/xml",
+  ".xul": "application/vnd.mozilla.xul+xml",
+  ".zip": "application/zip",
+  ".7z": "application/x-7z-compressed"
+};
+
+// Unescape urls
+// \s -> s
+unescape = \s -> {
+  Bs = []; // [i,]
+  Esc = []; // [s.]
+  Rs = []; // [s.]
+  for (rn = str.toRunes(s)) {
+    if (!!Esc) {
+      sz = arr.size(Esc);
+      if (sz == 1) arr.push(Esc, str.fromRunes([rn]));
+      else{
+        arr.push(Esc, str.fromRunes([rn]));
+        bOp = math.fromHex(arr.join(Esc[1:], ""));
+        if (!bOp) {
+          arr.clear(Bs);
+          arr.push(Rs, "�");
+        } else {
+          arr.push(Bs, bOp!);
+        }
+        arr.clear(Esc);
+      }
+    } else {
+      s = str.fromRunes([rn]);
+      if (s == "%") {
+        arr.push(Esc, "%");
+      } else {
+        if (!!Bs) {
+          arr.push(Rs, bytes.toStr(bytes.fromArr(Bs)));
+          arr.clear(Bs);
+        }
+        arr.push(Rs, s);
+      }
+    }
+  }
+  return arr.join(Rs, "");
+};
+
+/// Creates a server response with only one bytes value.
+/// \<bytes> -> \ -> <bytes>
+mkRpBytes = \bs -> {
+  isFirstV = [true];
+  return \ -> {
+      if (isFirstV!) {
+        isFirstV! = false;
+        return bs;
+      }
+      return bytes.new(0);
+    };
+};
+
+/// Start server.
+///   port   : Connection port.
+///   tm     : Maximum 'tm' secods to finish read operations.
+///            If 'tm' <= 0 there will not have limit for waiting.
+///   root   : Root directory of web pages and cgi programs.
+///               -Web pages must be in 'root'/www.
+///               -Binary files must be in 'root'/bin.
+///               -Data directory will be in 'root'/dmcgi.
+///   handler: Function to process requests.
+///   ferror : Function to process errors.
+/// \i, i, s, (\<bytes>->(\-><bytes>)), (\s->()) -> ()
+start = \port, tm, root, handler, ferror -> {
+  if (!!Sv) return;
+
+  arr.push(Sv, tcp.server(port, 128));
+  arr.push(Root, file.cat([root, "www"]));
+  file.cd(root);
+
+  while () {
+    if (!Sv) break;
+
+    connErr = tcp.accept(Sv!);
+    if (connErr[1] != "") {
+      ferror("Connection failed: " + connErr[1]);
+      continue;
+    }
+    conn = connErr[0];
+
+    thread.run(\ -> {
+      try {
+        bsErr = tcp.read(conn, 1_000_000, tm);
+        if (bsErr[1] != "") {
+          ferror(bsErr[1]);
+        } else {
+          fRp = handler(bsErr[0]);
+          while () {
+            bsRp = fRp();
+            if (bytes.size(bsRp) == 0) break;
+            err = tcp.write(conn, bsRp);
+            if (err != "") {
+              ferror(err);
+              break;
+            }
+          }
+        }
+        tcp.closeConnection(conn);
+      } catch (e) {
+        ferror(e);
+      }
+    });
+  }
+};
+
+/// Stop server.
+/// \-> ()
+stop = \ -> {
+  sys.println("Stopped");
+  if (!!Sv) {
+    sv = arr.shift(Sv);
+    tcp.closeServer(sv);
+  }
+};
+
+/// Returns server response or nothing if 'rq' is not a valid GET request.
+///
+/// NOTE: Only HTTP/1.1 requests are allowed.
+///   rq: Complete client request.
+/// \s -> ([\-><bytes>] | [])
+getRq = \rq -> {
+  ix = str.index(rq, "\n");
+  if (ix == -1)
+    return [mkRpBytes(bytes.fromStr(badRequestRp(rq)))];
+
+  rq2 = str.trim(rq[0:ix]);
+  if (!str.starts(rq2, "GET ") | ! str.ends(rq2, " HTTP/1.1")) return [];
+  rq3 = str.trim(rq2[4:]);
+  ix2 = str.index(rq3, " ");
+  if (ix2 == -1)
+    return [mkRpBytes(bytes.fromStr(badRequestRp(rq)))];
+
+  r = rq3[:ix2];
+  ix3 = str.index(r, "?");
+  r2 = ix3 != -1 ? r[:ix3] : r;
+
+  ext = file.extension(r2);
+  if (ext == "") {
+    return [mkRpBytes(
+      bytes.fromStr(
+        "HTTP/1.1 308 Permanent Redirect\n" +
+        "Location: " + (ix3 == -1
+          ? file.cat([r2, "index.html"])
+          : file.cat([r2, "index.html"]) + r[ix3:]) + "\n\n"
+      )
+    )];
+  }
+
+  fpath = unescape(file.clean(file.cat([Root!, r2])));
+
+  if (!file.exists(fpath))
+    return [mkRpBytes(bytes.fromStr(notFoundRp()))];
+
+  ext2 = file.extension(fpath);
+  type = dic.hasKey(Mimetypes, ext2) ? Mimetypes[ext2] : "text/plain";
+
+  len = file.size(fpath);
+  if (len < 1_000_000) {
+    f = file.ropen(fpath);
+    body = file.readBin(f, len);
+    file.close(f);
+
+    head = "HTTP/1.1 200 OK\n" +
+      "Server: Kut Webserver\n" +
+      "Content-type: " + type + "\n" +
+      "Content-length: " + math.itos(bytes.size(body)) + "\n\n"
+    ;
+    return [mkRpBytes(bytes.add(bytes.fromStr(head), body))];
+  }
+
+  f = file.ropen(fpath);
+  readLenV = [0];
+  return [\ -> {
+    if (readLenV! == 0) {
+      body = file.readBin(f, 1_000_000);
+      sz = bytes.size(body);
+      rp = "HTTP/1.1 200 OK\r\n" +
+        "Server: Kut Webserver\r\n" +
+        "Content-type: " + type + "\r\n" +
+        "Transfer-Encoding: chunked\r\n\r\n" +
+        math.itoh(sz) + "\r\n"
+      ;
+      readLenV! += sz;
+      return bytes.add(
+        bytes.fromStr(rp),
+        bytes.add(body, bytes.fromStr("\r\n"))
+      );
+    }
+
+    if (readLenV! >= len) {
+      readLenV! = -1;
+      file.close(f);
+      return bytes.fromStr("0\r\n\r\n");
+    }
+
+    if (readLenV! == -1) return bytes.new(0);
+
+    body = file.readBin(f, 1_000_000);
+    sz = bytes.size(body);
+    rp = math.itoh(sz) + "\r\n";
+
+    readLenV! += sz;
+    return bytes.add(
+      bytes.fromStr(rp),
+      bytes.add(body, bytes.fromStr("\r\n"))
+    );
+  }];
+
+};
+
+/// Executes ccgi.sh and returns an array with its result or an empty array if
+/// rq is not a valid POST request for 'cgi.kut'.
+/// \s -> s
+dmCgiRq = \rq -> {
+  rqUnix = str.replace(rq, "\r", "");
+  ix = str.index(rq, "\n");
+  if (ix == -1) return [badRequestRp(rq)];
+
+  rq2 = str.trim(rq[0:ix]);
+  if (rq2 != "POST /cgi-bin/ccgi.sh HTTP/1.1") return [];
+
+  ix2 = str.index(rqUnix, "\n\n");
+  if (ix2 == -1) return [badRequestRp(rq)];
+
+  rqUnix2 = str.trim(rqUnix[ix2 + 2:]);
+  ix3 = str.index(rqUnix2, ":");
+  if (ix3 == -1) return [badRequestRp(rq)];
+  cmd = rqUnix2[:ix3];
+  par = rqUnix2[ix3 + 1:];
+
+  rpErr = sys.cmd(file.cat(["bin", cmd]), [par]);
+
+  if (rpErr[1] != "") return [
+    (rpErr[0] != "") ? rpErr[0] : rpErr[1]
+  ];
+
+  return [textRp(rpErr[0])];
+};
+
+/// Return a html valid response.
+///   h: HTML text.
+/// \s -> s
+htmlRp = \h -> {
+  return "HTTP/1.1 200 OK\n" +
+    "Server: Kut Webserver\n" +
+    "Content-type: text/html\n" +
+    "Content-length: " + math.itos(str.len(h)) + "\n\n" +
+    h;
+};
+
+/// Return a text valid response.
+///   tx: Plain text.
+/// \s -> s
+textRp = \tx -> {
+  return "HTTP/1.1 200 OK\n" +
+    "Server: Kut Webserver\n" +
+    "Content-type: text/plain\n" +
+    "Content-length: " + math.itos(str.len(tx)) + "\n\n" +
+    tx;
+};
+
+/// Return a 'Not Found' response.
+/// \-> s
+notFoundRp = \ -> {
+  return "HTTP/1.1 404 Not Found\n" +
+    "Server: Kut Webserver\n" +
+    "Content-type: text/plain\n\n" +
+    "Page not found";
+};
+
+/// Return a 'Bad Request' response.
+///   rq: Request.
+/// \s -> s
+badRequestRp = \rq -> {
+  return "HTTP/1.1 400 Bad Request\n" +
+    "Server: Kut Webserver\n" +
+    "Content-type: text/plain\n\n" +
+    "Bad Request:\n" + rq;
+};

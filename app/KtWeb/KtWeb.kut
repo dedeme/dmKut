@@ -145,10 +145,11 @@ processHub = \ssk, rq -> {
 
   return switch(prg) {
     "AlarmClock": sys.cmd("kut", ["prgs/AlarmClock/kut/main", ssk, rq])!;
+    "Assimil": sys.cmd("kut", ["prgs/Assimil/kut/main", ssk, rq])!;
     "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ssk, rq])!;
     "CashFlow": sys.cmd("kut", ["prgs/CashFlow/kut/main", ssk, rq])!;
     "CDoc": sys.cmd("kut", ["prgs/CDoc/kut/main", ssk, rq])!;
-    "FMarket": sys.cmd("kut", ["prgs/FMarket/kut/main", ssk, rq])!;
+    "FMarket": sys.cmd("FMarket", [ssk, rq])!;
     "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ssk, rq])!;
     "Hconta": sys.cmd("kut", ["prgs/Hconta/kut/main", ssk, rq])!;
     "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ssk, rq])!;
@@ -158,10 +159,11 @@ processHub = \ssk, rq -> {
     "KutDoc": sys.cmd("kut", ["prgs/KutDoc/kut/main", ssk, rq])!;
     "KuttDoc": sys.cmd("prgs/KuttDoc/kutt/bin/KuttDoc", [ssk, rq])!;
     "Main": sys.cmd("kut", ["prgs/Main/kut/main", ssk, rq])!;
-    "Market": sys.cmd("kut", ["prgs/Market/kut/main", ssk, rq])!;
+    "Market": sys.cmd("Market", [ssk, rq])!;
     "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ssk, rq])!;
-    "MMarket": sys.cmd("kut", ["prgs/MMarket/kut/main", ssk, rq])!;
+    "MMarket": sys.cmd("MMarket", [ssk, rq])!;
     "MrBackup": sys.cmd("kut", ["prgs/MrBackup/kut/main", ssk, rq])!;
+    "News": sys.cmd("News", [ssk, rq])!;
     "NkutDoc": sys.cmd("kut", ["prgs/NkutDoc/kut/main", ssk, rq])!;
     "Notes": sys.cmd("kut", ["prgs/Notes/kut/main", ssk, rq])!;
     "Stocks": sys.cmd("kut", ["prgs/Stocks/kut/main", ssk, rq])!;

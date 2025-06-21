@@ -1,0 +1,140 @@
+// Copyright 08-Jun-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base management.
+
+import "data/entry";
+import "cts";
+
+klen = 20;
+dbStateKeyTb = file.cat([cts.dataPath, "dbStateKey.tb"]);
+
+/// Initializes data base
+/// \ -> ()
+init = \ -> {
+  if (!file.exists(cts.dataPath)) {
+    file.mkdir(cts.dataPath);
+    file.write(file.cat([cts.dataPath, "version.tb"]), cts.dataVersion);
+    file.write(dbStateKeyTb, cryp.genK(klen));
+
+    Indexes = {};
+    for (group = [cts.current, cts.archive, cts.trash]) {
+      file.mkdir(file.cat([cts.dataPath, group]));
+      write(group, []);
+      Indexes.put(group, 0);
+    }
+    writeIndexes(Indexes);
+    return;
+  }
+  sys.throw("Data base already is initialized");
+};
+
+/// Returns the state identifier.
+/// \ -> ()
+readKey = \ -> return str.trim(file.read(dbStateKeyTb));;
+
+/// Checks the state identifier 'key' and returns:
+///   - If 'key' is valid, a new identifier.
+///   - If 'key' is not valid, an empty string.
+/// \s -> s
+checkKey = \key -> {
+  if (str.trim(file.read(dbStateKeyTb)) == key) {
+    newKey = cryp.genK(klen);
+    file.write(dbStateKeyTb, newKey);
+    return newKey;
+  }
+  return "";
+};
+
+/// Read table of current, archive or trash phrases.
+///   group: one of [cts.current, cts.archive, cts.trash].
+/// \s -> [<entry>.]
+read = \group ->
+  return js.r(file.read(file.cat([cts.dataPath, group + ".tb"])));;
+
+/// Write table of current, archive or trash phrases.
+///   group: one of [cts.current, cts.archive, cts.trash].
+///   table: Array of entries.
+/// \s,[<entry>.] -> ()
+write = \group, table ->
+  file.write(file.cat([cts.dataPath, group + ".tb"]), js.w(table));;
+
+/// Reads table of indexes.
+/// Returns {cts.current: n1, cts.archive: n2, cts.trash: n3}.
+/// \ -> {i}
+readIndexes = \ -> return js.r(
+    file.read(file.cat([cts.dataPath, "indexes.tb"]))
+  );;
+
+/// Writes table of indexes.
+///   Indexes: It is a dictionary '{cts.current: n1, cts.archive: n2, cts.trash: n3}'
+/// \{i} -> ()
+writeIndexes = \Indexes -> file.write(
+    file.cat([cts.dataPath, "indexes.tb"]), js.w(Indexes)
+  );;
+
+// Returns unsorted audios from a group.
+//   group: one of [cts.current, cts.archive, cts.trash].
+// \s -> [s.]
+readAudios = \group ->
+  return arr.filter(
+    file.dir(file.cat([cts.dataPath, group])),
+    \name -> return str.ends(name, ".mp3");
+  );;
+
+/// Move audio from source to target.
+/// Modifies directories and indexes.
+///   id: Audio file (including extension).
+///   source: one of [cts.current, cts.archive, cts.trash].
+///   target: one of [cts.current, cts.archive, cts.trash].
+/// \s,s,s -> ()
+moveAudio = \id, source, target -> {
+  file.rename(
+    file.cat([cts.dataPath, source, id]),
+    file.cat([cts.dataPath, target, id])
+  );
+  :arr Source = read(source);
+  entryOp = Source.find(\:entry e -> return e.id == id;);
+
+  if (!entryOp) return;
+  e = entryOp!;
+
+  :arr Target = read(target);
+  Source.filterIn(\:entry e -> return e.id != id;);
+  Target.push(e);
+
+  write(source, Source);
+  write(target, Target);
+};
+
+/// Synchronize audios with entries (modifying entries).
+///   group: one of [cts.current, cts.archive, cts.trash].
+/// \s -> ()
+sync = \group -> {
+  :arr Audios = readAudios(group);
+  :arr Entries = read(group);
+
+  writeV = [false];
+  n0 = Entries.size();
+
+  if (group == cts.trash) {
+    :time now = time.now();
+    for(:entry e = Entries) {
+      path = file.cat([cts.dataPath, group, e.id]);
+      if (now.dfDays(file.tm(path)) > cts.trashDays)
+        file.del(path);
+    }
+  }
+  Entries.filterIn(\:entry e -> return Audios.any(\id -> return id == e.id;););
+  n = Entries.size();
+  if (n0 != n) writeV! = true;
+
+  for (id = Audios) {
+    if (!Entries.any(\:entry e -> return e.id == id;))
+      Entries.push(entry.newEmpty(id));
+  }
+  writeV! |= n != Entries.size();
+
+  if (writeV!) write(group, Entries);
+};
+

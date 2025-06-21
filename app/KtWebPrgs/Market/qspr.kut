@@ -270,7 +270,7 @@ updateIbexHistoric = \mainNick -> {
 /// "" or an error if the update failed.
 ///   coId: Company identifier (nick).
 ///   upInitRefs: Update first real reference if its value is 'true'.
-/// \s -> s
+/// \s, b -> s
 updateClosesAndRefs = \coId, upInitRefs -> {
   if (arr.any(cts.IxNicks, \e -> return e == coId;)) {
     Ixs, ok = readIxs.ixs();

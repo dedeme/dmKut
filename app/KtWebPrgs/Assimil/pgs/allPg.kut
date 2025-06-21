@@ -1,0 +1,65 @@
+// Copyright 09-Jun-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Page showing all examples.
+
+import "KtWeb/rp";
+import "db";
+import "cts";
+import "data/entry";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      gr = Rq.group;
+      db.sync(gr);
+      return rp.mk({
+        Entries: db.read(gr),
+        index: db.readIndexes()[gr],
+        dbKey: db.readKey()
+      });
+    }
+    "changeIndexTo": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, index : Rq;
+      ixV = [math.ftoi(index)];
+      :arr Entries = db.read(group);
+      if (!Entries) sys.throw("Entries is empty");
+      ix = ixV! < 0
+        ? Entries.size() - 1
+        : ixV! >= Entries.size()
+          ? 0
+          : ixV!
+      ;
+
+      Ixs = db.readIndexes();
+      Ixs[group] = ix;
+      db.writeIndexes(Ixs);
+
+      return rp.mkEmpty();
+    }
+    "archive", "restore": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      group, index : Rq;
+      ix = math.ftoi(index);
+      :arr Entries = db.read(group);
+      if (ix < Entries.size()) {
+        Entries.sort(\:entry e1, :entry e2 -> return e1.id < e2.id;);
+        target = group == cts.archive
+          ? Rq.rq == "archive" ? cts.trash : cts.current
+          : cts.archive
+        ;
+        :entry e = Entries[ix];
+        db.moveAudio(e.id, group, target);
+      }
+
+      return rp.mkEmpty();
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

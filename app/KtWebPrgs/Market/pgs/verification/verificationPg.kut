@@ -82,8 +82,9 @@ stocksData = \ -> {
     ),
     \Kv -> {
       stocks = Kv[1][0];
-      ttCost = stocks * Kv[1][1];
-      return [Kv[0], stocks, ttCost / stocks, ttCost];
+      price = Kv[1][1];
+      ttCost = stocks * price;
+      return [Kv[0], stocks, price, ttCost];
     }
   );
   return {

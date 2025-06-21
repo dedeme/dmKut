@@ -32,7 +32,12 @@ log.init(file.cat([cts.dataPath, "log.tb"]), 100);
 
 :arr Args = sys.args();
 
-if (Args.size() == 1) {
+if (Args.size() != 2) {
+  sys.println(help());
+  return;
+}
+
+if (Args[1] == "") {
   switch (Args[0]) {
     "version": sys.println(cts.version);
     "init": db.init();
@@ -40,11 +45,6 @@ if (Args.size() == 1) {
     "start": sch.start();
     default: sys.println(help());
   }
-  return;
-}
-
-if (Args.size() != 2) {
-  sys.println(help());
   return;
 }
 

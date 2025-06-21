@@ -1,0 +1,43 @@
+// Copyright 29-Dic-2023 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Data base access control.
+///
+/// 'dbchk' manages a table with a identifier.
+/// This identifier is cheched and changed with 'check()'.
+///
+/// 'dbchk' is intended to work in a data base:
+///   - When data are read, 'get' is used to send the identifier to client.
+///   - When data is write, client gives its identifer 'id'. Then, if 'id' is
+///     the correct identifier, a task is done and a new identifier is returned
+///     to client.
+///     If the identifer is not correct an empty string is returned.
+///
+/// 'dbchk' also can be used as "atomic long task controler":
+///   - Call 'get' previously to start the task.
+///   - With the code returned by 'get', call 'check' and discard its return.
+
+/// Initializes 'dbchk' using the file 'fpath'.
+/// \s -> ()
+init = \fpath -> if (!file.exists(fpath)) file.write(fpath, cryp.genK(20));;
+
+/// Returns checker's identifier.
+///   fpath: Path of 'dbchk' file.
+/// \s -> s
+get = \fpath -> return file.read(fpath);;
+
+/// Checks 'id' and if it is valid, exectute 'task' and returns a new identifier.
+/// Otherwise returns "".
+///   fpath: Path of 'dbchk' file.
+///   id: Control identifier.
+///   task: Function to run.
+/// \s, s, \->() -> s
+check = \:file fpath, id, task -> {
+  if (fpath.read() != id) return "";
+
+  fpath.write("");
+  task();
+  newId = cryp.genK(20);
+  fpath.write(newId);
+  return newId;
+};

@@ -1,0 +1,25 @@
+// Copyright 08-Jun-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Constants.
+
+import "KtWeb/global";
+
+/// Application name.
+/// s
+appName = "Assimil";
+/// Application version.
+/// s
+version = "2025.06";
+/// Data version.
+/// s
+dataVersion = "2025.06";
+/// Application file.
+/// s
+dataPath = file.cat([global.cgiRoot, appName]);
+/// Days to keep in trash
+/// i
+trashDays = 360;
+/// Groups names
+/// s
+current, archive, trash :;

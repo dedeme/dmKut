@@ -1,0 +1,15 @@
+// Copyright 08-Jun-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <entry> data definition.
+
+/// Constructor.
+///   id  : Audio identifier (including extension)
+///   text: Text corrensponding to 'id' or empty string if it is not set.
+/// \s,s -> <entry>
+new : id, text;
+
+/// Constructor with empty text.
+/// \s -> <entry>
+newEmpty = \id -> return new(id, "");;
+

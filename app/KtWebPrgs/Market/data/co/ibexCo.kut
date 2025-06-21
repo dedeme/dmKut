@@ -7,15 +7,13 @@
 ///   nick  : Company nick.
 ///   sel   : 'true' if it is selected to operate.
 ///   stocks: Stocks to calculate index.
-///   pond  : Ponderation to calculate index.
-/// \s,b,i,i -> <ibexCo>
-new : nick, sel, stocks, pond;
+/// \s,b,i -> <ibexCo>
+new : nick, sel, stocks;
 
 /// \[*.] -> <ibexCo>
 fromJs = \A -> return [
     A[nick],
     A[sel],
-    math.ftoi(A[stocks]),
-    math.ftoi(A[pond])
+    math.ftoi(A[stocks])
   ];;
 

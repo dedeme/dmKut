@@ -151,7 +151,7 @@ getIbexPonderations = \onlySel -> {
   Cos = ibexCosTb.read();
   sumV = [0.0];
   for (:ibexCo c = Cos) if (!onlySel | c.sel) {
-    amount = math.itof(c.stocks * c.pond) / 100.0 * getClose(c.nick);
+    amount = math.itof(c.stocks) * getClose(c.nick);
     sumV! += amount;
     R.put(c.nick, amount);
   }

@@ -1,4 +1,4 @@
-// Copyright 12-Mar-2024 ºDeme
+// Copyright 08-Jun-2025 ºDeme
 // GNU General Public License - V3 <http://www.gnu.org/licenses/>
 
 /// Main module.
@@ -6,22 +6,19 @@
 import "KtWeb/rp";
 import "db";
 import "cts";
-import "pgs/mainPg";
-import "pgs/pathsPg";
+import "pgs/allPg";
 import "pgs/indexPg";
-import "pgs/modulePg";
-import "pgs/codePg";
 
-// \ -> s
-help = \ -> return """
-  Use CDoc [help | version | init | key rq]
+// s
+help = """
+  Use English [help | version | init | key rq]
   where
     help: Shows this message.
     version: Shows program version.
     init: Initializes program.
           Must be called only the first time that the program is called.
     key rq: Requests 'rq' with 'key'. (Sent by browser)
-  """;;
+  """;
 
 :arr Args = sys.args();
 
@@ -29,13 +26,13 @@ if (Args.size() == 1) {
   switch (Args[0]) {
     "version": sys.println(cts.version);
     "init": db.init();
-    default: sys.println(help());
+    default: sys.println(help);
   }
   return;
 }
 
 if (Args.size() != 2) {
-  sys.println(help());
+  sys.println(help);
   return;
 }
 
@@ -44,10 +41,7 @@ rp.init(key);
 
 Rq = js.r(Args[1]);
 sys.print(switch(Rq.source) {
-  "Main": mainPg.process(Rq);
-  "PathsPg": pathsPg.process(Rq);
-  "IndexPg": indexPg.process(Rq);
-  "ModulePg": modulePg.process(Rq);
-  "CodePg": codePg.process(Rq);
+  "All": allPg.process(Rq);
+  "Index": indexPg.process(Rq);
   default: sys.throw("Value of source (" + Rq.source + ") is not valid");
 });

@@ -1,0 +1,25 @@
+// Copyright 31-Aug-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Budget edit page.
+
+import "KtWeb/rp";
+import "db/yearsDb";
+import "db/budgetTb";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "updateBudget": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      year = Rq.year;
+      ypath = yearsDb.yearPath(year);
+      budgetTb.writeJs(ypath, js.w(Rq.budget));
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

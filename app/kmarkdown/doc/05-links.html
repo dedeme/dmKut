@@ -53,7 +53,7 @@ window.MathJax = {
 <p style='text-indent:0px'>
 <a href='#Hipervínculos'>Hipervínculos</a><br>
 <a href='#Imágenes'>Imágenes</a><br>
-<a href='#Escape de '[''>Escape de '['</a>
+<a href='#Escape de <i>[</i>'>Escape de <i>[</i></a>
 </p>
 <hr>
 <a name="Hipervínculos"></a>
@@ -113,17 +113,29 @@ espacio.</p>
 <script>aceConf("aceEditor-4", "kmd");</script>
 <p>Produce:</p>
 <div style="color:#404080"><p> <img src="img/up.png"> Esto no es un error.</p>
-</div><a name="Escape de '['"></a>
-<h3>Escape de '['</h3>
-<p>Si se quiere escribir el caracter '[' sin que introduzca un hipervínculo o
-imagen, se puede usar '\['.</p>
+</div><a name="Escape de <i>[</i>"></a>
+<h3>Escape de <i>[</i></h3>
+<p>Si se quiere escribir en html el caracter '[' sin que se introduzca un
+hipervínculo o imagen, se puede usar '\['.</p>
 <div id="aceEditor-5" style="width: 650px;border-radius: 4px;border: 1px solid rgb(0,0,0);">Esto no es un hipervínculo \[https://www.gnu.org] y
 esto no es una imagen !\[img/up.png].</div>
 <script>aceConf("aceEditor-5", "kmd");</script>
 <p>Produce:</p>
 <div style="color:#404080"><p>Esto no es un hipervínculo [https://www.gnu.org] y
 esto no es una imagen ![img/up.png].</p>
-</div><hr>
+</div><p>NOTA: Para escribir la construccion '[<i>caracter</i>]' (p.ej. [a]) no hay
+otra solución que inyectar el primer '['.</p>
+<ul>
+<li>
+<p>'\[a]' genera el texto html 'a'
+    (ver <a href="02-Par.html#Inyección de carácter.">Inyección de caracter</a>).</p>
+</li>
+<li>
+<p>'\[[]a]' genera el texto html '[a]'
+</p>
+</li>
+</ul>
+<hr>
 <p style="text-indent: 0px"><a href='04-defs.html'>Anterior (Definiciones y citas)</a> · <a href="index.html">Índice</a> · <a href='06-formulas.html'>Posterior (Formulas)</a></p>
 <div style="position: fixed;bottom: 0px;right: 10px;cursor: pointer;">
   <span onclick="location.assign('#hp:START_PAGE');">

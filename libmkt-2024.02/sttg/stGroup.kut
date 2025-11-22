@@ -20,7 +20,7 @@ import "openSimple";
 ///   Qts     : Quotes returned by 'tquotes.new'.
 ///   Params  : Array of model parameters.
 /// \s, i, <tquotes>, [f.] -> [f.]
-run = \(siFF|F) mdId, npars, :tquotes qts, :arr Params -> {
+run = \mdId, npars, :tquotes qts, :arr Params -> {
   paramsN = Params.size() / npars;
   Sales = arr.new(0.0, paramsN);
   Assets = arr.new(0.0, paramsN);

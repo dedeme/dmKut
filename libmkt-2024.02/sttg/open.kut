@@ -27,7 +27,7 @@ import "../tquotes";
 ///             Sales is a flat array of sales.
 ///               Each sale is [f,f] :: [nick, date].
 /// \s, <tquotes>, [f.] -> [f.]
-run = \(sFF|F) mdId, :tquotes qts, :arr Params -> {
+run = \mdId, :tquotes qts, :arr Params -> {
   ndates = cts.historicQuotes;
   ncos = qts.ncos();
   size = ndates * ncos;

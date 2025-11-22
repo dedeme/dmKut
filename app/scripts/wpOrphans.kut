@@ -24,6 +24,7 @@ readPicts = \d -> {
   Pinups = readPicts("pinups");
 
   Orphans = [];
+  Orphans2 = [];
   for (P = Originals) {
     okV = [false];
     for (P2 = Wallpapers) if (P2[0] == P[0]) {
@@ -36,32 +37,48 @@ readPicts = \d -> {
     }
     if (!okV!) Orphans.push(P[1]);
   }
+  Orphans2.cat(Orphans.map(\o -> return [o, str.toUpper(o)];));
+  Orphans2.sort(\O1, O2 -> return O1[1] < O2[1];);
+  Orphans.clear();
+  Orphans.cat(Orphans2.map(\O -> return O[0];));
   sys.println("ORIGINALES:");
   if (!Orphans) sys.println("Ninguna");
   else sys.println(Orphans.join("\n"));
   sys.println("");
 
   Orphans.clear();
+  Orphans2.clear();
   for (P = Wallpapers) {
     okV = [false];
     for (P2 = Originals) if (P2[0] == P[0]) {
       okV! = true;
       break;
     }
+    if (!okV!) Orphans.push(P[1]);
   }
+  Orphans2.cat(Orphans.map(\o -> return [o, str.toUpper(o)];));
+  Orphans2.sort(\O1, O2 -> return O1[1] < O2[1];);
+  Orphans.clear();
+  Orphans.cat(Orphans2.map(\O -> return O[0];));
   sys.println("FONDOS:");
   if (!Orphans) sys.println("Ninguna");
   else sys.println(Orphans.join("\n"));
   sys.println("");
 
   Orphans.clear();
+  Orphans2.clear();
   for (P = Pinups) {
     okV = [false];
     for (P2 = Originals) if (P2[0] == P[0]) {
       okV! = true;
       break;
     }
+    if (!okV!) Orphans.push(P[1]);
   }
+  Orphans2.cat(Orphans.map(\o -> return [o, str.toUpper(o)];));
+  Orphans2.sort(\O1, O2 -> return O1[1] < O2[1];);
+  Orphans.clear();
+  Orphans.cat(Orphans2.map(\O -> return O[0];));
   sys.println("PIN-UPS:");
   if (!Orphans) sys.println("Ninguna");
   else sys.println(Orphans.join("\n"));

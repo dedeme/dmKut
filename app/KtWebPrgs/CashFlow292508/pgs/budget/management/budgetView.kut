@@ -1,0 +1,25 @@
+// Copyright 31-Aug-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// BudgetView page.
+
+import "KtWeb/rp";
+import "db/yearsDb";
+import "db/diaryTb";
+import "db";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "updateDiary": {
+      dbKey = db.checkKey(Rq.dbKey);
+      if (dbKey == "") return rp.mkOutdated();
+
+      year = Rq.year;
+      ypath = yearsDb.yearPath(year);
+      diaryTb.writeJs(ypath, js.w(Rq.diary));
+      return rp.mk({ dbKey });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

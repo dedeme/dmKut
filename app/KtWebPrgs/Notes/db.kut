@@ -74,8 +74,15 @@ mkName = \tx -> {
 /// Files list
 /// \b -> [{id:s, name:s}.]
 list = \isTrash -> {
-  mkFileId = \dpath, id ->
-    return {id, name: mkName(file.read(file.cat([dpath, id])))};;
+  mkFileId = \dpath, id -> {
+    fpath = file.cat([dpath, id]);
+    return {
+      id,
+      newDate: time.toIso(math.stoi(id)!),
+      changeDate: time.toIso(file.tm(fpath)),
+      name: mkName(file.read(fpath))
+    };
+  };
 
   dpath = isTrash ? trashPath : normalPath;
   return arr.map(file.dir(dpath), \id -> return mkFileId(dpath, id););

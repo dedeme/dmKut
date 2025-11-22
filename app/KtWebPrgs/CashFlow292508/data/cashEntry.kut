@@ -1,0 +1,11 @@
+// Copyright 31-Aug-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// <cashEntry> data definition.
+
+/// Constructor.
+///   month   : Annotation month.
+///   desc    : Annotation decription.
+///   am      : Annotation amount.
+/// \s,s,f -> <cashEntry>
+new : month, desc, am;

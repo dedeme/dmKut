@@ -28,18 +28,17 @@ process = \Rq -> {
 
       :alarm As = alarmTb.read();
       isDup = !As.add(alarm.mk(Rq.key, math.ftoi(Rq.tm)));
-      if (!isDup) {
+      if (!isDup)
         alarmTb.write(As);
-        ppath = file.cat([file.wd(), sys.mainPath()[:-4]]);
-        thread.run(
-          \ -> sys.cmd2("kut", [ppath, "alarm!", Rq.key]);
-        );
-        sys.sleep(200);
-      }
       return rp.mk({
           dbKey,
           isDup
         });
+    }
+    "add2": {
+      ppath = file.cat([file.wd(), sys.mainPath()[:-4]]);
+      sys.cmd("kut", [ppath, "alarm!", Rq.key]);
+      return rp.mkEmpty();
     }
     "del": {
       dbKey = db.checkKey(Rq.dbKey);

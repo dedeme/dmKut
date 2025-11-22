@@ -10,7 +10,7 @@ import "db/fromServerTb";
 import "db/fromClientTb";
 
 /// \s -> ()
-start= \key -> {
+start = \key -> {
   :fromServer sv = fromServerTb.read();
   :fromClient cl = fromClientTb.read();
 
@@ -35,7 +35,7 @@ start= \key -> {
       :fromClient cl = fromClientTb.read();
       actionV! = cl.action;
 
-      if (actionV! == fromClient.stop & state == fromServer.error){
+      if (actionV! == fromClient.stop | state == fromServer.error){
         fromServerTb.write(fromServer.new(
           fromServer.end, errorMsgV!, Warnings, totalCountV!, currentCountV!
         ));

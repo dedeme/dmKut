@@ -4,6 +4,7 @@
 /// Report page.
 
 import "KtWeb/rp";
+import "data/fromServer";
 import "data/fromClient";
 import "db/fromServerTb";
 import "db/fromClientTb";
@@ -17,6 +18,18 @@ process = \Rq -> {
         });
     }
     "update": {
+      procs, ok = sys.cmd("ps", ["x"]);
+      if (!ok) {
+        sys.throw("Command 'ps x' failed");
+      } else {
+        :arr Procs = str.splitTrim(procs, "\n");
+        if (!Procs.any(\l ->
+          return str.index(l, "prgs/BrutalBackup/kut/main start") != -1;
+        )) {
+          fromServerTb.write(fromServer.newDefault());
+        }
+      }
+
       return rp.mk({
           sv: fromServerTb.read()
         });

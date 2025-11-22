@@ -1,0 +1,14 @@
+// Copyright 24-Oct-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Last IPC data definition.
+
+/// Constructor.
+///   ipc : Last IPC value.
+///   date: Last IPC date (YYYYMM).
+/// \f,s -> <lastIpc>
+new : ipc, date;
+
+/// Default constructor.
+/// \ -> <lastIpc>
+newDefault = \ -> return new(0, time.toStr(time.now())[:6]);;

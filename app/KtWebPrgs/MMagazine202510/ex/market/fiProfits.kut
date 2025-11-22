@@ -1,0 +1,34 @@
+// Copyright 17-Aug-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+import "data/acc/ann";
+import "data/acc/diary";
+import "data/acc/opr";
+
+dir = "/dm/KtWeb/dmcgi/Market/acc";
+
+/// Reads fixed incomes profits of an investor.
+/// If there are no data, it returns [].
+/// Returns an array of pairs 'date-incomes' sorted from before to after.
+/// \i -> [[s,f].]
+read = \year -> {
+  y = math.itos(year) + ".tb";
+  path = file.cat([dir, "diaries", y]);
+  if (!file.exists(path)) return  [];
+  , Anns = diary.fromJs(file.read(path));
+
+  R = [];
+  for (:ann a = Anns) {
+    :opr o = a.op;
+    switch (o.type()) {
+      "ofx", "osfx": R.push([a.date, math.itof(o.nominal) - o.price]);
+      "cfx": R.push([a.date, o.price - math.itof(o.nominal)]);
+      "prfx": R.push([a.date, o.amount]);
+    }
+  }
+  R.sort(\E1, E2 -> return E1[0] < E2[0];);
+
+  return R;
+};
+
+

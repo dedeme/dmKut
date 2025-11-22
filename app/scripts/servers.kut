@@ -7,8 +7,6 @@ SvData = [
       Pars: ["/dm/dmKut/app/KtWebPrgs/Kron/main", "start"]},
     {ix: 3, name: "Market", command: "Market",
       Pars: ["start"]},
-//    {ix: 3, name: "Wdriver", command: "kut",
-//      Pars: ["/dm/dmKut/app/wdriver/main", "start"]},
     {ix: 4, name: "KutPost", command: "kut",
       Pars: ["/dm/dmKut/app/KutPost/KutPost/main", "start"]},
     {ix: 5, name: "serversObserver", command: "kut",
@@ -81,7 +79,9 @@ while () {
     // r == "1\n"
     if (r[0] == "1") break;
 
+    // Using og 'thread' is mandatory, because servers do not return.
     for (D = Deacts) thread.run(\-> sys.cmd(D.command, D.Pars););
+    sys.sleep(1000);
   } else {
     r, ok = sys.cmd("zenity", ["--info", title, "--text=" + txV!]);
     if (!ok) sys.cmd("zenity", ["--error", title, "--text=" + r]);

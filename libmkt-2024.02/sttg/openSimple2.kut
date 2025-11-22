@@ -18,7 +18,7 @@ import "../tquotes";
 ///   qts     : Quotes returned by 'tquotes.new'.
 ///   Params  : Model parameters.
 /// \s, <tquotes>, [f.] -> [f, f, f, f, f, f]
-run = \(sFF|F) mdId, :tquotes qts, Params -> {
+run = \mdId, :tquotes qts, Params -> {
   ndates = cts.historicQuotes;
   ncos = qts.ncos();
   size = ndates * ncos;

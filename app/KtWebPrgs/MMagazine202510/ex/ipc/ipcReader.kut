@@ -1,0 +1,58 @@
+// Copyright 24-Oct-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Reader of ipc using "ppmarket".
+
+import "libdm/ext";
+import "data/ipc/lastIpc";
+
+/// Reads the last four values of IPC from ine.es y a Result object.
+/// \ -> [[<lastIpc>.], s]
+run = \ -> {
+  :str html, ok = ext.wget("https://ine.es/prensa/ipc_tabla.htm", false);
+  if (!ok) return [[], "ine.es/prensa/ipc_tabla.htm not read"];
+  ixV = [html.index("En lo que<br>")];
+  if (ixV! == -1) return [[], "Header of ipc table not found"];
+  R = []; // [<lastIpc>.]
+  for (i = 0 : 4) {
+    ixV! = html.indexFrom("<tr>", ixV!);
+    if (ixV! == -1) return [[], str.fmt("<tr> (%v) not found", [i])];
+    ix = ixV!;
+    ixV! = html.indexFrom("</tr>", ix);
+    if (ixV! == -1) return [[], str.fmt("</tr> (%v) not found", [i])];
+    lipc, err = read(html[ix+4:ixV!]);
+    if (err != "") return [[], err];
+    R.push(lipc);
+  }
+  return [R, ""];
+};
+
+// Read a ipc table entry.
+// \s -> [<lastIpc>, s]
+read = \:str html -> {
+  ix1V = [html.index("<td>")];
+  if (ix1V! == -1) return [[], str.fmt("<td> of date not found in %v", [html])];
+  ix2V = [html.indexFrom("</td>", ix1V!)];
+  if (ix2V! == -1) return [[], str.fmt("</td> of date not found in %v", [html])];
+  :arr Date = str.splitTrim(str.trim(html[ix1V!+4 : ix2V!]), " ");
+  if (Date.size() != 2) return [[], str.fmt("Wrong date in %v", [html[ix1V!+4 : ix2V!]])];
+  ms = str.toLower(Date[0]);
+  m = arr.index(
+    [ "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+      "septiembre", "octubre", "noviembre", "diciembre"],
+    \m -> return m == ms;
+  );
+  if (m == -1) return [[], str.fmt("Wrong date in %v", [html])];
+  yOp = math.stoi(Date[1]);
+  if (!yOp) return [[], str.fmt("Wrong date in %v", [html])];
+  d = time.newDate(1, m + 1, yOp!);
+
+  ix1V! = html.indexFrom("<td>", ix2V!);
+  if (ix1V! == -1) return [[], str.fmt("<td> of value not found in %v", [html])];
+  ix2V! = html.indexFrom("</td>", ix1V!);
+  if (ix2V! == -1) return [[], str.fmt("</td> of value not found in %v", [html])];
+  vOp = math.fromIso(str.trim(html[ix1V!+4 : ix2V!]));
+  if (!vOp) return [[], str.fmt("Wrong value in %v", [html[ix1V!+4 : ix2V!]])];
+
+  return [lastIpc.new(vOp! / 100.0, time.toStr(d)[:6]), ""];
+};

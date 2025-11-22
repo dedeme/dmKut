@@ -1,0 +1,26 @@
+// Copyright 24-Oct-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// IPC base data definition.
+
+import "lastIpc";
+
+/// Constructor.
+///   base    : Base amount.
+///   baseDate: Base date (YYYYMM).
+///   accIpc  : Accumulate IPC.
+/// \f,s,f -> <ipcBase>
+new : amount, date, accIpc;
+
+/// Creates IPC data from a new base.
+///   base    : Base amount.
+/// \f -> <ipcBase>
+mkBase = \base -> return new(base, time.toStr(time.now())[:6], 1.0);;
+
+/// Returns a new IPC data after updating.
+///   base: Previous IPC.
+///   ipc : New last IPC.
+/// \<ipcBase>, f -> <ipcBase>
+update = \base, ipc ->
+  return new(base[amount], base[date], base[accIpc] * (1.0 + ipc));;
+

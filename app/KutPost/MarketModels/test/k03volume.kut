@@ -14,7 +14,7 @@ import "cts";
 /// \ -> {*.}
 run = \ -> return {
   vol: arr.map(
-      << volumes.read(cts.quotesPath, 60, cosTb.read()),
+      volumes.read(cts.quotesPath, 60, cosTb.read()),
       \n -> return math.ftoi(n);
     )
 };;

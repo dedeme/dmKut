@@ -7,12 +7,12 @@
 
 /// Returns selected companies sorted by ascendent alphabetic order.
 /// \ -> [s.]
-read = \(|S) -> {
-  Cos = [];
-  for (e = js.ra(js.ra(fpath.read())[1])) {
-    E = js.ra(e);
-    if (js.rb(E[1])) Cos.push(js.rs(E[0]));
-  }
-  Cos.sort(true);
+read = \ -> {
+  :arr Cos = arr.map(
+    arr.filter(
+      js.ra(js.ra(fpath.read())[1]), \E -> return js.rb(js.ra(E)[1]);
+    ), \E -> return js.rs(js.ra(E)[0]);
+  );
+  Cos.sort(\c1, c2 -> return c1 < c2;);
   return Cos;
 };

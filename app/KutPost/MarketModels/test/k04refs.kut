@@ -27,7 +27,7 @@ run = \Rq -> {
   for (:model md = List) {
     mdId = md.id;
     Params = simParams.paramBases(mdId);
-    Qs = tquotes.toQs(<< model.calc(mdId, Cls, Params));
+    Qs = tquotes.toQs(model.calc(mdId, Cls, Params));
     rfs = js.w(Qs);
     f.writeText(mdId + ":" + rfs + "\n");
   }

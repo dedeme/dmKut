@@ -18,44 +18,46 @@ new = \ -> return model.new(
   );;
 
 /// Caculates references.
-/// \[f.], [f.] -> [f.]
-refs = \(FF|F) :arr Closes, :arr Params -> {
-  size = Closes.size();
-  ndates = cts.historicQuotes;
-  ncos = size / ndates;
+/// \[[f.]], [f.] -> [f.]
+refs = \:arr Closes, :arr Params -> {
   start = Params[0];
   upStart = 1.0 + start;
   downStart = 1.0 - start;
   incr = Params[1];
+  :arr Cls0 = Closes[0];
+  ndates = Closes.size();
+  ncos = Cls0.size();
 
-  Refs = arr.new(0.0, size);
-  IsSolds = arr.new(0, ncos);
-  for (i = 0:ncos) Refs[i] = Closes[i] * downStart;
+  IsSolds = arr.new(false, ncos);
+  Refs = []; //[f.]
+  for (cl = Cls0) Refs.push(cl * downStart);
 
-  for (idate = ncos:size-1:ncos) {
-    previousIdate = idate - ncos;
+  Refs2 = Refs.copy();
+  AllRefs = arr.new(Refs2, ndates);
+  for (idate = 1:ndates) {
+    :arr ClosesR = Closes[idate];
+
     for (ico = 0:ncos) {
-      icurrent = idate + ico;
-      iprevious = previousIdate + ico;
+      c = ClosesR[ico];
+      rf = Refs[ico];
 
-      c = Closes[icurrent];
-      rf = Refs[iprevious];
-      if (IsSolds[ico] == 1) {
+      if (IsSolds.get(ico)) {
         if (c > rf) {
-          IsSolds[ico] = 0;
-          Refs[icurrent] = c * downStart;
+          IsSolds.set(ico, false);
+          Refs[ico] = c * downStart;
         } else {
-          Refs[icurrent] = rf - (rf - c) * incr;
+          Refs[ico] = rf - (rf - c) * incr;
         }
       } else {
         if (c < rf) {
-          IsSolds[ico] = 1;
-          Refs[icurrent] = c * upStart;
+          IsSolds.set(ico, true);
+          Refs[ico] =  c * upStart;
         } else {
-          Refs[icurrent] = rf + (c - rf) * incr;
+          Refs[ico] = rf + (c - rf) * incr;
         }
       }
     }
+    AllRefs.set(idate, Refs.copy());
   }
-  return Refs;
+  return AllRefs;
 };

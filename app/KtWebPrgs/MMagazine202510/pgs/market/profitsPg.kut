@@ -1,0 +1,28 @@
+// Copyright 03-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Profits page.
+
+import "KtWeb/rp";
+import "cts";
+import "data/dailyProfitsEntry";
+import "data/profitsEntry";
+import "ex/market/dailyProfits";
+import "ex/market/fiProfits";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      year = time.year(time.now());
+      //[<DailyProfitsEntry>.]
+      InvP = dailyProfits.read(year);
+      Fxs = fiProfits.read(year);
+      Pfs = dailyProfitsEntry.mkProfits(InvP, Fxs);
+      return rp.mk({
+        "Profits": Pfs
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

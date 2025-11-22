@@ -90,10 +90,7 @@ process = \Rq -> {
       sv.setState(fromServer.readingSource);
       fromServerTb.write(sv);
 
-      thread.run(\ -> {
-        sys.cmd("kut", [sys.mainPath()[:-4], "start", key]);
-      });
-      sys.sleep(200);
+      sys.cmd("kut", [sys.mainPath()[:-4], "start", key]);
 
       return rp.mkEmpty();
     }

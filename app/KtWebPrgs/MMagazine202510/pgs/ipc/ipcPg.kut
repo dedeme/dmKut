@@ -1,0 +1,66 @@
+// Copyright 24-Oct-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// IPC page.
+
+import "libdm/log";
+import "KtWeb/rp";
+import "db/ipcTb";
+import "data/ipc/ipcBase";
+import "data/ipc/lastIpc";
+import "ex/ipc/ipcReader";
+import "cts";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      tb = ipcTb.read();
+      :lastIpc ipc = tb[ipcTb.ipc];
+      ipcDate = ipc.date;
+
+      if (time.addDays(time.fromStr(ipcDate + "01")!, 58) < time.now()) {
+        :arr Ipcs, err = ipcReader.run();
+        if (err != "") {
+          log.error(err);
+          return rp.mk(tb);
+        }
+
+        for (i = 0:Ipcs.size() + 1) {
+          if (i > Ipcs.size()) {
+            log.error("Infinite loop in ipcPg.process");
+            break;
+          }
+          iDate = incIpcDate(ipcDate);
+          ipcOp = Ipcs.find(\:lastIpc i -> return i.date == iDate;);
+          if (!ipcOp) break;
+          :lastIpc ipc = ipcOp!;
+          tb[ipcTb.mkt] = ipcBase.update(tb[ipcTb.mkt], ipc.ipc);
+          tb[ipcTb.fx] = ipcBase.update(tb[ipcTb.fx], ipc.ipc);
+          tb[ipcTb.ipc] = ipc;
+          ipcTb.write(tb);
+        }
+      }
+
+      return rp.mk(tb);
+    }
+    "update": {
+      isMarket = Rq.isMarket;
+      amount = Rq.amount;
+
+      tb = ipcTb.read();
+      if (isMarket) tb[ipcTb.mkt] = ipcBase.mkBase(amount);
+      else tb[ipcTb.fx] = ipcBase.mkBase(amount);
+      ipcTb.write(tb);
+
+      return rp.mkEmpty();
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};
+
+// \s -> s
+incIpcDate = \iDate -> {
+  :time d = time.fromStr(iDate + "01")!;
+  return time.toStr(d.addDays(32))[:6];
+};

@@ -1,0 +1,57 @@
+// Copyright 03-May-2024 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Daily profits data.
+
+import "cts";
+import "data/profitsEntry";
+
+/// Creates a new daily profits data.
+///   date: Date of calculation.
+///   profits: Profits on date (amount)
+///   cash: Cash on date (amount)
+///   risk: Minimum future profits on date (amount)
+/// \s, f, f, f -> <dailyProfitsEntry>
+new : date, profits, cash, risk;
+
+/// Calculate weekly profits of investors.
+///   InvPs: Daily profits of investors.
+///   Fxs  : Array of [date, income] with sorted fixied incomes operations (from
+///          before to after.)
+/// \[<dailyProfitsEntry>.] -> [<profitsEntry>.]
+mkProfits = \InvP, :arr Fxs -> {
+  // [<ProfitsEntry>.]
+  R = [];
+
+  now = time.now();
+  Date = [time.newDate(31, 12, time.year(now) - 1)];
+  ixV = [0];
+  isFirstV = [true];
+  fxV = [0.0];
+  while (time.dfDays(Date!, now) <= 0) {
+    if (time.weekday(Date!) == 0 | isFirstV!) {
+      isFirstV! = false;
+      day = time.toStr(Date!);
+      while (ixV! < arr.size(InvP) & InvP[ixV!][date] <= day) ixV! += 1;
+
+      pfs = ixV! > 0
+        ? InvP[ixV! - 1][profits]
+        : arr.size(InvP) > 0
+          ? InvP[0][profits]
+          : 1.0
+      ;
+
+      // Fxs[0][0] is the date of the first element of Fxs.
+      while (!!Fxs & Fxs[0][0] <= day) {
+        fxV! += Fxs[0][1]; // Amount of the first element.
+        Fxs.shift();
+      }
+
+      arr.push(R, profitsEntry.new(day, pfs, fxV!));
+    }
+
+    Date! = time.addDays(Date!, 1);
+  }
+
+  return R;
+};

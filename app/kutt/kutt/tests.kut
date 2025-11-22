@@ -1,9 +1,0 @@
-// Copyright 07-Jan-2025 ºDeme
-// GNU General Public License - V3 <http://www.gnu.org/licenses/>
-
-/// Kutt tests.
-
-import "tests/reader/main" : rmain;
-
-rmain.run();
-

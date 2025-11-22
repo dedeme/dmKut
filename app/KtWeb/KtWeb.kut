@@ -79,7 +79,6 @@ response = \rqBs -> {
       bytes.fromStr(websv.badRequestRp("Bad POST request\n" + rq))
     );
 
-
   ix1 = rqUnix.index("\n\n");
   if (ix1 == -1)
     return websv.mkRpBytes(bytes.fromStr(websv.badRequestRp(rq)));
@@ -148,8 +147,10 @@ processHub = \ssk, rq -> {
     "Assimil": sys.cmd("kut", ["prgs/Assimil/kut/main", ssk, rq])!;
     "BrutalBackup": sys.cmd("kut", ["prgs/BrutalBackup/kut/main", ssk, rq])!;
     "CashFlow": sys.cmd("kut", ["prgs/CashFlow/kut/main", ssk, rq])!;
+    "CashFlow202508": sys.cmd("kut", ["prgs/CashFlow202508/kut/main", ssk, rq])!;
     "CDoc": sys.cmd("kut", ["prgs/CDoc/kut/main", ssk, rq])!;
     "FMarket": sys.cmd("FMarket", [ssk, rq])!;
+    "FRMarket": sys.cmd("FRMarket", [ssk, rq])!;
     "HBills": sys.cmd("kut", ["prgs/HBills/kut/main", ssk, rq])!;
     "Hconta": sys.cmd("kut", ["prgs/Hconta/kut/main", ssk, rq])!;
     "JkutDoc": sys.cmd("kut", ["prgs/JkutDoc/kut/main", ssk, rq])!;
@@ -160,6 +161,7 @@ processHub = \ssk, rq -> {
     "KuttDoc": sys.cmd("prgs/KuttDoc/kutt/bin/KuttDoc", [ssk, rq])!;
     "Main": sys.cmd("kut", ["prgs/Main/kut/main", ssk, rq])!;
     "Market": sys.cmd("Market", [ssk, rq])!;
+    "MetaMMarket": sys.cmd("MetaMMarket", [ssk, rq])!;
     "MMagazine": sys.cmd("kut", ["prgs/MMagazine/kut/main", ssk, rq])!;
     "MMarket": sys.cmd("MMarket", [ssk, rq])!;
     "MrBackup": sys.cmd("kut", ["prgs/MrBackup/kut/main", ssk, rq])!;
@@ -167,6 +169,7 @@ processHub = \ssk, rq -> {
     "NkutDoc": sys.cmd("kut", ["prgs/NkutDoc/kut/main", ssk, rq])!;
     "Notes": sys.cmd("kut", ["prgs/Notes/kut/main", ssk, rq])!;
     "Stocks": sys.cmd("kut", ["prgs/Stocks/kut/main", ssk, rq])!;
+    "Sportium": sys.cmd("kut", ["prgs/Sportium/kut/main", ssk, rq])!;
     "Wallpapers": sys.cmd("kut", ["prgs/Wallpapers/kut/main", ssk, rq])!;
     "WallpapersDesign": sys.cmd("kut", ["prgs/WallpapersDesign/kut/main", ssk, rq])!;
     default: sys.throw("Value of prg (" + prg + ") is not valid");

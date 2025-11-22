@@ -1,0 +1,35 @@
+// Copyright 03-Mar-2022 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Profits page.
+
+import "KtWeb/rp";
+import "cts";
+import "data/dailyProfitsEntry";
+import "data/profitsEntry";
+import "data/acc/diary";
+import "ex/market/dailyProfits";
+import "ex/market/fiProfits";
+import "ex/market/diariesDb";
+import "ex/market/ibex";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.rq) {
+    "idata": {
+      year = time.year(time.now());
+      //[<DailyProfitsEntry>.]
+      InvP = dailyProfits.read(year);
+      Fxs = fiProfits.read(year);
+      Pfs = dailyProfitsEntry.mkProfits(InvP, Fxs);
+      return rp.mk({
+        "initialAssets": diary.initialAssets(diariesDb.read(year)[diary.Anns]),
+        "Profits": Pfs,
+        "Ibex": ibex.read(
+            arr.map(Pfs, \:dailyProfitsEntry e -> return e.date;)
+          )
+      });
+    }
+    default: sys.throw("Value of rq (" + Rq.rq + ") is not valid");
+  }
+};

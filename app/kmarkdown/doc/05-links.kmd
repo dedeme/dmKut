@@ -102,10 +102,10 @@ Produce:
 
 ``</div>``
 
-## Escape de '['
+## Escape de <i>[</i>
 
-Si se quiere escribir el caracter '\[' sin que introduzca un hipervínculo o
-imagen, se puede usar '\\['.
+Si se quiere escribir en html el caracter '\[' sin que se introduzca un
+hipervínculo o imagen, se puede usar '\\['.
 
 ``kmd
 Esto no es un hipervínculo \[https://www.gnu.org] y
@@ -119,3 +119,11 @@ Esto no es un hipervínculo \[https://www.gnu.org] y
 esto no es una imagen !\[img/up.png].
 
 ``</div>``
+
+NOTA: Para escribir la construccion '\[_caracter_]' (p.ej. \[[]a]) no hay
+otra solución que inyectar el primer '\['.
+
+* '\\[[]a]' genera el texto html 'a'
+    (ver [02-Par.html#Inyección de carácter.](Inyección de caracter)).
+
+* '\\[\[]a]' genera el texto html '\[[]a]'

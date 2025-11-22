@@ -13,7 +13,7 @@ import "libmkt/quotes";
 ///   }
 /// \ -> {*.}
 run = \ -> {
-  Cos = << cosTb.read();
+  Cos = cosTb.read();
   return {
       q: quotes.read(cts.quotesPath, Cos)
   };

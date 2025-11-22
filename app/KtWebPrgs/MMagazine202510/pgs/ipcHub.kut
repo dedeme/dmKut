@@ -1,0 +1,14 @@
+// Copyright 24-Oct-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// Ipc module.
+
+import "pgs/ipc/ipcPg";
+
+/// \{*.} -> s
+process = \Rq -> {
+  switch (Rq.source) {
+    "IpcPg": return ipcPg.process(Rq);
+    default: sys.throw("Value of source (" + Rq.source + ") is not valid");
+  }
+};

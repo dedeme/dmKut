@@ -145,11 +145,11 @@ start = \port, tm, root, handler, ferror -> {
     conn = connErr[0];
 
     thread.run(\ -> {
-      try {
-        bsErr = tcp.read(conn, 1_000_000, tm);
-        if (bsErr[1] != "") {
-          ferror(bsErr[1]);
-        } else {
+      bsErr = tcp.read(conn, 1_000_000, tm);
+      if (bsErr[1] != "") {
+        ferror(bsErr[1]);
+      } else {
+        try {
           fRp = handler(bsErr[0]);
           while () {
             bsRp = fRp();
@@ -160,10 +160,10 @@ start = \port, tm, root, handler, ferror -> {
               break;
             }
           }
+        } catch (e) {
+          ferror(e);
         }
         tcp.closeConnection(conn);
-      } catch (e) {
-        ferror(e);
       }
     });
   }
@@ -218,7 +218,10 @@ getRq = \rq -> {
     return [mkRpBytes(bytes.fromStr(notFoundRp()))];
 
   ext2 = file.extension(fpath);
-  type = dic.hasKey(Mimetypes, ext2) ? Mimetypes[ext2] : "text/plain";
+  type = dic.hasKey(Mimetypes, ext2)
+    ? Mimetypes[ext2]
+    : "application/octet-stream"
+  ;
 
   len = file.size(fpath);
   if (len < 1_000_000) {
@@ -276,7 +279,7 @@ getRq = \rq -> {
 
 /// Executes ccgi.sh and returns an array with its result or an empty array if
 /// rq is not a valid POST request for 'cgi.kut'.
-/// \s -> s
+/// \s -> ([s]|[])
 dmCgiRq = \rq -> {
   rqUnix = str.replace(rq, "\r", "");
   ix = str.index(rq, "\n");

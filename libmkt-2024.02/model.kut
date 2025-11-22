@@ -40,8 +40,8 @@ new : id, name, doc, ParamNames, ParamTypes;
 ///           These closes must be regularized (without -1.0 values).
 ///   Params: Parameter values.
 ///   RETURN: Matrix 'dates x companies' with market references.
-/// \s, [f.], [f.] -> [f.]
-calc = \(sFF|F) mdId, Closes, Params -> {
+/// \s, [[f.]], [f.] -> [f.]
+calc = \mdId, Closes, Params -> {
   switch (mdId) {
     "APRX": return appr.refs(Closes, Params);
     "APRX2": return appr2.refs(Closes, Params);

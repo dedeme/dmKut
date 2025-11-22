@@ -10,26 +10,28 @@
 ///   samples: Number of samples to make the average.
 ///   Cos    : Nicks of companies to read.
 /// \s, i, [s.] -> [f.]
-read = \(siS|F) dpath, samples, Cos -> {
-  samples2 = math.itof(samples + samples);
-  Vols = [!0.0];
-  for (c = Cos) {
-    :file path = file.cat([dpath, c + ".tb"]);
-    :str qs = str.trim(path.read());
-    nSamplesV = [0];
-    sumV = [0.0];
-    for (l = qs.split("\n")) {
-      Ps = str.split(l, ":");
-      mx = math.stof(Ps[3])!;
-      mn = math.stof(Ps[4])!;
-      v = math.stof(Ps[5])!;
-      if (mx <= 0.0 | mn <= 0.0 | v <= 0.0) continue;
-      sumV! += (mx + mn) * v;
-      nSamplesV! += 1;
-      if (nSamplesV! >= samples) break;
-    }
-    Vols.push(nSamplesV! == samples ? sumV[0] / samples2 : 0.0);
-  }
+read = \dpath, samples, Cos -> {
+  Vols = []; // [f.]
 
+  for (c = Cos) {
+    fpath = file.cat([dpath, c + ".tb"]);
+    qsStr = str.trim(file.read(fpath));
+
+    nsamplesV = [0];
+    sumV = [0.0];
+    for (l = str.split(qsStr, "\n")) {
+      :arr ps = str.split(l, ":");
+      mx = math.stof(ps[3])!;
+      mn = math.stof(ps[4])!;
+      v = math.stof(ps[5])!;
+      if (mx <= 0.0 | mn <= 0.0 | v < 0.0) continue;
+
+      sumV! += (mx + mn) * v;
+      nsamplesV! += 1;
+      if (nsamplesV! >= samples) break;
+    }
+
+    Vols.push(sumV! / (math.itof(samples) * 2.0));
+  }
   return Vols;
 };

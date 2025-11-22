@@ -1,0 +1,34 @@
+// Copyright 24-Oct-2025 ºDeme
+// GNU General Public License - V3 <http://www.gnu.org/licenses/>
+
+/// IPC table.
+/// The table is a dictionary with 3 entries:
+///   - mkt: IPC data of market investment. (<ipcBase>).
+///   - fx : IPC data of fixed incomes investment. (<ipcBase>).
+///   - ipc: Las ipc data. (<lastIpc>).
+
+import "cts";
+import "data/ipc/ipcBase";
+import "data/ipc/lastIpc";
+
+:file fpath = file.cat([cts.dataPath, "ipc.tb"]);
+
+/// IPC table dictionary keys.
+/// s
+mkt, fx, ipc:;
+
+/// Initializes table.
+/// \ -> ()
+init = \ -> if (!fpath.exists()) write({
+    mkt: ipcBase.mkBase(300000.0),
+    fx: ipcBase.mkBase(75000.0),
+    ipc: lastIpc.newDefault()
+  });;
+
+/// Reads table.
+/// \ -> {*}
+read = \ -> return js.r(fpath.read());;
+
+/// Writes table.
+/// \{*} -> ()
+write = \o -> fpath.write(js.w(o));;
